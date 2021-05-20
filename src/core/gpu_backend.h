@@ -19,13 +19,14 @@ public:
   GPUBackend();
   virtual ~GPUBackend();
 
-  ALWAYS_INLINE u16* GetVRAM() const { return m_vram_ptr; }
+  virtual u16* GetVRAMshadowPtr() = 0;
 
   virtual bool Initialize(bool force_thread);
   virtual void UpdateSettings();
   virtual void Reset(bool clear_vram);
   virtual void Shutdown();
 
+  GPUBackendReadVRAMCommand* NewReadVRAMCommand();
   GPUBackendFillVRAMCommand* NewFillVRAMCommand();
   GPUBackendUpdateVRAMCommand* NewUpdateVRAMCommand(u32 num_words);
   GPUBackendCopyVRAMCommand* NewCopyVRAMCommand();
@@ -35,7 +36,7 @@ public:
   GPUBackendDrawLineCommand* NewDrawLineCommand(u32 num_vertices);
 
   void PushCommand(GPUBackendCommand* cmd);
-  void Sync(bool allow_sleep);
+  virtual void Sync(bool allow_sleep);
 
   /// Processes all pending GPU commands.
   void RunGPULoop();
@@ -47,6 +48,7 @@ protected:
   void StartGPUThread();
   void StopGPUThread();
 
+  virtual void ReadVRAM(u32 x, u32 y, u32 width, u32 height) {}
   virtual void FillVRAM(u32 x, u32 y, u32 width, u32 height, u32 color, GPUBackendCommandParameters params) = 0;
   virtual void UpdateVRAM(u32 x, u32 y, u32 width, u32 height, const void* data,
                           GPUBackendCommandParameters params) = 0;
@@ -59,8 +61,6 @@ protected:
   virtual void DrawingAreaChanged() = 0;
 
   void HandleCommand(const GPUBackendCommand* cmd);
-
-  u16* m_vram_ptr = nullptr;
 
   Common::Rectangle<u32> m_drawing_area{};
 

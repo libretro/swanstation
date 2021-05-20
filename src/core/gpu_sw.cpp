@@ -28,9 +28,10 @@ ALWAYS_INLINE static constexpr std::tuple<T, T> MinMax(T v1, T v2)
     return std::tie(v1, v2);
 }
 
+#define GetVramDisplayMemPtr() m_backend.GetUPRAM()
+
 GPU_SW::GPU_SW()
 {
-  m_vram_ptr = m_backend.GetVRAM();
 }
 
 GPU_SW::~GPU_SW()
@@ -38,6 +39,9 @@ GPU_SW::~GPU_SW()
   m_backend.Shutdown();
   if (m_host_display)
     m_host_display->ClearDisplayTexture();
+
+  if (m_display_texture_buffer)
+    free(m_display_texture_buffer);
 }
 
 GPURenderer GPU_SW::GetRendererType() const
@@ -45,10 +49,33 @@ GPURenderer GPU_SW::GetRendererType() const
   return GPURenderer::Software;
 }
 
+static ptrdiff_t getDisplayTextureSizeInBytes(int scale)
+{
+  return GPU_MAX_DISPLAY_WIDTH * GPU_MAX_DISPLAY_HEIGHT * scale * scale * sizeof(u32);
+}
+
+
+void GPU_SW::AllocDisplayBuffer()
+{
+  auto backend_uprender = m_backend.uprender_scale();
+
+  // backend will make some choices about what uprender it supports, so make sure it gets init'd first!
+  DebugAssert(backend_uprender >= 1);
+
+  if (m_display_texture_buffer)
+    free(m_display_texture_buffer);
+  m_display_texture_buffer = nullptr;
+
+  m_display_texture_scale  = backend_uprender;
+  m_display_texture_buffer = (u8*)malloc(getDisplayTextureSizeInBytes(m_display_texture_scale));
+}
+
 bool GPU_SW::Initialize(HostDisplay* host_display)
 {
   if (!GPU::Initialize(host_display) || !m_backend.Initialize(false))
     return false;
+
+  AllocDisplayBuffer();
 
   static constexpr auto formats_for_16bit = make_array(HostDisplayPixelFormat::RGB565, HostDisplayPixelFormat::RGBA5551,
                                                        HostDisplayPixelFormat::RGBA8, HostDisplayPixelFormat::BGRA8);
@@ -92,6 +119,7 @@ void GPU_SW::UpdateSettings()
 {
   GPU::UpdateSettings();
   m_backend.UpdateSettings();
+  AllocDisplayBuffer();
 }
 
 template<HostDisplayPixelFormat out_format, typename out_type>
@@ -223,17 +251,28 @@ ALWAYS_INLINE void CopyOutRow16<HostDisplayPixelFormat::BGRA8, u32>(const u16* s
 }
 
 template<HostDisplayPixelFormat display_format>
-void GPU_SW::CopyOut15Bit(u32 src_x, u32 src_y, u32 width, u32 height, u32 field, bool interlaced, bool interleaved)
+void GPU_SW::CopyOut15Bit(u32 src_x_native, u32 src_y_native, u32 width_native, u32 height_native, u32 field, bool interlaced, bool interleaved)
 {
   u8* dst_ptr;
   u32 dst_stride;
+
+  // FIXME - Uprender - architecturally all this stuff should be implemented in GPU_SW_Backend or -- better yet -- should be generalized 
+  // and not part of any monolithic class. But hat would cause huge diff-changes across this module so for now I'm just replicating a
+  // bunch of GPU_SW_BACH paramaters into local var space so we can do what we need to do.
+
+  auto uprender_scale   = m_backend.uprender_scale();
+  auto vram_upsize_x    = VRAM_WIDTH  * uprender_scale;
+  auto vram_upsize_y    = VRAM_HEIGHT * uprender_scale;
+
+  auto width_up  = width_native  * uprender_scale;
+  auto height_up = height_native * uprender_scale;
 
   using OutputPixelType = std::conditional_t<
     display_format == HostDisplayPixelFormat::RGBA8 || display_format == HostDisplayPixelFormat::BGRA8, u32, u16>;
 
   if (!interlaced)
   {
-    if (!m_host_display->BeginSetDisplayPixels(display_format, width, height, reinterpret_cast<void**>(&dst_ptr),
+    if (!m_host_display->BeginSetDisplayPixels(display_format, width_up, height_up, reinterpret_cast<void**>(&dst_ptr),
                                                &dst_stride))
     {
       return;
@@ -241,44 +280,49 @@ void GPU_SW::CopyOut15Bit(u32 src_x, u32 src_y, u32 width, u32 height, u32 field
   }
   else
   {
-    dst_stride = GPU_MAX_DISPLAY_WIDTH * sizeof(OutputPixelType);
-    dst_ptr = m_display_texture_buffer.data() + (field != 0 ? dst_stride : 0);
+    dst_stride = GPU_MAX_DISPLAY_WIDTH * m_display_texture_scale * sizeof(OutputPixelType);
+    dst_ptr = m_display_texture_buffer + (field != 0 ? dst_stride : 0);
   }
 
   const u32 output_stride = dst_stride;
   const u8 interlaced_shift = BoolToUInt8(interlaced);
   const u8 interleaved_shift = BoolToUInt8(interleaved);
 
+  auto src_x_up = src_x_native * uprender_scale;
+  auto src_y_up = src_y_native * uprender_scale;
+
+  auto m_vram_ptr = GetVramDisplayMemPtr();
+
   // Fast path when not wrapping around.
-  if ((src_x + width) <= VRAM_WIDTH && (src_y + height) <= VRAM_HEIGHT)
+  if ((src_x_native + width_native) <= VRAM_WIDTH && (src_y_native + height_native) <= VRAM_HEIGHT)
   {
-    const u32 rows = height >> interlaced_shift;
+    const u32 rows = height_up >> interlaced_shift;
     dst_stride <<= interlaced_shift;
 
-    const u16* src_ptr = &m_vram_ptr[src_y * VRAM_WIDTH + src_x];
-    const u32 src_step = VRAM_WIDTH << interleaved_shift;
+    const u16* src_ptr = &m_vram_ptr[src_y_up * vram_upsize_x + src_x_up];
+    const u32 src_step = vram_upsize_x << interleaved_shift;
     for (u32 row = 0; row < rows; row++)
     {
-      CopyOutRow16<display_format>(src_ptr, reinterpret_cast<OutputPixelType*>(dst_ptr), width);
+      CopyOutRow16<display_format>(src_ptr, reinterpret_cast<OutputPixelType*>(dst_ptr), width_up);
       src_ptr += src_step;
       dst_ptr += dst_stride;
     }
   }
   else
   {
-    const u32 rows = height >> interlaced_shift;
+    const u32 rows = height_up >> interlaced_shift;
     dst_stride <<= interlaced_shift;
 
-    const u32 end_x = src_x + width;
+    const u32 end_x_up = src_x_up + width_up;
     for (u32 row = 0; row < rows; row++)
     {
-      const u16* src_row_ptr = &m_vram_ptr[(src_y % VRAM_HEIGHT) * VRAM_WIDTH];
+      const u16* src_row_ptr = &m_vram_ptr[(src_y_up % vram_upsize_y) * vram_upsize_x];
       OutputPixelType* dst_row_ptr = reinterpret_cast<OutputPixelType*>(dst_ptr);
 
-      for (u32 col = src_x; col < end_x; col++)
-        *(dst_row_ptr++) = VRAM16ToOutput<display_format, OutputPixelType>(src_row_ptr[col % VRAM_WIDTH]);
+      for (u32 col = src_x_up; col < end_x_up; col++)
+        *(dst_row_ptr++) = VRAM16ToOutput<display_format, OutputPixelType>(src_row_ptr[col % vram_upsize_x]);
 
-      src_y += (1 << interleaved_shift);
+      src_y_up += (1 << interleaved_shift);
       dst_ptr += dst_stride;
     }
   }
@@ -289,7 +333,7 @@ void GPU_SW::CopyOut15Bit(u32 src_x, u32 src_y, u32 width, u32 height, u32 field
   }
   else
   {
-    m_host_display->SetDisplayPixels(display_format, width, height, m_display_texture_buffer.data(), output_stride);
+    m_host_display->SetDisplayPixels(display_format, width_up, height_up, m_display_texture_buffer, output_stride);
   }
 }
 
@@ -316,18 +360,36 @@ void GPU_SW::CopyOut15Bit(HostDisplayPixelFormat display_format, u32 src_x, u32 
 }
 
 template<HostDisplayPixelFormat display_format>
-void GPU_SW::CopyOut24Bit(u32 src_x, u32 src_y, u32 skip_x, u32 width, u32 height, u32 field, bool interlaced,
+void GPU_SW::CopyOut24Bit(u32 src_x_native, u32 src_y_native, u32 skip_x_native, u32 width_native, u32 height_native, u32 field, bool interlaced,
                           bool interleaved)
 {
   u8* dst_ptr;
   u32 dst_stride;
+
+  auto uprender_scale = m_backend.uprender_scale();
+
+  auto width_up   = width_native  * uprender_scale;
+  auto height_up  = height_native * uprender_scale;
+  auto src_x_up   = src_x_native  * uprender_scale;
+  auto src_y_up   = src_y_native  * uprender_scale;
+  auto skip_x_up  = skip_x_native * uprender_scale;
+
+  // 24 bit modes must be sampled either from a native res 'shadow copy', or by adapting 
+  // logic to handle the upres swizzle (due to PSX VMEM being 16-bits natively):
+  //
+  //  1  2  3  4  5  6  7  8  9  10
+  //  RG RG BR BR GB GB RG RG BR BR
+  //  RG RG BR BR GB GB RG RG BR BR
+  //
+  // Other portions of the GPU depend on the shadow copy being up-to-date anyway, so let's
+  // just read from that for now.
 
   using OutputPixelType = std::conditional_t<
     display_format == HostDisplayPixelFormat::RGBA8 || display_format == HostDisplayPixelFormat::BGRA8, u32, u16>;
 
   if (!interlaced)
   {
-    if (!m_host_display->BeginSetDisplayPixels(display_format, width, height, reinterpret_cast<void**>(&dst_ptr),
+    if (!m_host_display->BeginSetDisplayPixels(display_format, width_up, height_up, reinterpret_cast<void**>(&dst_ptr),
                                                &dst_stride))
     {
       return;
@@ -335,85 +397,76 @@ void GPU_SW::CopyOut24Bit(u32 src_x, u32 src_y, u32 skip_x, u32 width, u32 heigh
   }
   else
   {
-    dst_stride = Common::AlignUpPow2<u32>(width * sizeof(OutputPixelType), 4);
-    dst_ptr = m_display_texture_buffer.data() + (field != 0 ? dst_stride : 0);
+    dst_stride = GPU_MAX_DISPLAY_WIDTH * m_display_texture_scale * sizeof(OutputPixelType);
+    dst_ptr = m_display_texture_buffer + (field != 0 ? dst_stride : 0);
   }
 
   const u32 output_stride = dst_stride;
   const u8 interlaced_shift = BoolToUInt8(interlaced);
   const u8 interleaved_shift = BoolToUInt8(interleaved);
-  const u32 rows = height >> interlaced_shift;
+  const u32 rows_native = height_native >> interlaced_shift;
+
   dst_stride <<= interlaced_shift;
 
-  if ((src_x + width) <= VRAM_WIDTH && (src_y + (rows << interleaved_shift)) <= VRAM_HEIGHT)
-  {
-    const u8* src_ptr = reinterpret_cast<const u8*>(&m_vram_ptr[src_y * VRAM_WIDTH + src_x]) + (skip_x * 3);
-    const u32 src_stride = (VRAM_WIDTH << interleaved_shift) * sizeof(u16);
-    for (u32 row = 0; row < rows; row++)
-    {
-      if constexpr (display_format == HostDisplayPixelFormat::RGBA8)
-      {
-        const u8* src_row_ptr = src_ptr;
-        u8* dst_row_ptr = reinterpret_cast<u8*>(dst_ptr);
-        for (u32 col = 0; col < width; col++)
-        {
-          *(dst_row_ptr++) = *(src_row_ptr++);
-          *(dst_row_ptr++) = *(src_row_ptr++);
-          *(dst_row_ptr++) = *(src_row_ptr++);
-          *(dst_row_ptr++) = 0xFF;
-        }
-      }
-      else if constexpr (display_format == HostDisplayPixelFormat::BGRA8)
-      {
-        const u8* src_row_ptr = src_ptr;
-        u8* dst_row_ptr = reinterpret_cast<u8*>(dst_ptr);
-        for (u32 col = 0; col < width; col++)
-        {
-          *(dst_row_ptr++) = src_row_ptr[2];
-          *(dst_row_ptr++) = src_row_ptr[1];
-          *(dst_row_ptr++) = src_row_ptr[0];
-          *(dst_row_ptr++) = 0xFF;
-          src_row_ptr += 3;
-        }
-      }
-      else if constexpr (display_format == HostDisplayPixelFormat::RGB565)
-      {
-        const u8* src_row_ptr = src_ptr;
-        u16* dst_row_ptr = reinterpret_cast<u16*>(dst_ptr);
-        for (u32 col = 0; col < width; col++)
-        {
-          *(dst_row_ptr++) = ((static_cast<u16>(src_row_ptr[0]) >> 3) << 11) |
-                             ((static_cast<u16>(src_row_ptr[1]) >> 2) << 5) | (static_cast<u16>(src_row_ptr[2]) >> 3);
-          src_row_ptr += 3;
-        }
-      }
-      else if constexpr (display_format == HostDisplayPixelFormat::RGBA5551)
-      {
-        const u8* src_row_ptr = src_ptr;
-        u16* dst_row_ptr = reinterpret_cast<u16*>(dst_ptr);
-        for (u32 col = 0; col < width; col++)
-        {
-          *(dst_row_ptr++) = ((static_cast<u16>(src_row_ptr[0]) >> 3) << 10) |
-                             ((static_cast<u16>(src_row_ptr[1]) >> 3) << 5) | (static_cast<u16>(src_row_ptr[2]) >> 3);
-          src_row_ptr += 3;
-        }
-      }
+  auto shadow_ptr = m_backend.GetVRAMshadowPtr();
 
-      src_ptr += src_stride;
-      dst_ptr += dst_stride;
+  if ((src_x_native + width_native) <= VRAM_WIDTH && (src_y_native + (rows_native << interleaved_shift)) <= VRAM_HEIGHT)
+  {
+    const u8* src_ptr = reinterpret_cast<const u8*>(&shadow_ptr[(src_y_native * VRAM_WIDTH) + src_x_native]) + (skip_x_native * 3);
+    const u32 src_stride = (VRAM_WIDTH << interleaved_shift) * sizeof(u16);
+    for (u32 row = 0; row < rows_native; row++, src_ptr += src_stride)
+    {
+      for (int uy = 0; uy < uprender_scale; ++uy, dst_ptr += dst_stride)
+      {
+        u8  const *src_row_ptr = src_ptr;
+        u8        *dst_row_p8  = reinterpret_cast<u8 *>(dst_ptr);
+        u16       *dst_row_p16 = reinterpret_cast<u16*>(dst_ptr);
+      
+        for (u32 col = 0; col < width_native; col++, src_row_ptr+=3)
+        {
+          for (int ux = 0; ux < uprender_scale; ++ux)
+          {
+            if constexpr (display_format == HostDisplayPixelFormat::RGBA8)
+            {
+              *(dst_row_p8++) = src_row_ptr[0];
+              *(dst_row_p8++) = src_row_ptr[1];
+              *(dst_row_p8++) = src_row_ptr[2];
+              *(dst_row_p8++) = 0xFF;
+            }
+            else if constexpr (display_format == HostDisplayPixelFormat::BGRA8)
+            {
+              *(dst_row_p8++) = src_row_ptr[2];
+              *(dst_row_p8++) = src_row_ptr[1];
+              *(dst_row_p8++) = src_row_ptr[0];
+              *(dst_row_p8++) = 0xFF;
+            }
+            else if constexpr (display_format == HostDisplayPixelFormat::RGB565)
+            {
+              *(dst_row_p16++) = ((static_cast<u16>(src_row_ptr[0]) >> 3) << 11) |
+                                 ((static_cast<u16>(src_row_ptr[1]) >> 2) << 5 ) | (static_cast<u16>(src_row_ptr[2]) >> 3);
+            }
+            else if constexpr (display_format == HostDisplayPixelFormat::RGBA5551)
+            {
+              *(dst_row_p16++) = ((static_cast<u16>(src_row_ptr[0]) >> 3) << 10) |
+                                 ((static_cast<u16>(src_row_ptr[1]) >> 3) << 5 ) | (static_cast<u16>(src_row_ptr[2]) >> 3);
+            }
+          }
+        }
+      }
     }
   }
   else
   {
-    for (u32 row = 0; row < rows; row++)
+    // FIXME : UPRENDER : This has not been implemented yet.
+    for (u32 row = 0; row < rows_native; row++)
     {
-      const u16* src_row_ptr = &m_vram_ptr[(src_y % VRAM_HEIGHT) * VRAM_WIDTH];
+      const u16* src_row_ptr = &shadow_ptr[(src_y_native % VRAM_HEIGHT) * VRAM_WIDTH];
       OutputPixelType* dst_row_ptr = reinterpret_cast<OutputPixelType*>(dst_ptr);
 
-      for (u32 col = 0; col < width; col++)
+      for (u32 col = 0; col < width_up; col++)
       {
-        const u32 offset = (src_x + (((skip_x + col) * 3) / 2));
-        const u16 s0 = src_row_ptr[offset % VRAM_WIDTH];
+        const u32 offset = (src_x_up + (((skip_x_up + col) * 3) / 2));
+        const u16 s0 = src_row_ptr[(offset + 0) % VRAM_WIDTH];
         const u16 s1 = src_row_ptr[(offset + 1) % VRAM_WIDTH];
         const u8 shift = static_cast<u8>(col & 1u) * 8;
         const u32 rgb = (((ZeroExtend32(s1) << 16) | ZeroExtend32(s0)) >> shift);
@@ -436,7 +489,7 @@ void GPU_SW::CopyOut24Bit(u32 src_x, u32 src_y, u32 skip_x, u32 width, u32 heigh
         }
       }
 
-      src_y += (1 << interleaved_shift);
+      src_y_up += (1 << interleaved_shift);
       dst_ptr += dst_stride;
     }
   }
@@ -447,7 +500,7 @@ void GPU_SW::CopyOut24Bit(u32 src_x, u32 src_y, u32 skip_x, u32 width, u32 heigh
   }
   else
   {
-    m_host_display->SetDisplayPixels(display_format, width, height, m_display_texture_buffer.data(), output_stride);
+    m_host_display->SetDisplayPixels(display_format, width_up, height_up, m_display_texture_buffer, output_stride);
   }
 }
 
@@ -476,13 +529,21 @@ void GPU_SW::CopyOut24Bit(HostDisplayPixelFormat display_format, u32 src_x, u32 
 
 void GPU_SW::ClearDisplay()
 {
-  std::memset(m_display_texture_buffer.data(), 0, m_display_texture_buffer.size());
+  if (m_display_texture_buffer)
+    std::memset(m_display_texture_buffer, 0, getDisplayTextureSizeInBytes(m_display_texture_scale));
 }
 
 void GPU_SW::UpdateDisplay()
 {
+  if (!m_display_texture_buffer)
+    return;
+
   // fill display texture
   m_backend.Sync(true);
+
+  auto uprender_scale = m_backend.uprender_scale();
+  auto vram_upsize_x  = VRAM_WIDTH  * uprender_scale;
+  auto vram_upsize_y  = VRAM_HEIGHT * uprender_scale;
 
   if (!g_settings.debugging.show_vram)
   {
@@ -534,8 +595,8 @@ void GPU_SW::UpdateDisplay()
   else
   {
     CopyOut15Bit(m_16bit_display_format, 0, 0, VRAM_WIDTH, VRAM_HEIGHT, 0, false, false);
-    m_host_display->SetDisplayParameters(VRAM_WIDTH, VRAM_HEIGHT, 0, 0, VRAM_WIDTH, VRAM_HEIGHT,
-                                         static_cast<float>(VRAM_WIDTH) / static_cast<float>(VRAM_HEIGHT));
+    m_host_display->SetDisplayParameters(vram_upsize_x, vram_upsize_y, 0, 0, vram_upsize_x, vram_upsize_y,
+                                         static_cast<float>(vram_upsize_x) / static_cast<float>(vram_upsize_y));
   }
 }
 
@@ -824,6 +885,13 @@ void GPU_SW::DispatchRenderCommand()
 
 void GPU_SW::ReadVRAM(u32 x, u32 y, u32 width, u32 height)
 {
+  auto* cmd = m_backend.NewReadVRAMCommand();
+  FillBackendCommandParameters(cmd);
+  cmd->x = static_cast<u16>(x);
+  cmd->y = static_cast<u16>(y);
+  cmd->width = static_cast<u16>(width);
+  cmd->height = static_cast<u16>(height);
+  m_backend.PushCommand(cmd);
   m_backend.Sync(false);
 }
 

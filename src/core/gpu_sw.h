@@ -17,10 +17,14 @@ public:
 
   GPURenderer GetRendererType() const override;
 
+  u16* GetVRAMshadowPtr() override { return m_backend.GetVRAMshadowPtr(); }
+
   bool Initialize(HostDisplay* host_display) override;
   bool DoState(StateWrapper& sw, HostDisplayTexture** host_texture, bool update_display) override;
   void Reset(bool clear_vram) override;
   void UpdateSettings() override;
+
+  void AllocDisplayBuffer();
 
 protected:
   void ReadVRAM(u32 x, u32 y, u32 width, u32 height) override;
@@ -47,7 +51,8 @@ protected:
   void FillBackendCommandParameters(GPUBackendCommand* cmd) const;
   void FillDrawCommand(GPUBackendDrawCommand* cmd, GPURenderCommand rc) const;
 
-  HeapArray<u8, GPU_MAX_DISPLAY_WIDTH * GPU_MAX_DISPLAY_HEIGHT * sizeof(u32)> m_display_texture_buffer;
+  int m_display_texture_scale = 0;    // mirrors backbuffer uprender scale
+  u8* m_display_texture_buffer = nullptr;
   HostDisplayPixelFormat m_16bit_display_format = HostDisplayPixelFormat::RGB565;
   HostDisplayPixelFormat m_24bit_display_format = HostDisplayPixelFormat::RGBA8;
 

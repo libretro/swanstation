@@ -577,6 +577,7 @@ bool GPU::HandleCopyRectangleVRAMToCPUCommand()
 
   if (g_settings.debugging.dump_vram_to_cpu_copies)
   {
+    auto m_vram_ptr = GetVRAMshadowPtr();
     DumpVRAMToFile(StringUtil::StdStringFromFormat("vram_to_cpu_copy_%u.png", s_vram_to_cpu_dump_id++).c_str(),
                    m_vram_transfer.width, m_vram_transfer.height, sizeof(u16) * VRAM_WIDTH,
                    &m_vram_ptr[m_vram_transfer.y * VRAM_WIDTH + m_vram_transfer.x], true);

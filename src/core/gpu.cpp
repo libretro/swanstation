@@ -235,7 +235,7 @@ bool GPU::DoState(StateWrapper& sw, HostDisplayTexture** host_texture, bool upda
     else
     {
       ReadVRAM(0, 0, VRAM_WIDTH, VRAM_HEIGHT);
-      sw.DoBytes(m_vram_ptr, VRAM_WIDTH * VRAM_HEIGHT * sizeof(u16));
+      sw.DoBytes(GetVRAMshadowPtr(), VRAM_WIDTH * VRAM_HEIGHT * sizeof(u16));
     }
   }
 
@@ -973,6 +973,8 @@ u32 GPU::ReadGPUREAD()
   if (m_blitter_state != BlitterState::ReadingVRAM)
     return m_GPUREAD_latch;
 
+  auto m_vram_ptr = GetVRAMshadowPtr();
+
   // Read two pixels out of VRAM and combine them. Zero fill odd pixel counts.
   u32 value = 0;
   for (u32 i = 0; i < 2; i++)
@@ -1251,6 +1253,8 @@ void GPU::ReadVRAM(u32 x, u32 y, u32 width, u32 height) {}
 
 void GPU::FillVRAM(u32 x, u32 y, u32 width, u32 height, u32 color)
 {
+  auto m_vram_ptr = GetVRAMshadowPtr();
+
   const u16 color16 = VRAMRGBA8888ToRGBA5551(color);
   if ((x + width) <= VRAM_WIDTH && !IsInterlacedRenderingEnabled())
   {
@@ -1298,6 +1302,8 @@ void GPU::FillVRAM(u32 x, u32 y, u32 width, u32 height, u32 color)
 
 void GPU::UpdateVRAM(u32 x, u32 y, u32 width, u32 height, const void* data, bool set_mask, bool check_mask)
 {
+  auto m_vram_ptr = GetVRAMshadowPtr();
+
   // Fast path when the copy is not oversized.
   if ((x + width) <= VRAM_WIDTH && (y + height) <= VRAM_HEIGHT && !set_mask && !check_mask)
   {
@@ -1334,6 +1340,8 @@ void GPU::UpdateVRAM(u32 x, u32 y, u32 width, u32 height, const void* data, bool
 
 void GPU::CopyVRAM(u32 src_x, u32 src_y, u32 dst_x, u32 dst_y, u32 width, u32 height)
 {
+  auto m_vram_ptr = GetVRAMshadowPtr();
+
   // Break up oversized copies. This behavior has not been verified on console.
   if ((src_x + width) > VRAM_WIDTH || (dst_x + width) > VRAM_WIDTH)
   {
@@ -1478,11 +1486,11 @@ bool GPU::DumpVRAMToFile(const char* filename)
   const char* extension = std::strrchr(filename, '.');
   if (extension && StringUtil::Strcasecmp(extension, ".png") == 0)
   {
-    return DumpVRAMToFile(filename, VRAM_WIDTH, VRAM_HEIGHT, sizeof(u16) * VRAM_WIDTH, m_vram_ptr, true);
+    return DumpVRAMToFile(filename, VRAM_WIDTH, VRAM_HEIGHT, sizeof(u16) * VRAM_WIDTH, GetVRAMshadowPtr(), true);
   }
   else if (extension && StringUtil::Strcasecmp(extension, ".bin") == 0)
   {
-    return FileSystem::WriteBinaryFile(filename, m_vram_ptr, VRAM_WIDTH * VRAM_HEIGHT * sizeof(u16));
+    return FileSystem::WriteBinaryFile(filename, GetVRAMshadowPtr(), VRAM_WIDTH * VRAM_HEIGHT * sizeof(u16));
   }
   else
   {

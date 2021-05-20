@@ -33,7 +33,6 @@ ALWAYS_INLINE static bool ShouldUseUVLimits()
 
 GPU_HW::GPU_HW() : GPU()
 {
-  m_vram_ptr = m_vram_shadow.data();
 }
 
 GPU_HW::~GPU_HW()
@@ -1119,7 +1118,7 @@ void GPU_HW::UpdateSoftwareRenderer(bool copy_vram_from_hw)
   if (current_enabled == new_enabled)
     return;
 
-  m_vram_ptr = m_vram_shadow.data();
+  auto m_vram_ptr = GetVRAMshadowPtr();
 
   if (!new_enabled)
   {
@@ -1138,7 +1137,7 @@ void GPU_HW::UpdateSoftwareRenderer(bool copy_vram_from_hw)
   {
     FlushRender();
     ReadVRAM(0, 0, VRAM_WIDTH, VRAM_HEIGHT);
-    std::memcpy(sw_renderer->GetVRAM(), m_vram_ptr, sizeof(u16) * VRAM_WIDTH * VRAM_HEIGHT);
+    std::memcpy(sw_renderer->GetVRAMshadowPtr(), m_vram_ptr, sizeof(u16) * VRAM_WIDTH * VRAM_HEIGHT);
 
     // Sync the drawing area.
     GPUBackendSetDrawingAreaCommand* cmd = sw_renderer->NewSetDrawingAreaCommand();
@@ -1147,7 +1146,6 @@ void GPU_HW::UpdateSoftwareRenderer(bool copy_vram_from_hw)
   }
 
   m_sw_renderer = std::move(sw_renderer);
-  m_vram_ptr = m_sw_renderer->GetVRAM();
 }
 
 void GPU_HW::FillBackendCommandParameters(GPUBackendCommand* cmd) const

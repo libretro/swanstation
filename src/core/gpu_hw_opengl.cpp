@@ -261,7 +261,7 @@ void GPU_HW_OpenGL::UpdateSettings()
   if (framebuffer_changed)
   {
     RestoreGraphicsAPIState();
-    UpdateVRAM(0, 0, VRAM_WIDTH, VRAM_HEIGHT, m_vram_ptr, false, false);
+    UpdateVRAM(0, 0, VRAM_WIDTH, VRAM_HEIGHT, GetVRAMshadowPtr(), false, false);
     UpdateDepthBufferFromMaskBit();
     UpdateDisplay();
     ResetGraphicsAPIState();

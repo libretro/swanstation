@@ -40,6 +40,8 @@ public:
   void UpdateResolutionScale() override final;
   std::tuple<u32, u32> GetEffectiveDisplayResolution() override final;
 
+  u16* GetVRAMshadowPtr() override { return m_vram_shadow.data(); }
+
 protected:
   enum : u32
   {
