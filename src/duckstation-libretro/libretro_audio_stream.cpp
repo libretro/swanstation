@@ -15,9 +15,15 @@ void LibretroAudioStream::PauseDevice(bool paused) {}
 
 void LibretroAudioStream::CloseDevice() {}
 
-void LibretroAudioStream::FramesAvailable()
+void LibretroAudioStream::FramesAvailable() {}
+
+void LibretroAudioStream::BeginWrite(SampleType** buffer_ptr, u32* num_frames)
 {
-  const u32 num_frames = GetSamplesAvailable();
-  ReadFrames(m_output_buffer.data(), num_frames, false);
-  g_retro_audio_sample_batch_callback(m_output_buffer.data(), num_frames);
+	*buffer_ptr = m_output_buffer.data();
+	*num_frames = m_output_buffer.size() / m_channels;
+}
+
+void LibretroAudioStream::EndWrite(u32 num_frames)
+{
+	g_retro_audio_sample_batch_callback(m_output_buffer.data(), num_frames);
 }

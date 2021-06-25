@@ -9,6 +9,9 @@ public:
   LibretroAudioStream();
   ~LibretroAudioStream();
 
+  void BeginWrite(SampleType** buffer_ptr, u32* num_frames) override;
+  void EndWrite(u32 num_frames) override;
+
 protected:
   bool OpenDevice() override;
   void PauseDevice(bool paused) override;
@@ -16,6 +19,5 @@ protected:
   void FramesAvailable() override;
 
 private:
-  // TODO: Optimize this buffer away.
   std::vector<SampleType> m_output_buffer;
 };
