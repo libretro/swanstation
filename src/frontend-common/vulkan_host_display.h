@@ -16,7 +16,7 @@ class SwapChain;
 
 namespace FrontendCommon {
 
-class VulkanHostDisplay final : public HostDisplay
+class VulkanHostDisplay : public HostDisplay
 {
 public:
   VulkanHostDisplay();
@@ -97,7 +97,7 @@ protected:
                                 u32 target_width, u32 target_height);
 
   // Can be overridden by frontends.
-  VkRenderPass GetRenderPassForDisplay() const;
+  virtual VkRenderPass GetRenderPassForDisplay() const;
 
   bool CreateResources() override;
   void DestroyResources() override;

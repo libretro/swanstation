@@ -5,10 +5,7 @@ endif()
 add_subdirectory(common)
 add_subdirectory(core)
 add_subdirectory(scmversion)
-
-if(NOT BUILD_LIBRETRO_CORE)
-  add_subdirectory(frontend-common)
-endif()
+add_subdirectory(frontend-common)
 
 if(NOT BUILD_LIBRETRO_CORE AND NOT ANDROID)
   add_subdirectory(common-tests)

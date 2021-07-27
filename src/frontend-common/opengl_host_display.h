@@ -19,7 +19,7 @@
 
 namespace FrontendCommon {
 
-class OpenGLHostDisplay final : public HostDisplay
+class OpenGLHostDisplay : public HostDisplay
 {
 public:
   OpenGLHostDisplay();
