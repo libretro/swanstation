@@ -916,14 +916,22 @@ const char* Settings::GetControllerTypeDisplayName(ControllerType type)
   return s_controller_display_names[static_cast<int>(type)];
 }
 
-static std::array<const char*, 6> s_memory_card_type_names = {
-  {"None", "Shared", "PerGame", "PerGameTitle", "PerGameFileTitle", "NonPersistent"}};
-static std::array<const char*, 6> s_memory_card_type_display_names = {
+static std::array<const char*, 7> s_memory_card_type_names = {
+  {"None", "Shared", "PerGame", "PerGameTitle", "PerGameFileTitle", "NonPersistent", "Libretro"}};
+static std::array<const char*, 7> s_memory_card_type_display_names = {
   {TRANSLATABLE("MemoryCardType", "No Memory Card"), TRANSLATABLE("MemoryCardType", "Shared Between All Games"),
    TRANSLATABLE("MemoryCardType", "Separate Card Per Game (Game Code)"),
    TRANSLATABLE("MemoryCardType", "Separate Card Per Game (Game Title)"),
    TRANSLATABLE("MemoryCardType", "Separate Card Per Game (File Title)"),
-   TRANSLATABLE("MemoryCardType", "Non-Persistent Card (Do Not Save)")}};
+   TRANSLATABLE("MemoryCardType", "Non-Persistent Card (Do Not Save)"),
+   TRANSLATABLE("MemoryCardType", "Libretro SRM")
+}};
+
+// these need to be performed as static assert - if e set the std::array size according to MemoryCardType::Count then
+// it will just null-fill unspecified items and we could still have issues with the descriptions not matching the enum.
+// (todo: generally these enum-to-string things are better implemented as lambda switch statements)
+static_assert(s_memory_card_type_names.size()         == (intmax_t)MemoryCardType::Count);
+static_assert(s_memory_card_type_display_names.size() == (intmax_t)MemoryCardType::Count);
 
 std::optional<MemoryCardType> Settings::ParseMemoryCardTypeName(const char* str)
 {

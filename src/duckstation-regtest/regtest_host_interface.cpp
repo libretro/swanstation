@@ -200,7 +200,7 @@ void RegTestHostInterface::InitializeSettings()
   si.SetStringValue("GPU", "Renderer", Settings::GetRendererName(s_renderer_to_use));
   si.SetStringValue("Controller1", "Type", Settings::GetControllerTypeName(ControllerType::DigitalController));
   si.SetStringValue("Controller2", "Type", Settings::GetControllerTypeName(ControllerType::None));
-  si.SetStringValue("MemoryCards", "Card1Type", Settings::GetMemoryCardTypeName(MemoryCardType::NonPersistent));
+  si.SetStringValue("MemoryCards", "Card1Type", Settings::GetMemoryCardTypeName(MemoryCardType::Libretro));
   si.SetStringValue("MemoryCards", "Card2Type", Settings::GetMemoryCardTypeName(MemoryCardType::None));
   si.SetStringValue("ControllerPorts", "MultitapMode", Settings::GetMultitapModeName(MultitapMode::Disabled));
   si.SetStringValue("Logging", "LogLevel", Settings::GetLogLevelName(LOGLEVEL_DEV));

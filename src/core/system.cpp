@@ -1912,6 +1912,9 @@ static std::unique_ptr<MemoryCard> GetMemoryCardForSlot(u32 slot, MemoryCardType
     case MemoryCardType::NonPersistent:
       return MemoryCard::Create();
 
+    case MemoryCardType::Libretro:
+      return MemoryCard::Create();
+
     case MemoryCardType::None:
     default:
       return nullptr;
