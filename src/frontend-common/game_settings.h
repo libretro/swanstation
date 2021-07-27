@@ -17,6 +17,7 @@ enum class Trait : u32
   ForceInterlacing,
   DisableTrueColor,
   DisableUpscaling,
+  DisableAnalogModeForcing,
   DisableScaledDithering,
   DisableForceNTSCTimings,
   DisableWidescreen,

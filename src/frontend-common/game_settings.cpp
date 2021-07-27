@@ -25,6 +25,7 @@ std::array<std::pair<const char*, const char*>, static_cast<u32>(Trait::Count)> 
   {"ForceInterlacing", TRANSLATABLE("GameSettingsTrait", "Force Interlacing")},
   {"DisableTrueColor", TRANSLATABLE("GameSettingsTrait", "Disable True Color")},
   {"DisableUpscaling", TRANSLATABLE("GameSettingsTrait", "Disable Upscaling")},
+  {"DisableAnalogModeForcing", TRANSLATABLE("GameSettingsTrait", "Disable Analog Mode Forcing")},
   {"DisableScaledDithering", TRANSLATABLE("GameSettingsTrait", "Disable Scaled Dithering")},
   {"DisableForceNTSCTimings", TRANSLATABLE("GameSettingsTrait", "Disallow Forcing NTSC Timings")},
   {"DisableWidescreen", TRANSLATABLE("GameSettingsTrait", "Disable Widescreen")},
