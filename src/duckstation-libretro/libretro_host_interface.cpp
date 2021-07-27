@@ -333,10 +333,10 @@ void LibretroHostInterface::ApplyGameSettings()
 
 bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
 {
-  SystemBootParameters bp;
-  bp.filename = game->path;
-  bp.media_playlist_index = P_THIS->m_disk_control_info.initial_image_index;
-  bp.force_software_renderer = !m_hw_render_callback_valid;
+  auto bp = std::make_shared<SystemBootParameters>();
+  bp->filename = game->path;
+  bp->media_playlist_index = P_THIS->m_disk_control_info.initial_image_index;
+  bp->force_software_renderer = !m_hw_render_callback_valid;
 
   struct retro_input_descriptor desc[] = {
 #define JOYP(port)                                                                                                     \
@@ -368,7 +368,7 @@ bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
 
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, desc);
 
-  if (!BootSystem(bp))
+  if (!BootSystem(std::move(bp)))
     return false;
 
   if (g_settings.gpu_renderer != GPURenderer::Software)
