@@ -140,6 +140,7 @@ enum class MemoryCardType
   PerGameTitle,
   PerGameFileTitle,
   NonPersistent,
+  Libretro,
   Count
 };
 

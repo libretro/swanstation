@@ -117,7 +117,7 @@ bool LibretroHostInterface::Initialize()
   FixIncompatibleSettings(true);
   UpdateLogging();
 
-  m_last_aspect_ratio = Settings::GetDisplayAspectRatioValue(g_settings.display_aspect_ratio);
+  m_last_aspect_ratio = g_settings.GetDisplayAspectRatioValue();
   m_last_width = 320;
   m_last_height = 240;
   return true;
@@ -158,7 +158,7 @@ bool LibretroHostInterface::ConfirmMessage(const char* message)
 void LibretroHostInterface::GetGameInfo(const char* path, CDImage* image, std::string* code, std::string* title)
 {
   // Just use the filename for now... we don't have the game list. Unless we can pull this from the frontend somehow?
-  *title = System::GetTitleForPath(path);
+  *title = FileSystem::GetFileTitleFromPath(path);
   *code = System::GetGameCodeForImage(image, true);
 }
 
@@ -413,7 +413,7 @@ bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
       if (image_path.empty())
         return false;
 
-      const std::string_view image_label = System::GetTitleForPath(image_path.c_str());
+      const std::string_view image_label = FileSystem::GetFileTitleFromPath(image_path);
       if (image_label.empty())
         return false;
 
@@ -1660,7 +1660,7 @@ bool LibretroHostInterface::DiskControlReplaceImageIndex(unsigned index, const r
   if (CASE_COMPARE(extension, ".m3u") == 0)
     return false;
 
-  const std::string_view image_label = System::GetTitleForPath(info->path);
+  const std::string_view image_label = FileSystem::GetFileTitleFromPath(info->path);
   if (image_label.empty())
     return false;
 
