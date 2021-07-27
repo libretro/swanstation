@@ -517,7 +517,7 @@ size_t LibretroHostInterface::retro_get_memory_size(unsigned id)
   switch (id)
   {
     case RETRO_MEMORY_SYSTEM_RAM:
-      return Bus::RAM_SIZE;
+      return Bus::g_ram_size;
 
     case RETRO_MEMORY_SAVE_RAM: {
       const MemoryCardType type = g_settings.memory_card_types[0];
