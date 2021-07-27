@@ -247,7 +247,7 @@ if(APPLE)
   target_link_libraries(common PRIVATE "objc")
 endif()
 
-if(APPLE AND NOT BUILD_LIBRETRO_CORE)
+if(APPLE)
   target_sources(common PRIVATE
     gl/context_agl.mm
     gl/context_agl.h
