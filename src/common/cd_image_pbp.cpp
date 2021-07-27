@@ -887,6 +887,13 @@ std::string CDImagePBP::GetSubImageMetadata(u32 index, const std::string_view& t
     if (title && !title->empty())
       return StringUtil::StdStringFromFormat("%s (Disc %u)", title->c_str(), index + 1);
   }
+#if defined(LIBRETRO)
+  else if (type == "file_path")
+  {
+    if (!m_filename.empty())
+      return StringUtil::StdStringFromFormat("%s (Disc %u)", m_filename.c_str(), index + 1);
+  }
+#endif
 
   return CDImage::GetSubImageMetadata(index, type);
 }
