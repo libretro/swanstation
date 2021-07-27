@@ -2177,6 +2177,15 @@ std::string GetMediaSubImageTitle(u32 index)
   return cdi->GetSubImageMetadata(index, "title");
 }
 
+std::string GetMediaSubImagePath(u32 index)
+{
+  const CDImage* cdi = g_cdrom.GetMedia();
+  if (!cdi)
+    return {};
+
+  return cdi->GetSubImageMetadata(index, "file_path");
+}
+
 bool SwitchMediaSubImage(u32 index)
 {
   if (!g_cdrom.HasMedia())
