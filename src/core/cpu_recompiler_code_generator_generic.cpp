@@ -59,7 +59,7 @@ Value CodeGenerator::EmitLoadGuestMemory(const CodeBlockInstruction& cbi, const 
 
   Value result = m_register_cache.AllocateScratch(HostPointerSize);
 
-  const bool use_fastmem =
+  const bool use_fastmem = 0 &&
     (address_spec ? Bus::CanUseFastmemForAddress(*address_spec) : true) && !SpeculativeIsCacheIsolated();
   if (address_spec)
   {
@@ -132,7 +132,7 @@ void CodeGenerator::EmitStoreGuestMemory(const CodeBlockInstruction& cbi, const 
     }
   }
 
-  const bool use_fastmem =
+  const bool use_fastmem = 0 &&
     (address_spec ? Bus::CanUseFastmemForAddress(*address_spec) : true) && !SpeculativeIsCacheIsolated();
   if (address_spec)
   {
