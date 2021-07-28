@@ -16,7 +16,7 @@
 
 namespace FrontendCommon {
 
-class D3D11HostDisplay final : public HostDisplay
+class D3D11HostDisplay : public HostDisplay
 {
 public:
   template<typename T>
