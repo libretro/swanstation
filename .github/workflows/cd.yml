@@ -46,6 +46,10 @@ jobs:
     runs-on: macos-latest
 
     steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
       - run: cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_LIBRETRO_CORE=ON .
       - run: cmake --build . --parallel 2
 
@@ -75,6 +79,10 @@ jobs:
     runs-on: windows-latest
 
     steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
       - run: cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_LIBRETRO_CORE=ON .
       - run: cmake --build . --parallel 2 --config Release
 
