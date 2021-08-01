@@ -42,3 +42,61 @@ jobs:
           asset_name: swanstation-Linux-x86_64.zip
           asset_content_type: application/zip
 
+  build_osx:
+    runs-on: macos-latest
+
+    steps:
+      - run: cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_LIBRETRO_CORE=ON .
+      - run: cmake --build . --parallel 2
+
+      - name: ZIP Release
+        uses: papeloto/action-zip@v1
+        with:
+          files: swanstation_libretro.dylib
+          dest: swanstation_libretro.dylib.zip
+
+      - name: Get release
+        id: get_release
+        uses: bruceadams/get-release@v1.2.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
+          asset_path: swanstation_libretro.dylib.zip
+          asset_name: swanstation-OSX-x86_64.zip
+          asset_content_type: application/zip
+
+  build_windows:
+    runs-on: windows-latest
+
+    steps:
+      - run: cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_LIBRETRO_CORE=ON .
+      - run: cmake --build . --parallel 2 --config Release
+
+      - name: ZIP Release
+        uses: papeloto/action-zip@v1
+        with:
+          files: swanstation_libretro.dll
+          dest: swanstation_libretro.dll.zip
+
+      - name: Get release
+        id: get_release
+        uses: bruceadams/get-release@v1.2.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
+          asset_path: swanstation_libretro.dll.zip
+          asset_name: swanstation-Windows-x86_64.zip
+          asset_content_type: application/zip
+

@@ -40,5 +40,5 @@ jobs:
           submodules: true
       - uses: actions/setup-go@v2
       - run: cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_LIBRETRO_CORE=ON .
-      - run: cmake --build . --parallel 2
+      - run: cmake --build . --parallel 2 --config Release
 
