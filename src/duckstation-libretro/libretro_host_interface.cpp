@@ -588,7 +588,7 @@ void LibretroHostInterface::OnSystemDestroyed()
   HostInterface::OnSystemDestroyed();
 }
 
-static std::array<retro_core_option_definition, 64> s_option_definitions = {{
+static std::array<retro_core_option_definition, 65> s_option_definitions = {{
   {"duckstation_Console.Region",
    "Console Region",
    "Determines which region/hardware to emulate. Auto-Detect will use the region of the disc inserted.",
@@ -612,6 +612,12 @@ static std::array<retro_core_option_definition, 64> s_option_definitions = {{
    "Reads CD-ROM sectors ahead asynchronously, reducing the risk of frame time spikes.",
    {{"true", "Enabled"}, {"false", "Disabled"}},
    "true"},
+  {"duckstation_CDROM.LoadImagePatches",
+   "Apply Image Patches",
+   "Automatically applies patches to disc images when they are present in the same directory. Currently only PPF "
+   "patches are supported with this option. Requires the core to be restarted to apply.",
+   {{"true", "Enabled"}, {"false", "Disabled"}},
+   "false"},
   {"duckstation_CDROM.LoadImageToRAM",
    "Preload CD-ROM Image To RAM",
    "Loads the disc image to RAM before starting emulation. May reduce hitching if you are running off a network share, "
