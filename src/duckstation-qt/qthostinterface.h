@@ -51,6 +51,8 @@ public:
   bool Initialize() override;
   void Shutdown() override;
 
+  void RunLater(std::function<void()> func) override;
+
 public Q_SLOTS:
   void ReportError(const char* message) override;
   void ReportMessage(const char* message) override;
@@ -91,6 +93,7 @@ public:
   void setMainWindow(MainWindow* window);
   HostDisplay* createHostDisplay();
   void connectDisplaySignals(QtDisplayWidget* widget);
+  void reinstallTranslator();
 
   void populateLoadStateMenu(const char* game_code, QMenu* menu);
   void populateSaveStateMenu(const char* game_code, QMenu* menu);
@@ -147,6 +150,7 @@ Q_SIGNALS:
   void inputProfileLoaded();
   void mouseModeRequested(bool relative, bool hide_cursor);
   void achievementsLoaded(quint32 id, const QString& game_info_string, quint32 total, quint32 points);
+  void cheatEnabled(quint32 index, bool enabled);
 
 public Q_SLOTS:
   void setDefaultSettings();
@@ -220,7 +224,6 @@ protected:
   void ApplySettings(bool display_osd_messages) override;
 
   void SetMouseMode(bool relative, bool hide_cursor) override;
-  void RunLater(std::function<void()> func) override;
 
 private:
   enum : u32
@@ -285,6 +288,7 @@ private:
 
   QTimer* m_background_controller_polling_timer = nullptr;
   std::unique_ptr<QTimer> m_settings_save_timer;
+  std::vector<QTranslator*> m_translators;
 
   bool m_is_rendering_to_main = false;
   bool m_is_fullscreen = false;

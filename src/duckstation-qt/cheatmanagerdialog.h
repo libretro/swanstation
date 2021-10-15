@@ -31,6 +31,7 @@ private Q_SLOTS:
   void cheatListItemActivated(QTreeWidgetItem* item);
   void cheatListItemChanged(QTreeWidgetItem* item, int column);
   void activateCheat(u32 index);
+  void setCheatCheckState(u32 index, bool checked);
   void newCategoryClicked();
   void addCodeClicked();
   void editCodeClicked();
@@ -73,8 +74,10 @@ private:
   QTreeWidgetItem* createItemForCheatGroup(const QString& group_name) const;
   QStringList getCheatGroupNames() const;
   int getSelectedCheatIndex() const;
-  int getSelectedResultIndex() const;
-  int getSelectedWatchIndex() const;
+  int getSelectedResultIndexFirst() const;
+  int getSelectedResultIndexLast() const;
+  int getSelectedWatchIndexFirst() const;
+  int getSelectedWatchIndexLast() const;
 
   Ui::CheatManagerDialog m_ui;
 

@@ -75,8 +75,8 @@ public:
 
   virtual GPURenderer GetRendererType() const = 0;
 
-  virtual u16* GetVRAMshadowPtr() = 0;
 
+  virtual u16* GetVRAMshadowPtr() = 0;
 
   virtual bool Initialize(HostDisplay* host_display);
   virtual void Reset(bool clear_vram);
@@ -144,7 +144,14 @@ public:
   virtual void UpdateResolutionScale();
 
   /// Returns the effective display resolution of the GPU.
-  virtual std::tuple<u32, u32> GetEffectiveDisplayResolution();
+  virtual std::tuple<u32, u32> GetEffectiveDisplayResolution(bool scaled = true);
+
+  /// Returns the full display resolution of the GPU, including padding.
+  virtual std::tuple<u32, u32> GetFullDisplayResolution(bool scaled = true);
+
+  float ComputeHorizontalFrequency() const;
+  float ComputeVerticalFrequency() const;
+  float GetDisplayAspectRatio() const;
 
   // gpu_hw_d3d11.cpp
   static std::unique_ptr<GPU> CreateHardwareD3D11Renderer();
@@ -198,9 +205,6 @@ protected:
   void SoftReset();
 
   // Sets dots per scanline
-  float ComputeHorizontalFrequency() const;
-  float ComputeVerticalFrequency() const;
-  float GetDisplayAspectRatio() const;
   void UpdateCRTCConfig();
   void UpdateCRTCDisplayParameters();
 
