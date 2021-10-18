@@ -588,7 +588,7 @@ void LibretroHostInterface::OnSystemDestroyed()
   HostInterface::OnSystemDestroyed();
 }
 
-static std::array<retro_core_option_definition, 65> s_option_definitions = {{
+static std::array<retro_core_option_definition, 67> s_option_definitions = {{
   {"duckstation_Console.Region",
    "Console Region",
    "Determines which region/hardware to emulate. Auto-Detect will use the region of the disc inserted.",
@@ -828,6 +828,13 @@ static std::array<retro_core_option_definition, 65> s_option_definitions = {{
    "hidden.",
    {{"None", "None"}, {"Overscan", "Only Overscan Area"}, {"Borders", "All Borders"}},
    "Overscan"},
+  {"duckstation_Display.LinearFiltering",
+   "Linear Upscaling",
+   "Uses bilinear texture filtering when displaying the console's framebuffer to the screen. Disabling filtering will produce "
+   "a sharper, blockier/pixelated image. Enabling will smooth out the image. This option will be less noticable the higher "
+   "the resolution scale",
+   {{"true", "Enabled"}, {"false", "Disabled"}},
+   "true"},
   {"duckstation_GPU.DownsampleMode",
    "Downsampling",
    "Downsamples the rendered image prior to displaying it. Can improve overall image quality in mixed 2D/3D games, but "
@@ -1086,6 +1093,13 @@ static std::array<retro_core_option_definition, 65> s_option_definitions = {{
     {"9", "9 Frames"},
     {"10", "10 Frames"}},
    "0"},
+  {"duckstation_Console.Enable8MBRAM",
+   "Enable 8MB RAM (Dev Console)",
+   "Enabled an additional 6MB of RAM, usually present on dev consoles. Games have to use a "
+   "larger heap size for this additional RAM to be usable, and may break games which rely "
+   "on memory mirroring, so it should only be used with compatible mods",
+   {{"true", "Enabled"}, {"false", "Disabled"}},
+   "false"},
   {},
 }};
 
@@ -1099,6 +1113,7 @@ bool LibretroHostInterface::SetCoreOptions()
   }
 
   // use legacy options struct, which sucks. do we need to?
+  // Update this to V2 at some point.
   return false;
 }
 
