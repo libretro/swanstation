@@ -76,7 +76,6 @@ protected:
                             const std::string& game_title) override;
 
 private:
-  bool SetCoreOptions();
   bool HasCoreVariablesChanged();
   void InitInterfaces();
   void InitLogging();
