@@ -96,6 +96,51 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "Auto"
    },
    {
+      "duckstation_BIOS.PathNTSCJ",
+      "NTSC-J BIOS (Restart)",
+      NULL,
+      "Select which standard BIOS to use for NTSC-J",
+      NULL,
+      "console",
+      {
+         { "psxonpsp660.bin",   "POPS BIOS" },
+         { "scph5500.bin", "SCPH5500 BIOS" },
+         { "ps1_rom.bin", "PS3 BIOS" },
+         { NULL, NULL },
+      },
+      "psxonpsp660.bin"
+   },
+   {
+      "duckstation_BIOS.PathNTSCU",
+      "NTSC-U BIOS (Restart)",
+      NULL,
+      "Select which standard BIOS to use for NTSC-U",
+      NULL,
+      "console",
+      {
+         { "psxonpsp660.bin",   "POPS BIOS" },
+         { "scph5501.bin", "SCPH5501 BIOS" },
+         { "ps1_rom.bin", "PS3 BIOS" },
+         { NULL, NULL },
+      },
+      "psxonpsp660.bin"
+   },
+   {
+      "duckstation_BIOS.PathPAL",
+      "PAL BIOS (Restart)",
+      NULL,
+      "Select which standard BIOS to use for PAL",
+      NULL,
+      "console",
+      {
+         { "psxonpsp660.bin",   "POPS BIOS" },
+         { "scph5502.bin", "SCPH5502 BIOS" },
+         { "ps1_rom.bin", "PS3 BIOS" },
+         { NULL, NULL },
+      },
+      "psxonpsp660.bin"
+   },
+   {
       "duckstation_BIOS.PatchFastBoot",
       "Fast Boot",
       NULL,
@@ -1506,51 +1551,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { NULL, NULL },
       },
       "false"
-   },
-   {
-      "duckstation_BIOS.PathNTSCJ",
-      "NTSC-J BIOS (Restart)",
-      NULL,
-      "Select which standard BIOS to use for NTSC-J",
-      NULL,
-      "advanced",
-      {
-         { "psxonpsp660.bin",   "POPS BIOS" },
-         { "scph5500.bin", "SCPH5500 BIOS" },
-         { "ps1_rom.bin", "PS3 BIOS" },
-         { NULL, NULL },
-      },
-      "psxonpsp660.bin"
-   },
-   {
-      "duckstation_BIOS.PathNTSCU",
-      "NTSC-U BIOS (Restart)",
-      NULL,
-      "Select which standard BIOS to use for NTSC-U",
-      NULL,
-      "advanced",
-      {
-         { "psxonpsp660.bin",   "POPS BIOS" },
-         { "scph5501.bin", "SCPH5501 BIOS" },
-         { "ps1_rom.bin", "PS3 BIOS" },
-         { NULL, NULL },
-      },
-      "psxonpsp660.bin"
-   },
-   {
-      "duckstation_BIOS.PathPAL",
-      "PAL BIOS (Restart)",
-      NULL,
-      "Select which standard BIOS to use for PAL",
-      NULL,
-      "advanced",
-      {
-         { "psxonpsp660.bin",   "POPS BIOS" },
-         { "scph5502.bin", "SCPH5502 BIOS" },
-         { "ps1_rom.bin", "PS3 BIOS" },
-         { NULL, NULL },
-      },
-      "psxonpsp660.bin"
    },
    { NULL, NULL, NULL, NULL, NULL, NULL, {{0}}, NULL },
 };

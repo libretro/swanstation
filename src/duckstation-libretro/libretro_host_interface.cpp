@@ -43,6 +43,7 @@ static retro_log_callback s_libretro_log_callback = {};
 static bool s_libretro_log_callback_valid = false;
 static bool s_libretro_log_callback_registered = false;
 static bool libretro_supports_option_categories = false;
+static int show_multitap = -1;
 
 static void LibretroLogCallback(void* pUserParam, const char* channelName, const char* functionName, LOGLEVEL level,
                                 const char* message)
@@ -686,6 +687,38 @@ void LibretroHostInterface::LoadSettings(SettingsInterface& si)
   // Ensure we don't use the standalone memcard directory in shared mode.
   for (u32 i = 0; i < NUM_CONTROLLER_AND_CARD_PORTS; i++)
     g_settings.memory_card_paths[i] = GetSharedMemoryCardPath(i);
+
+  int show_multitap_prev = show_multitap;
+  if (g_settings.multitap_mode != MultitapMode::Disabled)
+    show_multitap = 1;
+  else
+    show_multitap = 0;
+	
+
+  if (show_multitap != show_multitap_prev)
+  {
+    unsigned i;
+    struct retro_core_option_display option_display;
+    char controller_multitap_options[8][49] = {
+        "duckstation_Controller3.Type",
+        "duckstation_Controller3.ForceAnalogOnReset",
+        "duckstation_Controller3.AnalogDPadInDigitalMode",
+        "duckstation_Controller3.AxisScale",
+        "duckstation_Controller4.Type",
+        "duckstation_Controller4.ForceAnalogOnReset",
+        "duckstation_Controller4.AnalogDPadInDigitalMode",
+        "duckstation_Controller4.AxisScale"
+    };
+
+    option_display.visible = show_multitap;
+
+    for (i = 0; i < 8; i++)
+    {
+        option_display.key = controller_multitap_options[i];
+        g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+    }
+  }
+
 }
 
 std::vector<std::string> LibretroHostInterface::GetSettingStringList(const char* section, const char* key)
