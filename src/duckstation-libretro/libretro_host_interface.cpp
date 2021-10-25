@@ -432,6 +432,58 @@ bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
     }
   }
 
+  switch (System::GetRegion())
+  {
+      case  ConsoleRegion::NTSC_J:
+      {
+         struct retro_core_option_display option_display;
+         option_display.visible = false;
+         option_display.key = "duckstation_BIOS.PathNTSCU";
+         g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+         option_display.key = "duckstation_BIOS.PathPAL";
+         g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+
+         break;
+      }
+
+      case  ConsoleRegion::NTSC_U:
+      {
+         struct retro_core_option_display option_display;
+         option_display.visible = false;
+         option_display.key = "duckstation_BIOS.PathNTSCJ";
+         g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+         option_display.key = "duckstation_BIOS.PathPAL";
+         g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+
+         break;
+      }
+
+      case  ConsoleRegion::PAL:
+      {
+         struct retro_core_option_display option_display;
+         option_display.visible = false;
+         option_display.key = "duckstation_BIOS.PathNTSCU";
+         g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+         option_display.key = "duckstation_BIOS.PathNTSCJ";
+         g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+
+         break;
+      }
+  }
+
+  struct retro_core_option_display option_display;
+  option_display.visible = false;
+  if (g_settings.gpu_renderer == GPURenderer::Software)
+  {
+      option_display.key = "duckstation_GPU.UseSoftwareRendererForReadbacks";
+      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  }
+  else
+  {
+      option_display.key = "duckstation_GPU.UseThread";
+      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  }
+
   return true;
 }
 

@@ -275,7 +275,7 @@ std::optional<std::vector<u8>> HostInterface::GetBIOSImage(ConsoleRegion region)
 
   if (bios_name.empty())
   {
-    // auto-detect
+     //auto-detect
     return FindBIOSImageInDirectory(region, bios_dir.c_str());
   }
 
@@ -284,10 +284,7 @@ std::optional<std::vector<u8>> HostInterface::GetBIOSImage(ConsoleRegion region)
     StringUtil::StdStringFromFormat("%s" FS_OSPATH_SEPARATOR_STR "%s", bios_dir.c_str(), bios_name.c_str()).c_str());
   if (!image.has_value())
   {
-    g_host_interface->ReportFormattedError(
-      g_host_interface->TranslateString("HostInterface", "Failed to load configured BIOS file '%s'"),
-      bios_name.c_str());
-    return std::nullopt;
+    return FindBIOSImageInDirectory(region, bios_dir.c_str());
   }
 
   BIOS::Hash found_hash = BIOS::GetHash(*image);
@@ -356,7 +353,7 @@ std::optional<std::vector<u8>> HostInterface::FindBIOSImageInDirectory(ConsoleRe
 
   if (!fallback_info)
   {
-    Log_WarningPrintf("Using unknown BIOS '%s'. This may crash.", fallback_path.c_str());
+    return std::nullopt;
   }
   else
   {
