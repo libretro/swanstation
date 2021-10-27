@@ -11,6 +11,7 @@
 #include "core/cheats.h"
 #include "core/digital_controller.h"
 #include "core/gpu.h"
+#include "core/negcon.h"
 #include "core/system.h"
 #include "core/pad.h"
 #include "libretro_audio_stream.h"
@@ -814,6 +815,10 @@ void LibretroHostInterface::UpdateControllers()
         UpdateControllersAnalogJoystick(i);
         break;
 
+      case ControllerType::NeGcon:
+        UpdateControllersNeGcon(i);
+        break;
+
       default:
         ReportFormattedError("Unhandled controller type '%s'.",
                              Settings::GetControllerTypeDisplayName(g_settings.controller_types[i]));
@@ -967,6 +972,50 @@ void LibretroHostInterface::UpdateControllersAnalogJoystick(u32 index)
     const int16_t state = g_retro_input_state_callback(index, RETRO_DEVICE_ANALOG, it.second.first, it.second.second);
     controller->SetAxisState(static_cast<s32>(it.first), std::clamp(static_cast<float>(state) / 32767.0f, -1.0f, 1.0f));
   }
+}
+
+void LibretroHostInterface::UpdateControllersNeGcon(u32 index)
+{
+  NeGcon* controller = static_cast<NeGcon*>(System::GetController(index));
+  DebugAssert(controller);
+
+  static constexpr std::array<std::pair<NeGcon::Button, u32>, 8> button_mapping = {
+    {{NeGcon::Button::Left, RETRO_DEVICE_ID_JOYPAD_LEFT},
+     {NeGcon::Button::Right, RETRO_DEVICE_ID_JOYPAD_RIGHT},
+     {NeGcon::Button::Up, RETRO_DEVICE_ID_JOYPAD_UP},
+     {NeGcon::Button::Down, RETRO_DEVICE_ID_JOYPAD_DOWN},
+     {NeGcon::Button::A, RETRO_DEVICE_ID_JOYPAD_A},
+     {NeGcon::Button::B, RETRO_DEVICE_ID_JOYPAD_X},
+     {NeGcon::Button::Start, RETRO_DEVICE_ID_JOYPAD_START},
+     {NeGcon::Button::R, RETRO_DEVICE_ID_JOYPAD_R}}};
+
+  static constexpr std::array<std::pair<NeGcon::Axis, std::pair<u32, u32>>, 4> axis_mapping = {
+    {{NeGcon::Axis::Steering, {RETRO_DEVICE_INDEX_ANALOG_LEFT, RETRO_DEVICE_ID_ANALOG_X}},
+     {NeGcon::Axis::I, {RETRO_DEVICE_INDEX_ANALOG_BUTTON, RETRO_DEVICE_ID_JOYPAD_B}},
+     {NeGcon::Axis::II, {RETRO_DEVICE_INDEX_ANALOG_BUTTON, RETRO_DEVICE_ID_JOYPAD_Y}},
+     {NeGcon::Axis::L, {RETRO_DEVICE_INDEX_ANALOG_BUTTON, RETRO_DEVICE_ID_JOYPAD_L}}}};
+
+  if (m_supports_input_bitmasks)
+  {
+    const u16 active = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_MASK);
+    for (const auto& it : button_mapping)
+      controller->SetButtonState(it.first, (active & (static_cast<u16>(1u) << it.second)) != 0u);
+  }
+  else
+  {
+    for (const auto& it : button_mapping)
+    {
+      const int16_t state = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, it.second);
+      controller->SetButtonState(it.first, state != 0);
+    }
+  }
+
+  for (const auto& it : axis_mapping)
+  {
+    const int16_t state = g_retro_input_state_callback(index, RETRO_DEVICE_ANALOG, it.second.first, it.second.second);
+    controller->SetAxisState(static_cast<s32>(it.first), std::clamp(static_cast<float>(state) / 32767.0f, -1.0f, 1.0f));
+  }
+
 }
 
 static std::optional<GPURenderer> RetroHwContextToRenderer(retro_hw_context_type type)
