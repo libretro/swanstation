@@ -842,6 +842,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "None",              NULL },
          { "DigitalController", "Digital Controller" },
          { "AnalogController",  "Analog Controller (DualShock)" },
+         { "AnalogJoystick",    "Analog Joystick" },
          { NULL, NULL },
       },
       "DigitalController"
@@ -900,6 +901,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "None",              NULL },
          { "DigitalController", "Digital Controller" },
          { "AnalogController",  "Analog Controller (DualShock)" },
+         { "AnalogJoystick",    "Analog Joystick" },
          { NULL, NULL },
       },
       "None"
