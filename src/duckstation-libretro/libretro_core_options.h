@@ -1074,6 +1074,250 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "1.00f"
    },
    {
+      "duckstation_Controller5.Type",
+      "Controller 5 Type",
+      NULL,
+      "Sets the type of controller for Slot 1.",
+      NULL,
+      "port",
+      {
+         { "None",              NULL },
+         { "DigitalController", "Digital Controller" },
+         { "AnalogController",  "Analog Controller (DualShock)" },
+         { "AnalogJoystick",    "Analog Joystick" },
+         { "NeGcon",            NULL },
+         { "PlayStationMouse",  "PlayStation Mouse" },
+         { NULL, NULL },
+      },
+      "None"
+   },
+   {
+      "duckstation_Controller5.ForceAnalogOnReset",
+      "Controller 5 Force Analog Mode on Reset",
+      NULL,
+      "Forces analog mode in Analog Controller (DualShock) at start/reset. May cause issues with some games. Only use "
+      "this option for games that support analog mode but do not automatically enable it themselves.",
+      NULL,
+      "port",
+      {
+         { "true",  "Enabled" },
+         { "false", "Disabled" },
+         { NULL, NULL },
+      },
+      "false"
+   },
+   {
+      "duckstation_Controller5.AnalogDPadInDigitalMode",
+      "Controller 5 Use Analog Sticks for D-Pad in Digital Mode",
+      NULL,
+      "Allows you to use the analog sticks to control the d-pad in digital mode, as well as the buttons.",
+      NULL,
+      "port",
+      {
+         { "true",  "Enabled" },
+         { "false", "Disabled" },
+         { NULL, NULL },
+      },
+      "false"
+   },
+   {
+      "duckstation_Controller5.AxisScale",
+      "Controller 5 Analog Axis Scale",
+      NULL,
+      "Sets the analog stick axis scaling factor.",
+      NULL,
+      "port",
+      {
+         { "1.00f", "1.00" },
+         { "1.40f", "1.40" },
+         { NULL, NULL },
+      },
+      "1.00f"
+   },
+   {
+      "duckstation_Controller6.Type",
+      "Controller 6 Type",
+      NULL,
+      "Sets the type of controller for Slot 6.",
+      NULL,
+      "port",
+      {
+         { "None",              NULL },
+         { "DigitalController", "Digital Controller" },
+         { "AnalogController",  "Analog Controller (DualShock)" },
+         { "AnalogJoystick",    "Analog Joystick" },
+         { "NeGcon",            NULL },
+         { "PlayStationMouse",  "PlayStation Mouse" },
+         { NULL, NULL },
+      },
+      "None"
+   },
+   {
+      "duckstation_Controller6.ForceAnalogOnReset",
+      "Controller 6 Force Analog Mode on Reset",
+      NULL,
+      "Forces analog mode in Analog Controller (DualShock) at start/reset. May cause issues with some games. Only use "
+      "this option for games that support analog mode but do not automatically enable it themselves.",
+      NULL,
+      "port",
+      {
+         { "true",  "Enabled" },
+         { "false", "Disabled" },
+         { NULL, NULL },
+      },
+      "false"
+   },
+   {
+      "duckstation_Controller6.AnalogDPadInDigitalMode",
+      "Controller 6 Use Analog Sticks for D-Pad in Digital Mode",
+      NULL,
+      "Allows you to use the analog sticks to control the d-pad in digital mode, as well as the buttons.",
+      NULL,
+      "port",
+      {
+         { "true",  "Enabled" },
+         { "false", "Disabled" },
+         { NULL, NULL },
+      },
+      "false"
+   },
+   {
+      "duckstation_Controller6.AxisScale",
+      "Controller 6 Analog Axis Scale",
+      NULL,
+      "Sets the analog stick axis scaling factor.",
+      NULL,
+      "port",
+      {
+         { "1.00f", "1.00" },
+         { "1.40f", "1.40" },
+         { NULL, NULL },
+      },
+      "1.00f"
+   },
+   {
+      "duckstation_Controller7.Type",
+      "Controller 7 Type",
+      NULL,
+      "Sets the type of controller for Slot 7.",
+      NULL,
+      "port",
+      {
+         { "None",              NULL },
+         { "DigitalController", "Digital Controller" },
+         { "AnalogController",  "Analog Controller (DualShock)" },
+         { "AnalogJoystick",    "Analog Joystick" },
+         { "NeGcon",            NULL },
+         { "PlayStationMouse",  "PlayStation Mouse" },
+         { NULL, NULL },
+      },
+      "None"
+   },
+   {
+      "duckstation_Controller7.ForceAnalogOnReset",
+      "Controller 7 Force Analog Mode on Reset",
+      NULL,
+      "Forces analog mode in Analog Controller (DualShock) at start/reset. May cause issues with some games. Only use "
+      "this option for games that support analog mode but do not automatically enable it themselves.",
+      NULL,
+      "port",
+      {
+         { "true",  "Enabled" },
+         { "false", "Disabled" },
+         { NULL, NULL },
+      },
+      "false"
+   },
+   {
+      "duckstation_Controller7.AnalogDPadInDigitalMode",
+      "Controller 7 Use Analog Sticks for D-Pad in Digital Mode",
+      NULL,
+      "Allows you to use the analog sticks to control the d-pad in digital mode, as well as the buttons.",
+      NULL,
+      "port",
+      {
+         { "true",  "Enabled" },
+         { "false", "Disabled" },
+         { NULL, NULL },
+      },
+      "false"
+   },
+   {
+      "duckstation_Controller7.AxisScale",
+      "Controller 7 Analog Axis Scale",
+      NULL,
+      "Sets the analog stick axis scaling factor.",
+      NULL,
+      "port",
+      {
+         { "1.00f", "1.00" },
+         { "1.40f", "1.40" },
+         { NULL, NULL },
+      },
+      "1.00f"
+   },
+   {
+      "duckstation_Controller8.Type",
+      "Controller 8 Type",
+      NULL,
+      "Sets the type of controller for Slot 8.",
+      NULL,
+      "port",
+      {
+         { "None",              NULL },
+         { "DigitalController", "Digital Controller" },
+         { "AnalogController",  "Analog Controller (DualShock)" },
+         { "AnalogJoystick",    "Analog Joystick" },
+         { "NeGcon",            NULL },
+         { "PlayStationMouse",  "PlayStation Mouse" },
+         { NULL, NULL },
+      },
+      "None"
+   },
+   {
+      "duckstation_Controller8.ForceAnalogOnReset",
+      "Controller 8 Force Analog Mode on Reset",
+      NULL,
+      "Forces analog mode in Analog Controller (DualShock) at start/reset. May cause issues with some games. Only use "
+      "this option for games that support analog mode but do not automatically enable it themselves.",
+      NULL,
+      "port",
+      {
+         { "true",  "Enabled" },
+         { "false", "Disabled" },
+         { NULL, NULL },
+      },
+      "false"
+   },
+   {
+      "duckstation_Controller8.AnalogDPadInDigitalMode",
+      "Controller 8 Use Analog Sticks for D-Pad in Digital Mode",
+      NULL,
+      "Allows you to use the analog sticks to control the d-pad in digital mode, as well as the buttons.",
+      NULL,
+      "port",
+      {
+         { "true",  "Enabled" },
+         { "false", "Disabled" },
+         { NULL, NULL },
+      },
+      "false"
+   },
+   {
+      "duckstation_Controller8.AxisScale",
+      "Controller 8 Analog Axis Scale",
+      NULL,
+      "Sets the analog stick axis scaling factor.",
+      NULL,
+      "port",
+      {
+         { "1.00f", "1.00" },
+         { "1.40f", "1.40" },
+         { NULL, NULL },
+      },
+      "1.00f"
+   },
+   {
       "duckstation_Display.ShowOSDMessages",
       "Display OSD Messages",
       NULL,

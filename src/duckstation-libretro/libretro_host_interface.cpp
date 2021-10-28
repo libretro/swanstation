@@ -692,11 +692,12 @@ void LibretroHostInterface::LoadSettings(SettingsInterface& si)
     g_settings.memory_card_paths[i] = GetSharedMemoryCardPath(i);
 
   int show_multitap_prev = show_multitap;
-  if (g_settings.multitap_mode != MultitapMode::Disabled)
-    show_multitap = 1;
-  else
+  if (g_settings.multitap_mode == MultitapMode::Disabled)
     show_multitap = 0;
-	
+  else if (g_settings.multitap_mode == MultitapMode::BothPorts)
+    show_multitap = 2;
+  else
+    show_multitap = 1;
 
   if (show_multitap != show_multitap_prev)
   {
@@ -712,12 +713,42 @@ void LibretroHostInterface::LoadSettings(SettingsInterface& si)
         "duckstation_Controller4.AnalogDPadInDigitalMode",
         "duckstation_Controller4.AxisScale"
     };
-
+	
     option_display.visible = show_multitap;
 
     for (i = 0; i < 8; i++)
     {
         option_display.key = controller_multitap_options[i];
+        g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+    }
+
+    char controller_double_multitap_options[16][49] = {
+        "duckstation_Controller5.Type",
+        "duckstation_Controller5.ForceAnalogOnReset",
+        "duckstation_Controller5.AnalogDPadInDigitalMode",
+        "duckstation_Controller5.AxisScale",
+        "duckstation_Controller6.Type",
+        "duckstation_Controller6.ForceAnalogOnReset",
+        "duckstation_Controller6.AnalogDPadInDigitalMode",
+        "duckstation_Controller6.AxisScale",
+        "duckstation_Controller7.Type",
+        "duckstation_Controller7.ForceAnalogOnReset",
+        "duckstation_Controller7.AnalogDPadInDigitalMode",
+        "duckstation_Controller7.AxisScale",
+        "duckstation_Controller8.Type",
+        "duckstation_Controller8.ForceAnalogOnReset",
+        "duckstation_Controller8.AnalogDPadInDigitalMode",
+        "duckstation_Controller8.AxisScale"
+    };
+
+    if (show_multitap == 2)
+        option_display.visible = true;
+    else
+        option_display.visible = false;
+
+    for (i = 0; i < 16; i++)
+    {
+        option_display.key = controller_double_multitap_options[i];
         g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
     }
   }
