@@ -14,6 +14,7 @@
 #include "core/negcon.h"
 #include "core/system.h"
 #include "core/pad.h"
+#include "core/playstation_mouse.h"
 #include "libretro_audio_stream.h"
 #include "libretro_game_settings.h"
 #include "libretro_host_display.h"
@@ -819,6 +820,10 @@ void LibretroHostInterface::UpdateControllers()
         UpdateControllersNeGcon(i);
         break;
 
+      case ControllerType::PlayStationMouse:
+        UpdateControllersPlayStationMouse(i);
+        break;
+
       default:
         ReportFormattedError("Unhandled controller type '%s'.",
                              Settings::GetControllerTypeDisplayName(g_settings.controller_types[i]));
@@ -1014,6 +1019,23 @@ void LibretroHostInterface::UpdateControllersNeGcon(u32 index)
   {
     const int16_t state = g_retro_input_state_callback(index, RETRO_DEVICE_ANALOG, it.second.first, it.second.second);
     controller->SetAxisState(static_cast<s32>(it.first), std::clamp(static_cast<float>(state) / 32767.0f, -1.0f, 1.0f));
+  }
+
+}
+
+void LibretroHostInterface::UpdateControllersPlayStationMouse(u32 index)
+{
+  PlayStationMouse* controller = static_cast<PlayStationMouse*>(System::GetController(index));
+  DebugAssert(controller);
+
+  static constexpr std::array<std::pair<PlayStationMouse::Button, u32>, 2> button_mapping = {
+    {{PlayStationMouse::Button::Left, RETRO_DEVICE_ID_MOUSE_LEFT},
+     {PlayStationMouse::Button::Right, RETRO_DEVICE_ID_MOUSE_RIGHT}}};
+
+  for (const auto& it : button_mapping)
+  {
+    const int16_t state = g_retro_input_state_callback(index, RETRO_DEVICE_MOUSE, 0, it.second);
+    controller->SetButtonState(it.first, state != 0);
   }
 
 }

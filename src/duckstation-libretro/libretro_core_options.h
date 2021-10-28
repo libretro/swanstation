@@ -844,6 +844,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "AnalogController",  "Analog Controller (DualShock)" },
          { "AnalogJoystick",    "Analog Joystick" },
          { "NeGcon",            NULL },
+         { "PlayStationMouse",  "PlayStation Mouse" },
          { NULL, NULL },
       },
       "DigitalController"
@@ -904,6 +905,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "AnalogController",  "Analog Controller (DualShock)" },
          { "AnalogJoystick",    "Analog Joystick" },
          { "NeGcon",            NULL },
+         { "PlayStationMouse",  "PlayStation Mouse" },
          { NULL, NULL },
       },
       "None"
@@ -962,7 +964,9 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "None",              NULL },
          { "DigitalController", "Digital Controller" },
          { "AnalogController",  "Analog Controller (DualShock)" },
-         { NULL, NULL },
+         { "AnalogJoystick",    "Analog Joystick" },
+         { "NeGcon",            NULL },
+         { "PlayStationMouse",  "PlayStation Mouse" },
       },
       "None"
    },
@@ -1020,7 +1024,9 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "None",              NULL },
          { "DigitalController", "Digital Controller" },
          { "AnalogController",  "Analog Controller (DualShock)" },
-         { NULL, NULL },
+         { "AnalogJoystick",    "Analog Joystick" },
+         { "NeGcon",            NULL },
+         { "PlayStationMouse",  "PlayStation Mouse" },
       },
       "None"
    },
