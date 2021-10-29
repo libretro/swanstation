@@ -771,7 +771,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "duckstation_MemoryCards.Card1Type",
       "Memory Card 1 Type",
       NULL,
-      "Sets the type of memory card for Slot 1.",
+      "Sets the type of memory card for Slot 1. Restart core when switching to Libretro from other formats",
       NULL,
       "port",
       {
