@@ -233,6 +233,9 @@ std::string LibretroHostInterface::GetStringSettingValue(const char* section, co
     return default_value;
 }
 
+void LibretroHostInterface::DisplayLoadingScreen(const char* message, int progress_min /*= -1*/,
+                                                int progress_max /*= -1*/, int progress_value /*= -1*/) {}
+
 void LibretroHostInterface::AddOSDMessage(std::string message, float duration /*= 2.0f*/)
 {
   if (!g_settings.display_show_osd_messages)
@@ -643,11 +646,15 @@ std::unique_ptr<AudioStream> LibretroHostInterface::CreateAudioStream(AudioBacke
 {
   return std::make_unique<LibretroAudioStream>();
 }
+void LibretroHostInterface::OnSystemCreated() {}
 
-void LibretroHostInterface::OnSystemDestroyed()
-{
-  HostInterface::OnSystemDestroyed();
-}
+void LibretroHostInterface::OnSystemPaused(bool paused) {}
+
+void LibretroHostInterface::OnSystemDestroyed() {}
+
+void LibretroHostInterface::OnControllerTypeChanged(u32 slot) {}
+
+void LibretroHostInterface::SetMouseMode(bool relative, bool hide_cursor) {}
 
 bool LibretroHostInterface::HasCoreVariablesChanged()
 {
@@ -824,6 +831,10 @@ void LibretroHostInterface::OnRunningGameChanged(const std::string& path, CDImag
   if (UpdateGameSettings())
     UpdateSettings();
 }
+
+void LibretroHostInterface::OnSystemPerformanceCountersUpdated() {}
+
+void LibretroHostInterface::OnDisplayInvalidated() {}
 
 void LibretroHostInterface::InitRumbleInterface()
 {

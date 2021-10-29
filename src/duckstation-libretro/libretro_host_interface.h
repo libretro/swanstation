@@ -40,6 +40,8 @@ public:
   void ReportMessage(const char* message) override;
   bool ConfirmMessage(const char* message) override;
   void AddOSDMessage(std::string message, float duration = 2.0f) override;
+  void DisplayLoadingScreen(const char* message, int progress_min = -1, int progress_max = -1,
+                            int progress_value = -1) override;
 
   void GetGameInfo(const char* path, CDImage* image, std::string* code, std::string* title) override;
   std::string GetSharedMemoryCardPath(u32 slot) const override;
@@ -51,6 +53,9 @@ public:
   std::unique_ptr<ByteStream> OpenPackageFile(const char* path, u32 flags) override;
 
   bool UpdateSystemAVInfo(bool use_resolution_scale);
+  
+  void OnSystemPerformanceCountersUpdated() override;
+  void OnDisplayInvalidated() override;
 
   // Called by frontend
   void retro_set_environment();
@@ -70,10 +75,15 @@ protected:
   bool AcquireHostDisplay() override;
   void ReleaseHostDisplay() override;
   std::unique_ptr<AudioStream> CreateAudioStream(AudioBackend backend) override;
+  void OnSystemCreated() override;
+  void OnSystemPaused(bool paused) override;
   void OnSystemDestroyed() override;
   void CheckForSettingsChanges(const Settings& old_settings) override;
   void OnRunningGameChanged(const std::string& path, CDImage* image, const std::string& game_code,
                             const std::string& game_title) override;
+  void OnControllerTypeChanged(u32 slot) override;
+
+  void SetMouseMode(bool relative, bool hide_cursor) override;
 
 private:
   bool HasCoreVariablesChanged();
