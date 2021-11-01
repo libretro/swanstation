@@ -61,6 +61,7 @@ public:
   void retro_set_environment();
   void retro_get_system_av_info(struct retro_system_av_info* info);
   bool retro_load_game(const struct retro_game_info* game);
+  void retro_set_controller_port_device(unsigned port, unsigned device);
   void retro_run_frame();
   unsigned retro_get_region();
   size_t retro_serialize_size();
