@@ -26,27 +26,35 @@ static ptrdiff_t getVRAMSizeInBytes(int scale)
 
 void GPU_SW_Backend::SetUprenderScale(int scale)
 {
-  switch (scale)
+  //const GPURenderer renderer = GetRendererType();
+  if (g_settings.gpu_renderer != GPURenderer::Software)
   {
-    case 1:  
-    case 2:  
-    case 4: 
-      // OK!
-    break;
+      scale = 1;
+  }
+  else
+  {
+     switch (scale)
+     {
+       case 1:  
+       case 2:  
+       case 4: 
+         // OK!
+       break;
 
-    case 3:
-      scale = 4;
-    break;
+       case 3:
+         scale = 4;
+       break;
 
-    default:
-      // if the input scale is invalid then default to either the current setting (if valid)
-      // or native res if vram memory is not initialized yet.
-      if (scale > 4)
-        scale = 4;
-      else if (!m_upram) 
-        scale = 1;
-      else
-        return;
+       default:
+         // if the input scale is invalid then default to either the current setting (if valid)
+         // or native res if vram memory is not initialized yet.
+         if (scale > 4)
+           scale = 4;
+         else if (!m_upram) 
+           scale = 1;
+         else
+           return;
+     }
   }
 
   // TODO: capture current VRAM and re-upload after resolution change.
