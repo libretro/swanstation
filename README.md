@@ -1,5 +1,5 @@
 # SwanStation - PlayStation 1, aka. PSX Emulator
-[Latest News](#latest-news) | [Features](#features) | [Disclaimers](#disclaimers)
+[Features](#features) | [Disclaimers](#disclaimers)
 
 **Latest Builds for Windows, MacOS and Linux** https://github.com/libretro/swanstation/releases
 
@@ -8,20 +8,6 @@
 SwanStation is a fork of DuckStation, which is an emulator of the Sony PlayStation(TM) console, focusing on playability, speed, and long-term maintainability. The goal is to be as accurate as possible while maintaining performance suitable for low-end devices. "Hack" options are discouraged, the default configuration should support all playable games with only some of the enhancements having compatibility issues.
 
 A "BIOS" ROM image is required to to start the emulator and to play games. You can use an image from any hardware version or region, although mismatching game regions and BIOS regions may have compatibility issues. A ROM image is not provided with the emulator for legal reasons, you should dump this from your own console using Caetla or other means.
-
-## Latest News
-Older entries are available at https://github.com/libretro/swanstation/blob/master/NEWS.md
-
-- 2021/07/25: Ability to boot games directly from CD-ROM added. You may want to reduce the readahead size to reduce hitches on seek/loading.
-- 2021/07/11: UWP/Xbox one port added. Follow the instructions in "Universal Windows Platform / Xbox One" below.
-- 2021/07/10: Direct3D 12 hardware renderer added. It does not support downsampling or postprocessing (was mainly intended for Xbox).
-- 2021/06/25: Ability to undelete files from memory card editor added.
-- 2021/06/22: Measured achievements for RetroAchievements added.
-- 2021/06/19: Leaderboards for RetroAchievements added.
-- 2021/06/01: Auto loading/applying of PPF patches added.
-- 2021/05/23: Save RAM (srm) support added to libretro core.
-- 2021/05/23: CD-ROM seek speedup enhancement added.
-- 2021/05/16: Auto fire (toggle pressing) buttons added.
 
 ## Features
 
@@ -40,7 +26,6 @@ SwanStation features include:
  - Direct booting of homebrew executables
  - Direct loading of Portable Sound Format (psf) files
  - Digital and analog controllers for input (rumble is forwarded to host)
- - Namco GunCon lightgun support (simulated with mouse)
  - NeGcon support
  - Emulated CPU overclocking
  - Multitap controllers (up to 8 devices)
