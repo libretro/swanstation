@@ -1,7 +1,5 @@
 # SwanStation - PlayStation 1, aka. PSX Emulator
-[Features](#features) | [Disclaimers](#disclaimers)
-
-**Latest Builds for Windows, MacOS and Linux** https://github.com/libretro/swanstation/releases
+[Features](#features) | [System Requirements](#system-requirements) | [Disclaimers](#disclaimers)
 
 **Game Compatibility List:** https://docs.google.com/spreadsheets/d/1H66MxViRjjE5f8hOl5RQmF5woS1murio2dsLn14kEqo/edit
 
