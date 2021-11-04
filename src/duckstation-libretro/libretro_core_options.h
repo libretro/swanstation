@@ -388,7 +388,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
 #ifdef WIN32
       "D3D11"
 #else
-      "OpenGL"
+      "Vulkan"
 #endif
    },
    {
