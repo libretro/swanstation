@@ -832,6 +832,24 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "Disabled"
    },
    {
+      "duckstation_Controller1.Type",
+      "Controller 1 Type",
+      NULL,
+      "Sets the type of controller for Slot 1.",
+      NULL,
+      "port",
+      {
+         { "None",              NULL },
+         { "DigitalController", "Digital Controller" },
+         { "AnalogController",  "Analog Controller (DualShock)" },
+         { "AnalogJoystick",    "Analog Joystick" },
+         { "NeGcon",            NULL },
+         { "PlayStationMouse",  "PlayStation Mouse" },
+         { NULL, NULL },
+      },
+      "DigitalController"
+   },
+   {
       "duckstation_Controller1.ForceAnalogOnReset",
       "Controller 1 Force Analog Mode on Reset",
       NULL,
@@ -873,6 +891,24 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { NULL, NULL },
       },
       "1.00f"
+   },
+   {
+      "duckstation_Controller2.Type",
+      "Controller 2 Type",
+      NULL,
+      "Sets the type of controller for Slot 2.",
+      NULL,
+      "port",
+      {
+         { "None",              NULL },
+         { "DigitalController", "Digital Controller" },
+         { "AnalogController",  "Analog Controller (DualShock)" },
+         { "AnalogJoystick",    "Analog Joystick" },
+         { "NeGcon",            NULL },
+         { "PlayStationMouse",  "PlayStation Mouse" },
+         { NULL, NULL },
+      },
+      "None"
    },
    {
       "duckstation_Controller2.ForceAnalogOnReset",
@@ -918,6 +954,23 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "1.00f"
    },
    {
+      "duckstation_Controller3.Type",
+      "Controller 3 Type",
+      NULL,
+      "Sets the type of controller for Slot 3.",
+      NULL,
+      "port",
+      {
+         { "None",              NULL },
+         { "DigitalController", "Digital Controller" },
+         { "AnalogController",  "Analog Controller (DualShock)" },
+         { "AnalogJoystick",    "Analog Joystick" },
+         { "NeGcon",            NULL },
+         { "PlayStationMouse",  "PlayStation Mouse" },
+      },
+      "None"
+   },
+   {
       "duckstation_Controller3.ForceAnalogOnReset",
       "Controller 3 Force Analog Mode on Reset",
       NULL,
@@ -959,6 +1012,23 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { NULL, NULL },
       },
       "1.00f"
+   },
+   {
+      "duckstation_Controller4.Type",
+      "Controller 4 Type",
+      NULL,
+      "Sets the type of controller for Slot 4.",
+      NULL,
+      "port",
+      {
+         { "None",              NULL },
+         { "DigitalController", "Digital Controller" },
+         { "AnalogController",  "Analog Controller (DualShock)" },
+         { "AnalogJoystick",    "Analog Joystick" },
+         { "NeGcon",            NULL },
+         { "PlayStationMouse",  "PlayStation Mouse" },
+      },
+      "None"
    },
    {
       "duckstation_Controller4.ForceAnalogOnReset",
@@ -1004,6 +1074,24 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "1.00f"
    },
    {
+      "duckstation_Controller5.Type",
+      "Controller 5 Type",
+      NULL,
+      "Sets the type of controller for Slot 1.",
+      NULL,
+      "port",
+      {
+         { "None",              NULL },
+         { "DigitalController", "Digital Controller" },
+         { "AnalogController",  "Analog Controller (DualShock)" },
+         { "AnalogJoystick",    "Analog Joystick" },
+         { "NeGcon",            NULL },
+         { "PlayStationMouse",  "PlayStation Mouse" },
+         { NULL, NULL },
+      },
+      "None"
+   },
+   {
       "duckstation_Controller5.ForceAnalogOnReset",
       "Controller 5 Force Analog Mode on Reset",
       NULL,
@@ -1045,6 +1133,24 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { NULL, NULL },
       },
       "1.00f"
+   },
+   {
+      "duckstation_Controller6.Type",
+      "Controller 6 Type",
+      NULL,
+      "Sets the type of controller for Slot 6.",
+      NULL,
+      "port",
+      {
+         { "None",              NULL },
+         { "DigitalController", "Digital Controller" },
+         { "AnalogController",  "Analog Controller (DualShock)" },
+         { "AnalogJoystick",    "Analog Joystick" },
+         { "NeGcon",            NULL },
+         { "PlayStationMouse",  "PlayStation Mouse" },
+         { NULL, NULL },
+      },
+      "None"
    },
    {
       "duckstation_Controller6.ForceAnalogOnReset",
@@ -1090,6 +1196,24 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "1.00f"
    },
    {
+      "duckstation_Controller7.Type",
+      "Controller 7 Type",
+      NULL,
+      "Sets the type of controller for Slot 7.",
+      NULL,
+      "port",
+      {
+         { "None",              NULL },
+         { "DigitalController", "Digital Controller" },
+         { "AnalogController",  "Analog Controller (DualShock)" },
+         { "AnalogJoystick",    "Analog Joystick" },
+         { "NeGcon",            NULL },
+         { "PlayStationMouse",  "PlayStation Mouse" },
+         { NULL, NULL },
+      },
+      "None"
+   },
+   {
       "duckstation_Controller7.ForceAnalogOnReset",
       "Controller 7 Force Analog Mode on Reset",
       NULL,
@@ -1131,6 +1255,24 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { NULL, NULL },
       },
       "1.00f"
+   },
+   {
+      "duckstation_Controller8.Type",
+      "Controller 8 Type",
+      NULL,
+      "Sets the type of controller for Slot 8.",
+      NULL,
+      "port",
+      {
+         { "None",              NULL },
+         { "DigitalController", "Digital Controller" },
+         { "AnalogController",  "Analog Controller (DualShock)" },
+         { "AnalogJoystick",    "Analog Joystick" },
+         { "NeGcon",            NULL },
+         { "PlayStationMouse",  "PlayStation Mouse" },
+         { NULL, NULL },
+      },
+      "None"
    },
    {
       "duckstation_Controller8.ForceAnalogOnReset",
