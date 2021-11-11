@@ -495,6 +495,7 @@ void HostInterface::SetDefaultSettings(SettingsInterface& si)
 
   si.SetStringValue("GPU", "Renderer", Settings::GetRendererName(Settings::DEFAULT_GPU_RENDERER));
   si.SetIntValue("GPU", "ResolutionScale", 1);
+  si.SetIntValue("GPU", "ResolutionSoftScale", 1);
   si.SetIntValue("GPU", "Multisamples", 1);
   si.SetBoolValue("GPU", "UseDebugDevice", false);
   si.SetBoolValue("GPU", "UseSoftwareRendererForReadbacks", false);
@@ -623,6 +624,7 @@ void HostInterface::FixIncompatibleSettings(bool display_osd_messages)
     g_settings.cpu_overclock_active = false;
     g_settings.enable_8mb_ram = false;
     g_settings.gpu_resolution_scale = 1;
+    g_settings.gpu_resolution_soft_scale = 1;
     g_settings.gpu_multisamples = 1;
     g_settings.gpu_per_sample_shading = false;
     g_settings.gpu_true_color = false;
@@ -776,6 +778,7 @@ void HostInterface::CheckForSettingsChanges(const Settings& old_settings)
     m_audio_stream->SetOutputVolume(GetAudioOutputVolume());
 
     if (g_settings.gpu_resolution_scale != old_settings.gpu_resolution_scale ||
+        g_settings.gpu_resolution_soft_scale != old_settings.gpu_resolution_soft_scale ||
         g_settings.gpu_multisamples != old_settings.gpu_multisamples ||
         g_settings.gpu_per_sample_shading != old_settings.gpu_per_sample_shading ||
         g_settings.gpu_use_thread != old_settings.gpu_use_thread ||
@@ -1097,10 +1100,13 @@ void HostInterface::ModifyResolutionScale(s32 increment)
 {
   const u32 new_resolution_scale = std::clamp<u32>(
     static_cast<u32>(static_cast<s32>(g_settings.gpu_resolution_scale) + increment), 1, GPU::MAX_RESOLUTION_SCALE);
-  if (new_resolution_scale == g_settings.gpu_resolution_scale)
+  const u32 new_resolution_soft_scale = std::clamp<u32>(
+    static_cast<u32>(static_cast<s32>(g_settings.gpu_resolution_soft_scale) + increment), 1, GPU::MAX_RESOLUTION_SCALE);
+  if (new_resolution_scale == g_settings.gpu_resolution_scale || new_resolution_soft_scale == g_settings.gpu_resolution_soft_scale)
     return;
 
   g_settings.gpu_resolution_scale = new_resolution_scale;
+  g_settings.gpu_resolution_soft_scale = new_resolution_soft_scale;
 
   if (!System::IsShutdown())
   {

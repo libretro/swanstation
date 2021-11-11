@@ -96,7 +96,7 @@ GPU_SW_Backend::~GPU_SW_Backend()
 
 bool GPU_SW_Backend::Initialize(bool force_thread)
 {
-  SetUprenderScale(g_settings.gpu_resolution_scale);
+  SetUprenderScale(g_settings.gpu_resolution_soft_scale);
   return GPUBackend::Initialize(force_thread);
 }
 
@@ -105,7 +105,7 @@ void GPU_SW_Backend::UpdateSettings()
   GPUBackend::UpdateSettings();   // invokes Sync()  [inheritance style coding caveat]
 
   // function internally shortcuts out if setting is up-to-date.
-  SetUprenderScale(g_settings.gpu_resolution_scale);
+  SetUprenderScale(g_settings.gpu_resolution_soft_scale);
 }
 
 void GPU_SW_Backend::Reset(bool clear_vram)

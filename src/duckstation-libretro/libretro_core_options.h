@@ -395,8 +395,8 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "duckstation_GPU.ResolutionScale",
       "Internal Resolution Scale",
       NULL,
-      "Scales internal VRAM resolution by the specified multiplier. Larger values are slower. Some games require "
-      "1x VRAM resolution or they will have rendering issues. Software render supports only 1x, 2x, 4x.",
+      "Scales internal VRAM resolution by the specified multiplier for the hardware renderer. Larger values are slower. "
+      " Some games require 1x VRAM resolution or they will have rendering issues.",
       NULL,
       "enhancement",
       {
@@ -416,6 +416,24 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "14", "14x" },
          { "15", "15x" },
          { "16", "16x" },
+         { NULL, NULL },
+      },
+      "1"
+   },
+   {
+      "duckstation_GPU.ResolutionSoftScale",
+      "Internal Resolution Scale (Software)",
+      NULL,
+      "Scales internal VRAM resolution by the specified multiplier for the software renderer. Larger values are slower. "
+      "Some games require 1x VRAM resolution or they will have rendering issues.",
+      NULL,
+      "enhancement",
+      {
+         { "1",  "1x" },
+#ifndef ANDROID
+         { "2",  "2x" },
+         { "4",  "4x" },
+#endif
          { NULL, NULL },
       },
       "1"

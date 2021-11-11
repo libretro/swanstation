@@ -484,10 +484,14 @@ bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
   {
       option_display.key = "duckstation_GPU.UseSoftwareRendererForReadbacks";
       g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+      option_display.key = "duckstation_GPU.ResolutionScale";
+      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
   }
   else
   {
       option_display.key = "duckstation_GPU.UseThread";
+      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+      option_display.key = "duckstation_GPU.ResolutionSoftScale";
       g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
   }
 
@@ -794,6 +798,7 @@ void LibretroHostInterface::UpdateSettings()
 
       // Don't let the base class mess with the GPU.
       old_settings.gpu_resolution_scale = g_settings.gpu_resolution_scale;
+      old_settings.gpu_resolution_soft_scale = g_settings.gpu_resolution_soft_scale;
     }
 
     if (g_settings.gpu_renderer != old_settings.gpu_renderer)

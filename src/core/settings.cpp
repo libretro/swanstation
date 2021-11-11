@@ -182,6 +182,7 @@ void Settings::Load(SettingsInterface& si)
                    .value_or(DEFAULT_GPU_RENDERER);
   gpu_adapter = si.GetStringValue("GPU", "Adapter", "");
   gpu_resolution_scale = static_cast<u32>(si.GetIntValue("GPU", "ResolutionScale", 1));
+  gpu_resolution_soft_scale = static_cast<u32>(si.GetIntValue("GPU", "ResolutionSoftScale", 1));
   gpu_multisamples = static_cast<u32>(si.GetIntValue("GPU", "Multisamples", 1));
   gpu_use_debug_device = si.GetBoolValue("GPU", "UseDebugDevice", false);
   gpu_per_sample_shading = si.GetBoolValue("GPU", "PerSampleShading", false);
@@ -373,6 +374,7 @@ void Settings::Save(SettingsInterface& si) const
   si.SetStringValue("GPU", "Renderer", GetRendererName(gpu_renderer));
   si.SetStringValue("GPU", "Adapter", gpu_adapter.c_str());
   si.SetIntValue("GPU", "ResolutionScale", static_cast<long>(gpu_resolution_scale));
+  si.SetIntValue("GPU", "ResolutionSoftScale", static_cast<long>(gpu_resolution_soft_scale));
   si.SetIntValue("GPU", "Multisamples", static_cast<long>(gpu_multisamples));
   si.SetBoolValue("GPU", "UseDebugDevice", gpu_use_debug_device);
   si.SetBoolValue("GPU", "PerSampleShading", gpu_per_sample_shading);
