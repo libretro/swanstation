@@ -486,6 +486,10 @@ bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
       g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
       option_display.key = "duckstation_GPU.ResolutionScale";
       g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+#ifdef ANDROID
+      option_display.key = "duckstation_GPU.ResolutionSoftScale";
+      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+#endif
   }
   else
   {
