@@ -35,6 +35,12 @@ Log_SetChannel(LibretroHostInterface);
 LibretroHostInterface g_libretro_host_interface;
 #define P_THIS (&g_libretro_host_interface)
 
+#define RETRO_DEVICE_PS_CONTROLLER RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_JOYPAD, 0)
+#define RETRO_DEVICE_PS_DUALSHOCK RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_ANALOG, 0)
+#define RETRO_DEVICE_PS_ANALOG_JOYSTICK RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_ANALOG, 1)
+#define RETRO_DEVICE_PS_NEGCON RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_ANALOG, 2)
+#define RETRO_DEVICE_PS_MOUSE RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_MOUSE, 0)
+
 retro_environment_t g_retro_environment_callback;
 retro_video_refresh_t g_retro_video_refresh_callback;
 retro_audio_sample_t g_retro_audio_sample_callback;
@@ -78,6 +84,30 @@ void LibretroHostInterface::retro_set_environment()
 {
   libretro_supports_option_categories = false;
   libretro_set_core_options(g_retro_environment_callback, &libretro_supports_option_categories);
+
+  static const struct retro_controller_description pads[] = {
+   	  { "Digital Controller (Gamepad)", RETRO_DEVICE_JOYPAD },
+   	  { "Analog Controller (DualShock)", RETRO_DEVICE_PS_DUALSHOCK },
+   	  { "Analog Joystick", RETRO_DEVICE_PS_ANALOG_JOYSTICK },
+   	  { "NeGcon", RETRO_DEVICE_PS_NEGCON },
+   	  { "PlayStation Mouse", RETRO_DEVICE_PS_MOUSE },
+      { NULL, 0 },
+  };
+
+  static const struct retro_controller_info ports[] = {
+   	  { pads, 5 },
+   	  { pads, 5 },
+   	  { pads, 5 },
+   	  { pads, 5 },
+   	  { pads, 5 },
+   	  { pads, 5 },
+   	  { pads, 5 },
+   	  { pads, 5 },
+      { NULL, 0 },
+  };
+
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CONTROLLER_INFO, (void *)ports);
+
   InitLogging();
 }
 
@@ -502,6 +532,50 @@ bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
   return true;
 }
 
+void LibretroHostInterface::retro_set_controller_port_device(unsigned port, unsigned device)
+{
+  if (port >= NUM_CONTROLLER_AND_CARD_PORTS)
+	return;
+
+  switch (device)
+  {
+    case RETRO_DEVICE_JOYPAD:
+    case RETRO_DEVICE_PS_CONTROLLER:
+      g_settings.controller_types[port] = ControllerType::DigitalController;
+      Log_InfoPrintf("Port %u = Digital Controller (Gamepad)", (port + 1));
+      break;
+
+    case RETRO_DEVICE_PS_DUALSHOCK:
+      g_settings.controller_types[port] = ControllerType::AnalogController;
+      Log_InfoPrintf("Port %u = Analog Controller (DualShock)", (port + 1));
+      break;
+
+    case RETRO_DEVICE_PS_ANALOG_JOYSTICK:
+      g_settings.controller_types[port] = ControllerType::AnalogJoystick;
+      Log_InfoPrintf("Port %u = Analog Joystick", (port + 1));
+      break;
+
+    case RETRO_DEVICE_PS_NEGCON:
+      g_settings.controller_types[port] = ControllerType::NeGcon;
+      Log_InfoPrintf("Port %u = NeGcon", (port + 1));
+      break;
+
+    case RETRO_DEVICE_PS_MOUSE:
+      g_settings.controller_types[port] = ControllerType::PlayStationMouse;
+      Log_InfoPrintf("Port %u = PlayStation Mouse", (port + 1));
+      break;
+
+    case RETRO_DEVICE_NONE:
+    default:
+      g_settings.controller_types[port] = ControllerType::None;
+      Log_InfoPrintf("Port %u = None", (port + 1));
+      break;
+  }
+  System::UpdateControllers();
+  System::ResetControllers();
+  System::UpdateControllerSettings();
+}
+
 void LibretroHostInterface::retro_run_frame()
 {
   Assert(!System::IsShutdown());
@@ -719,14 +793,14 @@ void LibretroHostInterface::LoadSettings(SettingsInterface& si)
     unsigned i;
     struct retro_core_option_display option_display;
     char controller_multitap_options[8][49] = {
-        "duckstation_Controller3.Type",
         "duckstation_Controller3.ForceAnalogOnReset",
         "duckstation_Controller3.AnalogDPadInDigitalMode",
         "duckstation_Controller3.AxisScale",
-        "duckstation_Controller4.Type",
+        "duckstation_Controller3.VibrationBias",
         "duckstation_Controller4.ForceAnalogOnReset",
         "duckstation_Controller4.AnalogDPadInDigitalMode",
-        "duckstation_Controller4.AxisScale"
+        "duckstation_Controller4.AxisScale",
+        "duckstation_Controller4.VibrationBias"
     };
 	
     option_display.visible = show_multitap;
@@ -738,22 +812,22 @@ void LibretroHostInterface::LoadSettings(SettingsInterface& si)
     }
 
     char controller_double_multitap_options[16][49] = {
-        "duckstation_Controller5.Type",
         "duckstation_Controller5.ForceAnalogOnReset",
         "duckstation_Controller5.AnalogDPadInDigitalMode",
         "duckstation_Controller5.AxisScale",
-        "duckstation_Controller6.Type",
+        "duckstation_Controller5.VibrationBias",
         "duckstation_Controller6.ForceAnalogOnReset",
         "duckstation_Controller6.AnalogDPadInDigitalMode",
         "duckstation_Controller6.AxisScale",
-        "duckstation_Controller7.Type",
+        "duckstation_Controller6.VibrationBias",
         "duckstation_Controller7.ForceAnalogOnReset",
         "duckstation_Controller7.AnalogDPadInDigitalMode",
         "duckstation_Controller7.AxisScale",
-        "duckstation_Controller8.Type",
+        "duckstation_Controller7.VibrationBias",
         "duckstation_Controller8.ForceAnalogOnReset",
         "duckstation_Controller8.AnalogDPadInDigitalMode",
-        "duckstation_Controller8.AxisScale"
+        "duckstation_Controller8.AxisScale",
+        "duckstation_Controller8.VibrationBias"
     };
 
     if (show_multitap == 2)
