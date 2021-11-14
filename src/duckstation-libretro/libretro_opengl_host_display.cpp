@@ -149,7 +149,9 @@ bool LibretroOpenGLHostDisplay::Render()
   const u32 display_width = static_cast<u32>(m_display_width) * resolution_scale;
   const u32 display_height = static_cast<u32>(m_display_height) * resolution_scale;
 
-  glEnable(GL_SCISSOR_TEST);
+  if (!m_is_gles)
+    glEnable(GL_SCISSOR_TEST);
+
   glScissor(0, 0, display_width, display_height);
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
