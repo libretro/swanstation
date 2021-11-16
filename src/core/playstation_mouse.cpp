@@ -10,12 +10,7 @@
 #include <array>
 Log_SetChannel(PlayStationMouse);
 
-PlayStationMouse::PlayStationMouse()
-{
-  // Comment this out to prevent core crash
-  //m_last_host_position_x = g_host_interface->GetDisplay()->GetMousePositionX();
-  //m_last_host_position_y = g_host_interface->GetDisplay()->GetMousePositionY();
-}
+PlayStationMouse::PlayStationMouse() = default;
 
 PlayStationMouse::~PlayStationMouse() = default;
 
