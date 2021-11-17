@@ -272,7 +272,7 @@ void Settings::Load(SettingsInterface& si)
   bios_patch_tty_enable = si.GetBoolValue("BIOS", "PatchTTYEnable", false);
   bios_patch_fast_boot = si.GetBoolValue("BIOS", "PatchFastBoot", DEFAULT_FAST_BOOT_VALUE);
 
-  controller_types[0] =
+  /* controller_types[0] =
     ParseControllerTypeName(
       si.GetStringValue("Controller1", "Type", GetControllerTypeName(DEFAULT_CONTROLLER_1_TYPE)).c_str())
       .value_or(DEFAULT_CONTROLLER_1_TYPE);
@@ -284,7 +284,7 @@ void Settings::Load(SettingsInterface& si)
                                                 GetControllerTypeName(DEFAULT_CONTROLLER_2_TYPE))
                                 .c_str())
         .value_or(DEFAULT_CONTROLLER_2_TYPE);
-  }
+  } */
 
   memory_card_types[0] =
     ParseMemoryCardTypeName(
