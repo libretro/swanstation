@@ -165,22 +165,6 @@ bool PlayStationMouse::Transfer(const u8 data_in, u8* data_out)
 void PlayStationMouse::UpdatePosition()
 {
   int player = 0;
-  // get screen coordinates, but not really for Libretro
-  const HostDisplay* display = g_host_interface->GetDisplay();
-  const s32 mouse_x = display->GetMousePositionX();
-  const s32 mouse_y = display->GetMousePositionY();
-  const s32 delta_x = mouse_x - m_last_host_position_x;
-  const s32 delta_y = mouse_y - m_last_host_position_y;
-  m_last_host_position_x = mouse_x;
-  m_last_host_position_y = mouse_y;
-
-  if (delta_x != 0 || delta_y != 0)
-    Log_DevPrintf("dx=%d, dy=%d", delta_x, delta_y);
-
-  // Let's source this directly from the frontend instead
-  //m_delta_x = static_cast<s8>(std::clamp<s32>(delta_x, std::numeric_limits<s8>::min(), std::numeric_limits<s8>::max()));
-  //m_delta_y = static_cast<s8>(std::clamp<s32>(delta_y, std::numeric_limits<s8>::min(), std::numeric_limits<s8>::max()));
-  
   for (player = 0; player < NUM_CONTROLLER_AND_CARD_PORTS; player++)
   {
     m_delta_x = g_retro_input_state_callback(player, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_X);
