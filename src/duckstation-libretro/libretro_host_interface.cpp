@@ -11,6 +11,7 @@
 #include "core/cheats.h"
 #include "core/digital_controller.h"
 #include "core/gpu.h"
+#include "core/namco_guncon.h"
 #include "core/negcon.h"
 #include "core/system.h"
 #include "core/pad.h"
@@ -39,6 +40,7 @@ LibretroHostInterface g_libretro_host_interface;
 #define RETRO_DEVICE_PS_DUALSHOCK RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_ANALOG, 0)
 #define RETRO_DEVICE_PS_ANALOG_JOYSTICK RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_ANALOG, 1)
 #define RETRO_DEVICE_PS_NEGCON RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_ANALOG, 2)
+#define RETRO_DEVICE_PS_GUNCON RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_LIGHTGUN, 0)
 #define RETRO_DEVICE_PS_MOUSE RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_MOUSE, 0)
 
 retro_environment_t g_retro_environment_callback;
@@ -90,19 +92,29 @@ void LibretroHostInterface::retro_set_environment()
    	  { "Analog Controller (DualShock)", RETRO_DEVICE_PS_DUALSHOCK },
    	  { "Analog Joystick", RETRO_DEVICE_PS_ANALOG_JOYSTICK },
    	  { "NeGcon", RETRO_DEVICE_PS_NEGCON },
+   	  { "Namco GunCon", RETRO_DEVICE_PS_GUNCON },
+   	  { "PlayStation Mouse", RETRO_DEVICE_PS_MOUSE },
+      { NULL, 0 },
+  };
+
+  static const struct retro_controller_description pads_mt[] = {
+   	  { "Digital Controller (Gamepad)", RETRO_DEVICE_JOYPAD },
+   	  { "Analog Controller (DualShock)", RETRO_DEVICE_PS_DUALSHOCK },
+   	  { "Analog Joystick", RETRO_DEVICE_PS_ANALOG_JOYSTICK },
+   	  { "NeGcon", RETRO_DEVICE_PS_NEGCON },
    	  { "PlayStation Mouse", RETRO_DEVICE_PS_MOUSE },
       { NULL, 0 },
   };
 
   static const struct retro_controller_info ports[] = {
-   	  { pads, 5 },
-   	  { pads, 5 },
-   	  { pads, 5 },
-   	  { pads, 5 },
-   	  { pads, 5 },
-   	  { pads, 5 },
-   	  { pads, 5 },
-   	  { pads, 5 },
+   	  { pads, 6 },
+   	  { pads, 6 },
+   	  { pads_mt, 6 },
+   	  { pads_mt, 6 },
+   	  { pads_mt, 6 },
+   	  { pads_mt, 6 },
+   	  { pads_mt, 6 },
+   	  { pads_mt, 6 },
       { NULL, 0 },
   };
 
@@ -560,6 +572,11 @@ void LibretroHostInterface::retro_set_controller_port_device(unsigned port, unsi
       Log_InfoPrintf("Port %u = NeGcon", (port + 1));
       break;
 
+    case RETRO_DEVICE_PS_GUNCON:
+      g_settings.controller_types[port] = ControllerType::NamcoGunCon;
+      Log_InfoPrintf("Port %u = Namco GunCon", (port + 1));
+      break;
+
     case RETRO_DEVICE_PS_MOUSE:
       g_settings.controller_types[port] = ControllerType::PlayStationMouse;
       Log_InfoPrintf("Port %u = PlayStation Mouse", (port + 1));
@@ -951,6 +968,10 @@ void LibretroHostInterface::UpdateControllers()
         UpdateControllersNeGcon(i);
         break;
 
+      case ControllerType::NamcoGunCon:
+        UpdateControllersNamcoGunCon(i);
+        break;
+
       case ControllerType::PlayStationMouse:
         UpdateControllersPlayStationMouse(i);
         break;
@@ -1150,6 +1171,25 @@ void LibretroHostInterface::UpdateControllersNeGcon(u32 index)
   {
     const int16_t state = g_retro_input_state_callback(index, RETRO_DEVICE_ANALOG, it.second.first, it.second.second);
     controller->SetAxisState(static_cast<s32>(it.first), std::clamp(static_cast<float>(state) / 32767.0f, -1.0f, 1.0f));
+  }
+
+}
+
+void LibretroHostInterface::UpdateControllersNamcoGunCon(u32 index)
+{
+  NamcoGunCon* controller = static_cast<NamcoGunCon*>(System::GetController(index));
+  DebugAssert(controller);
+
+  static constexpr std::array<std::pair<NamcoGunCon::Button, u32>, 4> button_mapping = {
+    {{NamcoGunCon::Button::Trigger, RETRO_DEVICE_ID_LIGHTGUN_TRIGGER},
+     {NamcoGunCon::Button::ShootOffscreen, RETRO_DEVICE_ID_LIGHTGUN_RELOAD},
+     {NamcoGunCon::Button::A, RETRO_DEVICE_ID_LIGHTGUN_AUX_A},
+     {NamcoGunCon::Button::B, RETRO_DEVICE_ID_LIGHTGUN_AUX_B}}};
+
+  for (const auto& it : button_mapping)
+  {
+    const int16_t state = g_retro_input_state_callback(index, RETRO_DEVICE_LIGHTGUN, 0, it.second);
+    controller->SetButtonState(it.first, state != 0);
   }
 
 }
