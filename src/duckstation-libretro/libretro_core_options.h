@@ -862,7 +862,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "false", "Disabled" },
          { NULL, NULL },
       },
-      "true"
+      "false"
    },
    {
       "duckstation_Controller1.AnalogDPadInDigitalMode",
@@ -1044,7 +1044,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "false", "Disabled" },
          { NULL, NULL },
       },
-      "true"
+      "false"
    },
    {
       "duckstation_Controller2.AnalogDPadInDigitalMode",
@@ -1226,7 +1226,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "false", "Disabled" },
          { NULL, NULL },
       },
-      "true"
+      "false"
    },
    {
       "duckstation_Controller3.AnalogDPadInDigitalMode",
@@ -1408,7 +1408,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "false", "Disabled" },
          { NULL, NULL },
       },
-      "true"
+      "false"
    },
    {
       "duckstation_Controller4.AnalogDPadInDigitalMode",
@@ -1590,7 +1590,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "false", "Disabled" },
          { NULL, NULL },
       },
-      "true"
+      "false"
    },
    {
       "duckstation_Controller5.AnalogDPadInDigitalMode",
@@ -1772,7 +1772,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "false", "Disabled" },
          { NULL, NULL },
       },
-      "true"
+      "false"
    },
    {
       "duckstation_Controller6.AnalogDPadInDigitalMode",
@@ -1954,7 +1954,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "false", "Disabled" },
          { NULL, NULL },
       },
-      "true"
+      "false"
    },
    {
       "duckstation_Controller7.AnalogDPadInDigitalMode",
@@ -2136,7 +2136,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "false", "Disabled" },
          { NULL, NULL },
       },
-      "true"
+      "false"
    },
    {
       "duckstation_Controller8.AnalogDPadInDigitalMode",
