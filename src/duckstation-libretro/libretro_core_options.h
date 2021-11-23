@@ -103,12 +103,12 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       NULL,
       "console",
       {
-         { "psxonpsp660.bin",   "POPS BIOS" },
          { "scph5500.bin", "SCPH5500 BIOS" },
+         { "psxonpsp660.bin",   "POPS BIOS" },
          { "ps1_rom.bin", "PS3 BIOS" },
          { NULL, NULL },
       },
-      "psxonpsp660.bin"
+      "scph5500.bin"
    },
    {
       "duckstation_BIOS.PathNTSCU",
@@ -118,12 +118,12 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       NULL,
       "console",
       {
-         { "psxonpsp660.bin",   "POPS BIOS" },
          { "scph5501.bin", "SCPH5501 BIOS" },
+         { "psxonpsp660.bin",   "POPS BIOS" },
          { "ps1_rom.bin", "PS3 BIOS" },
          { NULL, NULL },
       },
-      "psxonpsp660.bin"
+      "scph5501.bin"
    },
    {
       "duckstation_BIOS.PathPAL",
@@ -133,12 +133,12 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       NULL,
       "console",
       {
-         { "psxonpsp660.bin",   "POPS BIOS" },
          { "scph5502.bin", "SCPH5502 BIOS" },
+         { "psxonpsp660.bin",   "POPS BIOS" },
          { "ps1_rom.bin", "PS3 BIOS" },
          { NULL, NULL },
       },
-      "psxonpsp660.bin"
+      "scph5502.bin"
    },
    {
       "duckstation_BIOS.PatchFastBoot",
