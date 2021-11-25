@@ -623,10 +623,10 @@ void GPU::UpdateCRTCDisplayParameters()
 
       case DisplayCropMode::Borders:
       default:
-        cs.horizontal_visible_start = horizontal_display_start;
-        cs.horizontal_visible_end = horizontal_display_end;
-        cs.vertical_visible_start = vertical_display_start;
-        cs.vertical_visible_end = vertical_display_end;
+        cs.horizontal_visible_start = (horizontal_display_start + g_settings.display_active_start_offset);
+        cs.horizontal_visible_end = (horizontal_display_end + g_settings.display_active_end_offset);
+        cs.vertical_visible_start = (vertical_display_start + g_settings.display_line_start_offset);
+        cs.vertical_visible_end = (vertical_display_end + g_settings.display_line_end_offset);
         break;
     }
     cs.horizontal_visible_start =
@@ -660,10 +660,10 @@ void GPU::UpdateCRTCDisplayParameters()
 
       case DisplayCropMode::Borders:
       default:
-        cs.horizontal_visible_start = horizontal_display_start;
-        cs.horizontal_visible_end = horizontal_display_end;
-        cs.vertical_visible_start = vertical_display_start;
-        cs.vertical_visible_end = vertical_display_end;
+        cs.horizontal_visible_start = (horizontal_display_start + g_settings.display_active_start_offset);
+        cs.horizontal_visible_end = (horizontal_display_end + g_settings.display_active_end_offset);
+        cs.vertical_visible_start = (vertical_display_start + g_settings.display_line_start_offset);
+        cs.vertical_visible_end = (vertical_display_end + g_settings.display_line_end_offset);
         break;
     }
     cs.horizontal_visible_start =

@@ -737,7 +737,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "Borders",  "All Borders" },
          { NULL, NULL },
       },
-      "Overscan"
+      "Borders"
    },
    {
       "duckstation_Display.LinearFiltering",
