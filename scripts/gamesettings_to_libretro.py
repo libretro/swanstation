@@ -7,8 +7,6 @@ def parse_ini(path):
 
     entries = {}
     int_keys = {
-        "DisplayActiveStartOffset": "display_active_start_offset",
-        "DisplayActiveEndOffset": "display_active_end_offset",
         "DMAMaxSliceTicks": "dma_max_slice_ticks",
         "DMAHaltTicks": "dma_halt_ticks",
         "GPUFIFOSize" : "gpu_fifo_size",

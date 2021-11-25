@@ -391,13 +391,6 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SLUS-00208")
-  {
-    gs->display_active_start_offset = -62;
-    gs->display_active_end_offset = 72;
-    return gs;
-  }
-
   if (game_code == "SLPS-01762")
   {
     gs->AddTrait(GameSettings::Trait::DisablePGXPCulling);
@@ -413,20 +406,6 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
   if (game_code == "SLED-02439")
   {
     gs->AddTrait(GameSettings::Trait::DisablePGXPCulling);
-    return gs;
-  }
-
-  if (game_code == "SLPS-01567")
-  {
-    gs->display_active_start_offset = -62;
-    gs->display_active_end_offset = 51;
-    return gs;
-  }
-
-  if (game_code == "SLPS-00360")
-  {
-    gs->display_active_start_offset = -62;
-    gs->display_active_end_offset = 72;
     return gs;
   }
 
@@ -1093,85 +1072,6 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
   if (game_code == "SLUS-00912")
   {
     gs->AddTrait(GameSettings::Trait::ForceInterlacing);
-    return gs;
-  }
-
-  if (game_code == "SCES-00867")
-  {
-    gs->display_active_start_offset = -44;
-    return gs;
-  }
-
-  if (game_code == "SCES-10867")
-  {
-    gs->display_active_start_offset = -44;
-    return gs;
-  }
-
-  if (game_code == "SCES-20867")
-  {
-    gs->display_active_start_offset = -44;
-    return gs;
-  }
-
-  if (game_code == "SCES-00868")
-  {
-    gs->display_active_start_offset = -44;
-    return gs;
-  }
-
-  if (game_code == "SCES-10868")
-  {
-    gs->display_active_start_offset = -44;
-    return gs;
-  }
-
-  if (game_code == "SCES-20868")
-  {
-    gs->display_active_start_offset = -44;
-    return gs;
-  }
-
-  if (game_code == "SCES-00869")
-  {
-    gs->display_active_start_offset = -44;
-    return gs;
-  }
-
-  if (game_code == "SCES-10869")
-  {
-    gs->display_active_start_offset = -44;
-    return gs;
-  }
-
-  if (game_code == "SCES-20869")
-  {
-    gs->display_active_start_offset = -44;
-    return gs;
-  }
-
-  if (game_code == "SCES-00900")
-  {
-    gs->display_active_start_offset = -44;
-    return gs;
-  }
-
-  if (game_code == "SCES-10900")
-  {
-    gs->display_active_start_offset = -44;
-    return gs;
-  }
-
-  if (game_code == "SCES-20900")
-  {
-    gs->display_active_start_offset = -44;
-    return gs;
-  }
-
-  if (game_code == "SLUS-01222")
-  {
-    gs->display_active_start_offset = 64;
-    gs->display_active_end_offset = 68;
     return gs;
   }
 
