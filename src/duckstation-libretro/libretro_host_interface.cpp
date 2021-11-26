@@ -289,6 +289,10 @@ void LibretroHostInterface::AddOSDMessage(std::string message, float duration /*
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_MESSAGE, &msg);
 }
 
+void LibretroHostInterface::AddKeyedOSDMessage(std::string key, std::string message, float duration /* = 2.0f */) {}
+
+void LibretroHostInterface::RemoveKeyedOSDMessage(std::string key) {}
+
 void LibretroHostInterface::retro_get_system_av_info(struct retro_system_av_info* info)
 {
   const bool use_resolution_scale = (g_settings.gpu_renderer != GPURenderer::Software);
