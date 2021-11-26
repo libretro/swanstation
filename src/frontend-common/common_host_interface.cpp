@@ -1389,6 +1389,27 @@ void CommonHostInterface::AddOSDMessage(std::string message, float duration /*= 
   m_osd_posted_messages.push_back(std::move(msg));
 }
 
+void CommonHostInterface::AddKeyedOSDMessage(std::string key, std::string message, float duration /*= 2.0f*/)
+{
+  OSDMessage msg;
+  msg.key = std::move(key);
+  msg.text = std::move(message);
+  msg.duration = duration;
+
+  std::unique_lock<std::mutex> lock(m_osd_messages_lock);
+  m_osd_posted_messages.push_back(std::move(msg));
+}
+
+void CommonHostInterface::RemoveKeyedOSDMessage(std::string key)
+{
+  OSDMessage msg;
+  msg.key = std::move(key);
+  msg.duration = 0.0f;
+
+  std::unique_lock<std::mutex> lock(m_osd_messages_lock);
+  m_osd_posted_messages.push_back(std::move(msg));
+}
+
 void CommonHostInterface::ClearOSDMessages()
 {
   {
@@ -1425,7 +1446,23 @@ void CommonHostInterface::AcquirePendingOSDMessages()
         break;
 
       if (g_settings.display_show_osd_messages)
-        m_osd_active_messages.push_back(std::move(m_osd_posted_messages.front()));
+      {
+        OSDMessage& new_msg = m_osd_posted_messages.front();
+        std::deque<OSDMessage>::iterator iter;
+        if (!new_msg.key.empty() && (iter = std::find_if(m_osd_active_messages.begin(), m_osd_active_messages.end(),
+                                                         [&new_msg](const OSDMessage& other) {
+                                                           return new_msg.key == other.key;
+                                                         })) != m_osd_active_messages.end())
+        {
+          iter->text = std::move(new_msg.text);
+          iter->duration = new_msg.duration;
+          iter->time = new_msg.time;
+        }
+        else
+        {
+          m_osd_active_messages.push_back(std::move(new_msg));
+        }
+      }
 
       m_osd_posted_messages.pop_front();
 
@@ -1546,15 +1583,16 @@ void CommonHostInterface::DoToggleCheats()
   CheatList* cl = System::GetCheatList();
   if (!cl)
   {
-    AddOSDMessage(TranslateStdString("OSDMessage", "No cheats are loaded."), 10.0f);
+    AddKeyedOSDMessage("ToggleCheats", TranslateStdString("OSDMessage", "No cheats are loaded."), 10.0f);
     return;
   }
 
   cl->SetMasterEnable(!cl->GetMasterEnable());
-  AddOSDMessage(cl->GetMasterEnable() ?
-                  TranslateStdString("OSDMessage", "%n cheats are now active.", "", cl->GetEnabledCodeCount()) :
-                  TranslateStdString("OSDMessage", "%n cheats are now inactive.", "", cl->GetEnabledCodeCount()),
-                10.0f);
+  AddKeyedOSDMessage("ToggleCheats",
+                     cl->GetMasterEnable() ?
+                       TranslateStdString("OSDMessage", "%n cheats are now active.", "", cl->GetEnabledCodeCount()) :
+                       TranslateStdString("OSDMessage", "%n cheats are now inactive.", "", cl->GetEnabledCodeCount()),
+                     10.0f);
 }
 
 std::optional<CommonHostInterface::HostKeyCode>
@@ -2196,16 +2234,17 @@ void CommonHostInterface::SetRewindState(bool enabled)
     if (!g_settings.rewind_enable)
     {
       if (enabled)
-        AddOSDMessage(TranslateStdString("OSDMessage", "Rewinding is not enabled."), 5.0f);
+        AddKeyedOSDMessage("SetRewindState", TranslateStdString("OSDMessage", "Rewinding is not enabled."), 5.0f);
 
       return;
     }
 
     if (!m_fullscreen_ui_enabled)
     {
-      AddOSDMessage(enabled ? TranslateStdString("OSDMessage", "Rewinding...") :
-                              TranslateStdString("OSDMessage", "Stopped rewinding."),
-                    5.0f);
+      AddKeyedOSDMessage("SetRewindState",
+                         enabled ? TranslateStdString("OSDMessage", "Rewinding...") :
+                                   TranslateStdString("OSDMessage", "Stopped rewinding."),
+                         5.0f);
     }
 
     System::SetRewinding(enabled);
@@ -2409,17 +2448,54 @@ void CommonHostInterface::RegisterSystemHotkeys()
           const u32 percent = g_settings.GetCPUOverclockPercent();
           const double clock_speed =
             ((static_cast<double>(System::MASTER_CLOCK) * static_cast<double>(percent)) / 100.0) / 1000000.0;
-          AddFormattedOSDMessage(5.0f,
-                                 TranslateString("OSDMessage", "CPU clock speed control enabled (%u%% / %.3f MHz)."),
-                                 percent, clock_speed);
+          AddKeyedFormattedOSDMessage(
+            "ToggleOverclocking", 5.0f,
+            TranslateString("OSDMessage", "CPU clock speed control enabled (%u%% / %.3f MHz)."), percent, clock_speed);
         }
         else
         {
-          AddFormattedOSDMessage(5.0f, TranslateString("OSDMessage", "CPU clock speed control disabled (%.3f MHz)."),
-                                 static_cast<double>(System::MASTER_CLOCK) / 1000000.0);
+          AddKeyedFormattedOSDMessage("ToggleOverclocking", 5.0f,
+                                      TranslateString("OSDMessage", "CPU clock speed control disabled (%.3f MHz)."),
+                                      static_cast<double>(System::MASTER_CLOCK) / 1000000.0);
         }
       }
     });
+
+  RegisterHotkey(StaticString(TRANSLATABLE("Hotkeys", "System")), StaticString("IncreaseEmulationSpeed"),
+                 StaticString(TRANSLATABLE("Hotkeys", "Increase Emulation Speed")), [this](bool pressed) {
+                   if (pressed && System::IsValid())
+                   {
+                     g_settings.emulation_speed += 0.1f;
+                     UpdateSpeedLimiterState();
+                     AddKeyedFormattedOSDMessage("EmulationSpeedChange", 5.0f,
+                                                 TranslateString("OSDMessage", "Emulation speed set to %u%%."),
+                                                 static_cast<u32>(std::lround(g_settings.emulation_speed * 100.0f)));
+                   }
+                 });
+
+  RegisterHotkey(StaticString(TRANSLATABLE("Hotkeys", "System")), StaticString("DecreaseEmulationSpeed"),
+                 StaticString(TRANSLATABLE("Hotkeys", "Decrease Emulation Speed")), [this](bool pressed) {
+                   if (pressed && System::IsValid())
+                   {
+                     g_settings.emulation_speed = std::max(g_settings.emulation_speed - 0.1f, 0.1f);
+                     UpdateSpeedLimiterState();
+                     AddKeyedFormattedOSDMessage("EmulationSpeedChange", 5.0f,
+                                                 TranslateString("OSDMessage", "Emulation speed set to %u%%."),
+                                                 static_cast<u32>(std::lround(g_settings.emulation_speed * 100.0f)));
+                   }
+                 });
+
+  RegisterHotkey(StaticString(TRANSLATABLE("Hotkeys", "System")), StaticString("ResetEmulationSpeed"),
+                 StaticString(TRANSLATABLE("Hotkeys", "Reset Emulation Speed")), [this](bool pressed) {
+                   if (pressed && System::IsValid())
+                   {
+                     g_settings.emulation_speed = GetFloatSettingValue("Main", "EmulationSpeed", 1.0f);
+                     UpdateSpeedLimiterState();
+                     AddKeyedFormattedOSDMessage("EmulationSpeedChange", 5.0f,
+                                                 TranslateString("OSDMessage", "Emulation speed set to %u%%."),
+                                                 static_cast<u32>(std::lround(g_settings.emulation_speed * 100.0f)));
+                   }
+                 });
 }
 
 void CommonHostInterface::RegisterGraphicsHotkeys()
@@ -2439,10 +2515,11 @@ void CommonHostInterface::RegisterGraphicsHotkeys()
                      g_gpu->UpdateSettings();
                      g_gpu->ResetGraphicsAPIState();
                      System::ClearMemorySaveStates();
-                     AddOSDMessage(g_settings.gpu_pgxp_enable ?
-                                     TranslateStdString("OSDMessage", "PGXP is now enabled.") :
-                                     TranslateStdString("OSDMessage", "PGXP is now disabled."),
-                                   5.0f);
+                     AddKeyedOSDMessage("TogglePGXP",
+                                        g_settings.gpu_pgxp_enable ?
+                                          TranslateStdString("OSDMessage", "PGXP is now enabled.") :
+                                          TranslateStdString("OSDMessage", "PGXP is now disabled."),
+                                        5.0f);
 
                      if (g_settings.gpu_pgxp_enable)
                        PGXP::Initialize();
@@ -2483,7 +2560,8 @@ void CommonHostInterface::RegisterGraphicsHotkeys()
                  StaticString(TRANSLATABLE("Hotkeys", "Reload Texture Replacements")), [this](bool pressed) {
                    if (pressed && System::IsValid())
                    {
-                     AddOSDMessage(TranslateStdString("OSDMessage", "Texture replacements reloaded."), 10.0f);
+                     AddKeyedOSDMessage("ReloadTextureReplacements",
+                                        TranslateStdString("OSDMessage", "Texture replacements reloaded."), 10.0f);
                      g_texture_replacements.Reload();
                    }
                  });
@@ -2508,10 +2586,11 @@ void CommonHostInterface::RegisterGraphicsHotkeys()
                      g_gpu->UpdateSettings();
                      g_gpu->ResetGraphicsAPIState();
                      System::ClearMemorySaveStates();
-                     AddOSDMessage(g_settings.gpu_pgxp_depth_buffer ?
-                                     TranslateStdString("OSDMessage", "PGXP Depth Buffer is now enabled.") :
-                                     TranslateStdString("OSDMessage", "PGXP Depth Buffer is now disabled."),
-                                   5.0f);
+                     AddKeyedOSDMessage("TogglePGXPDepth",
+                                        g_settings.gpu_pgxp_depth_buffer ?
+                                          TranslateStdString("OSDMessage", "PGXP Depth Buffer is now enabled.") :
+                                          TranslateStdString("OSDMessage", "PGXP Depth Buffer is now disabled."),
+                                        5.0f);
                    }
                  });
 
@@ -2671,9 +2750,15 @@ void CommonHostInterface::RegisterAudioHotkeys()
                      const s32 volume = GetAudioOutputVolume();
                      m_audio_stream->SetOutputVolume(volume);
                      if (g_settings.audio_output_muted)
-                       AddOSDMessage(TranslateStdString("OSDMessage", "Volume: Muted"), 2.0f);
+                     {
+                       AddKeyedOSDMessage("AudioControlHotkey", TranslateStdString("OSDMessage", "Volume: Muted"),
+                                          2.0f);
+                     }
                      else
-                       AddFormattedOSDMessage(2.0f, TranslateString("OSDMessage", "Volume: %d%%"), volume);
+                     {
+                       AddKeyedFormattedOSDMessage("AudioControlHotkey", 2.0f,
+                                                   TranslateString("OSDMessage", "Volume: %d%%"), volume);
+                     }
                    }
                  });
   RegisterHotkey(StaticString(TRANSLATABLE("Hotkeys", "Audio")), StaticString("AudioCDAudioMute"),
@@ -2681,10 +2766,11 @@ void CommonHostInterface::RegisterAudioHotkeys()
                    if (pressed && System::IsValid())
                    {
                      g_settings.cdrom_mute_cd_audio = !g_settings.cdrom_mute_cd_audio;
-                     AddOSDMessage(g_settings.cdrom_mute_cd_audio ?
-                                     TranslateStdString("OSDMessage", "CD Audio Muted.") :
-                                     TranslateStdString("OSDMessage", "CD Audio Unmuted."),
-                                   2.0f);
+                     AddKeyedOSDMessage("AudioControlHotkey",
+                                        g_settings.cdrom_mute_cd_audio ?
+                                          TranslateStdString("OSDMessage", "CD Audio Muted.") :
+                                          TranslateStdString("OSDMessage", "CD Audio Unmuted."),
+                                        2.0f);
                    }
                  });
   RegisterHotkey(StaticString(TRANSLATABLE("Hotkeys", "Audio")), StaticString("AudioVolumeUp"),
@@ -2697,7 +2783,8 @@ void CommonHostInterface::RegisterAudioHotkeys()
                      g_settings.audio_output_volume = volume;
                      g_settings.audio_fast_forward_volume = volume;
                      m_audio_stream->SetOutputVolume(volume);
-                     AddFormattedOSDMessage(2.0f, TranslateString("OSDMessage", "Volume: %d%%"), volume);
+                     AddKeyedFormattedOSDMessage("AudioControlHotkey", 2.0f,
+                                                 TranslateString("OSDMessage", "Volume: %d%%"), volume);
                    }
                  });
   RegisterHotkey(StaticString(TRANSLATABLE("Hotkeys", "Audio")), StaticString("AudioVolumeDown"),
@@ -2710,7 +2797,8 @@ void CommonHostInterface::RegisterAudioHotkeys()
                      g_settings.audio_output_volume = volume;
                      g_settings.audio_fast_forward_volume = volume;
                      m_audio_stream->SetOutputVolume(volume);
-                     AddFormattedOSDMessage(2.0f, TranslateString("OSDMessage", "Volume: %d%%"), volume);
+                     AddKeyedFormattedOSDMessage("AudioControlHotkey", 2.0f,
+                                                 TranslateString("OSDMessage", "Volume: %d%%"), volume);
                    }
                  });
 }
