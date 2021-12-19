@@ -1173,7 +1173,16 @@ void LibretroHostInterface::UpdateControllersNeGcon(u32 index)
 
   for (const auto& it : axis_mapping)
   {
-    const int16_t state = g_retro_input_state_callback(index, RETRO_DEVICE_ANALOG, it.second.first, it.second.second);
+    int16_t state = g_retro_input_state_callback(index, RETRO_DEVICE_ANALOG, it.second.first, it.second.second);
+    if (state == 0 && it.second.second == RETRO_DEVICE_ID_JOYPAD_B)
+    {
+        state = g_retro_input_state_callback(index, RETRO_DEVICE_ANALOG, it.second.first, RETRO_DEVICE_ID_JOYPAD_R2);
+    }
+    else if (state == 0 && it.second.second == RETRO_DEVICE_ID_JOYPAD_Y)
+    {
+        state = g_retro_input_state_callback(index, RETRO_DEVICE_ANALOG, it.second.first, RETRO_DEVICE_ID_JOYPAD_L2);
+    }
+
     controller->SetAxisState(static_cast<s32>(it.first), std::clamp(static_cast<float>(state) / 32767.0f, -1.0f, 1.0f));
   }
 
