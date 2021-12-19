@@ -288,12 +288,14 @@ void NamcoGunCon::LoadSettings(const char* section)
     }
   }
 
+#ifndef LIBRETRO
 #ifndef __ANDROID__
   if (!m_crosshair_image.IsValid())
   {
     m_crosshair_image.SetPixels(Resources::CROSSHAIR_IMAGE_WIDTH, Resources::CROSSHAIR_IMAGE_HEIGHT,
                                 Resources::CROSSHAIR_IMAGE_DATA.data());
   }
+#endif
 #endif
 
   m_crosshair_image_scale = g_host_interface->GetFloatSettingValue(section, "CrosshairScale", 1.0f);
