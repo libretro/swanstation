@@ -213,7 +213,6 @@ void NamcoGunCon::UpdatePosition()
   m_position_y = static_cast<u16>(line);
   Log_DebugPrintf("Lightgun window coordinates %d,%d -> tick %u line %u 8mhz ticks %u", mouse_x, mouse_y, tick, line,
                   m_position_x);
-}
 #else
   // are we within the active display area?
   if (m_shoot_offscreen)
