@@ -2,7 +2,6 @@
 #include "common/assert.h"
 #include "common/log.h"
 #include "common/state_wrapper.h"
-#include "duckstation-libretro/libretro_host_interface.h"
 #include "gpu.h"
 #include "host_display.h"
 #include "host_interface.h"
@@ -190,27 +189,45 @@ bool NamcoGunCon::Transfer(const u8 data_in, u8* data_out)
 
 void NamcoGunCon::UpdatePosition()
 {
-  int player = 0;
-  for (player = 0; player < NUM_CONTROLLER_AND_CARD_PORTS; player++)
-  {
-     break;
-  }
-  const s32 mouse_x = g_retro_input_state_callback(player, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_SCREEN_X);
-  const s32 mouse_y = g_retro_input_state_callback(player, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_SCREEN_Y);
+  // get screen coordinates
+  const HostDisplay* display = g_host_interface->GetDisplay();
+  const s32 mouse_x = display->GetMousePositionX();
+  const s32 mouse_y = display->GetMousePositionY();
 
-  if (g_retro_input_state_callback(player, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_IS_OFFSCREEN) || m_shoot_offscreen)
+#ifndef LIBRETRO
+  // are we within the active display area?
+  u32 tick, line;
+  if (mouse_x < 0 || mouse_y < 0 ||
+      !g_gpu->ConvertScreenCoordinatesToBeamTicksAndLines(mouse_x, mouse_y, m_x_scale, &tick, &line) ||
+      m_shoot_offscreen)
   {
-    Log_DebugPrintf("Lightgun out of range for window coordinates");
+    Log_DebugPrintf("Lightgun out of range for window coordinates %d,%d", mouse_x, mouse_y);
+    m_position_x = 0x01;
+    m_position_y = 0x0A;
+    return;
+  }
+
+  // 8MHz units for X = 44100*768*11/7 = 53222400 / 8000000 = 6.6528
+  const double divider = static_cast<double>(g_gpu->GetCRTCFrequency()) / 8000000.0;
+  m_position_x = static_cast<u16>(static_cast<float>(tick) / static_cast<float>(divider));
+  m_position_y = static_cast<u16>(line);
+  Log_DebugPrintf("Lightgun window coordinates %d,%d -> tick %u line %u 8mhz ticks %u", mouse_x, mouse_y, tick, line,
+                  m_position_x);
+}
+#else
+  // are we within the active display area?
+  if (m_shoot_offscreen)
+  {
+    Log_DebugPrintf("Lightgun out of range for window coordinates %d,%d", mouse_x, mouse_y);
     m_position_x = 0;
     m_position_y = 0;
+    return;
   }
-  else
-  {
-    // Mouse range is between -32767 & 32767, hardcode multipliers for now
-    m_position_x = (((mouse_x + 0x7FFF) * 0x200) / 0xFFFE);
-    m_position_y = (((mouse_y + 0x7FFF) * 0x100) / 0xFFFE);
-    Log_DebugPrintf("Lightgun window coordinates %u,%u", m_position_x, m_position_y);
-  }
+
+  m_position_x = mouse_x;
+  m_position_y = mouse_y;
+  Log_DebugPrintf("Lightgun window coordinates %d,%d", m_position_x, m_position_y);
+#endif
 }
 
 std::unique_ptr<NamcoGunCon> NamcoGunCon::Create()

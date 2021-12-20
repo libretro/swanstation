@@ -1205,6 +1205,14 @@ void LibretroHostInterface::UpdateControllersNamcoGunCon(u32 index)
     controller->SetButtonState(it.first, state != 0);
   }
 
+  // Mouse range is between -32767 & 32767, hardcode multipliers for now
+  const int16_t gun_x = g_retro_input_state_callback(index, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_SCREEN_X);
+  const int16_t gun_y = g_retro_input_state_callback(index, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_SCREEN_Y);
+  const s32 pos_x = (g_retro_input_state_callback(index, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_IS_OFFSCREEN) ? 0 : (((static_cast<s32>(gun_x) + 0x7FFF) * 0x1E0) / 0xFFFE));
+  const s32 pos_y = (g_retro_input_state_callback(index, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_IS_OFFSCREEN) ? 0 : (((static_cast<s32>(gun_y) + 0x7FFF) * 0X100) / 0xFFFE));
+
+  m_display->SetMousePosition(pos_x, pos_y);
+
 }
 
 void LibretroHostInterface::UpdateControllersPlayStationMouse(u32 index)
@@ -1221,6 +1229,13 @@ void LibretroHostInterface::UpdateControllersPlayStationMouse(u32 index)
     const int16_t state = g_retro_input_state_callback(index, RETRO_DEVICE_MOUSE, 0, it.second);
     controller->SetButtonState(it.first, state != 0);
   }
+
+  const int16_t mouse_x = g_retro_input_state_callback(index, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_X);
+  const int16_t mouse_y = g_retro_input_state_callback(index, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_Y);
+  const s32 pos_x = (m_display->GetMousePositionX() + mouse_x);
+  const s32 pos_y = (m_display->GetMousePositionY() + mouse_y);
+
+  m_display->SetMousePosition(pos_x, pos_y);
 
 }
 
