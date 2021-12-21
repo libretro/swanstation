@@ -24,13 +24,19 @@ if(WIN32)
 endif()
 
 if (MSVC)
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DELAYLOAD:OpenGL32.dll")
-  target_link_libraries(swanstation_libretro PRIVATE core common glad scmversion frontend-common vulkan-loader Delayimp.lib)
+  target_link_libraries(swanstation_libretro PRIVATE core common glad scmversion vulkan-loader Delayimp.lib)
 elseif(APPLE)
-  target_link_libraries(swanstation_libretro PRIVATE core common glad scmversion frontend-common vulkan-loader "-framework Cocoa")
+  target_link_libraries(swanstation_libretro PRIVATE core common glad scmversion vulkan-loader "-framework Cocoa")
 else()
-  target_link_libraries(swanstation_libretro PRIVATE core common glad scmversion frontend-common vulkan-loader)
+  target_link_libraries(swanstation_libretro PRIVATE core common glad scmversion vulkan-loader)
 endif()
+
+# Stuff from frontend-common
+target_sources(swanstation_libretro PRIVATE
+  ../frontend-common/game_settings.cpp
+  ../frontend-common/game_settings.h
+)
+target_link_libraries(swanstation_libretro PRIVATE simpleini)
 
 # no lib prefix
 set_target_properties(swanstation_libretro PROPERTIES PREFIX "")
