@@ -36,7 +36,7 @@ RETRO_API void retro_get_system_info(struct retro_system_info* info)
 #endif
 
   info->library_version = g_scm_short_str;
-  info->valid_extensions = "exe|cue|bin|chd|psf|m3u|pbp";
+  info->valid_extensions = "exe|psexe|cue|bin|img|iso|chd|pbp|ecm|mds|psf|m3u";
   info->need_fullpath = true;
   info->block_extract = false;
 }

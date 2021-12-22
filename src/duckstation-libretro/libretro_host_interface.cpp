@@ -210,7 +210,11 @@ void LibretroHostInterface::GetGameInfo(const char* path, CDImage* image, std::s
 {
   // Just use the filename for now... we don't have the game list. Unless we can pull this from the frontend somehow?
   *title = FileSystem::GetFileTitleFromPath(path);
-  *code = System::GetGameCodeForImage(image, true);
+
+  if (image)
+    *code = System::GetGameCodeForImage(image, true);
+  else
+    code->clear();
 }
 
 static const char* GetSaveDirectory()
