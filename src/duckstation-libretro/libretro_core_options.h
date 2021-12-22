@@ -2399,7 +2399,11 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          {"LUT",      "LUT (Faster)"},
          { NULL, NULL },
       },
+#if defined(CPU_X64) || defined(CPU_AARCH64)
+      "MMap"
+#else
       "LUT"
+#endif
    },
    {
       "duckstation_Debug.ShowVRAM",
