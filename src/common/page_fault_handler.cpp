@@ -389,9 +389,25 @@ bool InstallHandler(const void* owner, void* start_pc, u32 code_size, Callback c
       return false;
     }
 #elif defined(USE_SIGSEGV)
+#if 1
+	static bool install_stack_done = false;
+	if (!install_stack_done) {
+		int stack_size = 2 * SIGSTKSZ; // Use a big stack by default
+		stack_t signal_stack = {};
+		signal_stack.ss_sp = malloc(stack_size);
+		signal_stack.ss_size = stack_size;
+		if (sigaltstack(&signal_stack, nullptr))
+		{
+			Log_ErrorPrintf("signaltstack() failed: %d", errno);
+			return false;
+		}
+		install_stack_done = true;
+	}
+#endif
+
     struct sigaction sa = {};
     sa.sa_sigaction = SIGSEGVHandler;
-    sa.sa_flags = SA_SIGINFO;
+    sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
     sigemptyset(&sa.sa_mask);
     if (sigaction(SIGSEGV, &sa, &s_old_sigsegv_action) < 0)
     {
