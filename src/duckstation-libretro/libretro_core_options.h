@@ -2394,9 +2394,11 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       NULL,
       "advanced",
       {
-         {"Disabled", "Disabled (Slow)"},
-         {"MMap",     "MMap (Hardware, Fast, 64-Bit Only)"},
-         {"LUT",      "LUT (Fast)"},
+         {"Disabled", "Disabled (Slower)"},
+         {"LUT",      "LUT (Faster)"},
+#if defined(CPU_X64) || defined(CPU_AARCH64)
+        {"MMap",     "MMap (Hardware, Faster, 64-Bit Only)"},
+#endif
          { NULL, NULL },
       },
       "LUT"
