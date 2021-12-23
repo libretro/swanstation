@@ -2394,16 +2394,12 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       NULL,
       "advanced",
       {
-         {"Disabled", "Disabled (Slowest)"},
-         {"MMap",     "MMap (Hardware, Fastest, 64-Bit Only)"},
-         {"LUT",      "LUT (Faster)"},
+         {"Disabled", "Disabled (Slow)"},
+         {"MMap",     "MMap (Hardware, Fast, 64-Bit Only)"},
+         {"LUT",      "LUT (Fast)"},
          { NULL, NULL },
       },
-#if defined(CPU_X64) || defined(CPU_AARCH64)
-      "MMap"
-#else
       "LUT"
-#endif
    },
    {
       "duckstation_Debug.ShowVRAM",
