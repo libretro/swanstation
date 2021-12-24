@@ -59,7 +59,7 @@ Value CodeGenerator::EmitLoadGuestMemory(const CodeBlockInstruction& cbi, const 
 
   Value result = m_register_cache.AllocateScratch(HostPointerSize);
 
-  const bool use_fastmem = 0 &&
+  const bool use_fastmem =
     (address_spec ? Bus::CanUseFastmemForAddress(*address_spec) : true) && !SpeculativeIsCacheIsolated();
   if (address_spec)
   {
@@ -75,7 +75,7 @@ Value CodeGenerator::EmitLoadGuestMemory(const CodeBlockInstruction& cbi, const 
                       use_fastmem ? "yes" : "no");
   }
 
-  if (g_settings.IsUsingFastmem() && use_fastmem)
+  if (g_settings.IsUsingFastmem() && use_fastmem && g_settings.cpu_fastmem_mode == CPUFastmemMode::MMap)
   {
     EmitLoadGuestMemoryFastmem(cbi, address, size, result);
   }
@@ -132,7 +132,7 @@ void CodeGenerator::EmitStoreGuestMemory(const CodeBlockInstruction& cbi, const 
     }
   }
 
-  const bool use_fastmem = 0 &&
+  const bool use_fastmem =
     (address_spec ? Bus::CanUseFastmemForAddress(*address_spec) : true) && !SpeculativeIsCacheIsolated();
   if (address_spec)
   {
@@ -148,7 +148,7 @@ void CodeGenerator::EmitStoreGuestMemory(const CodeBlockInstruction& cbi, const 
                       use_fastmem ? "yes" : "no");
   }
 
-  if (g_settings.IsUsingFastmem() && use_fastmem)
+  if (g_settings.IsUsingFastmem() && use_fastmem && g_settings.cpu_fastmem_mode == CPUFastmemMode::MMap)
   {
     EmitStoreGuestMemoryFastmem(cbi, address, size, value);
   }
