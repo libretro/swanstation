@@ -2767,7 +2767,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "Internal Run-Ahead",
       NULL,
       "Simulates the system ahead of time and rolls back/replays to reduce input lag. Has very high system "
-      "requirements and forces CPU Execution Mode to Interpreter.",
+      "requirements.",
       NULL,
       "advanced",
       {
