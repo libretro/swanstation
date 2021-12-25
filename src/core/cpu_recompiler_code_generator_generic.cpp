@@ -75,7 +75,7 @@ Value CodeGenerator::EmitLoadGuestMemory(const CodeBlockInstruction& cbi, const 
                       use_fastmem ? "yes" : "no");
   }
 
-  if (g_settings.IsUsingFastmem() && use_fastmem && g_settings.cpu_fastmem_mode == CPUFastmemMode::MMap)
+  if (g_settings.IsUsingFastmem() && use_fastmem && g_settings.cpu_fastmem_rewrite)
   {
     EmitLoadGuestMemoryFastmem(cbi, address, size, result);
   }
@@ -148,7 +148,7 @@ void CodeGenerator::EmitStoreGuestMemory(const CodeBlockInstruction& cbi, const 
                       use_fastmem ? "yes" : "no");
   }
 
-  if (g_settings.IsUsingFastmem() && use_fastmem && g_settings.cpu_fastmem_mode == CPUFastmemMode::MMap)
+  if (g_settings.IsUsingFastmem() && use_fastmem && g_settings.cpu_fastmem_rewrite)
   {
     EmitStoreGuestMemoryFastmem(cbi, address, size, value);
   }

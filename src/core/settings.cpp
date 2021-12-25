@@ -177,6 +177,7 @@ void Settings::Load(SettingsInterface& si)
   cpu_fastmem_mode = ParseCPUFastmemMode(
                        si.GetStringValue("CPU", "FastmemMode", GetCPUFastmemModeName(DEFAULT_CPU_FASTMEM_MODE)).c_str())
                        .value_or(DEFAULT_CPU_FASTMEM_MODE);
+  cpu_fastmem_rewrite = si.GetBoolValue("CPU", "FastmemRewrite", false);
 
   gpu_renderer = ParseRendererName(si.GetStringValue("GPU", "Renderer", GetRendererName(DEFAULT_GPU_RENDERER)).c_str())
                    .value_or(DEFAULT_GPU_RENDERER);
@@ -370,6 +371,7 @@ void Settings::Save(SettingsInterface& si) const
   si.SetBoolValue("CPU", "RecompilerBlockLinking", cpu_recompiler_block_linking);
   si.SetBoolValue("CPU", "RecompilerICache", cpu_recompiler_icache);
   si.SetStringValue("CPU", "FastmemMode", GetCPUFastmemModeName(cpu_fastmem_mode));
+  si.SetBoolValue("CPU", "FastmemRewrite", cpu_fastmem_rewrite);
 
   si.SetStringValue("GPU", "Renderer", GetRendererName(gpu_renderer));
   si.SetStringValue("GPU", "Adapter", gpu_adapter.c_str());

@@ -497,6 +497,7 @@ void HostInterface::SetDefaultSettings(SettingsInterface& si)
   si.SetBoolValue("CPU", "RecompilerBlockLinking", true);
   si.SetBoolValue("CPU", "ICache", false);
   si.SetBoolValue("CPU", "FastmemMode", Settings::GetCPUFastmemModeName(Settings::DEFAULT_CPU_FASTMEM_MODE));
+  si.SetBoolValue("CPU", "FastmemRewrite", false);
 
   si.SetStringValue("GPU", "Renderer", Settings::GetRendererName(Settings::DEFAULT_GPU_RENDERER));
   si.SetIntValue("GPU", "ResolutionScale", 1);
@@ -737,12 +738,16 @@ void HostInterface::CheckForSettingsChanges(const Settings& old_settings)
       System::UpdateThrottlePeriod();
 
     if (g_settings.cpu_execution_mode != old_settings.cpu_execution_mode ||
-        g_settings.cpu_fastmem_mode != old_settings.cpu_fastmem_mode)
+        g_settings.cpu_fastmem_mode != old_settings.cpu_fastmem_mode ||
+        g_settings.cpu_fastmem_rewrite != old_settings.cpu_fastmem_rewrite)
     {
-      AddFormattedOSDMessage(
-        5.0f, TranslateString("OSDMessage", "Switching to %s CPU execution mode."),
-        TranslateString("CPUExecutionMode", Settings::GetCPUExecutionModeDisplayName(g_settings.cpu_execution_mode))
-          .GetCharArray());
+      if (g_settings.cpu_execution_mode != old_settings.cpu_execution_mode)
+      {
+         AddFormattedOSDMessage(
+           5.0f, TranslateString("OSDMessage", "Switching to %s CPU execution mode."),
+           TranslateString("CPUExecutionMode", Settings::GetCPUExecutionModeDisplayName(g_settings.cpu_execution_mode))
+             .GetCharArray());
+      }
       CPU::CodeCache::Reinitialize();
       CPU::ClearICache();
     }

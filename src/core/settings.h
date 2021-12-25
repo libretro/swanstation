@@ -81,6 +81,7 @@ struct Settings
   bool cpu_recompiler_block_linking = true;
   bool cpu_recompiler_icache = false;
   CPUFastmemMode cpu_fastmem_mode = CPUFastmemMode::Disabled;
+  bool cpu_fastmem_rewrite = false;
 
   float emulation_speed = 1.0f;
   float fast_forward_speed = 0.0f;

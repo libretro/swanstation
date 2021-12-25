@@ -2389,14 +2389,8 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "duckstation_CPU.FastmemMode",
       "CPU Recompiler Fast Memory Access",
       NULL,
-#if defined(CPU_X64) || defined(CPU_AARCH64)
-      "Uses page faults to determine hardware memory accesses at runtime. Can provide a significant performance "
-      "improvement in some games, but make the core more difficult to debug. MMap provides even better performance "
-      "over LUT, but may cause issues.",
-#else
       "Uses page faults to determine hardware memory accesses at runtime. Can provide a significant performance "
       "improvement in some games, but make the core more difficult to debug.",
-#endif
       NULL,
       "advanced",
       {
@@ -2408,6 +2402,21 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { NULL, NULL },
       },
       "LUT"
+   },
+   {
+      "duckstation_CPU.FastmemRewrite",
+      "CPU Recompiler Fast Memory Access Rewrite",
+      NULL,
+      "Enables rewrites when CPU Recompiler Fast Memory Access is enabled. Can provide a measurable speed boost, "
+      "but may cause the core to segfault on certain platforms.",
+      NULL,
+      "advanced",
+      {
+         { "true",  "Enabled" },
+         { "false", "Disabled" },
+         { NULL, NULL },
+      },
+      "false"
    },
    {
       "duckstation_Debug.ShowVRAM",
