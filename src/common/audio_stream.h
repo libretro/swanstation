@@ -46,9 +46,9 @@ public:
 
   void Shutdown();
 
-  virtual void BeginWrite(SampleType** buffer_ptr, u32* num_frames);
+  void BeginWrite(SampleType** buffer_ptr, u32* num_frames);
   void WriteFrames(const SampleType* frames, u32 num_frames);
-  virtual void EndWrite(u32 num_frames);
+  void EndWrite(u32 num_frames);
 
   bool DidUnderflow()
   {
