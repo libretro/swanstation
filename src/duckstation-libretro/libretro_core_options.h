@@ -283,7 +283,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "console",
       {
          { "Interpreter",      NULL },
-         { "CachedIntepreter", "Cached Interpreter" },
+         { "CachedInterpreter", "Cached Interpreter" },
          { "Recompiler",       NULL },
          { NULL, NULL },
       },
