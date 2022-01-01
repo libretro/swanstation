@@ -307,7 +307,7 @@ void LibretroHostInterface::retro_get_system_av_info(struct retro_system_av_info
 
 void LibretroHostInterface::GetSystemAVInfo(struct retro_system_av_info* info, bool use_resolution_scale)
 {
-  const u32 resolution_scale = use_resolution_scale ? g_settings.gpu_resolution_scale : 1u;
+  const u32 resolution_scale = use_resolution_scale ? GetResolutionScale() : 1u;
   Assert(System::IsValid());
 
   std::memset(info, 0, sizeof(*info));
