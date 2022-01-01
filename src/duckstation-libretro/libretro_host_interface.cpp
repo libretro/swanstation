@@ -167,9 +167,6 @@ bool LibretroHostInterface::Initialize()
   FixIncompatibleSettings(true);
   UpdateLogging();
 
-  m_last_aspect_ratio = g_settings.GetDisplayAspectRatioValue();
-  m_last_width = 320;
-  m_last_height = 240;
   return true;
 }
 
@@ -301,6 +298,7 @@ void LibretroHostInterface::retro_get_system_av_info(struct retro_system_av_info
 {
   const bool use_resolution_scale = (g_settings.gpu_renderer != GPURenderer::Software);
   GetSystemAVInfo(info, use_resolution_scale);
+  m_last_aspect_ratio = info->geometry.aspect_ratio;
 
   Log_InfoPrintf("base = %ux%u, max = %ux%u, aspect ratio = %.2f, fps = %.2f", info->geometry.base_width,
                  info->geometry.base_height, info->geometry.max_width, info->geometry.max_height,
@@ -314,11 +312,9 @@ void LibretroHostInterface::GetSystemAVInfo(struct retro_system_av_info* info, b
 
   std::memset(info, 0, sizeof(*info));
 
-  const auto [effective_width, effective_height] = g_gpu->GetEffectiveDisplayResolution();
-
-  info->geometry.aspect_ratio = m_last_aspect_ratio;
-  info->geometry.base_width = effective_width;
-  info->geometry.base_height = effective_height;
+  info->geometry.base_width = (m_display ? m_display->GetDisplayWidth() : GPU_MAX_DISPLAY_WIDTH) * resolution_scale;
+  info->geometry.base_height = (m_display ? m_display->GetDisplayHeight() : GPU_MAX_DISPLAY_HEIGHT) * resolution_scale;
+  info->geometry.aspect_ratio = (m_display ? m_display->GetDisplayAspectRatio() : (g_gpu ? g_gpu->GetDisplayAspectRatio() : g_settings.GetDisplayAspectRatioValue()));
   info->geometry.max_width = VRAM_WIDTH * resolution_scale;
   info->geometry.max_height = VRAM_HEIGHT * resolution_scale;
 
@@ -341,6 +337,8 @@ bool LibretroHostInterface::UpdateSystemAVInfo(bool use_resolution_scale)
     return false;
   }
 
+  m_display->ResizeRenderWindow(avi.geometry.base_width, avi.geometry.base_height);
+  m_last_aspect_ratio = avi.geometry.aspect_ratio;
   return true;
 }
 
@@ -355,6 +353,9 @@ void LibretroHostInterface::UpdateGeometry()
 
   if (!g_retro_environment_callback(RETRO_ENVIRONMENT_SET_GEOMETRY, &avi.geometry))
     Log_WarningPrint("RETRO_ENVIRONMENT_SET_GEOMETRY failed");
+
+  m_display->ResizeRenderWindow(avi.geometry.base_width, avi.geometry.base_height);
+  m_last_aspect_ratio = avi.geometry.aspect_ratio;
 }
 
 void LibretroHostInterface::UpdateLogging()
@@ -615,13 +616,8 @@ void LibretroHostInterface::retro_run_frame()
   const float aspect_ratio = m_display->GetDisplayAspectRatio();
   const auto [effective_width, effective_height] = g_gpu->GetEffectiveDisplayResolution();
 
-  if (aspect_ratio != m_last_aspect_ratio || effective_width != m_last_width || effective_height != m_last_height)
-  {
-    m_last_aspect_ratio = aspect_ratio;
-    m_last_width = effective_width;
-    m_last_height = effective_height;
+  if (aspect_ratio != m_last_aspect_ratio)
     UpdateGeometry();
-  }
 
   m_display->Render();
 }
@@ -884,7 +880,7 @@ void LibretroHostInterface::UpdateSettings()
 
   if (System::IsValid())
   {
-    if (g_settings.gpu_resolution_scale != old_settings.gpu_resolution_scale &&
+    if ((g_settings.gpu_resolution_scale != old_settings.gpu_resolution_scale || g_settings.gpu_downsample_mode != old_settings.gpu_downsample_mode) &&
         g_settings.gpu_renderer != GPURenderer::Software)
     {
       ReportMessage("Resolution changed, updating system AV info...");

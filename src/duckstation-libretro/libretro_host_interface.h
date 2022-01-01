@@ -31,7 +31,7 @@ public:
   LibretroHostInterface();
   ~LibretroHostInterface() override;
 
-  ALWAYS_INLINE u32 GetResolutionScale() const { return g_settings.gpu_resolution_scale; }
+  ALWAYS_INLINE u32 GetResolutionScale() const { return (g_settings.gpu_downsample_mode == GPUDownsampleMode::Box) ? 1u : g_settings.gpu_resolution_scale; }
 
   bool Initialize() override;
   void Shutdown() override;
@@ -133,8 +133,6 @@ private:
 
   std::unique_ptr<GameSettings::Entry> m_game_settings;
   float m_last_aspect_ratio = 4.0f / 3.0f;
-  unsigned m_last_width = 320;
-  unsigned m_last_height = 240;
 
   retro_hw_render_callback m_hw_render_callback = {};
   std::unique_ptr<HostDisplay> m_hw_render_display;
