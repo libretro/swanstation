@@ -23,13 +23,7 @@ if(WIN32)
   )
 endif()
 
-if (MSVC)
-  target_link_libraries(swanstation_libretro PRIVATE core common glad scmversion vulkan-loader Delayimp.lib)
-elseif(APPLE)
-  target_link_libraries(swanstation_libretro PRIVATE core common glad scmversion vulkan-loader "-framework Cocoa")
-else()
-  target_link_libraries(swanstation_libretro PRIVATE core common glad scmversion vulkan-loader)
-endif()
+target_link_libraries(swanstation_libretro PRIVATE core common glad scmversion vulkan-loader)
 
 # Stuff from frontend-common
 target_sources(swanstation_libretro PRIVATE
