@@ -55,6 +55,7 @@ static bool s_libretro_log_callback_valid = false;
 static bool s_libretro_log_callback_registered = false;
 static bool libretro_supports_option_categories = false;
 static int show_multitap = -1;
+static int analog_press = -1;
 
 static void LibretroLogCallback(void* pUserParam, const char* channelName, const char* functionName, LOGLEVEL level,
                                 const char* message)
@@ -1081,6 +1082,22 @@ void LibretroHostInterface::UpdateControllersAnalogController(u32 index)
     const u16 weak = static_cast<u16>(static_cast<u32>(controller->GetVibrationMotorStrength(1) * 65535.0f));
     m_rumble_interface.set_rumble_state(index, RETRO_RUMBLE_STRONG, strong);
     m_rumble_interface.set_rumble_state(index, RETRO_RUMBLE_WEAK, weak);
+  }
+
+  const u16 L1 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L);
+  const u16 R1 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R);
+  const u16 L3 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3);
+  const u16 R3 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3);
+
+  // Workaround for the fact it will otherwise spam the analog button.
+  if (L1 && R1 && L3 && R3 && analog_press == 0)
+  {
+    analog_press = 1;
+    controller->SetButtonState(AnalogController::Button::Analog, (L1 && R1 && L3 && R3));
+  }
+  if (!L1 || !R1 || !L3 || !R3)
+  {
+    analog_press = 0;
   }
 }
 

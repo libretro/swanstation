@@ -856,7 +856,8 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "Controller 1 Force Analog Mode on Reset",
       NULL,
       "Forces analog mode in Analog Controller (DualShock) at start/reset. May cause issues with some games. Only use "
-      "this option for games that support analog mode but do not automatically enable it themselves.",
+      "this option for games that support analog mode but do not automatically enable it themselves. When disabled, analog "
+      "mode can be toggled by pressing and holding L1+R1+L3+R3.",
       NULL,
       "port",
       {
@@ -1038,7 +1039,8 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "Controller 2 Force Analog Mode on Reset",
       NULL,
       "Forces analog mode in Analog Controller (DualShock) at start/reset. May cause issues with some games. Only use "
-      "this option for games that support analog mode but do not automatically enable it themselves.",
+      "this option for games that support analog mode but do not automatically enable it themselves. When disabled, analog "
+      "mode can be toggled by pressing and holding L1+R1+L3+R3.",
       NULL,
       "port",
       {
@@ -1220,7 +1222,8 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "Controller 3 Force Analog Mode on Reset",
       NULL,
       "Forces analog mode in Analog Controller (DualShock) at start/reset. May cause issues with some games. Only use "
-      "this option for games that support analog mode but do not automatically enable it themselves.",
+      "this option for games that support analog mode but do not automatically enable it themselves. When disabled, analog "
+      "mode can be toggled by pressing and holding L1+R1+L3+R3.",
       NULL,
       "port",
       {
@@ -1402,7 +1405,8 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "Controller 4 Force Analog Mode on Reset",
       NULL,
       "Forces analog mode in Analog Controller (DualShock) at start/reset. May cause issues with some games. Only use "
-      "this option for games that support analog mode but do not automatically enable it themselves.",
+      "this option for games that support analog mode but do not automatically enable it themselves. When disabled, analog "
+      "mode can be toggled by pressing and holding L1+R1+L3+R3.",
       NULL,
       "port",
       {
@@ -1584,7 +1588,8 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "Controller 5 Force Analog Mode on Reset",
       NULL,
       "Forces analog mode in Analog Controller (DualShock) at start/reset. May cause issues with some games. Only use "
-      "this option for games that support analog mode but do not automatically enable it themselves.",
+      "this option for games that support analog mode but do not automatically enable it themselves. When disabled, analog "
+      "mode can be toggled by pressing and holding L1+R1+L3+R3.",
       NULL,
       "port",
       {
@@ -1766,7 +1771,8 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "Controller 6 Force Analog Mode on Reset",
       NULL,
       "Forces analog mode in Analog Controller (DualShock) at start/reset. May cause issues with some games. Only use "
-      "this option for games that support analog mode but do not automatically enable it themselves.",
+      "this option for games that support analog mode but do not automatically enable it themselves. When disabled, analog "
+      "mode can be toggled by pressing and holding L1+R1+L3+R3.",
       NULL,
       "port",
       {
@@ -1948,7 +1954,8 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "Controller 7 Force Analog Mode on Reset",
       NULL,
       "Forces analog mode in Analog Controller (DualShock) at start/reset. May cause issues with some games. Only use "
-      "this option for games that support analog mode but do not automatically enable it themselves.",
+      "this option for games that support analog mode but do not automatically enable it themselves. When disabled, analog "
+      "mode can be toggled by pressing and holding L1+R1+L3+R3.",
       NULL,
       "port",
       {
@@ -2130,7 +2137,8 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "Controller 8 Force Analog Mode on Reset",
       NULL,
       "Forces analog mode in Analog Controller (DualShock) at start/reset. May cause issues with some games. Only use "
-      "this option for games that support analog mode but do not automatically enable it themselves.",
+      "this option for games that support analog mode but do not automatically enable it themselves. When disabled, analog "
+      "mode can be toggled by pressing and holding L1+R1+L3+R3.",
       NULL,
       "port",
       {
