@@ -253,6 +253,114 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
+  if (game_code == "SLPS-00435")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLUS-00388")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLES-00529")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLPS-00699")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SCES-02834")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SCUS-94200")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SCES-00002")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SCUS-94003")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLPS-00025")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLES-01987")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLPS-01774")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLPS-02701")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLUS-00862")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLES-03552")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLUS-01324")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLPM-87159")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLPS-02728")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLPM-86086")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
   if (game_code == "SCED-01979")
   {
     gs->AddTrait(GameSettings::Trait::ForceInterpreter);
@@ -343,6 +451,132 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
+  if (game_code == "SLUS-00183")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SCPS-10059")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SCUS-94254")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SCES-01752")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SCES-01944")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SCES-01945")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SCES-01946")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SCES-01947")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLUS-00707")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLPM-86192")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLES-01514")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLUS-00875")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLPM-86739")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLES-02886")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLES-02887")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLES-02888")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLES-02889")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLES-02890")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLES-03449")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLES-01265")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLUS-00644")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
   if (game_code == "SLES-00483")
   {
     gs->AddTrait(GameSettings::Trait::ForceInterlacing);
@@ -352,6 +586,12 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
   if (game_code == "SLPS-02361")
   {
     gs->AddTrait(GameSettings::Trait::ForcePGXPVertexCache);
+    return gs;
+  }
+
+  if (game_code == "SLPS-00712")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
     return gs;
   }
 
@@ -744,6 +984,7 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
   if (game_code == "SCPS-45404")
   {
     gs->AddTrait(GameSettings::Trait::ForcePGXPCPUMode);
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
     return gs;
   }
 
@@ -897,6 +1138,24 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
+  if (game_code == "SLUS-00292")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SCUS-94577")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SCUS-94578")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
   if (game_code == "SLUS-00232")
   {
     gs->dma_max_slice_ticks = 100;
@@ -1003,6 +1262,7 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
   {
     gs->dma_max_slice_ticks = 100;
     gs->dma_halt_ticks = 150;
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
     return gs;
   }
 
@@ -1010,6 +1270,7 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
   {
     gs->dma_max_slice_ticks = 100;
     gs->dma_halt_ticks = 150;
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
     return gs;
   }
 
@@ -1017,6 +1278,7 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
   {
     gs->dma_max_slice_ticks = 100;
     gs->dma_halt_ticks = 150;
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
     return gs;
   }
 
@@ -1024,6 +1286,7 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
   {
     gs->dma_max_slice_ticks = 100;
     gs->dma_halt_ticks = 150;
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
     return gs;
   }
 
@@ -1031,6 +1294,7 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
   {
     gs->dma_max_slice_ticks = 100;
     gs->dma_halt_ticks = 150;
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
     return gs;
   }
 
@@ -1038,6 +1302,7 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
   {
     gs->dma_max_slice_ticks = 100;
     gs->dma_halt_ticks = 150;
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
     return gs;
   }
 
@@ -1045,6 +1310,7 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
   {
     gs->dma_max_slice_ticks = 100;
     gs->dma_halt_ticks = 150;
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
     return gs;
   }
 
@@ -1052,6 +1318,7 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
   {
     gs->dma_max_slice_ticks = 100;
     gs->dma_halt_ticks = 150;
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
     return gs;
   }
 
@@ -1059,6 +1326,7 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
   {
     gs->dma_max_slice_ticks = 100;
     gs->dma_halt_ticks = 150;
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
     return gs;
   }
 
@@ -1066,12 +1334,211 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
   {
     gs->dma_max_slice_ticks = 100;
     gs->dma_halt_ticks = 150;
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
     return gs;
   }
 
   if (game_code == "SLUS-00912")
   {
     gs->AddTrait(GameSettings::Trait::ForceInterlacing);
+    return gs;
+  }
+
+  if (game_code == "SLPS-00267")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SCPS-45294")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLES-01218")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLED-01401")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLED-01513")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLES-01264")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLUS-00674")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
+    return gs;
+  }
+
+  if (game_code == "SLPS-02878")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLES-02605")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLUS-01222")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLPM-86429")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLPM-86943")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLUS-00860")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLED-02879")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLED-03048")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLES-02908")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLES-02909")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLES-02910")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLPM-86751")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLUS-01066")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLUS-90086")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLES-03645")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLES-03646")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLES-03647")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLUS-01419")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLES-03954")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLES-03956")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLES-03955")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLUS-01485")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLPS-02833")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SCPS-45120")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SLPS-01009")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (game_code == "SCUS-94243")
+  {
+    gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
     return gs;
   }
 

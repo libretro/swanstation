@@ -31,7 +31,7 @@ def parse_ini(path):
         "ForcePGXPCPUMode",
         "DisableAnalogModeForcing",
         "ForceRecompilerMemoryExceptions",
-        "ForceRecompilerICache"
+        "ForceRecompilerICache",
         "ForceRecompilerLUTFastmem"
     ]
 
