@@ -1033,7 +1033,7 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     gs->gpu_max_run_ahead = 1;
     return gs;
   }
-  
+
   if (game_code == "SLES-00654")
   {
     gs->dma_max_slice_ticks = 200;

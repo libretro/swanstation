@@ -536,6 +536,12 @@ bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
   {
       option_display.key = "duckstation_GPU.UseSoftwareRendererForReadbacks";
       g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+      option_display.key = "duckstation_GPU.MSAA";
+      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+      option_display.key = "duckstation_GPU.TrueColor";
+      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+      option_display.key = "duckstation_GPU.ScaledDithering";
+      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
       option_display.key = "duckstation_GPU.ChromaSmoothing24Bit";
       g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
       option_display.key = "duckstation_GPU.TextureFilter";
