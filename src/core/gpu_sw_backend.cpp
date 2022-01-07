@@ -35,21 +35,15 @@ void GPU_SW_Backend::SetUprenderScale(int scale)
   {
      switch (scale)
      {
-       case 1:  
-       case 2:  
-       case 4: 
+       case 1:
+       case 2:
          // OK!
        break;
-
-       case 3:
-         scale = 4;
-       break;
-
        default:
          // if the input scale is invalid then default to either the current setting (if valid)
          // or native res if vram memory is not initialized yet.
-         if (scale > 4)
-           scale = 4;
+         if (scale > 2)
+           scale = 2;
          else if (!m_upram) 
            scale = 1;
          else
@@ -858,7 +852,7 @@ void GPU_SW_Backend::DrawTriangle(const GPUBackendDrawPolygonCommand* cmd,
           continue;
 
         DrawSpan<TShaderParams, TUprenderShift>(
-          cmd, yi, GetPolyXFP_Int(lc), GetPolyXFP_Int(rc), ig, idl);
+          cmd, y, GetPolyXFP_Int(lc), GetPolyXFP_Int(rc), ig, idl);
       }
     }
     else
@@ -873,7 +867,7 @@ void GPU_SW_Backend::DrawTriangle(const GPUBackendDrawPolygonCommand* cmd,
         if (y >= static_cast<s32>(m_drawing_area.top) * upscale)
         {
           DrawSpan<TShaderParams, TUprenderShift>(
-            cmd, yi, GetPolyXFP_Int(lc), GetPolyXFP_Int(rc), ig, idl);
+            cmd, y, GetPolyXFP_Int(lc), GetPolyXFP_Int(rc), ig, idl);
         }
 
         yi++;

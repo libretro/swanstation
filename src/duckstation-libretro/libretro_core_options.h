@@ -422,17 +422,15 @@ struct retro_core_option_v2_definition option_defs_us[] = {
    },
    {
       "duckstation_GPU.ResolutionSoftScale",
-      "Internal Resolution Scale (Software)",
+      "Enhanced Resolution (Software)",
       NULL,
-      "Scales internal VRAM resolution by the specified multiplier for the software renderer. Larger values are slower. "
-      "Some games require 1x VRAM resolution or they will have rendering issues.",
+      "Renders in double resolution at the cost of lower performance.",
       NULL,
       "enhancement",
       {
-         { "1",  "1x" },
+         { "1",  "Disabled" },
 #ifndef ANDROID
-         { "2",  "2x" },
-         { "4",  "4x" },
+         { "2",  "Enabled" },
 #endif
          { NULL, NULL },
       },
