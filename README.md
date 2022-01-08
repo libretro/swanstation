@@ -12,7 +12,7 @@ A "BIOS" ROM image is required to to start the emulator and to play games. You c
 SwanStation features include:
 
  - CPU Recompiler/JIT (x86-64, armv7/AArch32 and AArch64)
- - Hardware (D3D11, D3D12, OpenGL, Vulkan) and software rendering
+ - Hardware (D3D11, OpenGL, Vulkan) and software rendering
  - Upscaling in both hardware and software renderers
  - Texture filtering, and true colour (24-bit) in hardware renderers
  - PGXP for geometry precision, texture correction, and depth buffer emulation
