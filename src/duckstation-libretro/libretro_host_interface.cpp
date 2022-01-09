@@ -643,7 +643,6 @@ void LibretroHostInterface::retro_run_frame()
   System::RunFrame();
 
   const float aspect_ratio = m_display->GetDisplayAspectRatio();
-  const auto [effective_width, effective_height] = g_gpu->GetEffectiveDisplayResolution();
 
   if (aspect_ratio != m_last_aspect_ratio)
     UpdateGeometry();
