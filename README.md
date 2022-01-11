@@ -24,6 +24,7 @@ SwanStation features include:
  - Direct booting of homebrew executables
  - Direct loading of Portable Sound Format (psf) files
  - Digital and analog controllers for input (rumble is forwarded to host)
+ - Namco GunCon lightgun support (simulated with mouse)
  - NeGcon support
  - Emulated CPU overclocking
  - Multitap controllers (up to 8 devices)
