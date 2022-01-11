@@ -103,9 +103,9 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       NULL,
       "console",
       {
-         { "scph5500.bin", "SCPH5500 BIOS" },
-         { "psxonpsp660.bin",   "POPS BIOS" },
-         { "ps1_rom.bin", "PS3 BIOS" },
+         { "scph5500.bin", "SCPH5500" },
+         { "psxonpsp660.bin", "PSP" },
+         { "ps1_rom.bin", "PS3" },
          { NULL, NULL },
       },
       "scph5500.bin"
@@ -118,9 +118,9 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       NULL,
       "console",
       {
-         { "scph5501.bin", "SCPH5501 BIOS" },
-         { "psxonpsp660.bin",   "POPS BIOS" },
-         { "ps1_rom.bin", "PS3 BIOS" },
+         { "scph5501.bin", "SCPH5501" },
+         { "psxonpsp660.bin", "PSP" },
+         { "ps1_rom.bin", "PS3" },
          { NULL, NULL },
       },
       "scph5501.bin"
@@ -133,9 +133,9 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       NULL,
       "console",
       {
-         { "scph5502.bin", "SCPH5502 BIOS" },
-         { "psxonpsp660.bin",   "POPS BIOS" },
-         { "ps1_rom.bin", "PS3 BIOS" },
+         { "scph5502.bin", "SCPH5502" },
+         { "psxonpsp660.bin", "PSP" },
+         { "ps1_rom.bin", "PS3" },
          { NULL, NULL },
       },
       "scph5502.bin"
