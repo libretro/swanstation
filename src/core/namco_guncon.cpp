@@ -194,7 +194,6 @@ void NamcoGunCon::UpdatePosition()
   const s32 mouse_x = display->GetMousePositionX();
   const s32 mouse_y = display->GetMousePositionY();
 
-#ifndef LIBRETRO
   // are we within the active display area?
   u32 tick, line;
   if (mouse_x < 0 || mouse_y < 0 ||
@@ -213,20 +212,6 @@ void NamcoGunCon::UpdatePosition()
   m_position_y = static_cast<u16>(line);
   Log_DebugPrintf("Lightgun window coordinates %d,%d -> tick %u line %u 8mhz ticks %u", mouse_x, mouse_y, tick, line,
                   m_position_x);
-#else
-  // are we within the active display area?
-  if (m_shoot_offscreen)
-  {
-    Log_DebugPrintf("Lightgun out of range for window coordinates %d,%d", mouse_x, mouse_y);
-    m_position_x = 0;
-    m_position_y = 0;
-    return;
-  }
-
-  m_position_x = mouse_x;
-  m_position_y = mouse_y;
-  Log_DebugPrintf("Lightgun window coordinates %d,%d", m_position_x, m_position_y);
-#endif
 }
 
 std::unique_ptr<NamcoGunCon> NamcoGunCon::Create()
