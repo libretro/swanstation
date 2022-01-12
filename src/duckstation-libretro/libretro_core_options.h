@@ -1034,7 +1034,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
    },
    {
       "duckstation_Controller1.XScale", 
-      "Controller 1 X Scale",
+      "Controller 1 Lightgun X Scale",
       NULL,
       "Scales X coordinates relative to the center of the screen.",
       NULL,
@@ -1328,7 +1328,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
    },
    {
       "duckstation_Controller2.XScale", 
-      "Controller 2 X Scale",
+      "Controller 2 Lightgun X Scale",
       NULL,
       "Scales X coordinates relative to the center of the screen.",
       NULL,
