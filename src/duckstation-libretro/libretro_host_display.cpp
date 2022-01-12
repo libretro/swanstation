@@ -120,7 +120,10 @@ bool LibretroHostDisplay::DoneRenderContextCurrent()
   return true;
 }
 
-void LibretroHostDisplay::DestroyRenderDevice() {}
+void LibretroHostDisplay::DestroyRenderDevice()
+{
+  ClearSoftwareCursor();
+}
 
 void LibretroHostDisplay::DestroyRenderSurface() {}
 
