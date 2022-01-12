@@ -851,7 +851,7 @@ void LibretroHostInterface::LoadSettings(SettingsInterface& si)
         "duckstation_Controller4.AxisScale",
         "duckstation_Controller4.VibrationBias"
     };
-	
+
     option_display.visible = show_multitap;
 
     for (i = 0; i < 8; i++)
