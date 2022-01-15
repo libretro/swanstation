@@ -841,42 +841,48 @@ void LibretroHostInterface::LoadSettings(SettingsInterface& si)
   {
     unsigned i;
     struct retro_core_option_display option_display;
-    char controller_multitap_options[8][49] = {
+    char controller_multitap_options[10][49] = {
         "duckstation_Controller3.ForceAnalogOnReset",
         "duckstation_Controller3.AnalogDPadInDigitalMode",
         "duckstation_Controller3.AxisScale",
         "duckstation_Controller3.VibrationBias",
+        "duckstation_Controller3.SteeringDeadzone",
         "duckstation_Controller4.ForceAnalogOnReset",
         "duckstation_Controller4.AnalogDPadInDigitalMode",
         "duckstation_Controller4.AxisScale",
-        "duckstation_Controller4.VibrationBias"
+        "duckstation_Controller4.VibrationBias",
+        "duckstation_Controller4.SteeringDeadzone"
     };
 
     option_display.visible = show_multitap;
 
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < 10; i++)
     {
         option_display.key = controller_multitap_options[i];
         g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
     }
 
-    char controller_double_multitap_options[16][49] = {
+    char controller_double_multitap_options[20][49] = {
         "duckstation_Controller5.ForceAnalogOnReset",
         "duckstation_Controller5.AnalogDPadInDigitalMode",
         "duckstation_Controller5.AxisScale",
         "duckstation_Controller5.VibrationBias",
+        "duckstation_Controller5.SteeringDeadzone",
         "duckstation_Controller6.ForceAnalogOnReset",
         "duckstation_Controller6.AnalogDPadInDigitalMode",
         "duckstation_Controller6.AxisScale",
         "duckstation_Controller6.VibrationBias",
+        "duckstation_Controller6.SteeringDeadzone",
         "duckstation_Controller7.ForceAnalogOnReset",
         "duckstation_Controller7.AnalogDPadInDigitalMode",
         "duckstation_Controller7.AxisScale",
         "duckstation_Controller7.VibrationBias",
+        "duckstation_Controller7.SteeringDeadzone",
         "duckstation_Controller8.ForceAnalogOnReset",
         "duckstation_Controller8.AnalogDPadInDigitalMode",
         "duckstation_Controller8.AxisScale",
-        "duckstation_Controller8.VibrationBias"
+        "duckstation_Controller8.VibrationBias",
+        "duckstation_Controller8.SteeringDeadzone"
     };
 
     if (show_multitap == 2)
@@ -884,7 +890,7 @@ void LibretroHostInterface::LoadSettings(SettingsInterface& si)
     else
         option_display.visible = false;
 
-    for (i = 0; i < 16; i++)
+    for (i = 0; i < 20; i++)
     {
         option_display.key = controller_double_multitap_options[i];
         g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
