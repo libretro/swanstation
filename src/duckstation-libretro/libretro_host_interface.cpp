@@ -585,7 +585,7 @@ bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
 void LibretroHostInterface::retro_set_controller_port_device(unsigned port, unsigned device)
 {
   if (port >= NUM_CONTROLLER_AND_CARD_PORTS)
-	return;
+    return;
 
   switch (device)
   {
@@ -628,7 +628,7 @@ void LibretroHostInterface::retro_set_controller_port_device(unsigned port, unsi
   }
   System::UpdateControllers();
   System::ResetControllers();
-  System::UpdateControllerSettings();
+  HostInterface::UpdateSoftwareCursor();
 }
 
 void LibretroHostInterface::retro_run_frame()
@@ -783,7 +783,9 @@ void LibretroHostInterface::OnSystemPaused(bool paused) {}
 
 void LibretroHostInterface::OnSystemDestroyed() {}
 
-void LibretroHostInterface::OnControllerTypeChanged(u32 slot) {}
+void LibretroHostInterface::OnControllerTypeChanged(u32 slot) {
+  Log_InfoPrintf("Why are we reading this?");
+}
 
 void LibretroHostInterface::SetMouseMode(bool relative, bool hide_cursor) {}
 
@@ -939,7 +941,17 @@ void LibretroHostInterface::UpdateSettings()
                              Settings::GetRendererDisplayName(g_settings.gpu_renderer));
       g_settings.gpu_renderer = old_settings.gpu_renderer;
     }
-	
+
+    for (u32 i = 0; i < NUM_CONTROLLER_AND_CARD_PORTS; i++)
+    {
+      if (g_settings.controller_types[i] != old_settings.controller_types[i])
+      {
+        ReportFormattedMessage("Switch to %s prevented. Sticking with %s.",
+                               Settings::GetControllerTypeDisplayName(g_settings.controller_types[i]), Settings::GetControllerTypeDisplayName(old_settings.controller_types[i]));
+        g_settings.controller_types[i] = old_settings.controller_types[i];
+      }
+    }
+
     if (g_settings.memory_card_types[0] == MemoryCardType::Libretro && old_settings.memory_card_types[0] != MemoryCardType::Libretro)
     {
       ReportFormattedMessage("Setting memory card 1 to Save RAM mode will apply on core reload, to prevent save loss.");
