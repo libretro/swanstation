@@ -783,9 +783,7 @@ void LibretroHostInterface::OnSystemPaused(bool paused) {}
 
 void LibretroHostInterface::OnSystemDestroyed() {}
 
-void LibretroHostInterface::OnControllerTypeChanged(u32 slot) {
-  Log_InfoPrintf("Why are we reading this?");
-}
+void LibretroHostInterface::OnControllerTypeChanged(u32 slot) {}
 
 void LibretroHostInterface::SetMouseMode(bool relative, bool hide_cursor) {}
 
@@ -940,16 +938,6 @@ void LibretroHostInterface::UpdateSettings()
       ReportFormattedMessage("Switch to %s renderer pending, please restart the core to apply.",
                              Settings::GetRendererDisplayName(g_settings.gpu_renderer));
       g_settings.gpu_renderer = old_settings.gpu_renderer;
-    }
-
-    for (u32 i = 0; i < NUM_CONTROLLER_AND_CARD_PORTS; i++)
-    {
-      if (g_settings.controller_types[i] != old_settings.controller_types[i])
-      {
-        ReportFormattedMessage("Switch to %s prevented. Sticking with %s.",
-                               Settings::GetControllerTypeDisplayName(g_settings.controller_types[i]), Settings::GetControllerTypeDisplayName(old_settings.controller_types[i]));
-        g_settings.controller_types[i] = old_settings.controller_types[i];
-      }
     }
 
     if (g_settings.memory_card_types[0] == MemoryCardType::Libretro && old_settings.memory_card_types[0] != MemoryCardType::Libretro)
