@@ -942,7 +942,11 @@ void LibretroHostInterface::UpdateSettings()
 
     if (g_settings.gpu_use_software_renderer_for_readbacks != old_settings.gpu_use_software_renderer_for_readbacks)
     {
-      ReportFormattedMessage("Please restart the core to apply this setting.");
+      if (g_settings.gpu_use_software_renderer_for_readbacks)
+         ReportFormattedMessage("Enabling of software renderer for readbacks pending. Please restart the core to apply.");
+      else
+         ReportFormattedMessage("Disabling of software renderer for readbacks pending. Please restart the core to apply.");
+
       g_settings.gpu_use_software_renderer_for_readbacks = old_settings.gpu_use_software_renderer_for_readbacks;
     }
   }

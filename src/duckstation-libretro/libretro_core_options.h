@@ -436,10 +436,11 @@ struct retro_core_option_v2_definition option_defs_us[] = {
    },
    {
       "duckstation_GPU.UseSoftwareRendererForReadbacks",
-      "Use Software Renderer For Readbacks (Restart)",
+      "Use Software Renderer For Readbacks",
       NULL,
       "Runs the software renderer in parallel for VRAM readbacks. On some systems, this may "
-      "result in greater performance when using graphical enhancements with the hardware renderer.",
+      "result in greater performance when using graphical enhancements with the hardware renderer."
+      "Requires the core to be restarted to apply.",
       NULL,
       "enhancement",
       {
