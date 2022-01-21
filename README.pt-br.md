@@ -13,8 +13,7 @@ As características da SwanStation incluem:
 
  - CPU Recompilador/JIT (x86-64, armv7/AArch32 e também para AArch64)
  - Hardware (D3D11, OpenGL, Vulkan) e renderizador por software
- - Ampliação tanto em renderizadores de hardware como de software
- - Filtragem de textura, "função true color" (24-bit) nos renderizadores baseados por hardware (placa de vídeo)
+ - Aumento de resolução, filtragem de textura, "função true color" (24-bit) nos renderizadores baseados por hardware (placa de vídeo)
  - PGXP para precisão de geometria, correção de textura, e profundidade de campo
  - Filtro adaptativo de resolução
  - Opções de pós-processamento

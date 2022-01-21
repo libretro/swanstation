@@ -41,8 +41,6 @@ public:
   std::tuple<u32, u32> GetEffectiveDisplayResolution(bool scaled = true) override final;
   std::tuple<u32, u32> GetFullDisplayResolution(bool scaled = true) override final;
 
-  u16* GetVRAMshadowPtr() override { return m_vram_shadow.data(); }
-
 protected:
   enum : u32
   {

@@ -566,16 +566,10 @@ bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
       g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
       option_display.key = "duckstation_GPU.ResolutionScale";
       g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-#ifdef ANDROID
-      option_display.key = "duckstation_GPU.ResolutionSoftScale";
-      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-#endif
   }
   else
   {
       option_display.key = "duckstation_GPU.UseThread";
-      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-      option_display.key = "duckstation_GPU.ResolutionSoftScale";
       g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
   }
 
@@ -944,6 +938,12 @@ void LibretroHostInterface::UpdateSettings()
     {
       ReportFormattedMessage("Setting memory card 1 to Save RAM mode will apply on core reload, to prevent save loss.");
       g_settings.memory_card_types[0] = old_settings.memory_card_types[0];
+    }
+
+    if (g_settings.gpu_use_software_renderer_for_readbacks != old_settings.gpu_use_software_renderer_for_readbacks)
+    {
+      ReportFormattedMessage("Please restart the core to apply this setting.");
+      g_settings.gpu_use_software_renderer_for_readbacks = old_settings.gpu_use_software_renderer_for_readbacks;
     }
   }
 

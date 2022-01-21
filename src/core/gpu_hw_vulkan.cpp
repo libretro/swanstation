@@ -235,7 +235,7 @@ void GPU_HW_Vulkan::UpdateSettings()
   if (framebuffer_changed)
   {
     RestoreGraphicsAPIState();
-    UpdateVRAM(0, 0, VRAM_WIDTH, VRAM_HEIGHT, GetVRAMshadowPtr(), false, false);
+    UpdateVRAM(0, 0, VRAM_WIDTH, VRAM_HEIGHT, m_vram_ptr, false, false);
     UpdateDepthBufferFromMaskBit();
     UpdateDisplay();
     ResetGraphicsAPIState();

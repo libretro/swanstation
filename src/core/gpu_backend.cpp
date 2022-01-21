@@ -44,12 +44,6 @@ void GPUBackend::Shutdown()
   StopGPUThread();
 }
 
-GPUBackendReadVRAMCommand* GPUBackend::NewReadVRAMCommand()
-{
-  return static_cast<GPUBackendReadVRAMCommand*>(
-    AllocateCommand(GPUBackendCommandType::ReadVRAM, sizeof(GPUBackendReadVRAMCommand)));
-}
-
 GPUBackendFillVRAMCommand* GPUBackend::NewFillVRAMCommand()
 {
   return static_cast<GPUBackendFillVRAMCommand*>(
@@ -278,14 +272,6 @@ void GPUBackend::HandleCommand(const GPUBackendCommand* cmd)
 {
   switch (cmd->type)
   {
-    case GPUBackendCommandType::ReadVRAM:
-    {
-      FlushRender();
-      const auto* ccmd = static_cast<const GPUBackendReadVRAMCommand*>(cmd);
-      ReadVRAM(ZeroExtend32(ccmd->x), ZeroExtend32(ccmd->y), ZeroExtend32(ccmd->width), ZeroExtend32(ccmd->height));
-    }
-    break;
-
     case GPUBackendCommandType::FillVRAM:
     {
       FlushRender();

@@ -421,22 +421,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "1"
    },
    {
-      "duckstation_GPU.ResolutionSoftScale",
-      "Enhanced Resolution (Software)",
-      NULL,
-      "Renders in double resolution at the cost of lower performance.",
-      NULL,
-      "enhancement",
-      {
-         { "1",  "Disabled" },
-#ifndef ANDROID
-         { "2",  "Enabled" },
-#endif
-         { NULL, NULL },
-      },
-      "1"
-   },
-   {
       "duckstation_GPU.UseThread",
       "Threaded Rendering (Software)",
       NULL,
@@ -452,7 +436,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
    },
    {
       "duckstation_GPU.UseSoftwareRendererForReadbacks",
-      "Use Software Renderer For Readbacks",
+      "Use Software Renderer For Readbacks (Restart)",
       NULL,
       "Runs the software renderer in parallel for VRAM readbacks. On some systems, this may "
       "result in greater performance when using graphical enhancements with the hardware renderer.",

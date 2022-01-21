@@ -211,7 +211,7 @@ bool LibretroHostDisplay::BeginSetDisplayPixels(HostDisplayPixelFormat format, u
   m_software_fb.format = RETRO_PIXEL_FORMAT_UNKNOWN;
   m_software_fb.access_flags = RETRO_MEMORY_ACCESS_WRITE;
   m_software_fb.memory_flags = 0;
-  /*if (g_retro_environment_callback(RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER, &m_software_fb) &&
+  /* if (g_retro_environment_callback(RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER, &m_software_fb) &&
       m_software_fb.format == retro_pf)
   {
     SetDisplayTexture(m_software_fb.data, format, m_software_fb.width, m_software_fb.height, 0, 0, m_software_fb.width,
@@ -219,7 +219,7 @@ bool LibretroHostDisplay::BeginSetDisplayPixels(HostDisplayPixelFormat format, u
     *out_buffer = m_software_fb.data;
     *out_pitch = static_cast<u32>(m_software_fb.pitch);
     return true;
-  }*/
+  } */
 
   const u32 pitch = Common::AlignUpPow2(width * GetDisplayPixelFormatSize(format), 4);
   const u32 required_size = height * pitch;
@@ -254,6 +254,10 @@ bool LibretroHostDisplay::Render()
     if (m_display_texture_handle == m_software_fb.data)
       ClearDisplayTexture();
   }
+  else
+  {
+    g_retro_video_refresh_callback(nullptr, 0, 0, 0);
+  }
 
   return true;
 }
@@ -261,5 +265,5 @@ bool LibretroHostDisplay::Render()
 bool LibretroHostDisplay::RenderScreenshot(u32 width, u32 height, std::vector<u32>* out_pixels, u32* out_stride,
                                          HostDisplayPixelFormat* out_format)
 {
-  return true;
+  return false;
 }

@@ -13,8 +13,7 @@ SwanStation features include:
 
  - CPU Recompiler/JIT (x86-64, armv7/AArch32 and AArch64)
  - Hardware (D3D11, OpenGL, Vulkan) and software rendering
- - Upscaling in both hardware and software renderers
- - Texture filtering, and true colour (24-bit) in hardware renderers
+ - Upscaling, texture filtering, and true colour (24-bit) in hardware renderers
  - PGXP for geometry precision, texture correction, and depth buffer emulation
  - Adaptive downsampling filter
  - Post processing shader chains
