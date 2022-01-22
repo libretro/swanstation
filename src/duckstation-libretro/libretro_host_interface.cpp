@@ -72,13 +72,17 @@ LibretroHostInterface::LibretroHostInterface() = default;
 
 LibretroHostInterface::~LibretroHostInterface()
 {
-  // a few things we are safe to cleanup because these pointers are garaunteed to be initialized to zero (0)
-  // when the shared library (dll/so) is loaded into memory. Other things are not safe, such as calling
-  // HostInterface::Shutdown, because it depends on a bunch of vars being initialized to zero at runtime,
-  // otherwise it thinks it needs to clean them up and they're actually invalid, and crashes happen.
+  if (System::IsValid())
+  {
+    DestroySystem();
+  }
 
-  m_audio_stream.reset();   // assert checks will expect this is nullified.
-  ReleaseHostDisplay();     // assert checks will expect this is nullified.
+  // should be cleaned up by the context destroy, but just in case
+  if (m_hw_render_display)
+  {
+    m_hw_render_display->DestroyRenderDevice();
+    m_hw_render_display.reset();
+  }
 }
 
 #include "libretro_core_options.h"
@@ -309,7 +313,6 @@ void LibretroHostInterface::retro_get_system_av_info(struct retro_system_av_info
 void LibretroHostInterface::GetSystemAVInfo(struct retro_system_av_info* info, bool use_resolution_scale)
 {
   const u32 resolution_scale = use_resolution_scale ? GetResolutionScale() : 1u;
-  Assert(System::IsValid());
 
   std::memset(info, 0, sizeof(*info));
 
@@ -319,7 +322,7 @@ void LibretroHostInterface::GetSystemAVInfo(struct retro_system_av_info* info, b
   info->geometry.max_width = VRAM_WIDTH * resolution_scale;
   info->geometry.max_height = VRAM_HEIGHT * resolution_scale;
 
-  info->timing.fps = System::GetThrottleFrequency();
+  info->timing.fps = (System::IsValid()) ? System::GetThrottleFrequency() : 60.0;
   info->timing.sample_rate = static_cast<double>(AUDIO_SAMPLE_RATE);
 }
 
@@ -747,7 +750,17 @@ void LibretroHostInterface::retro_cheat_set(unsigned index, bool enabled, const 
 bool LibretroHostInterface::AcquireHostDisplay()
 {
   // start in software mode, switch to hardware later
+  struct retro_system_av_info avi;
+  g_libretro_host_interface.GetSystemAVInfo(&avi, false);
+
+  WindowInfo wi;
+  wi.type = WindowInfo::Type::Libretro;
+  wi.surface_width = avi.geometry.base_width;
+  wi.surface_height = avi.geometry.base_height;
+
   m_display = std::make_unique<LibretroHostDisplay>();
+  m_display->CreateRenderDevice(wi, {}, false, false);
+  m_display->InitializeRenderDevice({}, false, false);
   return true;
 }
 
@@ -757,14 +770,10 @@ void LibretroHostInterface::ReleaseHostDisplay()
   {
     m_hw_render_display->DestroyRenderDevice();
     m_hw_render_display.reset();
-    m_using_hardware_renderer = false;
   }
 
-  if (m_display)
-  {
-    m_display->DestroyRenderDevice();
-    m_display.reset();
-  }
+  m_display->DestroyRenderDevice();
+  m_display.reset();
 }
 
 std::unique_ptr<AudioStream> LibretroHostInterface::CreateAudioStream(AudioBackend backend)
@@ -1506,7 +1515,17 @@ void LibretroHostInterface::SwitchToSoftwareRenderer()
     m_using_hardware_renderer = false;
   }
 
+  struct retro_system_av_info avi;
+  g_libretro_host_interface.GetSystemAVInfo(&avi, false);
+
+  WindowInfo wi;
+  wi.type = WindowInfo::Type::Libretro;
+  wi.surface_width = avi.geometry.base_width;
+  wi.surface_height = avi.geometry.base_height;
+
   m_display = std::make_unique<LibretroHostDisplay>();
+  m_display->CreateRenderDevice(wi, {}, false, false);
+  m_display->InitializeRenderDevice({}, false, false);
   System::RecreateGPU(GPURenderer::Software, false);
 
   if (save_display)

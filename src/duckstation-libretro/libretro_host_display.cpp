@@ -204,31 +204,69 @@ bool LibretroHostDisplay::BeginSetDisplayPixels(HostDisplayPixelFormat format, u
   if (!CheckPixelFormat(retro_pf))
     return false;
 
+  const u32 full_width = (static_cast<u32>(m_display_active_left) + static_cast<u32>(m_display_width - m_display_active_left - m_display_active_width) + width);
+  const u32 full_height = (static_cast<u32>(m_display_active_top) + static_cast<u32>(m_display_height - m_display_active_top - m_display_active_height) + height);
   m_software_fb.data = nullptr;
-  m_software_fb.width = width;
-  m_software_fb.height = height;
+  m_software_fb.width = full_width;
+  m_software_fb.height = full_height;
   m_software_fb.pitch = 0;
   m_software_fb.format = RETRO_PIXEL_FORMAT_UNKNOWN;
   m_software_fb.access_flags = RETRO_MEMORY_ACCESS_WRITE;
   m_software_fb.memory_flags = 0;
-  /* if (g_retro_environment_callback(RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER, &m_software_fb) &&
+  const u32 pixel_size = GetDisplayPixelFormatSize(format);
+
+  if (g_retro_environment_callback(RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER, &m_software_fb) &&
       m_software_fb.format == retro_pf)
   {
+    const u32 active_left = static_cast<u32>(m_display_active_left);
+    const u32 active_right = static_cast<u32>(m_display_width - m_display_active_left - m_display_active_width);
+    const u32 active_top = static_cast<u32>(m_display_active_top);
+    const u32 active_bottom = static_cast<u32>(m_display_height - m_display_active_top - m_display_active_height);
+    const u32 pitch = static_cast<u32>(m_software_fb.pitch);
+    u8* pixel_start = reinterpret_cast<u8*>(m_software_fb.data);
+
+    if (active_left > 0 || active_right > 0)
+    {
+      const u32 left_pixel_size = pixel_size * active_left;
+      const u32 right_pixel_size = pixel_size * active_right;
+      u8* pixel_end = pixel_start + ((active_left + width) * pixel_size);
+      for (u32 i = 0; i < height; i++)
+      {
+        std::memset(pixel_start, 0, left_pixel_size);
+        std::memset(pixel_end, 0, right_pixel_size);
+        pixel_start += pitch;
+        pixel_end += pitch;
+      }
+    }
+
+    if (active_top > 0)
+    {
+      std::memset(pixel_start, 0, pixel_size * active_top * pitch);
+      pixel_start += pixel_size * active_top * pitch;
+    }
+
+    if (active_bottom > 0)
+      std::memset(pixel_start, 0, pixel_size * active_bottom * pitch);
+
+    m_frame_buffer_pitch = m_software_fb.pitch;
     SetDisplayTexture(m_software_fb.data, format, m_software_fb.width, m_software_fb.height, 0, 0, m_software_fb.width,
                       m_software_fb.height);
-    *out_buffer = m_software_fb.data;
+    *out_buffer = reinterpret_cast<u8*>(m_software_fb.data) + (active_left * pixel_size) + (active_top * pitch);
     *out_pitch = static_cast<u32>(m_software_fb.pitch);
     return true;
-  } */
+  }
 
-  const u32 pitch = Common::AlignUpPow2(width * GetDisplayPixelFormatSize(format), 4);
-  const u32 required_size = height * pitch;
-  if (m_frame_buffer.size() < (required_size / 4))
+  const u32 pitch = Common::AlignUpPow2(full_width * GetDisplayPixelFormatSize(format), 4);
+  const u32 required_size = full_height * pitch;
+  if (m_frame_buffer.size() != (required_size / 4))
+  {
+    m_frame_buffer.clear();
     m_frame_buffer.resize(required_size / 4);
+  }
 
   m_frame_buffer_pitch = pitch;
-  SetDisplayTexture(m_frame_buffer.data(), format, width, height, 0, 0, width, height);
-  *out_buffer = m_frame_buffer.data();
+  SetDisplayTexture(m_frame_buffer.data(), format, full_width, full_height, 0, 0, full_width, full_height);
+  *out_buffer = reinterpret_cast<u8*>(m_frame_buffer.data()) + (static_cast<u32>(m_display_active_top) * pitch) + (static_cast<u32>(m_display_active_left) * pixel_size);
   *out_pitch = pitch;
   return true;
 }

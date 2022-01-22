@@ -11,9 +11,6 @@ RETRO_API unsigned retro_api_version(void)
 
 RETRO_API void retro_init(void)
 {
-  // default log to stdout until we get an interface
-  Log::SetConsoleOutputParams(true, nullptr, LOGLEVEL_INFO);
-
   if (!g_libretro_host_interface.Initialize())
     Panic("Host interface initialization failed");
 }
