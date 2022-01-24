@@ -3239,6 +3239,35 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "false"
    },
    {
+      "duckstation_TextureReplacements.EnableVRAMWriteReplacements",
+      "Enable VRAM Write Texture Replacement",
+      NULL,
+      "Replace WRAM write textures with DuckStation formatted texture packs from the textures folder inside the RetroArch install directory."
+      "Currently only works with the D3D11 & Vulkan renderers.",
+      NULL,
+      "advanced",
+      {
+         { "true",  "Enabled" },
+         { "false", "Disabled" },
+         { NULL, NULL },
+      },
+      "false"
+   },
+   {
+      "duckstation_TextureReplacements.PreloadTextures",
+      "Preload Texture Replacements",
+      NULL,
+      "Preload VRAM write replacement textures to RAM",
+      NULL,
+      "advanced",
+      {
+         { "true",  "Enabled" },
+         { "false", "Disabled" },
+         { NULL, NULL },
+      },
+      "false"
+   },
+   {
       "duckstation_Display.ActiveStartOffset",
       "Display Active Start Offset",
       NULL,
