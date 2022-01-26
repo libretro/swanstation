@@ -55,9 +55,10 @@ public:
   std::unique_ptr<ByteStream> OpenPackageFile(const char* path, u32 flags) override;
 
   bool UpdateSystemAVInfo(bool use_resolution_scale);
-  
+
   void OnSystemPerformanceCountersUpdated() override;
   void OnDisplayInvalidated() override;
+  bool UpdateCoreOptionsDisplay();
 
   // Called by frontend
   void retro_set_environment();
@@ -110,6 +111,8 @@ private:
 
   bool UpdateGameSettings();
   void ApplyGameSettings();
+
+  static bool RETRO_CALLCONV UpdateCoreOptionsDisplayCallback();
 
   // Hardware renderer setup.
   bool RequestHardwareRendererContext();

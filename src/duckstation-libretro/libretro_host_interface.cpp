@@ -54,7 +54,6 @@ static retro_log_callback s_libretro_log_callback = {};
 static bool s_libretro_log_callback_valid = false;
 static bool s_libretro_log_callback_registered = false;
 static bool libretro_supports_option_categories = false;
-static int show_multitap = -1;
 static int analog_press = -1;
 
 static void LibretroLogCallback(void* pUserParam, const char* channelName, const char* functionName, LOGLEVEL level,
@@ -91,6 +90,9 @@ void LibretroHostInterface::retro_set_environment()
 {
   libretro_supports_option_categories = false;
   libretro_set_core_options(g_retro_environment_callback, &libretro_supports_option_categories);
+
+  retro_core_options_update_display_callback opts_update_display_cb = {UpdateCoreOptionsDisplayCallback};
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK, &opts_update_display_cb);
 
   static const struct retro_controller_description pads[] = {
    	  { "Digital Controller (Gamepad)", RETRO_DEVICE_JOYPAD },
@@ -494,12 +496,12 @@ bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
     }
   }
 
+  struct retro_core_option_display option_display;
+  option_display.visible = false;
   switch (System::GetRegion())
   {
       case  ConsoleRegion::NTSC_J:
       {
-         struct retro_core_option_display option_display;
-         option_display.visible = false;
          option_display.key = "duckstation_BIOS.PathNTSCU";
          g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
          option_display.key = "duckstation_BIOS.PathPAL";
@@ -510,8 +512,6 @@ bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
 
       case  ConsoleRegion::NTSC_U:
       {
-         struct retro_core_option_display option_display;
-         option_display.visible = false;
          option_display.key = "duckstation_BIOS.PathNTSCJ";
          g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
          option_display.key = "duckstation_BIOS.PathPAL";
@@ -522,8 +522,6 @@ bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
 
       case  ConsoleRegion::PAL:
       {
-         struct retro_core_option_display option_display;
-         option_display.visible = false;
          option_display.key = "duckstation_BIOS.PathNTSCU";
          g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
          option_display.key = "duckstation_BIOS.PathNTSCJ";
@@ -533,8 +531,6 @@ bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
       }
   }
 
-  struct retro_core_option_display option_display;
-  option_display.visible = false;
   if (g_settings.gpu_renderer == GPURenderer::Software)
   {
       option_display.key = "duckstation_GPU.UseSoftwareRendererForReadbacks";
@@ -551,23 +547,11 @@ bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
       g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
       option_display.key = "duckstation_GPU.PGXPEnable";
       g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-      option_display.key = "duckstation_GPU.PGXPCulling";
-      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-      option_display.key = "duckstation_GPU.PGXPTextureCorrection";
-      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-      option_display.key = "duckstation_GPU.PGXPDepthBuffer";
-      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-      option_display.key = "duckstation_GPU.PGXPVertexCache";
-      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-      option_display.key = "duckstation_GPU.PGXPCPU";
-      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-      option_display.key = "duckstation_GPU.PGXPPreserveProjFP";
-      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-      option_display.key = "duckstation_GPU.PGXPTolerance";
-      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
       option_display.key = "duckstation_GPU.DownsampleMode";
       g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
       option_display.key = "duckstation_GPU.ResolutionScale";
+      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+      option_display.key = "duckstation_TextureReplacements.EnableVRAMWriteReplacements";
       g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
   }
   else
@@ -790,6 +774,146 @@ void LibretroHostInterface::OnControllerTypeChanged(u32 slot) {}
 
 void LibretroHostInterface::SetMouseMode(bool relative, bool hide_cursor) {}
 
+bool LibretroHostInterface::UpdateCoreOptionsDisplay()
+{
+  LibretroSettingsInterface si;
+
+  static CPUExecutionMode cpu_execution_mode_prev;
+  static bool pgxp_enable_prev;
+  static MultitapMode multitap_mode_prev;
+  static bool vram_rewrite_replacements_prev;
+
+  const CPUExecutionMode cpu_execution_mode =
+    Settings::ParseCPUExecutionMode(
+      si.GetStringValue("CPU", "ExecutionMode", Settings::GetCPUExecutionModeName(Settings::DEFAULT_CPU_EXECUTION_MODE))
+        .c_str())
+      .value_or(Settings::DEFAULT_CPU_EXECUTION_MODE);
+  const bool cpu_recompiler = (cpu_execution_mode == CPUExecutionMode::Recompiler);
+
+  const GPURenderer gpu_renderer =
+    Settings::ParseRendererName(
+      si.GetStringValue("GPU", "Renderer", Settings::GetRendererName(Settings::DEFAULT_GPU_RENDERER)).c_str())
+      .value_or(Settings::DEFAULT_GPU_RENDERER);
+  const bool hardware_renderer = (gpu_renderer != GPURenderer::Software);
+  const bool pgxp_enable = (hardware_renderer && si.GetBoolValue("GPU", "PGXPEnable", false));
+
+  const MultitapMode multitap_mode =
+    Settings::ParseMultitapModeName(si.GetStringValue("ControllerPorts", "MultitapMode",
+                                                      Settings::GetMultitapModeName(Settings::DEFAULT_MULTITAP_MODE))
+                                      .c_str())
+      .value_or(Settings::DEFAULT_MULTITAP_MODE);
+  const bool single_multitap = (multitap_mode != MultitapMode::Disabled);
+  const bool dual_multitap = (multitap_mode == MultitapMode::BothPorts);
+
+  const bool vram_rewrite_replacements = (hardware_renderer && si.GetBoolValue("TextureReplacements", "EnableVRAMWriteReplacements", false));
+
+  if (cpu_execution_mode == cpu_execution_mode_prev && pgxp_enable == pgxp_enable_prev && 
+      multitap_mode == multitap_mode_prev && vram_rewrite_replacements == vram_rewrite_replacements_prev)
+    return false;
+
+  cpu_execution_mode_prev = cpu_execution_mode;
+  pgxp_enable_prev = pgxp_enable;
+  multitap_mode_prev = multitap_mode;
+  vram_rewrite_replacements_prev = vram_rewrite_replacements;
+
+  struct retro_core_option_display option_display;
+
+  option_display.visible = cpu_recompiler;
+  option_display.key = "duckstation_CPU.RecompilerICache";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_CPU.RecompilerBlockLinking";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_CPU.FastmemMode";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_CPU.FastmemRewrite";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+
+  option_display.visible = pgxp_enable;
+  option_display.key = "duckstation_GPU.PGXPCulling";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_GPU.PGXPTextureCorrection";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_GPU.PGXPDepthBuffer";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_GPU.PGXPVertexCache";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_GPU.PGXPCPU";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_GPU.PGXPPreserveProjFP";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_GPU.PGXPTolerance";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+
+  option_display.visible = single_multitap;
+  option_display.key = "duckstation_Controller3.ForceAnalogOnReset";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller3.AnalogDPadInDigitalMode";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller3.AxisScale";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller3.VibrationBias";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller3.SteeringDeadzone";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller4.ForceAnalogOnReset";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller4.AnalogDPadInDigitalMode";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller4.AxisScale";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller4.VibrationBias";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller4.SteeringDeadzone";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+
+  option_display.visible = dual_multitap;
+  option_display.key = "duckstation_Controller5.ForceAnalogOnReset";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller5.AnalogDPadInDigitalMode";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller5.AxisScale";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller5.VibrationBias";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller5.SteeringDeadzone";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller6.ForceAnalogOnReset";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller6.AnalogDPadInDigitalMode";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller6.AxisScale";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller6.VibrationBias";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller6.SteeringDeadzone";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller7.ForceAnalogOnReset";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller7.AnalogDPadInDigitalMode";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller7.AxisScale";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller7.VibrationBias";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller7.SteeringDeadzone";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller8.ForceAnalogOnReset";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller8.AnalogDPadInDigitalMode";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller8.AxisScale";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller8.VibrationBias";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Controller8.SteeringDeadzone";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+
+  option_display.visible = vram_rewrite_replacements;
+  option_display.key = "duckstation_TextureReplacements.PreloadTextures";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+
+  return true;
+}
 bool LibretroHostInterface::HasCoreVariablesChanged()
 {
   bool changed = false;
@@ -831,74 +955,6 @@ void LibretroHostInterface::LoadSettings(SettingsInterface& si)
   // Ensure we don't use the standalone memcard directory in shared mode.
   for (u32 i = 0; i < NUM_CONTROLLER_AND_CARD_PORTS; i++)
     g_settings.memory_card_paths[i] = GetSharedMemoryCardPath(i);
-
-  int show_multitap_prev = show_multitap;
-  if (g_settings.multitap_mode == MultitapMode::Disabled)
-    show_multitap = 0;
-  else if (g_settings.multitap_mode == MultitapMode::BothPorts)
-    show_multitap = 2;
-  else
-    show_multitap = 1;
-
-  if (show_multitap != show_multitap_prev)
-  {
-    unsigned i;
-    struct retro_core_option_display option_display;
-    char controller_multitap_options[10][49] = {
-        "duckstation_Controller3.ForceAnalogOnReset",
-        "duckstation_Controller3.AnalogDPadInDigitalMode",
-        "duckstation_Controller3.AxisScale",
-        "duckstation_Controller3.VibrationBias",
-        "duckstation_Controller3.SteeringDeadzone",
-        "duckstation_Controller4.ForceAnalogOnReset",
-        "duckstation_Controller4.AnalogDPadInDigitalMode",
-        "duckstation_Controller4.AxisScale",
-        "duckstation_Controller4.VibrationBias",
-        "duckstation_Controller4.SteeringDeadzone"
-    };
-
-    option_display.visible = show_multitap;
-
-    for (i = 0; i < 10; i++)
-    {
-        option_display.key = controller_multitap_options[i];
-        g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-    }
-
-    char controller_double_multitap_options[20][49] = {
-        "duckstation_Controller5.ForceAnalogOnReset",
-        "duckstation_Controller5.AnalogDPadInDigitalMode",
-        "duckstation_Controller5.AxisScale",
-        "duckstation_Controller5.VibrationBias",
-        "duckstation_Controller5.SteeringDeadzone",
-        "duckstation_Controller6.ForceAnalogOnReset",
-        "duckstation_Controller6.AnalogDPadInDigitalMode",
-        "duckstation_Controller6.AxisScale",
-        "duckstation_Controller6.VibrationBias",
-        "duckstation_Controller6.SteeringDeadzone",
-        "duckstation_Controller7.ForceAnalogOnReset",
-        "duckstation_Controller7.AnalogDPadInDigitalMode",
-        "duckstation_Controller7.AxisScale",
-        "duckstation_Controller7.VibrationBias",
-        "duckstation_Controller7.SteeringDeadzone",
-        "duckstation_Controller8.ForceAnalogOnReset",
-        "duckstation_Controller8.AnalogDPadInDigitalMode",
-        "duckstation_Controller8.AxisScale",
-        "duckstation_Controller8.VibrationBias",
-        "duckstation_Controller8.SteeringDeadzone"
-    };
-
-    if (show_multitap == 2)
-        option_display.visible = true;
-    else
-        option_display.visible = false;
-
-    for (i = 0; i < 20; i++)
-    {
-        option_display.key = controller_double_multitap_options[i];
-        g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-    }
-  }
 
 }
 
@@ -1299,6 +1355,11 @@ void LibretroHostInterface::UpdateControllersPlayStationMouse(u32 index)
 
   m_display->SetMousePosition(pos_x, pos_y);
 
+}
+
+bool LibretroHostInterface::UpdateCoreOptionsDisplayCallback()
+{
+  return P_THIS->UpdateCoreOptionsDisplay();
 }
 
 static std::optional<GPURenderer> RetroHwContextToRenderer(retro_hw_context_type type)
