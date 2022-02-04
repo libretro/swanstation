@@ -214,6 +214,21 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "false"
    },
    {
+      "duckstation_CDROM.PreCacheCHD",
+      "Pre-cache CHD Images To RAM",
+      NULL,
+      "Pre-caches CHD CD-ROM images to RAM without decompressing them. Unlike the preload option, this option supports "
+      "M3U files. It is also faster and requires less RAM compared to preloading as it doesn't decompress the CHD.",
+      NULL,
+      "console",
+      {
+         { "true",  "Enabled" },
+         { "false", "Disabled" },
+         { NULL, NULL },
+      },
+      "false"
+   },
+   {
       "duckstation_CDROM.MuteCDAudio",
       "Mute CD Audio",
       NULL,

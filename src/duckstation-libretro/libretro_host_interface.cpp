@@ -782,6 +782,7 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay()
   static bool pgxp_enable_prev;
   static MultitapMode multitap_mode_prev;
   static bool vram_rewrite_replacements_prev;
+  static bool cdrom_preload_enable_prev;
 
   const CPUExecutionMode cpu_execution_mode =
     Settings::ParseCPUExecutionMode(
@@ -806,15 +807,18 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay()
   const bool dual_multitap = (multitap_mode == MultitapMode::BothPorts);
 
   const bool vram_rewrite_replacements = (hardware_renderer && si.GetBoolValue("TextureReplacements", "EnableVRAMWriteReplacements", false));
+  const bool cdrom_preload_enable = si.GetBoolValue("CDROM", "LoadImageToRAM", false);
 
   if (cpu_execution_mode == cpu_execution_mode_prev && pgxp_enable == pgxp_enable_prev && 
-      multitap_mode == multitap_mode_prev && vram_rewrite_replacements == vram_rewrite_replacements_prev)
+      multitap_mode == multitap_mode_prev && vram_rewrite_replacements == vram_rewrite_replacements_prev &&
+      cdrom_preload_enable == cdrom_preload_enable_prev)
     return false;
 
   cpu_execution_mode_prev = cpu_execution_mode;
   pgxp_enable_prev = pgxp_enable;
   multitap_mode_prev = multitap_mode;
   vram_rewrite_replacements_prev = vram_rewrite_replacements;
+  cdrom_preload_enable_prev = cdrom_preload_enable;
 
   struct retro_core_option_display option_display;
 
@@ -910,6 +914,10 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay()
 
   option_display.visible = vram_rewrite_replacements;
   option_display.key = "duckstation_TextureReplacements.PreloadTextures";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+
+  option_display.visible = !cdrom_preload_enable;
+  option_display.key = "duckstation_CDROM.PreCacheCHD";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
   return true;
