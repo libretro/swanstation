@@ -225,6 +225,12 @@ bool LibretroHostDisplay::BeginSetDisplayPixels(HostDisplayPixelFormat format, u
     const u32 pitch = static_cast<u32>(m_software_fb.pitch);
     u8* pixel_start = reinterpret_cast<u8*>(m_software_fb.data);
 
+    if (active_top > 0)
+    {
+      std::memset(pixel_start, 0, pixel_size * active_top * pitch);
+      pixel_start += pixel_size * active_top * pitch;
+    }
+
     if (active_left > 0 || active_right > 0)
     {
       const u32 left_pixel_size = pixel_size * active_left;
@@ -237,12 +243,6 @@ bool LibretroHostDisplay::BeginSetDisplayPixels(HostDisplayPixelFormat format, u
         pixel_start += pitch;
         pixel_end += pitch;
       }
-    }
-
-    if (active_top > 0)
-    {
-      std::memset(pixel_start, 0, pixel_size * active_top * pitch);
-      pixel_start += pixel_size * active_top * pitch;
     }
 
     if (active_bottom > 0)
