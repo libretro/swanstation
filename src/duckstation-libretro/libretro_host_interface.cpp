@@ -977,6 +977,17 @@ void LibretroHostInterface::UpdateSettings()
   LibretroSettingsInterface si;
   LoadSettings(si);
   ApplyGameSettings();
+
+  if (System::IsValid())
+  {
+    if (g_settings.gpu_renderer != old_settings.gpu_renderer)
+    {
+      ReportFormattedMessage("Switch to %s renderer pending, please restart the core to apply.",
+                             Settings::GetRendererDisplayName(g_settings.gpu_renderer));
+      g_settings.gpu_renderer = old_settings.gpu_renderer;
+    }
+  }
+
   FixIncompatibleSettings(false);
 
   if (System::IsValid())
@@ -998,13 +1009,6 @@ void LibretroHostInterface::UpdateSettings()
 
       // Don't let the base class mess with the GPU.
       old_settings.gpu_resolution_scale = g_settings.gpu_resolution_scale;
-    }
-
-    if (g_settings.gpu_renderer != old_settings.gpu_renderer)
-    {
-      ReportFormattedMessage("Switch to %s renderer pending, please restart the core to apply.",
-                             Settings::GetRendererDisplayName(g_settings.gpu_renderer));
-      g_settings.gpu_renderer = old_settings.gpu_renderer;
     }
 
     if (g_settings.memory_card_types[0] == MemoryCardType::Libretro && old_settings.memory_card_types[0] != MemoryCardType::Libretro)
