@@ -783,11 +783,11 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay()
   static MultitapMode multitap_mode_prev;
   static bool vram_rewrite_replacements_prev;
   static bool cdrom_preload_enable_prev;
+  static DisplayAspectRatio aspect_ratio_prev;
 
   const CPUExecutionMode cpu_execution_mode =
     Settings::ParseCPUExecutionMode(
-      si.GetStringValue("CPU", "ExecutionMode", Settings::GetCPUExecutionModeName(Settings::DEFAULT_CPU_EXECUTION_MODE))
-        .c_str())
+      si.GetStringValue("CPU", "ExecutionMode", Settings::GetCPUExecutionModeName(Settings::DEFAULT_CPU_EXECUTION_MODE)).c_str())
       .value_or(Settings::DEFAULT_CPU_EXECUTION_MODE);
   const bool cpu_recompiler = (cpu_execution_mode == CPUExecutionMode::Recompiler);
 
@@ -799,9 +799,7 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay()
   const bool pgxp_enable = (hardware_renderer && si.GetBoolValue("GPU", "PGXPEnable", false));
 
   const MultitapMode multitap_mode =
-    Settings::ParseMultitapModeName(si.GetStringValue("ControllerPorts", "MultitapMode",
-                                                      Settings::GetMultitapModeName(Settings::DEFAULT_MULTITAP_MODE))
-                                      .c_str())
+    Settings::ParseMultitapModeName(si.GetStringValue("ControllerPorts", "MultitapMode", Settings::GetMultitapModeName(Settings::DEFAULT_MULTITAP_MODE)).c_str())
       .value_or(Settings::DEFAULT_MULTITAP_MODE);
   const bool single_multitap = (multitap_mode != MultitapMode::Disabled);
   const bool dual_multitap = (multitap_mode == MultitapMode::BothPorts);
@@ -809,9 +807,15 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay()
   const bool vram_rewrite_replacements = (hardware_renderer && si.GetBoolValue("TextureReplacements", "EnableVRAMWriteReplacements", false));
   const bool cdrom_preload_enable = si.GetBoolValue("CDROM", "LoadImageToRAM", false);
 
+  const DisplayAspectRatio aspect_ratio =
+    Settings::ParseDisplayAspectRatio(
+      si.GetStringValue("Display", "AspectRatio", Settings::GetDisplayAspectRatioName(Settings::DEFAULT_DISPLAY_ASPECT_RATIO)).c_str())
+      .value_or(Settings::DEFAULT_DISPLAY_ASPECT_RATIO);
+  const bool custom_aspect_ratio = (aspect_ratio == DisplayAspectRatio::Custom);
+
   if (cpu_execution_mode == cpu_execution_mode_prev && pgxp_enable == pgxp_enable_prev && 
       multitap_mode == multitap_mode_prev && vram_rewrite_replacements == vram_rewrite_replacements_prev &&
-      cdrom_preload_enable == cdrom_preload_enable_prev)
+      cdrom_preload_enable == cdrom_preload_enable_prev && aspect_ratio == aspect_ratio_prev)
     return false;
 
   cpu_execution_mode_prev = cpu_execution_mode;
@@ -819,6 +823,7 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay()
   multitap_mode_prev = multitap_mode;
   vram_rewrite_replacements_prev = vram_rewrite_replacements;
   cdrom_preload_enable_prev = cdrom_preload_enable;
+  aspect_ratio_prev = aspect_ratio;
 
   struct retro_core_option_display option_display;
 
@@ -918,6 +923,12 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay()
 
   option_display.visible = !cdrom_preload_enable;
   option_display.key = "duckstation_CDROM.PreCacheCHD";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+
+  option_display.visible = custom_aspect_ratio;
+  option_display.key = "duckstation_Display.CustomAspectRatioNumerator";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Display.CustomAspectRatioDenominator";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
   return true;
