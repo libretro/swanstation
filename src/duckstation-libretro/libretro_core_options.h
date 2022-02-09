@@ -778,7 +778,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "PAR 1:1",        "PAR 1:1" },
          { NULL, NULL },
       },
-      "Auto"
+      "Custom"
    },
    {
       "duckstation_Display.CustomAspectRatioNumerator",
