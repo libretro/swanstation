@@ -46,7 +46,7 @@ RETRO_API void retro_get_system_av_info(struct retro_system_av_info* info)
 RETRO_API void retro_set_controller_port_device(unsigned port, unsigned device)
 {
   g_libretro_host_interface.retro_set_controller_port_device(port, device);
-  g_libretro_host_interface.UpdateCoreOptionsDisplay();
+  g_libretro_host_interface.UpdateCoreOptionsDisplay(true);
 }
 
 RETRO_API void retro_reset(void)

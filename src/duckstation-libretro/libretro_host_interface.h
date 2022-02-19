@@ -58,7 +58,7 @@ public:
 
   void OnSystemPerformanceCountersUpdated() override;
   void OnDisplayInvalidated() override;
-  bool UpdateCoreOptionsDisplay();
+  bool UpdateCoreOptionsDisplay(bool controller);
 
   // Called by frontend
   void retro_set_environment();
@@ -136,6 +136,8 @@ private:
 
   std::unique_ptr<GameSettings::Entry> m_game_settings;
   float m_last_aspect_ratio = 4.0f / 3.0f;
+
+  std::array<u32, NUM_CONTROLLER_AND_CARD_PORTS> retropad_device = {RETRO_DEVICE_JOYPAD};
 
   retro_hw_render_callback m_hw_render_callback = {};
   std::unique_ptr<HostDisplay> m_hw_render_display;
