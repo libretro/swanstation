@@ -855,7 +855,7 @@ void HostInterface::CheckForSettingsChanges(const Settings& old_settings)
     g_dma.SetHaltTicks(g_settings.dma_halt_ticks);
   }
 
-#ifndef LIBRETRO
+/* Disable this for Libretro
   bool controllers_updated = false;
   for (u32 i = 0; i < NUM_CONTROLLER_AND_CARD_PORTS; i++)
   {
@@ -878,7 +878,7 @@ void HostInterface::CheckForSettingsChanges(const Settings& old_settings)
       UpdateSoftwareCursor();
     }
   }
-#endif
+*/
 
   if (g_settings.multitap_mode != old_settings.multitap_mode)
     System::UpdateMultitaps();

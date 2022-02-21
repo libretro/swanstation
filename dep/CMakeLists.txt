@@ -15,16 +15,6 @@ add_subdirectory(simpleini)
 set(LIBSAMPLERATE_ENABLE_SINC_BEST_CONVERTER OFF)
 add_subdirectory(libsamplerate)
 
-if(NOT BUILD_LIBRETRO_CORE)
-  add_subdirectory(tinyxml2)
-  add_subdirectory(cubeb)
-  add_subdirectory(googletest)
-endif()
-
-if(ENABLE_DISCORD_PRESENCE)
-  add_subdirectory(discord-rpc)
-endif()
-
 if(ENABLE_CHEEVOS)
   add_subdirectory(rcheevos)
 endif()
