@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(duckstation C CXX)
+project(swanstation C CXX)
 
 message("CMake Version: ${CMAKE_VERSION}")
 message("CMake System Name: ${CMAKE_SYSTEM_NAME}")
@@ -10,155 +10,24 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules/")
 # Platform detection.
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
   set(LINUX TRUE)
-  set(SUPPORTS_X11 TRUE)
-  set(SUPPORTS_WAYLAND TRUE)
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD")
   set(FREEBSD TRUE)
-  set(SUPPORTS_X11 TRUE)
 endif()
 
 # Set minimum OS version for macOS. 10.14 should work.
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14.0" CACHE STRING "")
 
-# Global options.
-if(NOT ANDROID)
-  option(BUILD_NOGUI_FRONTEND "Build the NoGUI frontend" ON)
-  option(BUILD_QT_FRONTEND "Build the Qt frontend" ON)
-  option(BUILD_LIBRETRO_CORE "Build a libretro core" OFF)
-  option(BUILD_REGTEST "Build regression test runner" OFF)
-  option(ENABLE_DISCORD_PRESENCE "Build with Discord Rich Presence support" ON)
-  option(ENABLE_CHEEVOS "Build with RetroAchievements support" ON)
-  option(USE_SDL2 "Link with SDL2 for controller support" ON)
-endif()
+message("Building libretro core, disabling platform integration.")
+
+set(USE_EGL OFF)
+set(ENABLE_CHEEVOS OFF)
+set(USE_X11 OFF)
+set(USE_WAYLAND OFF)
+
+# Force PIC when compiling a libretro core.
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 
-# OpenGL context creation methods.
-if(SUPPORTS_X11)
-  option(USE_X11 "Support X11 window system" ON)
-endif()
-if(SUPPORTS_WAYLAND)
-  option(USE_WAYLAND "Support Wayland window system" OFF)
-endif()
-if((LINUX OR FREEBSD) OR ANDROID)
-  option(USE_EGL "Support EGL OpenGL context creation" ON)
-endif()
-if((LINUX OR FREEBSD) AND NOT ANDROID AND NOT BUILD_LIBRETRO_CORE)
-  option(USE_DRMKMS "Support DRM/KMS OpenGL contexts" OFF)
-  option(USE_FBDEV "Support FBDev OpenGL contexts" OFF)
-  option(USE_EVDEV "Support EVDev controller interface" ON)
-endif()
-
-# Force EGL when using Wayland
-if(USE_WAYLAND)
-  set(USE_EGL ON)
-endif()
-
-if(ANDROID)
-  if(BUILD_NOGUI_FRONTEND)
-    message(WARNING "Building for Android, disabling NoGUI frontend")
-    set(BUILD_NOGUI_FRONTEND OFF)
-  endif()
-  if(BUILD_QT_FRONTEND)
-    message(WARNING "Building for Android, disabling Qt frontend")
-    set(BUILD_QT_FRONTEND OFF)
-  endif()
-  if(ENABLE_DISCORD_PRESENCE)
-    message("Building for Android, disabling Discord Presence support")
-    set(ENABLE_DISCORD_PRESENCE OFF)
-  endif()
-  if(USE_SDL2)
-    message("Building for Android, disabling SDL2 support")
-    set(USE_SDL2 OFF)
-  endif()
-  if(USE_X11)
-    set(USE_X11 OFF)
-  endif()
-  if(USE_WAYLAND)
-    set(USE_WAYLAND OFF)
-  endif()
-
-  # Cheevos are always on.
-  set(ENABLE_CHEEVOS ON)
-endif()
-
-
-# Disable platform integration when building for libretro.
-if(BUILD_LIBRETRO_CORE)
-  message("Building libretro core, disabling platform integration.")
-
-  if(USE_EGL)
-    set(USE_EGL OFF)
-  endif()
-  if(BUILD_NOGUI_FRONTEND)
-    set(BUILD_NOGUI_FRONTEND OFF)
-  endif()
-  if(BUILD_QT_FRONTEND)
-    set(BUILD_QT_FRONTEND OFF)
-  endif()
-  if(ENABLE_DISCORD_PRESENCE)
-    set(ENABLE_DISCORD_PRESENCE OFF)
-  endif()
-  if(ENABLE_CHEEVOS)
-    set(ENABLE_CHEEVOS OFF)
-  endif()
-  if(USE_SDL2)
-    set(USE_SDL2 OFF)
-  endif()
-  if(USE_X11)
-    set(USE_X11 OFF)
-  endif()
-  if(USE_WAYLAND)
-    set(USE_WAYLAND OFF)
-  endif()
-
-  # Force PIC when compiling a libretro core.
-  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-endif()
-
-
-# Common include/library directories on Windows.
-if(WIN32 AND USE_SDL2)
-  set(SDL2_FOUND TRUE)
-  set(SDL2_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/dep/msvc/sdl2/include")
-  if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    set(SDL2_LIBRARIES "${CMAKE_CURRENT_SOURCE_DIR}/dep/msvc/sdl2/lib64/SDL2.lib")
-    set(SDL2MAIN_LIBRARIES "${CMAKE_CURRENT_SOURCE_DIR}/dep/msvc/sdl2/lib64/SDL2main.lib")
-    set(SDL2_DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/dep/msvc/sdl2/bin64/SDL2.dll")
-    set(Qt5_DIR "${CMAKE_CURRENT_SOURCE_DIR}/dep/msvc/qt/5.15.0/msvc2017_64/lib/cmake/Qt5")
-  else()
-    set(SDL2_LIBRARIES "${CMAKE_CURRENT_SOURCE_DIR}/dep/msvc/sdl2/lib32/SDL2.lib")
-    set(SDL2MAIN_LIBRARIES "${CMAKE_CURRENT_SOURCE_DIR}/dep/msvc/sdl2/lib32/SDL2main.lib")
-    set(SDL2_DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/dep/msvc/sdl2/bin32/SDL2.dll")
-    set(Qt5_DIR "${CMAKE_CURRENT_SOURCE_DIR}/dep/msvc/qt/5.15.0/msvc2017_32/lib/cmake/Qt5")
-  endif()
-endif()
-
-
-# Required libraries.
-if(NOT ANDROID)
-  if(NOT WIN32 AND USE_SDL2)
-    find_package(SDL2 REQUIRED)
-  endif()
-  if(BUILD_QT_FRONTEND)
-    find_package(Qt5 COMPONENTS Core Gui Widgets Network LinguistTools REQUIRED)
-  endif()
-endif()
-
-if(USE_EGL)
-  find_package(EGL REQUIRED)
-endif()
-if(USE_X11)
-  find_package(X11 REQUIRED)
-  if (NOT X11_Xrandr_FOUND)
-    message(FATAL_ERROR "XRandR extension is required")
-  endif()
-endif()
-if(USE_WAYLAND)
-  find_package(ECM REQUIRED NO_MODULE)
-  list(APPEND CMAKE_MODULE_PATH "${ECM_MODULE_PATH}")
-  find_package(Wayland REQUIRED Egl)
-  message(STATUS "Wayland support enabled")
-endif()
 if(USE_DRMKMS AND USE_FBDEV)
   message(FATAL_ERROR "Only one of DRM/KMS and FBDev can be enabled")
 endif()
@@ -225,15 +94,13 @@ endif()
 
 
 # Default symbol visibility to hidden, that way we don't go through the PLT for intra-library calls.
-if(ANDROID OR BUILD_LIBRETRO_CORE)
-  set(CMAKE_C_VISIBILITY_PRESET hidden)
-  set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_C_VISIBILITY_PRESET hidden)
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
-  # -fno-semantic-interposition appears to be broken on Macs... of course.
-  if((CMAKE_COMPILER_IS_GNUCC OR CMAKE_CXX_COMPILER_ID MATCHES "Clang") AND NOT APPLE AND NOT ANDROID)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-semantic-interposition")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-semantic-interposition")
-  endif()
+# -fno-semantic-interposition appears to be broken on Macs... of course.
+if((CMAKE_COMPILER_IS_GNUCC OR CMAKE_CXX_COMPILER_ID MATCHES "Clang") AND NOT APPLE AND NOT ANDROID)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-semantic-interposition")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-semantic-interposition")
 endif()
 
 
@@ -284,12 +151,8 @@ endif()
 
 
 # Write binaries to a seperate directory.
-if(WIN32 AND NOT BUILD_LIBRETRO_CORE)
-  # For Windows, use the source directory, except for libretro.
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CPU_ARCH}")
-else()
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin")
-endif()
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin")
+
 
 # Needed for Linux - put shared libraries in the binary directory.
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
@@ -312,6 +175,3 @@ enable_testing()
 add_subdirectory(dep)
 add_subdirectory(src)
 
-if(ANDROID AND NOT BUILD_LIBRETRO_CORE)
-  add_subdirectory(android/app/src/cpp)
-endif()
