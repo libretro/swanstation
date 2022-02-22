@@ -3,6 +3,7 @@
 #include "common/byte_stream.h"
 #include "common/file_system.h"
 #include "common/log.h"
+#include "common/make_array.h"
 #include "common/platform.h"
 #include "common/string_util.h"
 #include "core/analog_controller.h"
@@ -61,7 +62,7 @@ static void LibretroLogCallback(void* pUserParam, const char* channelName, const
                                 const char* message)
 {
   static constexpr std::array<retro_log_level, LOGLEVEL_COUNT> levels = {
-    {RETRO_LOG_ERROR, RETRO_LOG_ERROR, RETRO_LOG_WARN, RETRO_LOG_INFO, RETRO_LOG_INFO, RETRO_LOG_INFO, RETRO_LOG_DEBUG,
+    {RETRO_LOG_ERROR, RETRO_LOG_ERROR, RETRO_LOG_WARN, RETRO_LOG_INFO, RETRO_LOG_INFO, RETRO_LOG_INFO, RETRO_LOG_INFO,
      RETRO_LOG_DEBUG, RETRO_LOG_DEBUG, RETRO_LOG_DEBUG}};
 
   s_libretro_log_callback.log(levels[level], "[%s] %s\n", (level <= LOGLEVEL_PERF) ? functionName : channelName,
@@ -171,7 +172,7 @@ bool LibretroHostInterface::Initialize()
 
   InitInterfaces();
   LibretroSettingsInterface si;
-  LoadSettings(si);
+  LoadSettings();
   FixIncompatibleSettings(true);
   UpdateLogging();
 
@@ -403,7 +404,7 @@ void LibretroHostInterface::ApplyGameSettings()
 
 bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
 {
-  auto bp = std::make_shared<SystemBootParameters>();
+  std::shared_ptr<SystemBootParameters> bp = std::make_shared<SystemBootParameters>();
   bp->filename = game->path;
   bp->media_playlist_index = P_THIS->m_disk_control_info.initial_image_index;
   bp->force_software_renderer = !m_hw_render_callback_valid;
@@ -945,8 +946,9 @@ std::unique_ptr<ByteStream> LibretroHostInterface::OpenPackageFile(const char* p
   return {};
 }
 
-void LibretroHostInterface::LoadSettings(SettingsInterface& si)
+void LibretroHostInterface::LoadSettings()
 {
+  LibretroSettingsInterface si;
   HostInterface::LoadSettings(si);
 
   // turn percentage into fraction for overclock
@@ -975,8 +977,7 @@ std::vector<std::string> LibretroHostInterface::GetSettingStringList(const char*
 void LibretroHostInterface::UpdateSettings()
 {
   Settings old_settings(std::move(g_settings));
-  LibretroSettingsInterface si;
-  LoadSettings(si);
+  LoadSettings();
   ApplyGameSettings();
 
   if (System::IsValid())

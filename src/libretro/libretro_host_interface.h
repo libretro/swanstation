@@ -96,7 +96,7 @@ private:
   void InitDiskControlInterface();
   void InitRumbleInterface();
 
-  void LoadSettings(SettingsInterface& si) override;
+  void LoadSettings();
   void UpdateSettings();
   void UpdateControllers();
   void UpdateControllersDigitalController(u32 index);
