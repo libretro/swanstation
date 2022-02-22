@@ -23,6 +23,7 @@ set(USE_EGL OFF)
 set(ENABLE_CHEEVOS OFF)
 set(USE_X11 OFF)
 set(USE_WAYLAND OFF)
+set(USE_D3D12 OFF)
 
 # Force PIC when compiling a libretro core.
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)

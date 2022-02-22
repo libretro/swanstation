@@ -41,7 +41,9 @@ public:
   {
     None,
     D3D11,
+#ifdef USE_D3D12
     D3D12,
+#endif
     Vulkan,
     OpenGL,
     OpenGLES
