@@ -9,7 +9,6 @@ add_subdirectory(xxhash)
 add_subdirectory(rapidjson)
 add_subdirectory(glslang)
 add_subdirectory(vulkan-loader)
-add_subdirectory(imgui)
 add_subdirectory(simpleini)
 
 set(LIBSAMPLERATE_ENABLE_SINC_BEST_CONVERTER OFF)

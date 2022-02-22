@@ -418,18 +418,6 @@ void LibretroD3D11HostDisplay::DestroyResources()
   m_display_rasterizer_state.Reset();
 }
 
-bool LibretroD3D11HostDisplay::CreateImGuiContext()
-{
-  return false;
-}
-
-void LibretroD3D11HostDisplay::DestroyImGuiContext() {}
-
-bool LibretroD3D11HostDisplay::UpdateImGuiFontTexture()
-{
-  return false;
-}
-
 bool LibretroD3D11HostDisplay::Render()
 {
   const u32 resolution_scale = g_libretro_host_interface.GetResolutionScale();

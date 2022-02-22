@@ -30,9 +30,6 @@ public:
   bool IsFullscreen() override;
   bool SetFullscreen(bool fullscreen, u32 width, u32 height, float refresh_rate) override;
   AdapterAndModeList GetAdapterAndModeList() override;
-  bool CreateImGuiContext() override;
-  void DestroyImGuiContext() override;
-  bool UpdateImGuiFontTexture() override;
   void DestroyRenderSurface() override;
 
   bool SetPostProcessingChain(const std::string_view& config) override;

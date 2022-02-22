@@ -474,18 +474,6 @@ bool LibretroOpenGLHostDisplay::SetPostProcessingChain(const std::string_view& c
   return false;
 }
 
-bool LibretroOpenGLHostDisplay::CreateImGuiContext()
-{
-  return false;
-}
-
-void LibretroOpenGLHostDisplay::DestroyImGuiContext() {}
-
-bool LibretroOpenGLHostDisplay::UpdateImGuiFontTexture()
-{
-  return false;
-}
-
 bool LibretroOpenGLHostDisplay::CreateResources()
 {
   static constexpr char fullscreen_quad_vertex_shader[] = R"(

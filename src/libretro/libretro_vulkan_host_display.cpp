@@ -561,18 +561,6 @@ bool LibretroVulkanHostDisplay::ChangeRenderWindow(const WindowInfo& new_wi)
   return true;
 }
 
-bool LibretroVulkanHostDisplay::CreateImGuiContext()
-{
-  return false;
-}
-
-void LibretroVulkanHostDisplay::DestroyImGuiContext() {}
-
-bool LibretroVulkanHostDisplay::UpdateImGuiFontTexture()
-{
-  return false;
-}
-
 bool LibretroVulkanHostDisplay::Render()
 {
   const u32 resolution_scale = g_libretro_host_interface.GetResolutionScale();

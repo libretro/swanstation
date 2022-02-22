@@ -67,10 +67,6 @@ protected:
   bool CreateResources() override;
   void DestroyResources() override;
 
-  bool CreateImGuiContext() override;
-  void DestroyImGuiContext() override;
-  bool UpdateImGuiFontTexture() override;
-
 private:
   static constexpr VkFormat FRAMEBUFFER_FORMAT = VK_FORMAT_R8G8B8A8_UNORM;
 

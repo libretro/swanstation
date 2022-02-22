@@ -78,10 +78,6 @@ protected:
   bool CreateResources() override;
   void DestroyResources() override;
 
-  bool CreateImGuiContext() override;
-  void DestroyImGuiContext() override;
-  bool UpdateImGuiFontTexture() override;
-
   void RenderDisplay(s32 left, s32 bottom, s32 width, s32 height, void* texture_handle, u32 texture_width,
                      s32 texture_height, s32 texture_view_x, s32 texture_view_y, s32 texture_view_width,
                      s32 texture_view_height, bool linear_filter);

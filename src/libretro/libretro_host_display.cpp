@@ -61,22 +61,6 @@ HostDisplay::RenderAPI LibretroHostDisplay::GetRenderAPI() const
   return RenderAPI::None;
 }
 
-bool LibretroHostDisplay::CreateImGuiContext()
-{
-  return true;
-}
-
-void LibretroHostDisplay::DestroyImGuiContext()
-{
-  // noop
-}
-
-bool LibretroHostDisplay::UpdateImGuiFontTexture()
-{
-  // noop
-  return true;
-}
-
 void* LibretroHostDisplay::GetRenderDevice() const
 {
   return nullptr;
