@@ -14,10 +14,6 @@ add_subdirectory(simpleini)
 set(LIBSAMPLERATE_ENABLE_SINC_BEST_CONVERTER OFF)
 add_subdirectory(libsamplerate)
 
-if(ENABLE_CHEEVOS)
-  add_subdirectory(rcheevos)
-endif()
-
 if(${CPU_ARCH} STREQUAL "aarch32" OR ${CPU_ARCH} STREQUAL "aarch64")
   add_subdirectory(vixl)
 endif()

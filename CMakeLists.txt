@@ -20,7 +20,6 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14.0" CACHE STRING "")
 message("Building libretro core, disabling platform integration.")
 
 set(USE_EGL OFF)
-set(ENABLE_CHEEVOS OFF)
 set(USE_X11 OFF)
 set(USE_WAYLAND OFF)
 set(USE_D3D12 OFF)
