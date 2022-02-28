@@ -768,17 +768,17 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       NULL,
       "display",
       {
-         { "Auto",           "Corrected (Auto)" },
-         { "Custom",         "Custom"},
          { "4:3",            "4:3" },
          { "16:9",           "16:9" },
          { "16:10",          "16:10" },
          { "19:9",           "19:9" },
          { "20:9",           "20:9" },
-         { "PAR 1:1",        "Uncorrected (PAR 1:1)" },
+         { "Custom",         "Custom"},
+         { "Auto",           "Auto (Game Native)" },
+         { "PAR 1:1",        "PAR 1:1" },
          { NULL, NULL },
       },
-      "Auto"
+      "4:3"
    },
    {
       "duckstation_Display.CustomAspectRatioNumerator",
