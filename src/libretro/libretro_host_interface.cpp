@@ -533,35 +533,6 @@ bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
       }
   }
 
-  if (g_settings.gpu_renderer == GPURenderer::Software)
-  {
-      option_display.key = "duckstation_GPU.UseSoftwareRendererForReadbacks";
-      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-      option_display.key = "duckstation_GPU.MSAA";
-      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-      option_display.key = "duckstation_GPU.TrueColor";
-      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-      option_display.key = "duckstation_GPU.ScaledDithering";
-      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-      option_display.key = "duckstation_GPU.ChromaSmoothing24Bit";
-      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-      option_display.key = "duckstation_GPU.TextureFilter";
-      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-      option_display.key = "duckstation_GPU.PGXPEnable";
-      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-      option_display.key = "duckstation_GPU.DownsampleMode";
-      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-      option_display.key = "duckstation_GPU.ResolutionScale";
-      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-      option_display.key = "duckstation_TextureReplacements.EnableVRAMWriteReplacements";
-      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  }
-  else
-  {
-      option_display.key = "duckstation_GPU.UseThread";
-      g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  }
-
   return true;
 }
 
@@ -782,6 +753,7 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
   LibretroSettingsInterface si;
 
   static CPUExecutionMode cpu_execution_mode_prev;
+  static bool hardware_renderer_prev;
   static bool pgxp_enable_prev;
   static MultitapMode multitap_mode_prev;
   static bool vram_rewrite_replacements_prev;
@@ -818,13 +790,15 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
   {
     if (cpu_execution_mode == cpu_execution_mode_prev && pgxp_enable == pgxp_enable_prev && 
         multitap_mode == multitap_mode_prev && vram_rewrite_replacements == vram_rewrite_replacements_prev &&
-        cdrom_preload_enable == cdrom_preload_enable_prev && aspect_ratio == aspect_ratio_prev)
+        cdrom_preload_enable == cdrom_preload_enable_prev && aspect_ratio == aspect_ratio_prev &&
+        hardware_renderer == hardware_renderer_prev)
     {
       return false;
     }
   }
 
   cpu_execution_mode_prev = cpu_execution_mode;
+  hardware_renderer_prev = hardware_renderer;
   pgxp_enable_prev = pgxp_enable;
   multitap_mode_prev = multitap_mode;
   vram_rewrite_replacements_prev = vram_rewrite_replacements;
@@ -841,6 +815,32 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
   option_display.key = "duckstation_CPU.FastmemMode";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
   option_display.key = "duckstation_CPU.FastmemRewrite";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+
+  option_display.visible = hardware_renderer;
+  option_display.key = "duckstation_GPU.UseSoftwareRendererForReadbacks";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_GPU.MSAA";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_GPU.TrueColor";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_GPU.ScaledDithering";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_GPU.ChromaSmoothing24Bit";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_GPU.TextureFilter";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_GPU.DownsampleMode";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_GPU.ResolutionScale";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_TextureReplacements.EnableVRAMWriteReplacements";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_GPU.PGXPEnable";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+
+  option_display.visible = !hardware_renderer;
+  option_display.key = "duckstation_GPU.UseThread";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
   option_display.visible = pgxp_enable;
