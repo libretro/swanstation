@@ -28,8 +28,6 @@ add_library(core
     digital_controller.h
     dma.cpp
     dma.h
-    gdb_protocol.cpp
-    gdb_protocol.h
     gpu.cpp
     gpu.h
     gpu_backend.cpp
