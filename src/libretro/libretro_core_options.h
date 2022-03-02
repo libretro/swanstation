@@ -517,7 +517,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "Use Software Renderer For Readbacks",
       NULL,
       "Runs the software renderer in parallel for VRAM readbacks. On some systems, this may "
-      "result in greater performance when using graphical enhancements with the hardware renderer."
+      "result in greater performance when using graphical enhancements with the hardware renderer. "
       "Requires the core to be restarted to apply.",
       NULL,
       "enhancement",
@@ -770,7 +770,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       {
          { "4:3",            "4:3" },
          { "16:9",           "16:9" },
-         { "16:10",          "16:10" },
          { "19:9",           "19:9" },
          { "20:9",           "20:9" },
          { "Custom",         "Custom"},
