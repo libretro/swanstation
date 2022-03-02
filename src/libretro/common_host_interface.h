@@ -1,8 +1,8 @@
 #pragma once
 #include "common/bitfield.h"
 #include "common/string.h"
-#include "controller.h"
-#include "host_interface.h"
+#include "core/controller.h"
+#include "core/host_interface.h"
 #include <atomic>
 #include <functional>
 #include <map>
