@@ -4,7 +4,7 @@
 #include "common/log.h"
 #include "common/string_util.h"
 #include "cpu_core.h"
-#include "frontend-common/common_host_interface.h"
+#include "libretro/common_host_interface.h"
 #include "system.h"
 #include <functional>
 #include <iomanip>

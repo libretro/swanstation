@@ -8,9 +8,9 @@
 #include "core/host_interface.h"
 #include "core/settings.h"
 #include "core/shader_cache_version.h"
-#include "frontend-common/display_ps.hlsl.h"
-#include "frontend-common/display_ps_alpha.hlsl.h"
-#include "frontend-common/display_vs.hlsl.h"
+#include "display_ps.hlsl.h"
+#include "display_ps_alpha.hlsl.h"
+#include "display_vs.hlsl.h"
 #include "libretro_host_interface.h"
 #include <array>
 Log_SetChannel(LibretroD3D11HostDisplay);
