@@ -1,4 +1,6 @@
 add_library(swanstation_libretro SHARED
+  game_settings.cpp
+  game_settings.h
   libretro_audio_stream.cpp
   libretro_audio_stream.h
   libretro_game_settings.cpp
@@ -23,14 +25,7 @@ if(WIN32)
   )
 endif()
 
-target_link_libraries(swanstation_libretro PRIVATE core common glad scmversion vulkan-loader)
-
-# Stuff from frontend-common
-target_sources(swanstation_libretro PRIVATE
-  ../frontend-common/game_settings.cpp
-  ../frontend-common/game_settings.h
-)
-target_link_libraries(swanstation_libretro PRIVATE simpleini)
+target_link_libraries(swanstation_libretro PRIVATE core common glad scmversion simpleini vulkan-loader libretro-common)
 
 # no lib prefix
 set_target_properties(swanstation_libretro PROPERTIES PREFIX "")

@@ -2,8 +2,8 @@
 #include "common/align.h"
 #include "common/assert.h"
 #include "common/log.h"
-#include "libretro.h"
 #include "libretro_host_interface.h"
+#include <libretro.h>
 #include <array>
 #include <tuple>
 Log_SetChannel(LibretroHostDisplay);

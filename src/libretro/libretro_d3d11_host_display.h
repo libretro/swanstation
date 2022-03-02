@@ -3,7 +3,7 @@
 #include "common/d3d11/stream_buffer.h"
 #include "common/d3d11/texture.h"
 #include "core/host_display.h"
-#include "libretro.h"
+#include <libretro.h>
 
 class LibretroD3D11HostDisplay final : public HostDisplay
 {

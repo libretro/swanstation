@@ -12,7 +12,7 @@
 #include "common/gl/stream_buffer.h"
 #include "common/gl/texture.h"
 #include "core/host_display.h"
-#include "libretro.h"
+#include <libretro.h>
 #include <memory>
 #include <string>
 

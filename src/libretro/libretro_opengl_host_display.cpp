@@ -3,8 +3,8 @@
 #include "common/assert.h"
 #include "common/log.h"
 #include "core/gpu.h"
-#include "libretro.h"
 #include "libretro_host_interface.h"
+#include <libretro.h>
 #include <array>
 #include <tuple>
 Log_SetChannel(LibretroOpenGLHostDisplay);

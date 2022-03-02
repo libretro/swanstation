@@ -1,6 +1,6 @@
 #pragma once
 #include "core/host_display.h"
-#include "libretro.h"
+#include <libretro.h>
 
 class LibretroHostDisplay final : public HostDisplay
 {

@@ -1,7 +1,7 @@
 #pragma once
 #include "core/host_interface.h"
 #include "core/system.h"
-#include "libretro.h"
+#include <libretro.h>
 #include <limits>
 #include <optional>
 #include <memory>

@@ -6,7 +6,7 @@
 #include "libretro.h"
 
 #define HAVE_VULKAN
-#include "libretro_vulkan.h"
+#include <libretro_vulkan.h>
 
 class LibretroVulkanHostDisplay final : public HostDisplay
 {

@@ -16,7 +16,7 @@
 Log_SetChannel(LibretroD3D11HostDisplay);
 
 #define HAVE_D3D11
-#include "libretro_d3d.h"
+#include <libretro_d3d.h>
 
 class LibretroD3D11HostDisplayTexture : public HostDisplayTexture
 {
