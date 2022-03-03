@@ -43,12 +43,6 @@ if(USE_EVDEV)
   message(STATUS "EVDev Support enabled")
   find_package(LIBEVDEV REQUIRED)
 endif()
-if(ENABLE_CHEEVOS)
-  message(STATUS "RetroAchievements support enabled")
-  if(NOT WIN32 AND NOT ANDROID)
-    find_package(CURL REQUIRED)
-  endif()
-endif()
 
 
 # Set _DEBUG macro for Debug builds.
