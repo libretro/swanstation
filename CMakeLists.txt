@@ -23,26 +23,12 @@ set(USE_EGL OFF)
 set(USE_X11 OFF)
 set(USE_WAYLAND OFF)
 set(USE_D3D12 OFF)
+set(USE_DRMKMS OFF)
+set(USE_FBDEV OFF)
+set(USE_EVDEV OFF)
 
 # Force PIC when compiling a libretro core.
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-
-if(USE_DRMKMS AND USE_FBDEV)
-  message(FATAL_ERROR "Only one of DRM/KMS and FBDev can be enabled")
-endif()
-if(USE_DRMKMS)
-  find_package(GBM REQUIRED)
-  find_package(Libdrm REQUIRED)
-  message(STATUS "DRM/KMS support enabled")
-endif()
-if(USE_FBDEV)
-  message(STATUS "FBDev Support enabled")
-endif()
-if(USE_EVDEV)
-  message(STATUS "EVDev Support enabled")
-  find_package(LIBEVDEV REQUIRED)
-endif()
 
 
 # Set _DEBUG macro for Debug builds.
