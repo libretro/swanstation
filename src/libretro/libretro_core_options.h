@@ -953,8 +953,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "Load Devices From Save States",
       NULL,
       "Sets whether the contents of devices and memory cards will be loaded when a save state is loaded. "
-      "Disabling this will simulate a replug of devices and memory cards, and is required to load save states "
-      "from other platforms and/or relocated game images.",
+      "Disabling this will simulate a replug of devices and memory cards.",
       NULL,
       "port",
       {
