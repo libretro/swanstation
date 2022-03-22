@@ -603,6 +603,10 @@ void LibretroHostInterface::retro_run_frame()
     UpdateGeometry();
 
   m_display->Render();
+
+  auto* const audio_stream = dynamic_cast<LibretroAudioStream*>(m_audio_stream.get());
+  DebugAssert(audio_stream);
+  audio_stream->UploadToFrontend();
 }
 
 unsigned LibretroHostInterface::retro_get_region()
