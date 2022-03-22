@@ -9,6 +9,8 @@ public:
   LibretroAudioStream();
   ~LibretroAudioStream();
 
+  void UploadToFrontend();
+
 protected:
   bool OpenDevice() override;
   void PauseDevice(bool paused) override;
