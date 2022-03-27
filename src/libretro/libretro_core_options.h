@@ -999,13 +999,14 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "duckstation_MemoryCards.Card1Type",
       "Memory Card 1 Type",
       NULL,
-      "Sets the type of memory card for Slot 1. Restart core when switching to Libretro from other formats. "
-      "Libretro (.srm) and PerGameTitle (.mcd) saves have internally identical formats and can be converted " 
-      "between one another via renaming the extension and removing/adding the slot number (_1)",
+      "Sets the type of memory card for Slot 1. Restart the core when switching formats. "
+      "'Shared Between All Games' and both 'Separate Card Per Game' options may be used for legacy purposes, "
+      "and are unsupported. 'Libretro' (.srm) and 'Separate Card Per Game (Game Title)' (.mcd) saves "
+      "have internally identical formats and can be converted between one another via renaming the extension " 
+      "and removing/adding the slot number (_1)",
       NULL,
       "port",
       {
-         { "None",         "No Memory Card" },
          { "Libretro",     "Libretro (Default)" },
          { "Shared",       "Shared Between All Games" },
          { "PerGame",      "Separate Card Per Game (Game Code)" },

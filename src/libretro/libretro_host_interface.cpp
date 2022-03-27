@@ -1017,9 +1017,9 @@ void LibretroHostInterface::UpdateSettings()
       old_settings.gpu_resolution_scale = g_settings.gpu_resolution_scale;
     }
 
-    if (g_settings.memory_card_types[0] == MemoryCardType::Libretro && old_settings.memory_card_types[0] != MemoryCardType::Libretro)
+    if (g_settings.memory_card_types[0] != old_settings.memory_card_types[0])
     {
-      ReportFormattedMessage("Setting memory card 1 to Save RAM mode will apply on core reload, to prevent save loss.");
+      ReportFormattedMessage("Changing memory card 1 type will apply on core reload, to prevent save loss.");
       g_settings.memory_card_types[0] = old_settings.memory_card_types[0];
     }
 
