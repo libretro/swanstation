@@ -1006,7 +1006,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "port",
       {
          { "None",         "No Memory Card" },
-         { "Libretro",     NULL },
+         { "Libretro",     "Libretro (Default)" },
          { "Shared",       "Shared Between All Games" },
          { "PerGame",      "Separate Card Per Game (Game Code)" },
          { "PerGameTitle", "Separate Card Per Game (Game Title)" },
