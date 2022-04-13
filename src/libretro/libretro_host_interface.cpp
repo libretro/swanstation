@@ -894,16 +894,10 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
     }
 
     const u32 active_controller = retropad_device[i];
-    const bool pscontroller_active = (port_allowed && (active_controller == RETRO_DEVICE_JOYPAD || active_controller == RETRO_DEVICE_PS_CONTROLLER));
     const bool analog_active = (port_allowed && (active_controller == RETRO_DEVICE_PS_DUALSHOCK || active_controller == RETRO_DEVICE_PS_ANALOG_JOYSTICK ||
                                 active_controller == RETRO_DEVICE_PS_NEGCON));
     const bool dualshock_active = (port_allowed && active_controller == RETRO_DEVICE_PS_DUALSHOCK);
-    const bool negcon_active = (port_allowed && active_controller == RETRO_DEVICE_PS_NEGCON);
     const bool guncon_active = (port_allowed && active_controller == RETRO_DEVICE_PS_GUNCON);
-
-    option_display.visible = pscontroller_active;
-    option_display.key = (TinyString::FromFormat("duckstation_Controller%u.ForcePopnControllerMode", (i + 1)));
-    g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
     option_display.visible = analog_active;
     option_display.key = (TinyString::FromFormat("duckstation_Controller%u.AxisScale", (i + 1)));
@@ -915,10 +909,6 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
     option_display.key = (TinyString::FromFormat("duckstation_Controller%u.AnalogDPadInDigitalMode", (i + 1)));
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
     option_display.key = (TinyString::FromFormat("duckstation_Controller%u.VibrationBias", (i + 1)));
-    g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-
-    option_display.visible = negcon_active;
-    option_display.key = (TinyString::FromFormat("duckstation_Controller%u.SteeringDeadzone", (i + 1)));
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
     option_display.visible = guncon_active;

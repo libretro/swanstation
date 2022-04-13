@@ -17,8 +17,6 @@ endif()
 # Set minimum OS version for macOS. 10.14 should work.
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14.0" CACHE STRING "")
 
-message("Building libretro core.")
-
 set(USE_EGL OFF)
 set(USE_X11 OFF)
 set(USE_WAYLAND OFF)
