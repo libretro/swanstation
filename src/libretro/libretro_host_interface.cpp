@@ -536,62 +536,24 @@ bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
   return true;
 }
 
-void LibretroHostInterface::retro_set_controller_port_device(unsigned port, unsigned device)
+void LibretroHostInterface::retro_set_controller_port_device(u32 port, u32 device)
 {
-  if (port >= NUM_CONTROLLER_AND_CARD_PORTS)
-    return;
-
-  switch (device)
+  if (retropad_device[port] != device)
   {
-    case RETRO_DEVICE_JOYPAD:
-    case RETRO_DEVICE_PS_CONTROLLER:
-      g_settings.controller_types[port] = ControllerType::DigitalController;
-      Log_InfoPrintf("Port %u = Digital Controller (Gamepad)", (port + 1));
-      break;
-
-    case RETRO_DEVICE_PS_DUALSHOCK:
-      g_settings.controller_types[port] = ControllerType::AnalogController;
-      Log_InfoPrintf("Port %u = Analog Controller (DualShock)", (port + 1));
-      break;
-
-    case RETRO_DEVICE_PS_ANALOG_JOYSTICK:
-      g_settings.controller_types[port] = ControllerType::AnalogJoystick;
-      Log_InfoPrintf("Port %u = Analog Joystick", (port + 1));
-      break;
-
-    case RETRO_DEVICE_PS_NEGCON:
-      g_settings.controller_types[port] = ControllerType::NeGcon;
-      Log_InfoPrintf("Port %u = NeGcon", (port + 1));
-      break;
-
-    case RETRO_DEVICE_PS_GUNCON:
-      g_settings.controller_types[port] = ControllerType::NamcoGunCon;
-      Log_InfoPrintf("Port %u = Namco GunCon", (port + 1));
-      break;
-
-    case RETRO_DEVICE_PS_MOUSE:
-      g_settings.controller_types[port] = ControllerType::PlayStationMouse;
-      Log_InfoPrintf("Port %u = PlayStation Mouse", (port + 1));
-      break;
-
-    case RETRO_DEVICE_NONE:
-    default:
-      g_settings.controller_types[port] = ControllerType::None;
-      Log_InfoPrintf("Port %u = None", (port + 1));
-      break;
+    controller_dirty = true;
+    retropad_device[port] = device;
   }
-  retropad_device[port] = device;
-  System::UpdateControllers();
-  System::ResetControllers();
-  HostInterface::UpdateSoftwareCursor();
 }
 
 void LibretroHostInterface::retro_run_frame()
 {
   Assert(!System::IsShutdown());
 
-  if (HasCoreVariablesChanged())
+  if (HasCoreVariablesChanged() || controller_dirty)
+  {
+    controller_dirty = false;
     UpdateSettings();
+  }
 
   UpdateControllers();
 
@@ -897,6 +859,7 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
     const bool analog_active = (port_allowed && (active_controller == RETRO_DEVICE_PS_DUALSHOCK || active_controller == RETRO_DEVICE_PS_ANALOG_JOYSTICK ||
                                 active_controller == RETRO_DEVICE_PS_NEGCON));
     const bool dualshock_active = (port_allowed && active_controller == RETRO_DEVICE_PS_DUALSHOCK);
+    const bool negcon_active = (port_allowed && active_controller == RETRO_DEVICE_PS_NEGCON);
     const bool guncon_active = (port_allowed && active_controller == RETRO_DEVICE_PS_GUNCON);
 
     option_display.visible = analog_active;
@@ -909,6 +872,10 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
     option_display.key = (TinyString::FromFormat("duckstation_Controller%u.AnalogDPadInDigitalMode", (i + 1)));
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
     option_display.key = (TinyString::FromFormat("duckstation_Controller%u.VibrationBias", (i + 1)));
+    g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+
+    option_display.visible = negcon_active;
+    option_display.key = (TinyString::FromFormat("duckstation_Controller%u.SteeringDeadzone", (i + 1)));
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
     option_display.visible = guncon_active;
@@ -956,6 +923,50 @@ void LibretroHostInterface::LoadSettings()
   const std::string msaa = si.GetStringValue("GPU", "MSAA", "1");
   g_settings.gpu_multisamples = StringUtil::FromChars<u32>(msaa).value_or(1);
   g_settings.gpu_per_sample_shading = StringUtil::EndsWith(msaa, "-ssaa");
+
+  // workaround to make sure controller specific settings don't require a re-init
+  for (u32 i = 0; i < NUM_CONTROLLER_AND_CARD_PORTS; i++)
+  {
+    switch (retropad_device[i])
+    {
+      case RETRO_DEVICE_JOYPAD:
+      case RETRO_DEVICE_PS_CONTROLLER:
+        g_settings.controller_types[i] = ControllerType::DigitalController;
+        Log_InfoPrintf("Port %u = Digital Controller (Gamepad)", (i + 1));
+        break;
+
+      case RETRO_DEVICE_PS_DUALSHOCK:
+        g_settings.controller_types[i] = ControllerType::AnalogController;
+        Log_InfoPrintf("Port %u = Analog Controller (DualShock)", (i + 1));
+        break;
+
+      case RETRO_DEVICE_PS_ANALOG_JOYSTICK:
+        g_settings.controller_types[i] = ControllerType::AnalogJoystick;
+        Log_InfoPrintf("Port %u = Analog Joystick", (i + 1));
+        break;
+
+      case RETRO_DEVICE_PS_NEGCON:
+        g_settings.controller_types[i] = ControllerType::NeGcon;
+        Log_InfoPrintf("Port %u = NeGcon", (i + 1));
+        break;
+
+      case RETRO_DEVICE_PS_GUNCON:
+        g_settings.controller_types[i] = ControllerType::NamcoGunCon;
+        Log_InfoPrintf("Port %u = Namco GunCon", (i + 1));
+        break;
+
+      case RETRO_DEVICE_PS_MOUSE:
+        g_settings.controller_types[i] = ControllerType::PlayStationMouse;
+        Log_InfoPrintf("Port %u = PlayStation Mouse", (i + 1));
+        break;
+
+      case RETRO_DEVICE_NONE:
+      default:
+        g_settings.controller_types[i] = ControllerType::None;
+        Log_InfoPrintf("Port %u = None", (i + 1));
+        break;
+    }
+  }
 
   // Ensure we don't use the standalone memcard directory in shared mode.
   for (u32 i = 0; i < NUM_CONTROLLER_AND_CARD_PORTS; i++)
