@@ -97,33 +97,41 @@ void LibretroHostInterface::retro_set_environment()
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK, &opts_update_display_cb);
 
   static const struct retro_controller_description pads[] = {
-   	  { "Digital Controller (Gamepad)", RETRO_DEVICE_JOYPAD },
-   	  { "Analog Controller (DualShock)", RETRO_DEVICE_PS_DUALSHOCK },
-   	  { "Analog Joystick", RETRO_DEVICE_PS_ANALOG_JOYSTICK },
-   	  { "NeGcon", RETRO_DEVICE_PS_NEGCON },
-   	  { "Namco GunCon", RETRO_DEVICE_PS_GUNCON },
-   	  { "PlayStation Mouse", RETRO_DEVICE_PS_MOUSE },
+      { "Digital Controller (Gamepad)", RETRO_DEVICE_JOYPAD },
+      { "Analog Controller (DualShock)", RETRO_DEVICE_PS_DUALSHOCK },
+      { "Analog Joystick", RETRO_DEVICE_PS_ANALOG_JOYSTICK },
+      { "NeGcon", RETRO_DEVICE_PS_NEGCON },
+      { "Namco GunCon", RETRO_DEVICE_PS_GUNCON },
+      { "PlayStation Mouse", RETRO_DEVICE_PS_MOUSE },
       { NULL, 0 },
   };
 
   static const struct retro_controller_description pads_mt[] = {
-   	  { "Digital Controller (Gamepad)", RETRO_DEVICE_JOYPAD },
-   	  { "Analog Controller (DualShock)", RETRO_DEVICE_PS_DUALSHOCK },
-   	  { "Analog Joystick", RETRO_DEVICE_PS_ANALOG_JOYSTICK },
-   	  { "NeGcon", RETRO_DEVICE_PS_NEGCON },
-   	  { "PlayStation Mouse", RETRO_DEVICE_PS_MOUSE },
+      { "Digital Controller (Gamepad)", RETRO_DEVICE_JOYPAD },
+      { "Analog Controller (DualShock)", RETRO_DEVICE_PS_DUALSHOCK },
+      { "Analog Joystick", RETRO_DEVICE_PS_ANALOG_JOYSTICK },
+      { "NeGcon", RETRO_DEVICE_PS_NEGCON },
+      { "PlayStation Mouse", RETRO_DEVICE_PS_MOUSE },
+      { NULL, 0 },
+  };
+
+  static const struct retro_controller_description pads_mt2[] = {
+      { "Digital Controller (Gamepad)", RETRO_DEVICE_JOYPAD },
+      { "Analog Controller (DualShock)", RETRO_DEVICE_PS_DUALSHOCK },
+      { "Analog Joystick", RETRO_DEVICE_PS_ANALOG_JOYSTICK },
+      { "PlayStation Mouse", RETRO_DEVICE_PS_MOUSE },
       { NULL, 0 },
   };
 
   static const struct retro_controller_info ports[] = {
-   	  { pads, 6 },
-   	  { pads, 6 },
+   	  { pads, 7 },
+   	  { pads, 7 },
    	  { pads_mt, 6 },
    	  { pads_mt, 6 },
-   	  { pads_mt, 6 },
-   	  { pads_mt, 6 },
-   	  { pads_mt, 6 },
-   	  { pads_mt, 6 },
+   	  { pads_mt2, 5 },
+   	  { pads_mt2, 5 },
+   	  { pads_mt2, 5 },
+   	  { pads_mt2, 5 },
       { NULL, 0 },
   };
 
@@ -876,6 +884,8 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
 
     option_display.visible = negcon_active;
     option_display.key = (TinyString::FromFormat("duckstation_Controller%u.SteeringDeadzone", (i + 1)));
+    g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+    option_display.key = (TinyString::FromFormat("duckstation_Controller%u.TwistResponse", (i + 1)));
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
     option_display.visible = guncon_active;

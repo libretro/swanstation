@@ -67,12 +67,24 @@ void NeGcon::SetAxisState(s32 axis_code, float value)
   // Steering Axis: -1..1 -> 0..255
   if (axis_code == static_cast<s32>(Axis::Steering))
   {
-    const float float_value =
+    float float_value =
       (std::abs(value) < m_steering_deadzone) ?
         0.0f :
         std::copysign((std::abs(value) - m_steering_deadzone) / (1.0f - m_steering_deadzone), value);
-    const u8 u8_value = static_cast<u8>(std::clamp(std::round(((float_value + 1.0f) / 2.0f) * 255.0f), 0.0f, 255.0f));
 
+    if (m_twist_response == "quadratic")
+    {
+        if (float_value < 0.0f)
+            float_value = -(float_value * float_value);
+        else
+            float_value = float_value * float_value;
+    }
+    else if (m_twist_response == "cubic")
+    {
+        float_value = float_value * float_value * float_value;
+    }
+
+    const u8 u8_value = static_cast<u8>(std::clamp(std::round(((float_value + 1.0f) / 2.0f) * 255.0f), 0.0f, 255.0f));
     SetAxisState(static_cast<Axis>(axis_code), u8_value);
 
     return;
@@ -293,9 +305,11 @@ u32 NeGcon::StaticGetVibrationMotorCount()
 
 Controller::SettingList NeGcon::StaticGetSettings()
 {
-  static constexpr std::array<SettingInfo, 1> settings = {
+  static constexpr std::array<SettingInfo, 2> settings = {
     {{SettingInfo::Type::Float, "SteeringDeadzone", TRANSLATABLE("NeGcon", "Steering Axis Deadzone"),
-      TRANSLATABLE("NeGcon", "Sets deadzone size for steering axis."), "0.00f", "0.00f", "0.99f", "0.01f"}}};
+      TRANSLATABLE("NeGcon", "Sets deadzone size for steering axis."), "0.00f", "0.00f", "0.99f", "0.01f"},
+     {SettingInfo::Type::String, "TwistResponse", TRANSLATABLE("NeGcon", "Twist Response"),
+      TRANSLATABLE("NeGcon", "Choose the twist response type of the left analog stick.")}}};
 
   return SettingList(settings.begin(), settings.end());
 }
@@ -304,4 +318,5 @@ void NeGcon::LoadSettings(const char* section)
 {
   Controller::LoadSettings(section);
   m_steering_deadzone = g_host_interface->GetFloatSettingValue(section, "SteeringDeadzone", 0.10f);
+  m_twist_response = g_host_interface->GetStringSettingValue(section, "TwistResponse");
 }

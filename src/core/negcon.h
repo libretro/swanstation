@@ -87,4 +87,5 @@ private:
   TransferState m_transfer_state = TransferState::Idle;
 
   float m_steering_deadzone = 0.00f;
+  std::string m_twist_response;
 };
