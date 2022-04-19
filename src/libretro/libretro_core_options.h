@@ -3475,6 +3475,20 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "true"
    },
    {
+      "duckstation_Display.ShowFPS",
+      "Display Internal Framerate",
+      NULL,
+      "Shows the internal frame rate at which the game is running.",
+      NULL,
+      "display",
+      {
+         { "true",  "Enabled" },
+         { "false", "Disabled" },
+         { NULL, NULL },
+      },
+      "false"
+   },
+   {
       "duckstation_Main.ApplyGameSettings",
       "Apply Compatibility Settings",
       NULL,
