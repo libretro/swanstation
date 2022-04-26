@@ -949,22 +949,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "Borders"
    },
    {
-      "duckstation_Display.LinearFiltering",
-      "Linear Upscaling",
-      NULL,
-      "Uses bilinear texture filtering when displaying the console's framebuffer to the screen. Disabling filtering will produce "
-      "a sharper, blockier/pixelated image. Enabling will smooth out the image. This option will be less noticable the higher "
-      "the resolution scale.",
-      NULL,
-      "display",
-      {
-         { "true",  "Enabled" },
-         { "false", "Disabled" },
-         { NULL, NULL },
-      },
-      "true"
-   },
-   {
       "duckstation_GPU.DownsampleMode",
       "Downsampling",
       NULL,
