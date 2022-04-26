@@ -230,7 +230,7 @@ void Settings::Load(SettingsInterface& si)
   display_active_end_offset = static_cast<s16>(si.GetIntValue("Display", "ActiveEndOffset", 0));
   display_line_start_offset = static_cast<s8>(si.GetIntValue("Display", "LineStartOffset", 0));
   display_line_end_offset = static_cast<s8>(si.GetIntValue("Display", "LineEndOffset", 0));
-  display_linear_filtering = si.GetBoolValue("Display", "LinearFiltering", true);
+  display_linear_filtering = si.GetBoolValue("Display", "LinearFiltering", false);
   display_integer_scaling = si.GetBoolValue("Display", "IntegerScaling", false);
   display_stretch = si.GetBoolValue("Display", "Stretch", false);
   display_post_processing = si.GetBoolValue("Display", "PostProcessing", false);
