@@ -805,11 +805,11 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "19:9",           "19:9" },
          { "20:9",           "20:9" },
          { "Custom",         "Custom"},
-         { "Auto",           "Auto (Game Native)" },
-         { "PAR 1:1",        "PAR 1:1" },
+         { "Auto",           "Corrected" },
+         { "PAR 1:1",        "PAR 1:1 (Uncorrected)" },
          { NULL, NULL },
       },
-      "4:3"
+      "Auto"
    },
    {
       "duckstation_Display.CustomAspectRatioNumerator",
