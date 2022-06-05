@@ -759,6 +759,7 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
   LibretroSettingsInterface si;
 
   static CPUExecutionMode cpu_execution_mode_prev;
+  static CPUFastmemMode cpu_fastmem_mode_prev;
   static bool hardware_renderer_prev;
   static bool pgxp_enable_prev;
   static MultitapMode multitap_mode_prev;
@@ -770,7 +771,12 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
     Settings::ParseCPUExecutionMode(
       si.GetStringValue("CPU", "ExecutionMode", Settings::GetCPUExecutionModeName(Settings::DEFAULT_CPU_EXECUTION_MODE)).c_str())
       .value_or(Settings::DEFAULT_CPU_EXECUTION_MODE);
+  const CPUFastmemMode cpu_fastmem_mode =
+    Settings::ParseCPUFastmemMode(
+      si.GetStringValue("CPU", "FastmemMode", Settings::GetCPUFastmemModeName(Settings::DEFAULT_CPU_FASTMEM_MODE)).c_str())
+      .value_or(Settings::DEFAULT_CPU_FASTMEM_MODE);
   const bool cpu_recompiler = (cpu_execution_mode == CPUExecutionMode::Recompiler);
+  const bool cpu_fastmem_rewrite = (cpu_recompiler && cpu_fastmem_mode == CPUFastmemMode::MMap);
 
   const GPURenderer gpu_renderer =
     Settings::ParseRendererName(
@@ -794,7 +800,7 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
 
   if (!controller)
   {
-    if (cpu_execution_mode == cpu_execution_mode_prev && pgxp_enable == pgxp_enable_prev && 
+    if (cpu_execution_mode == cpu_execution_mode_prev && cpu_fastmem_mode == cpu_fastmem_mode_prev && pgxp_enable == pgxp_enable_prev && 
         multitap_mode == multitap_mode_prev && vram_rewrite_replacements == vram_rewrite_replacements_prev &&
         cdrom_preload_enable == cdrom_preload_enable_prev && aspect_ratio == aspect_ratio_prev &&
         hardware_renderer == hardware_renderer_prev)
@@ -804,6 +810,7 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
   }
 
   cpu_execution_mode_prev = cpu_execution_mode;
+  cpu_fastmem_mode_prev = cpu_fastmem_mode;
   hardware_renderer_prev = hardware_renderer;
   pgxp_enable_prev = pgxp_enable;
   multitap_mode_prev = multitap_mode;
@@ -820,6 +827,8 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
   option_display.key = "duckstation_CPU.FastmemMode";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+
+  option_display.visible = cpu_fastmem_rewrite;
   option_display.key = "duckstation_CPU.FastmemRewrite";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
