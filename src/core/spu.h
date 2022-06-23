@@ -41,9 +41,6 @@ public:
   void DMARead(u32* words, u32 word_count);
   void DMAWrite(const u32* words, u32 word_count);
 
-  // Render statistics debug window.
-  void DrawDebugStateWindow();
-
   // Executes the SPU, generating any pending samples.
   void GeneratePendingSamples();
 

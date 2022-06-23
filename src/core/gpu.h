@@ -83,9 +83,6 @@ public:
   virtual void ResetGraphicsAPIState();
   virtual void RestoreGraphicsAPIState();
 
-  // Render statistics debug window.
-  void DrawDebugStateWindow();
-
   bool IsHardwareRenderer();
   void CPUClockChanged();
 

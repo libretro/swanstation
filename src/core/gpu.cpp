@@ -13,9 +13,6 @@
 #include "system.h"
 #include "timers.h"
 #include <cmath>
-#ifdef WITH_IMGUI
-#include "imgui.h"
-#endif
 Log_SetChannel(GPU);
 
 std::unique_ptr<GPU> g_gpu;
@@ -1543,129 +1540,6 @@ bool GPU::DumpVRAMToFile(const char* filename, u32 width, u32 height, u32 stride
     std::fwrite(data, 1, size, static_cast<std::FILE*>(context));
   };
   return (stbi_write_png_to_func(write_func, fp.get(), width, height, 4, rgba8_buf.get(), sizeof(u32) * width) != 0);
-}
-
-void GPU::DrawDebugStateWindow()
-{
-#ifdef WITH_IMGUI
-  const float framebuffer_scale = ImGui::GetIO().DisplayFramebufferScale.x;
-
-  ImGui::SetNextWindowSize(ImVec2(450.0f * framebuffer_scale, 550.0f * framebuffer_scale), ImGuiCond_FirstUseEver);
-  if (!ImGui::Begin("GPU", nullptr))
-  {
-    ImGui::End();
-    return;
-  }
-
-  const bool is_idle_frame = m_stats.num_polygons == 0;
-  if (!is_idle_frame)
-  {
-    m_last_stats = m_stats;
-    m_stats = {};
-  }
-
-  if (ImGui::CollapsingHeader("Statistics", ImGuiTreeNodeFlags_DefaultOpen))
-  {
-    const Stats& stats = m_last_stats;
-
-    ImGui::Columns(2);
-    ImGui::SetColumnWidth(0, 200.0f * framebuffer_scale);
-
-    ImGui::TextUnformatted("Idle Frame: ");
-    ImGui::NextColumn();
-    ImGui::Text("%s", is_idle_frame ? "Yes" : "No");
-    ImGui::NextColumn();
-
-    ImGui::TextUnformatted("VRAM Reads: ");
-    ImGui::NextColumn();
-    ImGui::Text("%u", stats.num_vram_reads);
-    ImGui::NextColumn();
-
-    ImGui::TextUnformatted("VRAM Fills: ");
-    ImGui::NextColumn();
-    ImGui::Text("%u", stats.num_vram_fills);
-    ImGui::NextColumn();
-
-    ImGui::TextUnformatted("VRAM Writes: ");
-    ImGui::NextColumn();
-    ImGui::Text("%u", stats.num_vram_writes);
-    ImGui::NextColumn();
-
-    ImGui::TextUnformatted("VRAM Copies: ");
-    ImGui::NextColumn();
-    ImGui::Text("%u", stats.num_vram_copies);
-    ImGui::NextColumn();
-
-    ImGui::TextUnformatted("Vertices Processed: ");
-    ImGui::NextColumn();
-    ImGui::Text("%u", stats.num_vertices);
-    ImGui::NextColumn();
-
-    ImGui::TextUnformatted("Polygons Drawn: ");
-    ImGui::NextColumn();
-    ImGui::Text("%u", stats.num_polygons);
-    ImGui::NextColumn();
-
-    ImGui::Columns(1);
-  }
-
-  DrawRendererStats(is_idle_frame);
-
-  if (ImGui::CollapsingHeader("GPU", ImGuiTreeNodeFlags_DefaultOpen))
-  {
-    static constexpr std::array<const char*, 5> state_strings = {
-      {"Idle", "Reading VRAM", "Writing VRAM", "Drawing Polyline"}};
-
-    ImGui::Text("State: %s", state_strings[static_cast<u8>(m_blitter_state)]);
-    ImGui::Text("Dither: %s", m_GPUSTAT.dither_enable ? "Enabled" : "Disabled");
-    ImGui::Text("Draw To Displayed Field: %s", m_GPUSTAT.draw_to_displayed_field ? "Enabled" : "Disabled");
-    ImGui::Text("Draw Set Mask Bit: %s", m_GPUSTAT.set_mask_while_drawing ? "Yes" : "No");
-    ImGui::Text("Draw To Masked Pixels: %s", m_GPUSTAT.check_mask_before_draw ? "Yes" : "No");
-    ImGui::Text("Reverse Flag: %s", m_GPUSTAT.reverse_flag ? "Yes" : "No");
-    ImGui::Text("Texture Disable: %s", m_GPUSTAT.texture_disable ? "Yes" : "No");
-    ImGui::Text("PAL Mode: %s", m_GPUSTAT.pal_mode ? "Yes" : "No");
-    ImGui::Text("Interrupt Request: %s", m_GPUSTAT.interrupt_request ? "Yes" : "No");
-    ImGui::Text("DMA Request: %s", m_GPUSTAT.dma_data_request ? "Yes" : "No");
-  }
-
-  if (ImGui::CollapsingHeader("CRTC", ImGuiTreeNodeFlags_DefaultOpen))
-  {
-    const auto& cs = m_crtc_state;
-    ImGui::Text("Clock: %s", (m_console_is_pal ? (m_GPUSTAT.pal_mode ? "PAL-on-PAL" : "NTSC-on-PAL") :
-                                                 (m_GPUSTAT.pal_mode ? "PAL-on-NTSC" : "NTSC-on-NTSC")));
-    ImGui::Text("Horizontal Frequency: %.3f KHz", ComputeHorizontalFrequency() / 1000.0f);
-    ImGui::Text("Vertical Frequency: %.3f Hz", ComputeVerticalFrequency());
-    ImGui::Text("Dot Clock Divider: %u", cs.dot_clock_divider);
-    ImGui::Text("Vertical Interlace: %s (%s field)", m_GPUSTAT.vertical_interlace ? "Yes" : "No",
-                cs.interlaced_field ? "odd" : "even");
-    ImGui::Text("Current Scanline: %u (tick %u)", cs.current_scanline, cs.current_tick_in_scanline);
-    ImGui::Text("Display Disable: %s", m_GPUSTAT.display_disable ? "Yes" : "No");
-    ImGui::Text("Displaying Odd Lines: %s", cs.active_line_lsb ? "Yes" : "No");
-    ImGui::Text("Color Depth: %u-bit", m_GPUSTAT.display_area_color_depth_24 ? 24 : 15);
-    ImGui::Text("Start Offset in VRAM: (%u, %u)", cs.regs.X.GetValue(), cs.regs.Y.GetValue());
-    ImGui::Text("Display Total: %u (%u) horizontal, %u vertical", cs.horizontal_total,
-                cs.horizontal_total / cs.dot_clock_divider, cs.vertical_total);
-    ImGui::Text("Configured Display Range: %u-%u (%u-%u), %u-%u", cs.regs.X1.GetValue(), cs.regs.X2.GetValue(),
-                cs.regs.X1.GetValue() / cs.dot_clock_divider, cs.regs.X2.GetValue() / cs.dot_clock_divider,
-                cs.regs.Y1.GetValue(), cs.regs.Y2.GetValue());
-    ImGui::Text("Output Display Range: %u-%u (%u-%u), %u-%u", cs.horizontal_display_start, cs.horizontal_display_end,
-                cs.horizontal_display_start / cs.dot_clock_divider, cs.horizontal_display_end / cs.dot_clock_divider,
-                cs.vertical_display_start, cs.vertical_display_end);
-    ImGui::Text("Cropping: %s", Settings::GetDisplayCropModeName(g_settings.display_crop_mode));
-    ImGui::Text("Visible Display Range: %u-%u (%u-%u), %u-%u", cs.horizontal_visible_start, cs.horizontal_visible_end,
-                cs.horizontal_visible_start / cs.dot_clock_divider, cs.horizontal_visible_end / cs.dot_clock_divider,
-                cs.vertical_visible_start, cs.vertical_visible_end);
-    ImGui::Text("Display Resolution: %ux%u", cs.display_width, cs.display_height);
-    ImGui::Text("Display Origin: %u, %u", cs.display_origin_left, cs.display_origin_top);
-    ImGui::Text("Displayed/Visible VRAM Portion: %ux%u @ (%u, %u)", cs.display_vram_width, cs.display_vram_height,
-                cs.display_vram_left, cs.display_vram_top);
-    ImGui::Text("Padding: Left=%d, Top=%d, Right=%d, Bottom=%d", cs.display_origin_left, cs.display_origin_top,
-                cs.display_width - cs.display_vram_width - cs.display_origin_left,
-                cs.display_height - cs.display_vram_height - cs.display_origin_top);
-  }
-
-  ImGui::End();
-#endif
 }
 
 void GPU::DrawRendererStats(bool is_idle_frame) {}

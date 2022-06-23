@@ -27,8 +27,6 @@ public:
   void DMARead(u32* words, u32 word_count);
   void DMAWrite(const u32* words, u32 word_count);
 
-  void DrawDebugStateWindow();
-
 private:
   static constexpr u32 DATA_IN_FIFO_SIZE = 1024;
   static constexpr u32 DATA_OUT_FIFO_SIZE = 768;

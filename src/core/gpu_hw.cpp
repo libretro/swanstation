@@ -11,9 +11,6 @@
 #include <cmath>
 #include <sstream>
 #include <tuple>
-#ifdef WITH_IMGUI
-#include "imgui.h"
-#endif
 Log_SetChannel(GPU_HW);
 
 template<typename T>
@@ -1402,77 +1399,6 @@ void GPU_HW::DrawRendererStats(bool is_idle_frame)
     m_last_renderer_stats = m_renderer_stats;
     m_renderer_stats = {};
   }
-
-#ifdef WITH_IMGUI
-  if (ImGui::CollapsingHeader("Renderer Statistics", ImGuiTreeNodeFlags_DefaultOpen))
-  {
-    static const ImVec4 active_color{1.0f, 1.0f, 1.0f, 1.0f};
-    static const ImVec4 inactive_color{0.4f, 0.4f, 0.4f, 1.0f};
-    const auto& stats = m_last_renderer_stats;
-
-    ImGui::Columns(2);
-    ImGui::SetColumnWidth(0, 200.0f * ImGui::GetIO().DisplayFramebufferScale.x);
-
-    ImGui::TextUnformatted("Resolution Scale:");
-    ImGui::NextColumn();
-    ImGui::Text("%u (VRAM %ux%u)", m_resolution_scale, VRAM_WIDTH * m_resolution_scale,
-                VRAM_HEIGHT * m_resolution_scale);
-    ImGui::NextColumn();
-
-    ImGui::TextUnformatted("Effective Display Resolution:");
-    ImGui::NextColumn();
-    ImGui::Text("%ux%u", m_crtc_state.display_vram_width * m_resolution_scale,
-                m_crtc_state.display_vram_height * m_resolution_scale);
-    ImGui::NextColumn();
-
-    ImGui::TextUnformatted("True Color:");
-    ImGui::NextColumn();
-    ImGui::TextColored(m_true_color ? active_color : inactive_color, m_true_color ? "Enabled" : "Disabled");
-    ImGui::NextColumn();
-
-    ImGui::TextUnformatted("Scaled Dithering:");
-    ImGui::NextColumn();
-    ImGui::TextColored(m_scaled_dithering ? active_color : inactive_color, m_scaled_dithering ? "Enabled" : "Disabled");
-    ImGui::NextColumn();
-
-    ImGui::TextUnformatted("Texture Filtering:");
-    ImGui::NextColumn();
-    ImGui::TextColored((m_texture_filtering != GPUTextureFilter::Nearest) ? active_color : inactive_color, "%s",
-                       Settings::GetTextureFilterDisplayName(m_texture_filtering));
-    ImGui::NextColumn();
-
-    ImGui::TextUnformatted("PGXP:");
-    ImGui::NextColumn();
-    ImGui::TextColored(g_settings.gpu_pgxp_enable ? active_color : inactive_color, "Geom");
-    ImGui::SameLine();
-    ImGui::TextColored((g_settings.gpu_pgxp_enable && g_settings.gpu_pgxp_culling) ? active_color : inactive_color,
-                       "Cull");
-    ImGui::SameLine();
-    ImGui::TextColored(
-      (g_settings.gpu_pgxp_enable && g_settings.gpu_pgxp_texture_correction) ? active_color : inactive_color, "Tex");
-    ImGui::SameLine();
-    ImGui::TextColored((g_settings.gpu_pgxp_enable && g_settings.gpu_pgxp_vertex_cache) ? active_color : inactive_color,
-                       "Cache");
-    ImGui::NextColumn();
-
-    ImGui::TextUnformatted("Batches Drawn:");
-    ImGui::NextColumn();
-    ImGui::Text("%u", stats.num_batches);
-    ImGui::NextColumn();
-
-    ImGui::TextUnformatted("VRAM Read Texture Updates:");
-    ImGui::NextColumn();
-    ImGui::Text("%u", stats.num_vram_read_texture_updates);
-    ImGui::NextColumn();
-
-    ImGui::TextUnformatted("Uniform Buffer Updates: ");
-    ImGui::NextColumn();
-    ImGui::Text("%u", stats.num_uniform_buffer_updates);
-    ImGui::NextColumn();
-
-    ImGui::Columns(1);
-  }
-#endif
 }
 
 GPU_HW::ShaderCompileProgressTracker::ShaderCompileProgressTracker(std::string title, u32 total)

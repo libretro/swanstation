@@ -5,9 +5,6 @@
 #include "dma.h"
 #include "interrupt_controller.h"
 #include "system.h"
-#ifdef WITH_IMGUI
-#include "imgui.h"
-#endif
 Log_SetChannel(MDEC);
 
 MDEC g_mdec;
@@ -720,47 +717,4 @@ void MDEC::HandleSetScaleCommand()
   m_data_in_fifo.PopRange(packed_data.data(), static_cast<u32>(packed_data.size()));
   m_remaining_halfwords -= 32;
   std::memcpy(m_scale_table.data(), packed_data.data(), m_scale_table.size() * sizeof(s16));
-}
-
-void MDEC::DrawDebugStateWindow()
-{
-#ifdef WITH_IMGUI
-  const float framebuffer_scale = ImGui::GetIO().DisplayFramebufferScale.x;
-
-  ImGui::SetNextWindowSize(ImVec2(300.0f * framebuffer_scale, 350.0f * framebuffer_scale), ImGuiCond_FirstUseEver);
-  if (!ImGui::Begin("MDEC State", nullptr))
-  {
-    ImGui::End();
-    return;
-  }
-
-  static constexpr std::array<const char*, 5> state_names = {
-    {"None", "Decoding Macroblock", "Writing Macroblock", "SetIqTab", "SetScale"}};
-  static constexpr std::array<const char*, 4> output_depths = {{"4-bit", "8-bit", "24-bit", "15-bit"}};
-  static constexpr std::array<const char*, 7> block_names = {{"Crblk", "Cbblk", "Y1", "Y2", "Y3", "Y4", "Output"}};
-
-  ImGui::Text("Blocks Decoded: %u", m_total_blocks_decoded);
-  ImGui::Text("Data-In FIFO Size: %u (%u bytes)", m_data_in_fifo.GetSize(), m_data_in_fifo.GetSize() * 4);
-  ImGui::Text("Data-Out FIFO Size: %u (%u bytes)", m_data_out_fifo.GetSize(), m_data_out_fifo.GetSize() * 4);
-  ImGui::Text("DMA Enable: %s%s", m_enable_dma_in ? "In " : "", m_enable_dma_out ? "Out" : "");
-  ImGui::Text("Current State: %s", state_names[static_cast<u8>(m_state)]);
-  ImGui::Text("Current Block: %s", block_names[m_current_block]);
-  ImGui::Text("Current Coefficient: %u", m_current_coefficient);
-
-  if (ImGui::CollapsingHeader("Status", ImGuiTreeNodeFlags_DefaultOpen))
-  {
-    ImGui::Text("Data-Out FIFO Empty: %s", m_status.data_out_fifo_empty ? "Yes" : "No");
-    ImGui::Text("Data-In FIFO Full: %s", m_status.data_in_fifo_full ? "Yes" : "No");
-    ImGui::Text("Command Busy: %s", m_status.command_busy ? "Yes" : "No");
-    ImGui::Text("Data-In Request: %s", m_status.data_in_request ? "Yes" : "No");
-    ImGui::Text("Output Depth: %s", output_depths[static_cast<u8>(m_status.data_output_depth.GetValue())]);
-    ImGui::Text("Output Signed: %s", m_status.data_output_signed ? "Yes" : "No");
-    ImGui::Text("Output Bit 15: %u", ZeroExtend32(m_status.data_output_bit15.GetValue()));
-    ImGui::Text("Current Block: %u", ZeroExtend32(m_status.current_block.GetValue()));
-    ImGui::Text("Parameter Words Remaining: %d",
-                static_cast<s32>(SignExtend32(m_status.parameter_words_remaining.GetValue())));
-  }
-
-  ImGui::End();
-#endif
 }

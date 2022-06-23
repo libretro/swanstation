@@ -22,8 +22,6 @@ public:
 
   void SetGate(u32 timer, bool state);
 
-  void DrawDebugStateWindow();
-
   void CPUClocksChanged();
 
   // dot clock/hblank/sysclk div 8
