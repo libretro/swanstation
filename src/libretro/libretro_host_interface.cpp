@@ -321,10 +321,6 @@ void LibretroHostInterface::retro_get_system_av_info(struct retro_system_av_info
   const bool use_resolution_scale = (g_settings.gpu_renderer != GPURenderer::Software);
   GetSystemAVInfo(info, use_resolution_scale);
   m_last_aspect_ratio = info->geometry.aspect_ratio;
-
-  Log_InfoPrintf("base = %ux%u, max = %ux%u, aspect ratio = %.2f, fps = %.2f", info->geometry.base_width,
-                 info->geometry.base_height, info->geometry.max_width, info->geometry.max_height,
-                 info->geometry.aspect_ratio, info->timing.fps);
 }
 
 void LibretroHostInterface::GetSystemAVInfo(struct retro_system_av_info* info, bool use_resolution_scale)
@@ -347,16 +343,8 @@ bool LibretroHostInterface::UpdateSystemAVInfo(bool use_resolution_scale)
 {
   struct retro_system_av_info avi;
   GetSystemAVInfo(&avi, use_resolution_scale);
-
-  Log_InfoPrintf("base = %ux%u, max = %ux%u, aspect ratio = %.2f, fps = %.2f", avi.geometry.base_width,
-                 avi.geometry.base_height, avi.geometry.max_width, avi.geometry.max_height, avi.geometry.aspect_ratio,
-                 avi.timing.fps);
-
   if (!g_retro_environment_callback(RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO, &avi))
-  {
-    Log_ErrorPrintf("Failed to update system AV info on resolution change");
     return false;
-  }
 
   m_display->ResizeRenderWindow(avi.geometry.base_width, avi.geometry.base_height);
   m_last_aspect_ratio = avi.geometry.aspect_ratio;
@@ -369,11 +357,7 @@ void LibretroHostInterface::UpdateGeometry()
   const bool use_resolution_scale = (g_settings.gpu_renderer != GPURenderer::Software);
   GetSystemAVInfo(&avi, use_resolution_scale);
 
-  Log_InfoPrintf("base = %ux%u, max = %ux%u, aspect ratio = %.2f", avi.geometry.base_width, avi.geometry.base_height,
-                 avi.geometry.max_width, avi.geometry.max_height, avi.geometry.aspect_ratio);
-
-  if (!g_retro_environment_callback(RETRO_ENVIRONMENT_SET_GEOMETRY, &avi.geometry))
-    Log_WarningPrint("RETRO_ENVIRONMENT_SET_GEOMETRY failed");
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_GEOMETRY, &avi.geometry);
 
   m_display->ResizeRenderWindow(avi.geometry.base_width, avi.geometry.base_height);
   m_last_aspect_ratio = avi.geometry.aspect_ratio;
@@ -625,11 +609,7 @@ bool LibretroHostInterface::retro_serialize(void* data, size_t size)
 {
   std::unique_ptr<ByteStream> stream = ByteStream_CreateMemoryStream(data, static_cast<u32>(size));
   if (!System::SaveState(stream.get(), 0))
-  {
-    Log_ErrorPrintf("Failed to save state to memory stream");
     return false;
-  }
-
   return true;
 }
 
@@ -637,11 +617,7 @@ bool LibretroHostInterface::retro_unserialize(const void* data, size_t size)
 {
   std::unique_ptr<ByteStream> stream = ByteStream_CreateReadOnlyMemoryStream(data, static_cast<u32>(size));
   if (!System::LoadState(stream.get(), false))
-  {
-    Log_ErrorPrintf("Failed to load save state from memory stream");
     return false;
-  }
-
   return true;
 }
 
@@ -983,38 +959,31 @@ void LibretroHostInterface::LoadSettings()
       case RETRO_DEVICE_JOYPAD:
       case RETRO_DEVICE_PS_CONTROLLER:
         g_settings.controller_types[i] = ControllerType::DigitalController;
-        Log_InfoPrintf("Port %u = Digital Controller (Gamepad)", (i + 1));
         break;
 
       case RETRO_DEVICE_PS_DUALSHOCK:
         g_settings.controller_types[i] = ControllerType::AnalogController;
-        Log_InfoPrintf("Port %u = Analog Controller (DualShock)", (i + 1));
         break;
 
       case RETRO_DEVICE_PS_ANALOG_JOYSTICK:
         g_settings.controller_types[i] = ControllerType::AnalogJoystick;
-        Log_InfoPrintf("Port %u = Analog Joystick", (i + 1));
         break;
 
       case RETRO_DEVICE_PS_NEGCON:
         g_settings.controller_types[i] = ControllerType::NeGcon;
-        Log_InfoPrintf("Port %u = NeGcon", (i + 1));
         break;
 
       case RETRO_DEVICE_PS_GUNCON:
         g_settings.controller_types[i] = ControllerType::NamcoGunCon;
-        Log_InfoPrintf("Port %u = Namco GunCon", (i + 1));
         break;
 
       case RETRO_DEVICE_PS_MOUSE:
         g_settings.controller_types[i] = ControllerType::PlayStationMouse;
-        Log_InfoPrintf("Port %u = PlayStation Mouse", (i + 1));
         break;
 
       case RETRO_DEVICE_NONE:
       default:
         g_settings.controller_types[i] = ControllerType::None;
-        Log_InfoPrintf("Port %u = None", (i + 1));
         break;
     }
   }

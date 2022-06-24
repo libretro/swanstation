@@ -1,12 +1,10 @@
 #include "libretro_host_display.h"
 #include "common/align.h"
 #include "common/assert.h"
-#include "common/log.h"
 #include "libretro_host_interface.h"
 #include <libretro.h>
 #include <array>
 #include <tuple>
-Log_SetChannel(LibretroHostDisplay);
 
 static retro_pixel_format GetRetroPixelFormat(HostDisplayPixelFormat format)
 {
@@ -22,16 +20,15 @@ static retro_pixel_format GetRetroPixelFormat(HostDisplayPixelFormat format)
       return RETRO_PIXEL_FORMAT_0RGB1555;
 
     default:
-      return RETRO_PIXEL_FORMAT_UNKNOWN;
+      break;
   }
+  return RETRO_PIXEL_FORMAT_UNKNOWN;
 }
 
 LibretroHostDisplay::LibretroHostDisplay()
 {
   retro_pixel_format pf = RETRO_PIXEL_FORMAT_RGB565;
-  if (!g_retro_environment_callback(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &pf))
-    Log_ErrorPrint("Failed to set pixel format to RGB565");
-  else
+  if (g_retro_environment_callback(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &pf))
     m_current_pixel_format = pf;
 }
 
@@ -43,11 +40,7 @@ bool LibretroHostDisplay::CheckPixelFormat(retro_pixel_format new_format)
     return true;
 
   if (!g_retro_environment_callback(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &new_format))
-  {
-    Log_ErrorPrintf("g_retro_environment_callback(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, %u) failed",
-                    static_cast<unsigned>(new_format));
     return false;
-  }
 
   if (!g_libretro_host_interface.UpdateSystemAVInfo(false))
     return false;
@@ -260,12 +253,6 @@ void LibretroHostDisplay::EndSetDisplayPixels()
   // noop
 }
 
-void LibretroHostDisplay::SetVSync(bool enabled)
-{
-  // The libretro frontend controls this.
-  Log_DevPrintf("Ignoring SetVSync(%u)", BoolToUInt32(enabled));
-}
-
 bool LibretroHostDisplay::Render()
 {
   if (HasDisplayTexture())
@@ -277,9 +264,7 @@ bool LibretroHostDisplay::Render()
       ClearDisplayTexture();
   }
   else
-  {
     g_retro_video_refresh_callback(nullptr, 0, 0, 0);
-  }
 
   return true;
 }

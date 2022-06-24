@@ -214,12 +214,6 @@ void LibretroD3D11HostDisplay::EndSetDisplayPixels()
   m_context->Unmap(m_display_pixels_texture.GetD3DTexture(), 0);
 }
 
-void LibretroD3D11HostDisplay::SetVSync(bool enabled)
-{
-  // The libretro frontend controls this.
-  Log_DevPrintf("Ignoring SetVSync(%u)", BoolToUInt32(enabled));
-}
-
 bool LibretroD3D11HostDisplay::RequestHardwareRendererContext(retro_hw_render_callback* cb)
 {
   cb->cache_context = false;

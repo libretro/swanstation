@@ -65,8 +65,6 @@ public:
   void EndSetDisplayPixels() override;
   bool SetDisplayPixels(HostDisplayPixelFormat format, u32 width, u32 height, const void* buffer, u32 pitch) override;
 
-  void SetVSync(bool enabled) override;
-
   bool Render() override;
   bool RenderScreenshot(u32 width, u32 height, std::vector<u32>* out_pixels, u32* out_stride,
                         HostDisplayPixelFormat* out_format) override;

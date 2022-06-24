@@ -243,12 +243,6 @@ void LibretroVulkanHostDisplay::EndSetDisplayPixels()
                                          static_cast<u32>(m_display_texture_view_height));
 }
 
-void LibretroVulkanHostDisplay::SetVSync(bool enabled)
-{
-  // The libretro frontend controls this.
-  Log_DevPrintf("Ignoring SetVSync(%u)", BoolToUInt32(enabled));
-}
-
 static bool RetroCreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instance, VkPhysicalDevice gpu,
                                     VkSurfaceKHR surface, PFN_vkGetInstanceProcAddr get_instance_proc_addr,
                                     const char** required_device_extensions, unsigned num_required_device_extensions,
@@ -669,10 +663,7 @@ void LibretroVulkanHostDisplay::RenderDisplay(s32 left, s32 top, s32 width, s32 
 
   VkDescriptorSet ds = g_vulkan_context->AllocateDescriptorSet(m_descriptor_set_layout);
   if (ds == VK_NULL_HANDLE)
-  {
-    Log_ErrorPrintf("Skipping rendering display because of no descriptor set");
     return;
-  }
 
   {
     const Vulkan::Texture* vktex = static_cast<Vulkan::Texture*>(texture_handle);

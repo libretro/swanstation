@@ -764,16 +764,6 @@ bool SwapChain::RecreateSwapChain()
   return true;
 }
 
-bool SwapChain::SetVSync(bool enabled)
-{
-  if (m_vsync_enabled == enabled)
-    return true;
-
-  // Recreate the swap chain with the new present mode.
-  m_vsync_enabled = enabled;
-  return RecreateSwapChain();
-}
-
 bool SwapChain::RecreateSurface(const WindowInfo& new_wi)
 {
   // Destroy the old swap chain, images, and surface.

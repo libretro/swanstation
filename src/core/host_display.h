@@ -123,8 +123,6 @@ public:
   virtual bool RenderScreenshot(u32 width, u32 height, std::vector<u32>* out_pixels, u32* out_stride,
                                 HostDisplayPixelFormat* out_format) = 0;
 
-  virtual void SetVSync(bool enabled) = 0;
-
   const void* GetDisplayTextureHandle() const { return m_display_texture_handle; }
   const s32 GetDisplayTopMargin() const { return m_display_top_margin; }
   const s32 GetDisplayWidth() const { return m_display_width; }

@@ -226,12 +226,6 @@ bool LibretroOpenGLHostDisplay::SetDisplayPixels(HostDisplayPixelFormat format, 
   return true;
 }
 
-void LibretroOpenGLHostDisplay::SetVSync(bool enabled)
-{
-  // The libretro frontend controls this.
-  Log_DevPrintf("Ignoring SetVSync(%u)", BoolToUInt32(enabled));
-}
-
 const char* LibretroOpenGLHostDisplay::GetGLSLVersionString() const
 {
   if (GetRenderAPI() == RenderAPI::OpenGLES)
@@ -407,15 +401,10 @@ bool LibretroOpenGLHostDisplay::InitializeRenderDevice(std::string_view shader_c
       glDebugMessageCallback(GLDebugCallback, nullptr);
 
     glEnable(GL_DEBUG_OUTPUT);
-    // glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
   }
 
   if (!CreateResources())
     return false;
-
-  // Start with vsync on.
-  SetVSync(true);
-
   return true;
 }
 

@@ -63,9 +63,6 @@ public:
   bool ResizeSwapChain(u32 new_width = 0, u32 new_height = 0);
   bool RecreateSwapChain();
 
-  // Change vsync enabled state. This may fail as it causes a swapchain recreation.
-  bool SetVSync(bool enabled);
-
 private:
   bool SelectSurfaceFormat();
   bool SelectPresentMode();

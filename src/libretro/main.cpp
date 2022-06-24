@@ -1,8 +1,6 @@
 #include "common/assert.h"
-#include "common/log.h"
 #include "libretro_host_interface.h"
 #include "scmversion/scmversion.h"
-Log_SetChannel(Main);
 
 RETRO_API unsigned retro_api_version(void)
 {
@@ -51,7 +49,6 @@ RETRO_API void retro_set_controller_port_device(unsigned port, unsigned device)
 
 RETRO_API void retro_reset(void)
 {
-  Log_InfoPrint("retro_reset()");
   g_libretro_host_interface.ResetSystem();
 }
 
@@ -77,25 +74,21 @@ RETRO_API bool retro_unserialize(const void* data, size_t size)
 
 RETRO_API void retro_cheat_reset(void)
 {
-  Log_InfoPrint("retro_cheat_reset()");
   g_libretro_host_interface.retro_cheat_reset();
 }
 
 RETRO_API void retro_cheat_set(unsigned index, bool enabled, const char* code)
 {
-  Log_InfoPrintf("retro_cheat_set(%u, %u, %s)", index, enabled, code);
   g_libretro_host_interface.retro_cheat_set(index, enabled, code);
 }
 
 RETRO_API bool retro_load_game(const struct retro_game_info* game)
 {
-  Log_InfoPrintf("retro_load_game(%s)", game->path);
   return g_libretro_host_interface.retro_load_game(game);
 }
 
 RETRO_API bool retro_load_game_special(unsigned game_type, const struct retro_game_info* info, size_t num_info)
 {
-  Log_ErrorPrintf("retro_load_game_special()");
   return false;
 }
 
