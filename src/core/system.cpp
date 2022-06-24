@@ -1676,11 +1676,6 @@ bool SetExpansionROM(const char* filename)
 }
 #endif
 
-void StallCPU(TickCount ticks)
-{
-  CPU::AddPendingTicks(ticks);
-}
-
 Controller* GetController(u32 slot)
 {
   return g_pad.GetController(slot);
@@ -1883,34 +1878,6 @@ void UpdateMultitaps()
     }
     break;
   }
-}
-
-bool DumpRAM(const char* filename)
-{
-  if (!IsValid())
-    return false;
-
-  return FileSystem::WriteBinaryFile(filename, Bus::g_ram, Bus::g_ram_size);
-}
-
-bool DumpVRAM(const char* filename)
-{
-  if (!IsValid())
-    return false;
-
-  g_gpu->RestoreGraphicsAPIState();
-  const bool result = g_gpu->DumpVRAMToFile(filename);
-  g_gpu->ResetGraphicsAPIState();
-
-  return result;
-}
-
-bool DumpSPURAM(const char* filename)
-{
-  if (!IsValid())
-    return false;
-
-  return FileSystem::WriteBinaryFile(filename, g_spu.GetRAM().data(), SPU::RAM_SIZE);
 }
 
 bool HasMedia()

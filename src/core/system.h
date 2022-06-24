@@ -178,15 +178,6 @@ bool HasMemoryCard(u32 slot);
 void SwapMemoryCards();
 void UpdateMultitaps();
 
-/// Dumps RAM to a file.
-bool DumpRAM(const char* filename);
-
-/// Dumps video RAM to a file.
-bool DumpVRAM(const char* filename);
-
-/// Dumps sound RAM to a file.
-bool DumpSPURAM(const char* filename);
-
 bool HasMedia();
 std::string GetMediaFileName();
 bool InsertMedia(const char* path);
