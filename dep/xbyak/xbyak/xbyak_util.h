@@ -256,12 +256,6 @@ public:
 		}
 		setFamily();
 	}
-	void putFamily() const
-	{
-		printf("family=%d, model=%X, stepping=%d, extFamily=%d, extModel=%X\n",
-			family, model, stepping, extFamily, extModel);
-		printf("display:family=%X, model=%X\n", displayFamily, displayModel);
-	}
 	bool has(Type type) const
 	{
 		return (type & type_) != 0;
@@ -342,7 +336,6 @@ public:
 	Pack& append(const Xbyak::Reg64& t)
 	{
 		if (n_ == 10) {
-			fprintf(stderr, "ERR Pack::can't append\n");
 			throw Error(ERR_BAD_PARAMETER);
 		}
 		tbl_[n_++] = &t;
@@ -351,7 +344,6 @@ public:
 	void init(const Xbyak::Reg64 *tbl, size_t n)
 	{
 		if (n > maxTblNum) {
-			fprintf(stderr, "ERR Pack::init bad n=%d\n", (int)n);
 			throw Error(ERR_BAD_PARAMETER);
 		}
 		n_ = n;
@@ -362,7 +354,6 @@ public:
 	const Xbyak::Reg64& operator[](size_t n) const
 	{
 		if (n >= n_) {
-			fprintf(stderr, "ERR Pack bad n=%d\n", (int)n);
 			throw Error(ERR_BAD_PARAMETER);
 		}
 		return *tbl_[n];
@@ -375,7 +366,6 @@ public:
 	{
 		if (num == size_t(-1)) num = n_ - pos;
 		if (pos + num > n_) {
-			fprintf(stderr, "ERR Pack::sub bad pos=%d, num=%d\n", (int)pos, (int)num);
 			throw Error(ERR_BAD_PARAMETER);
 		}
 		Pack pack;
@@ -384,175 +374,6 @@ public:
 			pack.tbl_[i] = tbl_[pos + i];
 		}
 		return pack;
-	}
-	void put() const
-	{
-		for (size_t i = 0; i < n_; i++) {
-			printf("%s ", tbl_[i]->toString());
-		}
-		printf("\n");
-	}
-};
-
-class StackFrame {
-#ifdef XBYAK64_WIN
-	static const int noSaveNum = 6;
-	static const int rcxPos = 0;
-	static const int rdxPos = 1;
-#else
-	static const int noSaveNum = 8;
-	static const int rcxPos = 3;
-	static const int rdxPos = 2;
-#endif
-	Xbyak::CodeGenerator *code_;
-	int pNum_;
-	int tNum_;
-	bool useRcx_;
-	bool useRdx_;
-	int saveNum_;
-	int P_;
-	bool makeEpilog_;
-	Xbyak::Reg64 pTbl_[4];
-	Xbyak::Reg64 tTbl_[10];
-	Pack p_;
-	Pack t_;
-	StackFrame(const StackFrame&);
-	void operator=(const StackFrame&);
-public:
-	const Pack& p;
-	const Pack& t;
-	/*
-		make stack frame
-		@param sf [in] this
-		@param pNum [in] num of function parameter(0 <= pNum <= 4)
-		@param tNum [in] num of temporary register(0 <= tNum <= 10, with UseRCX, UseRDX)
-		@param stackSizeByte [in] local stack size
-		@param makeEpilog [in] automatically call close() if true
-
-		you can use
-		rax
-		gp0, ..., gp(pNum - 1)
-		gt0, ..., gt(tNum-1)
-		rcx if tNum & UseRCX
-		rdx if tNum & UseRDX
-		rsp[0..stackSizeByte - 1]
-	*/
-	StackFrame(Xbyak::CodeGenerator *code, int pNum, int tNum = 0, int stackSizeByte = 0, bool makeEpilog = true)
-		: code_(code)
-		, pNum_(pNum)
-		, tNum_(tNum & ~(UseRCX | UseRDX))
-		, useRcx_((tNum & UseRCX) != 0)
-		, useRdx_((tNum & UseRDX) != 0)
-		, saveNum_(0)
-		, P_(0)
-		, makeEpilog_(makeEpilog)
-		, p(p_)
-		, t(t_)
-	{
-		using namespace Xbyak;
-		if (pNum < 0 || pNum > 4) throw Error(ERR_BAD_PNUM);
-		const int allRegNum = pNum + tNum_ + (useRcx_ ? 1 : 0) + (useRdx_ ? 1 : 0);
-		if (allRegNum < pNum || allRegNum > 14) throw Error(ERR_BAD_TNUM);
-		const Reg64& _rsp = code->rsp;
-		const AddressFrame& _ptr = code->ptr;
-		saveNum_ = (std::max)(0, allRegNum - noSaveNum);
-		const int *tbl = getOrderTbl() + noSaveNum;
-		P_ = saveNum_ + (stackSizeByte + 7) / 8;
-		if (P_ > 0 && (P_ & 1) == 0) P_++; // here (rsp % 16) == 8, then increment P_ for 16 byte alignment
-		P_ *= 8;
-		if (P_ > 0) code->sub(_rsp, P_);
-#ifdef XBYAK64_WIN
-		for (int i = 0; i < (std::min)(saveNum_, 4); i++) {
-			code->mov(_ptr [_rsp + P_ + (i + 1) * 8], Reg64(tbl[i]));
-		}
-		for (int i = 4; i < saveNum_; i++) {
-			code->mov(_ptr [_rsp + P_ - 8 * (saveNum_ - i)], Reg64(tbl[i]));
-		}
-#else
-		for (int i = 0; i < saveNum_; i++) {
-			code->mov(_ptr [_rsp + P_ - 8 * (saveNum_ - i)], Reg64(tbl[i]));
-		}
-#endif
-		int pos = 0;
-		for (int i = 0; i < pNum; i++) {
-			pTbl_[i] = Xbyak::Reg64(getRegIdx(pos));
-		}
-		for (int i = 0; i < tNum_; i++) {
-			tTbl_[i] = Xbyak::Reg64(getRegIdx(pos));
-		}
-		if (useRcx_ && rcxPos < pNum) code_->mov(code_->r10, code_->rcx);
-		if (useRdx_ && rdxPos < pNum) code_->mov(code_->r11, code_->rdx);
-		p_.init(pTbl_, pNum);
-		t_.init(tTbl_, tNum_);
-	}
-	/*
-		make epilog manually
-		@param callRet [in] call ret() if true
-	*/
-	void close(bool callRet = true)
-	{
-		using namespace Xbyak;
-		const Reg64& _rsp = code_->rsp;
-		const AddressFrame& _ptr = code_->ptr;
-		const int *tbl = getOrderTbl() + noSaveNum;
-#ifdef XBYAK64_WIN
-		for (int i = 0; i < (std::min)(saveNum_, 4); i++) {
-			code_->mov(Reg64(tbl[i]), _ptr [_rsp + P_ + (i + 1) * 8]);
-		}
-		for (int i = 4; i < saveNum_; i++) {
-			code_->mov(Reg64(tbl[i]), _ptr [_rsp + P_ - 8 * (saveNum_ - i)]);
-		}
-#else
-		for (int i = 0; i < saveNum_; i++) {
-			code_->mov(Reg64(tbl[i]), _ptr [_rsp + P_ - 8 * (saveNum_ - i)]);
-		}
-#endif
-		if (P_ > 0) code_->add(_rsp, P_);
-
-		if (callRet) code_->ret();
-	}
-	~StackFrame()
-	{
-		if (!makeEpilog_) return;
-		try {
-			close();
-		} catch (std::exception& e) {
-			printf("ERR:StackFrame %s\n", e.what());
-			exit(1);
-		} catch (...) {
-			printf("ERR:StackFrame otherwise\n");
-			exit(1);
-		}
-	}
-private:
-	const int *getOrderTbl() const
-	{
-		using namespace Xbyak;
-		static const int tbl[] = {
-#ifdef XBYAK64_WIN
-			Operand::RCX, Operand::RDX, Operand::R8, Operand::R9, Operand::R10, Operand::R11, Operand::RDI, Operand::RSI,
-#else
-			Operand::RDI, Operand::RSI, Operand::RDX, Operand::RCX, Operand::R8, Operand::R9, Operand::R10, Operand::R11,
-#endif
-			Operand::RBX, Operand::RBP, Operand::R12, Operand::R13, Operand::R14, Operand::R15
-		};
-		return &tbl[0];
-	}
-	int getRegIdx(int& pos) const
-	{
-		assert(pos < 14);
-		using namespace Xbyak;
-		const int *tbl = getOrderTbl();
-		int r = tbl[pos++];
-		if (useRcx_) {
-			if (r == Operand::RCX) { return Operand::R10; }
-			if (r == Operand::R10) { r = tbl[pos++]; }
-		}
-		if (useRdx_) {
-			if (r == Operand::RDX) { return Operand::R11; }
-			if (r == Operand::R11) { return tbl[pos++]; }
-		}
-		return r;
 	}
 };
 #endif

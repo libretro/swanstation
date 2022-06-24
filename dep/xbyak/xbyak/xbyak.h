@@ -15,7 +15,6 @@
 	#endif
 #endif
 
-#include <stdio.h> // for debug print
 #include <assert.h>
 #include <list>
 #include <string>
@@ -185,69 +184,11 @@ class Error : public std::exception {
 public:
 	explicit Error(int err) : err_(err)
 	{
-		if (err_ < 0 || err_ > ERR_INTERNAL) {
-			fprintf(stderr, "bad err=%d in Xbyak::Error\n", err_);
+		if (err_ < 0 || err_ > ERR_INTERNAL)
 			exit(1);
-		}
 	}
 	operator int() const { return err_; }
-	const char *what() const throw()
-	{
-		static const char *errTbl[] = {
-			"none",
-			"bad addressing",
-			"code is too big",
-			"bad scale",
-			"esp can't be index",
-			"bad combination",
-			"bad size of register",
-			"imm is too big",
-			"bad align",
-			"label is redefined",
-			"label is too far",
-			"label is not found",
-			"code is not copyable",
-			"bad parameter",
-			"can't protect",
-			"can't use 64bit disp(use (void*))",
-			"offset is too big",
-			"MEM size is not specified",
-			"bad mem size",
-			"bad st combination",
-			"over local label",
-			"under local label",
-			"can't alloc",
-			"T_SHORT is not supported in AutoGrow",
-			"bad protect mode",
-			"bad pNum",
-			"bad tNum",
-			"bad vsib addressing",
-			"can't convert",
-			"label is not set by L()",
-			"label is already set by L()",
-			"bad label string",
-			"err munmap",
-			"opmask is already set",
-			"rounding is already set",
-			"k0 is invalid",
-			"evex is invalid",
-			"sae(suppress all exceptions) is invalid",
-			"er(embedded rounding) is invalid",
-			"invalid broadcast",
-			"invalid opmask with memory",
-			"invalid zero",
-			"invalid rip in AutoGrow",
-			"internal error",
-		};
-		assert((size_t)err_ < sizeof(errTbl) / sizeof(*errTbl));
-		return errTbl[err_];
-	}
 };
-
-inline const char *ConvertErrorToString(Error err)
-{
-	return err.what();
-}
 
 inline void *AlignedMalloc(size_t size, size_t alignment)
 {
@@ -876,28 +817,6 @@ public:
 	{
 		if (size > maxSize_) throw Error(ERR_OFFSET_IS_TOO_BIG);
 		size_ = size;
-	}
-	void dump() const
-	{
-		const uint8 *p = getCode();
-		size_t bufSize = getSize();
-		size_t remain = bufSize;
-		for (int i = 0; i < 4; i++) {
-			size_t disp = 16;
-			if (remain < 16) {
-				disp = remain;
-			}
-			for (size_t j = 0; j < 16; j++) {
-				if (j < disp) {
-					printf("%02X", p[i * 16 + j]);
-				}
-			}
-			putchar('\n');
-			remain -= disp;
-			if (remain == 0) {
-				break;
-			}
-		}
 	}
 	/*
 		@param offset [in] offset from top
@@ -2363,13 +2282,6 @@ public:
 		if (hasUndefinedLabel()) throw Error(ERR_LABEL_IS_NOT_FOUND);
 		if (isAutoGrow()) calcJmpAddress();
 	}
-#ifdef XBYAK_TEST
-	void dump(bool doClear = true)
-	{
-		CodeArray::dump();
-		if (doClear) size_ = 0;
-	}
-#endif
 
 #ifndef XBYAK_DONT_READ_LIST
 #include "xbyak_mnemonic.h"
@@ -2377,7 +2289,6 @@ public:
 	{
 		if (x == 1) return;
 		if (x < 1 || (x & (x - 1))) throw Error(ERR_BAD_ALIGN);
-		if (isAutoGrow() && x > (int)inner::ALIGN_PAGE_SIZE) fprintf(stderr, "warning:autoGrow mode does not support %d align\n", x);
 		while (size_t(getCurr()) % x) {
 			nop();
 		}
