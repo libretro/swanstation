@@ -1,6 +1,4 @@
 #include "window_info.h"
-#include "common/log.h"
-Log_SetChannel(WindowInfo);
 
 #if defined(_WIN32) && !defined(_UWP)
 
@@ -102,51 +100,28 @@ static bool GetRefreshRateFromXRandR(const WindowInfo& wi, float* refresh_rate)
 
   XRRScreenResources* res = XRRGetScreenResources(display, window);
   if (!res)
-  {
-    Log_ErrorPrint("XRRGetScreenResources() failed");
     return false;
-  }
 
   Common::ScopeGuard res_guard([res]() { XRRFreeScreenResources(res); });
 
   int num_monitors;
   XRRMonitorInfo* mi = XRRGetMonitors(display, window, True, &num_monitors);
   if (num_monitors < 0)
-  {
-    Log_ErrorPrint("XRRGetMonitors() failed");
     return false;
-  }
-  else if (num_monitors > 1)
-  {
-    Log_WarningPrintf("XRRGetMonitors() returned %d monitors, using first", num_monitors);
-  }
 
   Common::ScopeGuard mi_guard([mi]() { XRRFreeMonitors(mi); });
   if (mi->noutput <= 0)
-  {
-    Log_ErrorPrint("Monitor has no outputs");
     return false;
-  }
-  else if (mi->noutput > 1)
-  {
-    Log_WarningPrintf("Monitor has %d outputs, using first", mi->noutput);
-  }
 
   XRROutputInfo* oi = XRRGetOutputInfo(display, res, mi->outputs[0]);
   if (!oi)
-  {
-    Log_ErrorPrint("XRRGetOutputInfo() failed");
     return false;
-  }
 
   Common::ScopeGuard oi_guard([oi]() { XRRFreeOutputInfo(oi); });
 
   XRRCrtcInfo* ci = XRRGetCrtcInfo(display, res, oi->crtc);
   if (!ci)
-  {
-    Log_ErrorPrint("XRRGetCrtcInfo() failed");
     return false;
-  }
 
   Common::ScopeGuard ci_guard([ci]() { XRRFreeCrtcInfo(ci); });
 
@@ -160,16 +135,10 @@ static bool GetRefreshRateFromXRandR(const WindowInfo& wi, float* refresh_rate)
     }
   }
   if (!mode)
-  {
-    Log_ErrorPrintf("Failed to look up mode %d (of %d)", static_cast<int>(ci->mode), res->nmode);
     return false;
-  }
 
   if (mode->dotClock == 0 || mode->hTotal == 0 || mode->vTotal == 0)
-  {
-    Log_ErrorPrintf("Modeline is invalid: %ld/%d/%d", mode->dotClock, mode->hTotal, mode->vTotal);
     return false;
-  }
 
   *refresh_rate =
     static_cast<double>(mode->dotClock) / (static_cast<double>(mode->hTotal) * static_cast<double>(mode->vTotal));

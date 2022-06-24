@@ -1,6 +1,5 @@
 #include "namco_guncon.h"
 #include "common/assert.h"
-#include "common/log.h"
 #include "common/state_wrapper.h"
 #include "gpu.h"
 #include "host_display.h"
@@ -8,7 +7,6 @@
 #include "resources.h"
 #include "system.h"
 #include <array>
-Log_SetChannel(NamcoGunCon);
 
 NamcoGunCon::NamcoGunCon() = default;
 
@@ -200,7 +198,6 @@ void NamcoGunCon::UpdatePosition()
       !g_gpu->ConvertScreenCoordinatesToBeamTicksAndLines(mouse_x, mouse_y, m_x_scale, &tick, &line) ||
       m_shoot_offscreen)
   {
-    Log_DebugPrintf("Lightgun out of range for window coordinates %d,%d", mouse_x, mouse_y);
     m_position_x = 0x01;
     m_position_y = 0x0A;
     return;
@@ -210,8 +207,6 @@ void NamcoGunCon::UpdatePosition()
   const double divider = static_cast<double>(g_gpu->GetCRTCFrequency()) / 8000000.0;
   m_position_x = static_cast<u16>(static_cast<float>(tick) / static_cast<float>(divider));
   m_position_y = static_cast<u16>(line);
-  Log_DebugPrintf("Lightgun window coordinates %d,%d -> tick %u line %u 8mhz ticks %u", mouse_x, mouse_y, tick, line,
-                  m_position_x);
 }
 
 std::unique_ptr<NamcoGunCon> NamcoGunCon::Create()

@@ -1,7 +1,6 @@
 #include "host_display.h"
 #include "common/align.h"
 #include "common/assert.h"
-#include "common/log.h"
 #include "common/string_util.h"
 #include "common/timer.h"
 #include "host_interface.h"
@@ -13,7 +12,6 @@
 #include <cstring>
 #include <thread>
 #include <vector>
-Log_SetChannel(HostDisplay);
 
 HostDisplayTexture::~HostDisplayTexture() = default;
 
@@ -57,8 +55,9 @@ u32 HostDisplay::GetDisplayPixelFormatSize(HostDisplayPixelFormat format)
       return 2;
 
     default:
-      return 0;
+      break;
   }
+  return 0;
 }
 
 bool HostDisplay::SetDisplayPixels(HostDisplayPixelFormat format, u32 width, u32 height, const void* buffer, u32 pitch)

@@ -104,7 +104,6 @@ static std::string s_running_game_code;
 static std::string s_running_game_title;
 
 static float s_throttle_frequency = 60.0f;
-static float s_target_speed = 1.0f;
 
 static float s_average_frame_time_accumulator = 0.0f;
 static float s_worst_frame_time_accumulator = 0.0f;

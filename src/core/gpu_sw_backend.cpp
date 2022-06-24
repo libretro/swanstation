@@ -1,11 +1,9 @@
 #include "gpu_sw_backend.h"
 #include "common/assert.h"
-#include "common/log.h"
 #include "gpu_sw_backend.h"
 #include "host_display.h"
 #include "system.h"
 #include <algorithm>
-Log_SetChannel(GPU_SW_Backend);
 
 GPU_SW_Backend::GPU_SW_Backend() : GPUBackend()
 {

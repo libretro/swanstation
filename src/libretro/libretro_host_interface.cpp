@@ -58,7 +58,6 @@ static bool libretro_supports_option_categories = false;
 static int analog_press = -1;
 static bool port_allowed = false;
 static unsigned libretro_msg_interface_version = 0;
-static unsigned frame_count = 0;
 
 static void LibretroLogCallback(void* pUserParam, const char* channelName, const char* functionName, LOGLEVEL level,
                                 const char* message)

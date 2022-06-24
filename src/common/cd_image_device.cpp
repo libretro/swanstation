@@ -1,13 +1,11 @@
 #include "assert.h"
 #include "cd_image.h"
 #include "error.h"
-#include "log.h"
 #include "string_util.h"
 #include <algorithm>
 #include <cerrno>
 #include <cinttypes>
 #include <cmath>
-Log_SetChannel(CDImageDevice);
 
 static constexpr u32 MAX_TRACK_NUMBER = 99;
 static constexpr int ALL_SUBCODE_SIZE = 96;
@@ -123,7 +121,6 @@ bool CDImageDeviceWin32::Open(const char* filename, Common::Error* error)
     }
     else
     {
-      Log_ErrorPrintf("CreateFile('%s') failed: %08X", filename, GetLastError());
       if (error)
         error->SetWin32(GetLastError());
 
@@ -135,8 +132,7 @@ bool CDImageDeviceWin32::Open(const char* filename, Common::Error* error)
   static constexpr u32 READ_SPEED_MULTIPLIER = 4;
   static constexpr u32 READ_SPEED_KBS = (DATA_SECTOR_SIZE * FRAMES_PER_SECOND * 8) / 1024;
   CDROM_SET_SPEED set_speed = {CdromSetSpeed, READ_SPEED_KBS, 0, CdromDefaultRotation};
-  if (!DeviceIoControl(m_hDevice, IOCTL_CDROM_SET_SPEED, &set_speed, sizeof(set_speed), nullptr, 0, nullptr, nullptr))
-    Log_WarningPrintf("DeviceIoControl(IOCTL_CDROM_SET_SPEED) failed: %08X", GetLastError());
+  DeviceIoControl(m_hDevice, IOCTL_CDROM_SET_SPEED, &set_speed, sizeof(set_speed), nullptr, 0, nullptr, nullptr);
 
   CDROM_READ_TOC_EX read_toc_ex = {};
   read_toc_ex.Format = CDROM_READ_TOC_EX_FORMAT_TOC;
@@ -151,7 +147,6 @@ bool CDImageDeviceWin32::Open(const char* filename, Common::Error* error)
                        &bytes_returned, nullptr) ||
       toc.LastTrack < toc.FirstTrack)
   {
-    Log_ErrorPrintf("DeviceIoCtl(IOCTL_CDROM_READ_TOC_EX) failed: %08X", GetLastError());
     if (error)
       error->SetWin32(GetLastError());
 
@@ -160,7 +155,6 @@ bool CDImageDeviceWin32::Open(const char* filename, Common::Error* error)
 
   DWORD last_track_address = 0;
   LBA disc_lba = 0;
-  Log_DevPrintf("FirstTrack=%u, LastTrack=%u", toc.FirstTrack, toc.LastTrack);
 
   const u32 num_tracks_to_check = (toc.LastTrack - toc.FirstTrack) + 1 + 1;
   for (u32 track_index = 0; track_index < num_tracks_to_check; track_index++)
@@ -168,16 +162,12 @@ bool CDImageDeviceWin32::Open(const char* filename, Common::Error* error)
     const TRACK_DATA& td = toc.TrackData[track_index];
     const u8 track_num = td.TrackNumber;
     const DWORD track_address = BEToU32(td.Address);
-    Log_DevPrintf("  [%u]: Num=%02X, Address=%u", track_index, track_num, track_address);
 
     // fill in the previous track's length
     if (!m_tracks.empty())
     {
       if (track_num < m_tracks.back().track_number)
-      {
-        Log_ErrorPrintf("Invalid TOC, track %u less than %u", track_num, m_tracks.back().track_number);
         return false;
-      }
 
       const LBA previous_track_length = static_cast<LBA>(track_address - last_track_address);
       m_tracks.back().length += previous_track_length;
@@ -240,7 +230,6 @@ bool CDImageDeviceWin32::Open(const char* filename, Common::Error* error)
 
   if (m_tracks.empty())
   {
-    Log_ErrorPrintf("File '%s' contains no tracks", filename);
     if (error)
       error->SetFormattedMessage("File '%s' contains no tracks", filename);
     return false;
@@ -248,25 +237,8 @@ bool CDImageDeviceWin32::Open(const char* filename, Common::Error* error)
 
   m_lba_count = disc_lba;
 
-  Log_DevPrintf("%u tracks, %u indices, %u lbas", static_cast<u32>(m_tracks.size()), static_cast<u32>(m_indices.size()),
-                static_cast<u32>(m_lba_count));
-  for (u32 i = 0; i < m_tracks.size(); i++)
-  {
-    Log_DevPrintf(" Track %u: Start %u, length %u, mode %u, control 0x%02X", static_cast<u32>(m_tracks[i].track_number),
-                  static_cast<u32>(m_tracks[i].start_lba), static_cast<u32>(m_tracks[i].length),
-                  static_cast<u32>(m_tracks[i].mode), static_cast<u32>(m_tracks[i].control.bits));
-  }
-  for (u32 i = 0; i < m_indices.size(); i++)
-  {
-    Log_DevPrintf(" Index %u: Track %u, Index %u, Start %u, length %u, file sector size %u, file offset %" PRIu64, i,
-                  static_cast<u32>(m_indices[i].track_number), static_cast<u32>(m_indices[i].index_number),
-                  static_cast<u32>(m_indices[i].start_lba_on_disc), static_cast<u32>(m_indices[i].length),
-                  static_cast<u32>(m_indices[i].file_sector_size), m_indices[i].file_offset);
-  }
-
   if (!DetermineReadMode())
   {
-    Log_ErrorPrintf("Could not determine read mode");
     if (error)
       error->SetMessage("Could not determine read mode");
 
@@ -352,15 +324,7 @@ bool CDImageDeviceWin32::ReadSectorToBuffer(u64 offset)
     if (!DeviceIoControl(m_hDevice, IOCTL_SCSI_PASS_THROUGH_DIRECT, &sptd, sizeof(sptd), &sptd, sizeof(sptd),
                          &bytes_returned, nullptr) &&
         sptd.cmd.ScsiStatus == 0x00)
-    {
-      Log_ErrorPrintf("DeviceIoControl(IOCTL_SCSI_PASS_THROUGH_DIRECT) for offset %" PRIu64
-                      " failed: %08X Status 0x%02X",
-                      offset, GetLastError(), sptd.cmd.ScsiStatus);
       return false;
-    }
-
-    if (sptd.cmd.DataTransferLength != expected_bytes)
-      Log_WarningPrintf("Only read %u of %u bytes", static_cast<u32>(sptd.cmd.DataTransferLength), expected_bytes);
 
     if (m_read_subcode)
       std::memcpy(m_subq.data(), &m_buffer[RAW_SECTOR_SIZE], SUBCHANNEL_BYTES_PER_FRAME);
@@ -375,14 +339,7 @@ bool CDImageDeviceWin32::ReadSectorToBuffer(u64 offset)
     DWORD bytes_returned;
     if (!DeviceIoControl(m_hDevice, IOCTL_CDROM_RAW_READ, &rri, sizeof(rri), m_buffer.data(),
                          static_cast<DWORD>(m_buffer.size()), &bytes_returned, nullptr))
-    {
-      Log_ErrorPrintf("DeviceIoControl(IOCTL_CDROM_RAW_READ) for offset %" PRIu64 " failed: %08X", offset,
-                      GetLastError());
       return false;
-    }
-
-    if (bytes_returned != m_buffer.size())
-      Log_WarningPrintf("Only read %u of %u bytes", bytes_returned, static_cast<unsigned>(m_buffer.size()));
 
     // P, Q, ...
     DeinterleaveSubcode(&m_buffer[RAW_SECTOR_SIZE], m_deinterleaved_subcode.data());
@@ -414,22 +371,10 @@ bool CDImageDeviceWin32::DetermineReadMode()
     m_read_subcode = true;
 
     if (subq.IsCRCValid())
-    {
-      Log_DevPrintf("Raw read returned invalid SubQ CRC (got %02X expected %02X)", static_cast<unsigned>(subq.crc),
-                    static_cast<unsigned>(SubChannelQ::ComputeCRC(subq.data)));
-
       m_read_subcode = false;
-    }
-    else
-    {
-      Log_DevPrintf("Using raw reads with subcode");
-    }
 
     return true;
   }
-
-  Log_DevPrintf("DeviceIoControl(IOCTL_CDROM_RAW_READ) failed: %08X, %u bytes returned, trying SPTD", GetLastError(),
-                bytes_returned);
 
   SPTDBuffer sptd = {};
   FillSPTD(&sptd, 0, true, m_buffer.data());
@@ -444,15 +389,9 @@ bool CDImageDeviceWin32::DetermineReadMode()
     std::memcpy(&subq, &m_buffer[RAW_SECTOR_SIZE], sizeof(subq));
     if (subq.IsCRCValid())
     {
-      Log_DevPrintf("Using SPTD reads with subq (%u, status 0x%02X)", sptd.cmd.DataTransferLength, sptd.cmd.ScsiStatus);
       m_read_subcode = true;
       m_use_sptd = true;
       return true;
-    }
-    else
-    {
-      Log_DevPrintf("SPTD read returned invalid SubQ CRC (got %02X expected %02X)", static_cast<unsigned>(subq.crc),
-                    static_cast<unsigned>(SubChannelQ::ComputeCRC(subq.data)));
     }
   }
 
@@ -462,14 +401,11 @@ bool CDImageDeviceWin32::DetermineReadMode()
                       &bytes_returned, nullptr) &&
       sptd.cmd.ScsiStatus == 0x00)
   {
-    Log_DevPrintf("Using SPTD reads without subq (%u, status 0x%02X)", sptd.cmd.DataTransferLength,
-                  sptd.cmd.ScsiStatus);
     m_read_subcode = false;
     m_use_sptd = true;
     return true;
   }
 
-  Log_ErrorPrintf("No working read mode found (status 0x%02X, err %08X)", sptd.cmd.ScsiStatus, GetLastError());
   return false;
 }
 

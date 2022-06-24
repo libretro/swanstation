@@ -1,11 +1,9 @@
 #include "bios.h"
 #include "common/assert.h"
 #include "common/file_system.h"
-#include "common/log.h"
 #include "common/md5_digest.h"
 #include <array>
 #include <cerrno>
-Log_SetChannel(BIOS);
 
 namespace BIOS {
 static constexpr Hash MakeHashFromString(const char str[])
@@ -95,27 +93,17 @@ std::optional<Image> LoadImageFromFile(const char* filename)
   Image ret(BIOS_SIZE);
   auto fp = FileSystem::OpenManagedCFile(filename, "rb");
   if (!fp)
-  {
-    Log_ErrorPrintf("Failed to open BIOS image '%s', errno=%d", filename, errno);
     return std::nullopt;
-  }
 
   std::fseek(fp.get(), 0, SEEK_END);
   const u32 size = static_cast<u32>(std::ftell(fp.get()));
   std::fseek(fp.get(), 0, SEEK_SET);
 
   if (size != BIOS_SIZE && size != BIOS_SIZE_PS2 && size != BIOS_SIZE_PS3)
-  {
-    Log_ErrorPrintf("BIOS image '%s' size mismatch, expecting either %u or %u or %u bytes but got %u bytes", filename,
-                    BIOS_SIZE, BIOS_SIZE_PS2, BIOS_SIZE_PS3, size);
     return std::nullopt;
-  }
 
   if (std::fread(ret.data(), 1, ret.size(), fp.get()) != ret.size())
-  {
-    Log_ErrorPrintf("Failed to read BIOS image '%s'", filename);
     return std::nullopt;
-  }
 
   return ret;
 }
@@ -165,12 +153,8 @@ bool PatchBIOSEnableTTY(u8* image, u32 image_size, const Hash& hash)
 {
   const ImageInfo* ii = GetImageInfoForHash(hash);
   if (!ii || !ii->patch_compatible)
-  {
-    Log_WarningPrintf("Incompatible version for TTY patch: %s", hash.ToString().c_str());
     return false;
-  }
 
-  Log_InfoPrintf("Patching BIOS to enable TTY/printf");
   PatchBIOS(image, image_size, 0x1FC06F0C, 0x24010001);
   PatchBIOS(image, image_size, 0x1FC06F14, 0xAF81A9C0);
   return true;
@@ -180,13 +164,9 @@ bool PatchBIOSFastBoot(u8* image, u32 image_size, const Hash& hash)
 {
   const ImageInfo* ii = GetImageInfoForHash(hash);
   if (!ii || !ii->patch_compatible)
-  {
-    Log_WarningPrintf("Incompatible version for fast-boot patch: %s", hash.ToString().c_str());
     return false;
-  }
 
   // Replace the shell entry point with a return back to the bootstrap.
-  Log_InfoPrintf("Patching BIOS to skip intro");
   PatchBIOS(image, image_size, 0x1FC18000, 0x3C011F80); // lui at, 1f80
   PatchBIOS(image, image_size, 0x1FC18004, 0x3C0A0300); // lui t2, 0300h
   PatchBIOS(image, image_size, 0x1FC18008, 0xAC2A1814); // sw zero, 1814h(at)        ; turn the display on
@@ -238,13 +218,6 @@ bool IsValidPSExeHeader(const PSEXEHeader& header, u32 file_size)
   static constexpr char expected_id[] = {'P', 'S', '-', 'X', ' ', 'E', 'X', 'E'};
   if (std::memcmp(header.id, expected_id, sizeof(expected_id)) != 0)
     return false;
-
-  if ((header.file_size + sizeof(PSEXEHeader)) > file_size)
-  {
-    Log_WarningPrintf("Incorrect file size in PS-EXE header: %u bytes should not be greater than %u bytes",
-                      header.file_size, file_size - sizeof(PSEXEHeader));
-  }
-
   return true;
 }
 
