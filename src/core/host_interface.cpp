@@ -469,21 +469,6 @@ void HostInterface::CheckForSettingsChanges(const Settings& old_settings)
       System::UpdateOverclock();
     }
 
-    if (g_settings.audio_backend != old_settings.audio_backend ||
-        g_settings.audio_buffer_size != old_settings.audio_buffer_size)
-    {
-      if (g_settings.audio_backend != old_settings.audio_backend)
-      {
-        AddFormattedOSDMessage(5.0f, TranslateString("OSDMessage", "Switching to %s audio backend."),
-                               Settings::GetAudioBackendName(g_settings.audio_backend));
-      }
-      DebugAssert(m_audio_stream);
-      m_audio_stream.reset();
-      m_audio_stream = CreateAudioStream();
-      m_audio_stream->Reconfigure(AUDIO_SAMPLE_RATE, AUDIO_SAMPLE_RATE, AUDIO_CHANNELS, g_settings.audio_buffer_size);
-      m_audio_stream->PauseOutput(System::IsPaused());
-    }
-
     if (g_settings.cpu_execution_mode != old_settings.cpu_execution_mode ||
         g_settings.cpu_fastmem_mode != old_settings.cpu_fastmem_mode ||
         g_settings.cpu_fastmem_rewrite != old_settings.cpu_fastmem_rewrite)

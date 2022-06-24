@@ -69,18 +69,8 @@ struct Settings
   CPUFastmemMode cpu_fastmem_mode = CPUFastmemMode::Disabled;
   bool cpu_fastmem_rewrite = false;
 
-  float emulation_speed = 1.0f;
-  float fast_forward_speed = 0.0f;
-  float turbo_speed = 0.0f;
-  bool sync_to_host_refresh_rate = true;
-  bool increase_timer_resolution = true;
-  bool inhibit_screensaver = false;
   bool start_paused = false;
   bool start_fullscreen = false;
-  bool pause_on_focus_loss = false;
-  bool pause_on_menu = true;
-  bool save_state_on_exit = true;
-  bool confim_power_off = true;
   bool load_devices_from_save_states = false;
   bool apply_game_settings = true;
   bool auto_load_cheats = false;
@@ -93,7 +83,6 @@ struct Settings
 
   GPURenderer gpu_renderer = GPURenderer::Software;
   std::string gpu_adapter;
-  std::string display_post_process_chain;
   u32 gpu_resolution_scale = 1;
   u32 gpu_multisamples = 1;
   bool gpu_use_thread = true;
@@ -128,16 +117,10 @@ struct Settings
   bool display_linear_filtering = true;
   bool display_integer_scaling = false;
   bool display_stretch = false;
-  bool display_post_processing = false;
   bool display_show_osd_messages = true;
-  bool display_show_vps = false;
-  bool display_show_speed = false;
   bool display_show_resolution = false;
   bool display_show_status_indicators = true;
   bool display_show_enhancements = false;
-  bool display_all_frames = false;
-  bool video_sync_enabled = DEFAULT_VSYNC_VALUE;
-  float display_max_fps = DEFAULT_DISPLAY_MAX_FPS;
   float gpu_pgxp_tolerance = -1.0f;
   float gpu_pgxp_depth_clear_threshold = 300.0f / 4096.0f;
 
@@ -149,14 +132,9 @@ struct Settings
   u32 cdrom_read_speedup = 1;
   u32 cdrom_seek_speedup = 1;
 
-  AudioBackend audio_backend = AudioBackend::Cubeb;
   s32 audio_output_volume = 100;
   s32 audio_fast_forward_volume = 100;
   u32 audio_buffer_size = 2048;
-  bool audio_resampling = false;
-  bool audio_output_muted = false;
-  bool audio_sync_enabled = true;
-  bool audio_dump_on_boot = true;
 
   // timing hacks section
   TickCount dma_max_slice_ticks = 1000;
@@ -202,11 +180,6 @@ struct Settings
   std::array<TinyString, NUM_CONTROLLER_AND_CARD_PORTS> GeneratePortLabels() const;
 
   LOGLEVEL log_level = LOGLEVEL_INFO;
-  std::string log_filter;
-  bool log_to_console = false;
-  bool log_to_debug = false;
-  bool log_to_window = false;
-  bool log_to_file = false;
 
   ALWAYS_INLINE bool IsUsingCodeCache() const { return (cpu_execution_mode != CPUExecutionMode::Interpreter); }
   ALWAYS_INLINE bool IsUsingRecompiler() const { return (cpu_execution_mode == CPUExecutionMode::Recompiler); }
@@ -296,10 +269,6 @@ struct Settings
   static std::optional<DisplayAspectRatio> ParseDisplayAspectRatio(const char* str);
   static const char* GetDisplayAspectRatioName(DisplayAspectRatio ar);
 
-  static std::optional<AudioBackend> ParseAudioBackend(const char* str);
-  static const char* GetAudioBackendName(AudioBackend backend);
-  static const char* GetAudioBackendDisplayName(AudioBackend backend);
-
   static std::optional<ControllerType> ParseControllerTypeName(const char* str);
   static const char* GetControllerTypeName(ControllerType type);
   static const char* GetControllerTypeDisplayName(ControllerType type);
@@ -333,14 +302,6 @@ struct Settings
 #else
   static constexpr CPUExecutionMode DEFAULT_CPU_EXECUTION_MODE = CPUExecutionMode::CachedInterpreter;
   static constexpr CPUFastmemMode DEFAULT_CPU_FASTMEM_MODE = CPUFastmemMode::Disabled;
-#endif
-
-#if defined(__ANDROID__)
-  static constexpr AudioBackend DEFAULT_AUDIO_BACKEND = AudioBackend::OpenSLES;
-#elif defined(_UWP)
-  static constexpr AudioBackend DEFAULT_AUDIO_BACKEND = AudioBackend::XAudio2;
-#else
-  static constexpr AudioBackend DEFAULT_AUDIO_BACKEND = AudioBackend::Cubeb;
 #endif
 
   static constexpr DisplayCropMode DEFAULT_DISPLAY_CROP_MODE = DisplayCropMode::Overscan;

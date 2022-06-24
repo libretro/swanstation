@@ -17,24 +17,20 @@ namespace Common {
 static double s_counter_frequency;
 static bool s_counter_initialized = false;
 
-// This gets leaked... oh well.
-static thread_local HANDLE s_sleep_timer;
-static thread_local bool s_sleep_timer_created = false;
-
-static HANDLE GetSleepTimer()
+static HANDLE GetSleepTimer(void)
 {
+  // This gets leaked... oh well.
+  static thread_local HANDLE s_sleep_timer;
+  static thread_local bool s_sleep_timer_created = false;
   if (s_sleep_timer_created)
     return s_sleep_timer;
 
   s_sleep_timer_created = true;
   s_sleep_timer = CreateWaitableTimer(nullptr, TRUE, nullptr);
-  if (!s_sleep_timer)
-    std::fprintf(stderr, "CreateWaitableTimer() failed, falling back to Sleep()\n");
-
   return s_sleep_timer;
 }
 
-Timer::Value Timer::GetValue()
+Timer::Value Timer::GetValue(void)
 {
   // even if this races, it should still result in the same value..
   if (!s_counter_initialized)
@@ -120,7 +116,7 @@ void Timer::SleepUntil(Value value, bool exact)
 
 #else
 
-Timer::Value Timer::GetValue()
+Timer::Value Timer::GetValue(void)
 {
   struct timespec tv;
   clock_gettime(CLOCK_MONOTONIC, &tv);
@@ -206,74 +202,6 @@ double Timer::GetTimeSeconds() const
 double Timer::GetTimeMilliseconds() const
 {
   return ConvertValueToMilliseconds(GetValue() - m_tvStartValue);
-}
-
-double Timer::GetTimeNanoseconds() const
-{
-  return ConvertValueToNanoseconds(GetValue() - m_tvStartValue);
-}
-
-void Timer::BusyWait(std::uint64_t ns)
-{
-  const Value start = GetValue();
-  const Value end = start + ConvertNanosecondsToValue(static_cast<double>(ns));
-  if (end < start)
-  {
-    // overflow, unlikely
-    while (GetValue() > end)
-      ;
-  }
-
-  while (GetValue() < end)
-    ;
-}
-
-void Timer::HybridSleep(std::uint64_t ns, std::uint64_t min_sleep_time)
-{
-  const std::uint64_t start = GetValue();
-  const std::uint64_t end = start + ConvertNanosecondsToValue(static_cast<double>(ns));
-  if (end < start)
-  {
-    // overflow, unlikely
-    while (GetValue() > end)
-      ;
-  }
-
-  std::uint64_t current = GetValue();
-  while (current < end)
-  {
-    const std::uint64_t remaining = end - current;
-    if (remaining >= min_sleep_time)
-      NanoSleep(min_sleep_time);
-
-    current = GetValue();
-  }
-}
-
-void Timer::NanoSleep(std::uint64_t ns)
-{
-#if defined(_WIN32)
-  HANDLE timer = GetSleepTimer();
-  if (timer)
-  {
-    LARGE_INTEGER due_time;
-    due_time.QuadPart = -static_cast<std::int64_t>(static_cast<std::uint64_t>(ns) / 100u);
-    if (SetWaitableTimer(timer, &due_time, 0, nullptr, nullptr, FALSE))
-      WaitForSingleObject(timer, INFINITE);
-    else
-      std::fprintf(stderr, "SetWaitableTimer() failed: %08X\n", GetLastError());
-  }
-  else
-  {
-    Sleep(static_cast<std::uint32_t>(ns / 1000000));
-  }
-#elif defined(__ANDROID__)
-  // Round down to the next millisecond.
-  usleep(static_cast<useconds_t>((ns / 1000000) * 1000));
-#else
-  const struct timespec ts = {0, static_cast<long>(ns)};
-  nanosleep(&ts, nullptr);
-#endif
 }
 
 } // namespace Common

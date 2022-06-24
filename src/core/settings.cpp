@@ -142,18 +142,8 @@ void Settings::Load(SettingsInterface& si)
       .value_or(DEFAULT_CONSOLE_REGION);
   enable_8mb_ram = si.GetBoolValue("Console", "Enable8MBRAM", false);
 
-  emulation_speed = si.GetFloatValue("Main", "EmulationSpeed", 1.0f);
-  fast_forward_speed = si.GetFloatValue("Main", "FastForwardSpeed", 0.0f);
-  turbo_speed = si.GetFloatValue("Main", "TurboSpeed", 0.0f);
-  sync_to_host_refresh_rate = si.GetBoolValue("Main", "SyncToHostRefreshRate", false);
-  increase_timer_resolution = si.GetBoolValue("Main", "IncreaseTimerResolution", true);
-  inhibit_screensaver = si.GetBoolValue("Main", "InhibitScreensaver", true);
   start_paused = si.GetBoolValue("Main", "StartPaused", false);
   start_fullscreen = si.GetBoolValue("Main", "StartFullscreen", false);
-  pause_on_focus_loss = si.GetBoolValue("Main", "PauseOnFocusLoss", false);
-  pause_on_menu = si.GetBoolValue("Main", "PauseOnMenu", true);
-  save_state_on_exit = si.GetBoolValue("Main", "SaveStateOnExit", true);
-  confim_power_off = si.GetBoolValue("Main", "ConfirmPowerOff", true);
   load_devices_from_save_states = si.GetBoolValue("Main", "LoadDevicesFromSaveStates", false);
   apply_game_settings = si.GetBoolValue("Main", "ApplyGameSettings", true);
   auto_load_cheats = si.GetBoolValue("Main", "AutoLoadCheats", true);
@@ -233,17 +223,10 @@ void Settings::Load(SettingsInterface& si)
   display_linear_filtering = si.GetBoolValue("Display", "LinearFiltering", false);
   display_integer_scaling = si.GetBoolValue("Display", "IntegerScaling", false);
   display_stretch = si.GetBoolValue("Display", "Stretch", false);
-  display_post_processing = si.GetBoolValue("Display", "PostProcessing", false);
   display_show_osd_messages = si.GetBoolValue("Display", "ShowOSDMessages", true);
-  display_show_vps = si.GetBoolValue("Display", "ShowVPS", false);
-  display_show_speed = si.GetBoolValue("Display", "ShowSpeed", false);
   display_show_resolution = si.GetBoolValue("Display", "ShowResolution", false);
   display_show_status_indicators = si.GetBoolValue("Display", "ShowStatusIndicators", true);
   display_show_enhancements = si.GetBoolValue("Display", "ShowEnhancements", false);
-  display_all_frames = si.GetBoolValue("Display", "DisplayAllFrames", false);
-  video_sync_enabled = si.GetBoolValue("Display", "VSync", DEFAULT_VSYNC_VALUE);
-  display_post_process_chain = si.GetStringValue("Display", "PostProcessChain", "");
-  display_max_fps = si.GetFloatValue("Display", "MaxFPS", DEFAULT_DISPLAY_MAX_FPS);
 
   cdrom_readahead_sectors = static_cast<u8>(si.GetIntValue("CDROM", "ReadaheadSectors", DEFAULT_CDROM_READAHEAD_SECTORS));
   cdrom_region_check = si.GetBoolValue("CDROM", "RegionCheck", false);
@@ -253,16 +236,9 @@ void Settings::Load(SettingsInterface& si)
   cdrom_read_speedup = si.GetIntValue("CDROM", "ReadSpeedup", 1);
   cdrom_seek_speedup = si.GetIntValue("CDROM", "SeekSpeedup", 1);
 
-  audio_backend =
-    ParseAudioBackend(si.GetStringValue("Audio", "Backend", GetAudioBackendName(DEFAULT_AUDIO_BACKEND)).c_str())
-      .value_or(DEFAULT_AUDIO_BACKEND);
   audio_output_volume = si.GetIntValue("Audio", "OutputVolume", 100);
   audio_fast_forward_volume = si.GetIntValue("Audio", "FastForwardVolume", 100);
   audio_buffer_size = si.GetIntValue("Audio", "BufferSize", HostInterface::DEFAULT_AUDIO_BUFFER_SIZE);
-  audio_resampling = si.GetBoolValue("Audio", "Resampling", true);
-  audio_output_muted = si.GetBoolValue("Audio", "OutputMuted", false);
-  audio_sync_enabled = si.GetBoolValue("Audio", "Sync", true);
-  audio_dump_on_boot = si.GetBoolValue("Audio", "DumpOnBoot", false);
 
   dma_max_slice_ticks = si.GetIntValue("Hacks", "DMAMaxSliceTicks", DEFAULT_DMA_MAX_SLICE_TICKS);
   dma_halt_ticks = si.GetIntValue("Hacks", "DMAHaltTicks", DEFAULT_DMA_HALT_TICKS);
@@ -306,11 +282,6 @@ void Settings::Load(SettingsInterface& si)
 
   log_level = ParseLogLevelName(si.GetStringValue("Logging", "LogLevel", GetLogLevelName(DEFAULT_LOG_LEVEL)).c_str())
                 .value_or(DEFAULT_LOG_LEVEL);
-  log_filter = si.GetStringValue("Logging", "LogFilter", "");
-  log_to_console = si.GetBoolValue("Logging", "LogToConsole", DEFAULT_LOG_TO_CONSOLE);
-  log_to_debug = si.GetBoolValue("Logging", "LogToDebug", false);
-  log_to_window = si.GetBoolValue("Logging", "LogToWindow", false);
-  log_to_file = si.GetBoolValue("Logging", "LogToFile", false);
 
   texture_replacements.enable_vram_write_replacements =
     si.GetBoolValue("TextureReplacements", "EnableVRAMWriteReplacements", false);
@@ -658,58 +629,6 @@ float Settings::GetDisplayAspectRatioValue() const
       return s_display_aspect_ratio_values[static_cast<int>(display_aspect_ratio)];
     }
   }
-}
-
-static const auto s_audio_backend_names = make_array("Null", "Cubeb"
-#ifdef _WIN32
-                                                     ,
-                                                     "XAudio2"
-#endif
-#ifndef ANDROID
-                                                     ,
-                                                     "SDL"
-#else
-                                                     ,
-                                                     "OpenSLES"
-#endif
-);
-static const auto s_audio_backend_display_names =
-  make_array(TRANSLATABLE("AudioBackend", "Null (No Output)"), TRANSLATABLE("AudioBackend", "Cubeb")
-#ifdef _WIN32
-                                                                 ,
-             TRANSLATABLE("AudioBackend", "XAudio2")
-#endif
-#ifndef ANDROID
-               ,
-             TRANSLATABLE("AudioBackend", "SDL")
-#else
-                                                                 ,
-             TRANSLATABLE("AudioBackend", "OpenSL ES")
-#endif
-  );
-
-std::optional<AudioBackend> Settings::ParseAudioBackend(const char* str)
-{
-  int index = 0;
-  for (const char* name : s_audio_backend_names)
-  {
-    if (StringUtil::Strcasecmp(name, str) == 0)
-      return static_cast<AudioBackend>(index);
-
-    index++;
-  }
-
-  return std::nullopt;
-}
-
-const char* Settings::GetAudioBackendName(AudioBackend backend)
-{
-  return s_audio_backend_names[static_cast<int>(backend)];
-}
-
-const char* Settings::GetAudioBackendDisplayName(AudioBackend backend)
-{
-  return s_audio_backend_display_names[static_cast<int>(backend)];
 }
 
 static std::array<const char*, 7> s_controller_type_names = {
