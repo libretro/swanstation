@@ -421,7 +421,6 @@ bool HostInterface::LoadState(const char* filename)
       return false;
   }
 
-  OnDisplayInvalidated();
   return true;
 }
 
@@ -778,7 +777,6 @@ void HostInterface::CheckForSettingsChanges(const Settings& old_settings)
         g_settings.runahead_frames != old_settings.runahead_frames)
     {
       g_gpu->UpdateSettings();
-      OnDisplayInvalidated();
     }
 
     if (g_settings.gpu_widescreen_hack != old_settings.gpu_widescreen_hack ||
@@ -875,7 +873,6 @@ void HostInterface::CheckForSettingsChanges(const Settings& old_settings)
     m_display->SetDisplayLinearFiltering(g_settings.display_linear_filtering);
     m_display->SetDisplayIntegerScaling(g_settings.display_integer_scaling);
     m_display->SetDisplayStretch(g_settings.display_stretch);
-    OnDisplayInvalidated();
   }
 }
 
@@ -1067,7 +1064,6 @@ void HostInterface::ToggleSoftwareRendering()
   AddFormattedOSDMessage(5.0f, TranslateString("OSDMessage", "Switching to %s renderer..."),
                          Settings::GetRendererDisplayName(new_renderer));
   System::RecreateGPU(new_renderer);
-  OnDisplayInvalidated();
 }
 
 void HostInterface::ModifyResolutionScale(s32 increment)
@@ -1085,7 +1081,6 @@ void HostInterface::ModifyResolutionScale(s32 increment)
     g_gpu->UpdateSettings();
     g_gpu->ResetGraphicsAPIState();
     System::ClearMemorySaveStates();
-    OnDisplayInvalidated();
   }
 }
 
@@ -1147,6 +1142,4 @@ void HostInterface::RecreateSystem()
     ReportError("Failed to boot system after recreation.");
     return;
   }
-
-  OnDisplayInvalidated();
 }

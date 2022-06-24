@@ -1050,10 +1050,6 @@ void LibretroHostInterface::OnRunningGameChanged(const std::string& path, CDImag
     UpdateSettings();
 }
 
-void LibretroHostInterface::OnSystemPerformanceCountersUpdated() {}
-
-void LibretroHostInterface::OnDisplayInvalidated() {}
-
 void LibretroHostInterface::InitRumbleInterface()
 {
   m_rumble_interface_valid = g_retro_environment_callback(RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE, &m_rumble_interface);

@@ -151,11 +151,6 @@ public:
 
   virtual void OnRunningGameChanged(const std::string& path, CDImage* image, const std::string& game_code,
                                     const std::string& game_title) = 0;
-  virtual void OnSystemPerformanceCountersUpdated() = 0;
-
-  /// Called when the display is invalidated (e.g. a state is loaded).
-  virtual void OnDisplayInvalidated() = 0;
-
 protected:
   virtual bool AcquireHostDisplay() = 0;
   virtual void ReleaseHostDisplay() = 0;

@@ -56,8 +56,6 @@ public:
 
   bool UpdateSystemAVInfo(bool use_resolution_scale);
 
-  void OnSystemPerformanceCountersUpdated() override;
-  void OnDisplayInvalidated() override;
   bool UpdateCoreOptionsDisplay(bool controller);
 
   // Called by frontend
