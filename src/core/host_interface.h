@@ -56,9 +56,6 @@ public:
   virtual void ResetSystem();
   virtual void DestroySystem();
 
-  /// Loads state from the specified filename.
-  bool LoadState(const char* filename);
-
   virtual void ReportError(const char* message);
   virtual void ReportMessage(const char* message);
   virtual void ReportDebuggerMessage(const char* message);
@@ -190,8 +187,6 @@ protected:
 
   /// Updates software cursor state, based on controllers.
   void UpdateSoftwareCursor();
-
-  bool SaveState(const char* filename);
 
   std::unique_ptr<HostDisplay> m_display;
   std::unique_ptr<AudioStream> m_audio_stream;

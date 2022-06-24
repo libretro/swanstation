@@ -246,11 +246,9 @@ std::optional<std::vector<u8>> HostInterface::GetBIOSImage(ConsoleRegion region)
       break;
   }
 
+  //auto-detect
   if (bios_name.empty())
-  {
-     //auto-detect
     return FindBIOSImageInDirectory(region, bios_dir.c_str());
-  }
 
   // try the configured path
   std::optional<BIOS::Image> image = BIOS::LoadImageFromFile(
@@ -325,14 +323,10 @@ std::optional<std::vector<u8>> HostInterface::FindBIOSImageInDirectory(ConsoleRe
   }
 
   if (!fallback_info)
-  {
     return std::nullopt;
-  }
-  else
-  {
-    Log_WarningPrintf("Falling back to possibly-incompatible image '%s': %s", fallback_path.c_str(),
-                      fallback_info->description);
-  }
+
+  Log_WarningPrintf("Falling back to possibly-incompatible image '%s': %s", fallback_path.c_str(),
+		  fallback_info->description);
 
   return fallback_image;
 }
@@ -370,57 +364,6 @@ bool HostInterface::HasAnyBIOSImages()
 {
   const std::string dir = GetBIOSDirectory();
   return (FindBIOSImageInDirectory(ConsoleRegion::Auto, dir.c_str()).has_value());
-}
-
-bool HostInterface::LoadState(const char* filename)
-{
-  std::unique_ptr<ByteStream> stream = FileSystem::OpenFile(filename, BYTESTREAM_OPEN_READ | BYTESTREAM_OPEN_STREAMED);
-  if (!stream)
-    return false;
-
-  AddFormattedOSDMessage(5.0f, TranslateString("OSDMessage", "Loading state from '%s'..."), filename);
-
-  if (!System::IsShutdown())
-  {
-    if (!System::LoadState(stream.get()))
-    {
-      ReportFormattedError(TranslateString("OSDMessage", "Loading state from '%s' failed. Resetting."), filename);
-      ResetSystem();
-      return false;
-    }
-  }
-  else
-  {
-    auto boot_params = std::make_shared<SystemBootParameters>();
-    boot_params->state_stream = std::move(stream);
-    if (!BootSystem(std::move(boot_params)))
-      return false;
-  }
-
-  return true;
-}
-
-bool HostInterface::SaveState(const char* filename)
-{
-  std::unique_ptr<ByteStream> stream =
-    FileSystem::OpenFile(filename, BYTESTREAM_OPEN_CREATE | BYTESTREAM_OPEN_WRITE | BYTESTREAM_OPEN_TRUNCATE |
-                                     BYTESTREAM_OPEN_ATOMIC_UPDATE | BYTESTREAM_OPEN_STREAMED);
-  if (!stream)
-    return false;
-
-  const bool result = System::SaveState(stream.get());
-  if (!result)
-  {
-    ReportFormattedError(TranslateString("OSDMessage", "Saving state to '%s' failed."), filename);
-    stream->Discard();
-  }
-  else
-  {
-    AddFormattedOSDMessage(5.0f, TranslateString("OSDMessage", "State saved to '%s'."), filename);
-    stream->Commit();
-  }
-
-  return result;
 }
 
 std::string HostInterface::GetShaderCacheBasePath() const
