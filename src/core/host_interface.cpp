@@ -694,15 +694,6 @@ std::string HostInterface::GetProgramDirectoryRelativePath(const char* format, .
   }
 }
 
-TinyString HostInterface::GetTimestampStringForFileName()
-{
-  const Timestamp ts(Timestamp::Now());
-
-  TinyString str;
-  ts.ToString(str, "%Y-%m-%d_%H-%M-%S");
-  return str;
-}
-
 std::string HostInterface::GetMemoryCardDirectory() const
 {
   if (g_settings.memory_card_directory.empty())
