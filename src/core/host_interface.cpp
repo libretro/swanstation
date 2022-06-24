@@ -132,8 +132,6 @@ bool HostInterface::BootSystem(std::shared_ptr<SystemBootParameters> parameters)
 void HostInterface::ResetSystem()
 {
   System::Reset();
-  System::ResetPerformanceCounters();
-  System::ResetThrottler();
   AddOSDMessage(TranslateStdString("OSDMessage", "System reset."));
 }
 
@@ -148,12 +146,6 @@ void HostInterface::PauseSystem(bool paused)
   m_audio_stream->PauseOutput(paused);
 
   OnSystemPaused(paused);
-
-  if (!paused)
-  {
-    System::ResetPerformanceCounters();
-    System::ResetThrottler();
-  }
 }
 
 void HostInterface::DestroySystem()
@@ -429,8 +421,6 @@ bool HostInterface::LoadState(const char* filename)
       return false;
   }
 
-  System::ResetPerformanceCounters();
-  System::ResetThrottler();
   OnDisplayInvalidated();
   return true;
 }
@@ -732,9 +722,6 @@ void HostInterface::CheckForSettingsChanges(const Settings& old_settings)
       CreateAudioStream();
       m_audio_stream->PauseOutput(System::IsPaused());
     }
-
-    if (g_settings.emulation_speed != old_settings.emulation_speed)
-      System::UpdateThrottlePeriod();
 
     if (g_settings.cpu_execution_mode != old_settings.cpu_execution_mode ||
         g_settings.cpu_fastmem_mode != old_settings.cpu_fastmem_mode ||
@@ -1161,7 +1148,5 @@ void HostInterface::RecreateSystem()
     return;
   }
 
-  System::ResetPerformanceCounters();
-  System::ResetThrottler();
   OnDisplayInvalidated();
 }

@@ -164,9 +164,6 @@ void SetTargetSpeed(float speed);
 /// Adjusts the throttle frequency, i.e. how many times we should sleep per second.
 void SetThrottleFrequency(float frequency);
 
-void UpdatePerformanceCounters();
-void ResetPerformanceCounters();
-
 // Access controllers for simulating input.
 Controller* GetController(u32 slot);
 void UpdateControllers();

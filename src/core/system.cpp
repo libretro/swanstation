@@ -109,17 +109,6 @@ static float s_target_speed = 1.0f;
 static float s_average_frame_time_accumulator = 0.0f;
 static float s_worst_frame_time_accumulator = 0.0f;
 
-static float s_vps = 0.0f;
-static float s_fps = 0.0f;
-static float s_speed = 0.0f;
-static float s_worst_frame_time = 0.0f;
-static float s_average_frame_time = 0.0f;
-static u32 s_last_frame_number = 0;
-static u32 s_last_internal_frame_number = 0;
-static u32 s_last_global_tick_counter = 0;
-static Common::Timer s_fps_timer;
-static Common::Timer s_frame_timer;
-
 static std::unique_ptr<CheatList> s_cheat_list;
 
 static bool s_memory_saves_enabled = false;
@@ -246,26 +235,6 @@ const std::string& GetRunningTitle()
   return s_running_game_title;
 }
 
-float GetFPS()
-{
-  return s_fps;
-}
-float GetVPS()
-{
-  return s_vps;
-}
-float GetEmulationSpeed()
-{
-  return s_speed;
-}
-float GetAverageFrameTime()
-{
-  return s_average_frame_time;
-}
-float GetWorstFrameTime()
-{
-  return s_worst_frame_time;
-}
 float GetThrottleFrequency()
 {
   return s_throttle_frequency;
@@ -882,17 +851,6 @@ bool Initialize(bool force_software_renderer)
   s_average_frame_time_accumulator = 0.0f;
   s_worst_frame_time_accumulator = 0.0f;
 
-  s_vps = 0.0f;
-  s_fps = 0.0f;
-  s_speed = 0.0f;
-  s_worst_frame_time = 0.0f;
-  s_average_frame_time = 0.0f;
-  s_last_frame_number = 0;
-  s_last_internal_frame_number = 0;
-  s_last_global_tick_counter = 0;
-  s_fps_timer.Reset();
-  s_frame_timer.Reset();
-
   TimingEvents::Initialize();
 
   CPU::Initialize();
@@ -1168,7 +1126,6 @@ void Reset()
   s_frame_number = 1;
   s_internal_frame_number = 0;
   TimingEvents::Reset();
-  ResetPerformanceCounters();
 
   g_gpu->ResetGraphicsAPIState();
 }
@@ -1380,8 +1337,6 @@ void SingleStepCPU()
 {
   const u32 old_frame_number = s_frame_number;
 
-  s_frame_timer.Reset();
-
   g_gpu->RestoreGraphicsAPIState();
 
   CPU::SingleStep();
@@ -1436,8 +1391,6 @@ void DoRunFrame()
 
 void RunFrame()
 {
-  s_frame_timer.Reset();
-
   if (s_rewind_load_counter >= 0)
   {
     DoRewind();
@@ -1466,50 +1419,6 @@ void SetTargetSpeed(float speed)
 void SetThrottleFrequency(float frequency)
 {
   s_throttle_frequency = frequency;
-}
-
-void UpdatePerformanceCounters()
-{
-  const float frame_time = static_cast<float>(s_frame_timer.GetTimeMilliseconds());
-  s_average_frame_time_accumulator += frame_time;
-  s_worst_frame_time_accumulator = std::max(s_worst_frame_time_accumulator, frame_time);
-
-  // update fps counter
-  const float time = static_cast<float>(s_fps_timer.GetTimeSeconds());
-  if (time < 1.0f)
-    return;
-
-  const float frames_presented = static_cast<float>(s_frame_number - s_last_frame_number);
-  const u32 global_tick_counter = TimingEvents::GetGlobalTickCounter();
-
-  s_worst_frame_time = s_worst_frame_time_accumulator;
-  s_worst_frame_time_accumulator = 0.0f;
-  s_average_frame_time = s_average_frame_time_accumulator / frames_presented;
-  s_average_frame_time_accumulator = 0.0f;
-  s_vps = static_cast<float>(frames_presented / time);
-  s_last_frame_number = s_frame_number;
-  s_fps = static_cast<float>(s_internal_frame_number - s_last_internal_frame_number) / time;
-  s_last_internal_frame_number = s_internal_frame_number;
-  s_speed = static_cast<float>(static_cast<double>(global_tick_counter - s_last_global_tick_counter) /
-                               (static_cast<double>(g_ticks_per_second) * time)) *
-            100.0f;
-  s_last_global_tick_counter = global_tick_counter;
-  s_fps_timer.Reset();
-
-  Log_VerbosePrintf("FPS: %.2f VPS: %.2f Average: %.2fms Worst: %.2fms", s_fps, s_vps, s_average_frame_time,
-                    s_worst_frame_time);
-
-  g_host_interface->OnSystemPerformanceCountersUpdated();
-}
-
-void ResetPerformanceCounters()
-{
-  s_last_frame_number = s_frame_number;
-  s_last_internal_frame_number = s_internal_frame_number;
-  s_last_global_tick_counter = TimingEvents::GetGlobalTickCounter();
-  s_average_frame_time_accumulator = 0.0f;
-  s_worst_frame_time_accumulator = 0.0f;
-  s_fps_timer.Reset();
 }
 
 static bool LoadEXEToRAM(const char* filename, bool patch_bios)
@@ -2252,14 +2161,11 @@ void SetRewinding(bool enabled)
 
 void DoRewind()
 {
-  s_frame_timer.Reset();
-
   if (s_rewind_load_counter == 0)
   {
     const u32 skip_saves = BoolToUInt32(!s_rewinding_first_save);
     s_rewinding_first_save = false;
     LoadRewindState(skip_saves, false);
-    ResetPerformanceCounters();
     s_rewind_load_counter = s_rewind_load_frequency;
   }
   else
