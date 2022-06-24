@@ -453,11 +453,6 @@ void LibretroD3D11HostDisplay::RenderDisplay(s32 left, s32 top, s32 width, s32 h
   m_context->Draw(3, 0);
 }
 
-HostDisplay::AdapterAndModeList LibretroD3D11HostDisplay::GetAdapterAndModeList()
-{
-  return {};
-}
-
 bool LibretroD3D11HostDisplay::CheckFramebufferSize(u32 width, u32 height)
 {
   if (m_framebuffer.GetWidth() == width && m_framebuffer.GetHeight() == height)

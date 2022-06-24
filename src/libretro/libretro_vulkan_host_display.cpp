@@ -59,11 +59,6 @@ void* LibretroVulkanHostDisplay::GetRenderContext() const
   return nullptr;
 }
 
-HostDisplay::AdapterAndModeList LibretroVulkanHostDisplay::GetAdapterAndModeList()
-{
-  return {};
-}
-
 void LibretroVulkanHostDisplay::DestroyRenderSurface() {}
 
 static constexpr std::array<VkFormat, static_cast<u32>(HostDisplayPixelFormat::Count)> s_display_pixel_format_mapping =

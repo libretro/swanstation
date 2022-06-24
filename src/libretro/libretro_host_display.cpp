@@ -123,11 +123,6 @@ void LibretroHostDisplay::ResizeRenderWindow(s32 new_window_width, s32 new_windo
   m_window_info.surface_height = new_window_height;
 }
 
-HostDisplay::AdapterAndModeList LibretroHostDisplay::GetAdapterAndModeList()
-{
-  return {};
-}
-
 std::unique_ptr<HostDisplayTexture> LibretroHostDisplay::CreateTexture(u32 width, u32 height, u32 layers, u32 levels,
                                                                        u32 samples, HostDisplayPixelFormat format,
                                                                        const void* data, u32 data_stride,

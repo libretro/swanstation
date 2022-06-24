@@ -436,11 +436,6 @@ bool LibretroOpenGLHostDisplay::ChangeRenderWindow(const WindowInfo& new_wi)
   return true;
 }
 
-HostDisplay::AdapterAndModeList LibretroOpenGLHostDisplay::GetAdapterAndModeList()
-{
-  return {};
-}
-
 void LibretroOpenGLHostDisplay::DestroyRenderSurface() {}
 
 bool LibretroOpenGLHostDisplay::CreateResources()

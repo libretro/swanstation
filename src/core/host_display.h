@@ -94,7 +94,6 @@ public:
   virtual void DestroyRenderDevice() = 0;
   virtual void DestroyRenderSurface() = 0;
   virtual bool ChangeRenderWindow(const WindowInfo& wi) = 0;
-  virtual AdapterAndModeList GetAdapterAndModeList() = 0;
   virtual bool CreateResources() = 0;
   virtual void DestroyResources() = 0;
 

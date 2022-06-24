@@ -26,7 +26,6 @@ public:
 
   bool ChangeRenderWindow(const WindowInfo& wi) override;
   void ResizeRenderWindow(s32 new_window_width, s32 new_window_height) override;
-  AdapterAndModeList GetAdapterAndModeList() override;
   void DestroyRenderSurface() override;
 
   bool CreateResources() override;

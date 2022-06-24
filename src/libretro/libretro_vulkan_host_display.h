@@ -36,7 +36,6 @@ public:
 
   bool ChangeRenderWindow(const WindowInfo& new_wi) override;
 
-  AdapterAndModeList GetAdapterAndModeList() override;
   void DestroyRenderSurface() override;
 
   std::unique_ptr<HostDisplayTexture> CreateTexture(u32 width, u32 height, u32 layers, u32 levels, u32 samples,
