@@ -103,7 +103,6 @@ void UpdateFastmemBase();
 /// Executes interpreter loop.
 void Execute();
 void ExecuteDebug();
-void SingleStep();
 
 // Forces an early exit from the CPU dispatcher.
 void ForceDispatcherExit();
@@ -152,32 +151,7 @@ bool SafeWriteMemoryWord(VirtualMemoryAddress addr, u32 value);
 void SetExternalInterrupt(u8 bit);
 void ClearExternalInterrupt(u8 bit);
 
-// Breakpoint callback - if the callback returns false, the breakpoint will be removed.
-using BreakpointCallback = bool (*)(VirtualMemoryAddress address);
-
-struct Breakpoint
-{
-  VirtualMemoryAddress address;
-  BreakpointCallback callback;
-  u32 number;
-  u32 hit_count;
-  bool auto_clear;
-  bool enabled;
-};
-
-using BreakpointList = std::vector<Breakpoint>;
-
 // Breakpoints
-bool HasAnyBreakpoints();
-bool HasBreakpointAtAddress(VirtualMemoryAddress address);
-BreakpointList GetBreakpointList(bool include_auto_clear = false, bool include_callbacks = false);
-bool AddBreakpoint(VirtualMemoryAddress address, bool auto_clear = false, bool enabled = true);
-bool AddBreakpointWithCallback(VirtualMemoryAddress address, BreakpointCallback callback);
-bool RemoveBreakpoint(VirtualMemoryAddress address);
 void ClearBreakpoints();
-bool AddStepOverBreakpoint();
-bool AddStepOutBreakpoint(u32 max_instructions_to_search = 1000);
-
-extern bool TRACE_EXECUTION;
 
 } // namespace CPU
