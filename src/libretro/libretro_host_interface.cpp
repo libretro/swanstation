@@ -666,7 +666,6 @@ bool LibretroHostInterface::AcquireHostDisplay()
   g_libretro_host_interface.GetSystemAVInfo(&avi, false);
 
   WindowInfo wi;
-  wi.type = WindowInfo::Type::Libretro;
   wi.surface_width = avi.geometry.base_width;
   wi.surface_height = avi.geometry.base_height;
 
@@ -1483,7 +1482,6 @@ void LibretroHostInterface::SwitchToHardwareRenderer()
   g_libretro_host_interface.GetSystemAVInfo(&avi, true);
 
   WindowInfo wi;
-  wi.type = WindowInfo::Type::Libretro;
   wi.display_connection = &g_libretro_host_interface.m_hw_render_callback;
   wi.surface_width = avi.geometry.base_width;
   wi.surface_height = avi.geometry.base_height;
@@ -1581,7 +1579,6 @@ void LibretroHostInterface::SwitchToSoftwareRenderer()
   g_libretro_host_interface.GetSystemAVInfo(&avi, false);
 
   WindowInfo wi;
-  wi.type = WindowInfo::Type::Libretro;
   wi.surface_width = avi.geometry.base_width;
   wi.surface_height = avi.geometry.base_height;
 

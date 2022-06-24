@@ -364,8 +364,6 @@ bool LibretroOpenGLHostDisplay::RequestHardwareRendererContext(retro_hw_render_c
 bool LibretroOpenGLHostDisplay::CreateRenderDevice(const WindowInfo& wi, std::string_view adapter_name,
                                                    bool debug_device, bool threaded_presentation)
 {
-  Assert(wi.type == WindowInfo::Type::Libretro);
-
   // gross - but can't do much because of the GLADloadproc below.
   static retro_hw_render_callback* cb;
   cb = static_cast<retro_hw_render_callback*>(wi.display_connection);

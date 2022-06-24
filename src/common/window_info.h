@@ -4,19 +4,6 @@
 // Contains the information required to create a graphics context in a window.
 struct WindowInfo
 {
-  enum class Type
-  {
-    Surfaceless,
-    Win32,
-    WinRT,
-    X11,
-    Wayland,
-    MacOS,
-    Android,
-    Display,
-    Libretro,
-  };
-
   enum class SurfaceFormat
   {
     None,
@@ -27,7 +14,6 @@ struct WindowInfo
     Count
   };
 
-  Type type = Type::Surfaceless;
   void* display_connection = nullptr;
   void* window_handle = nullptr;
   u32 surface_width = 0;
