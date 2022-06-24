@@ -76,7 +76,7 @@ public:
 protected:
   bool AcquireHostDisplay() override;
   void ReleaseHostDisplay() override;
-  std::unique_ptr<AudioStream> CreateAudioStream(AudioBackend backend) override;
+  std::unique_ptr<AudioStream> CreateAudioStream() override;
   void OnSystemCreated() override;
   void OnSystemPaused(bool paused) override;
   void OnSystemDestroyed() override;

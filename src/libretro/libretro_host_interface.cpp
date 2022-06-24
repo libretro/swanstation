@@ -689,7 +689,7 @@ void LibretroHostInterface::ReleaseHostDisplay()
   m_display.reset();
 }
 
-std::unique_ptr<AudioStream> LibretroHostInterface::CreateAudioStream(AudioBackend backend)
+std::unique_ptr<AudioStream> LibretroHostInterface::CreateAudioStream()
 {
   return std::make_unique<LibretroAudioStream>();
 }

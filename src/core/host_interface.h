@@ -154,8 +154,7 @@ public:
 protected:
   virtual bool AcquireHostDisplay() = 0;
   virtual void ReleaseHostDisplay() = 0;
-  virtual std::unique_ptr<AudioStream> CreateAudioStream(AudioBackend backend) = 0;
-  virtual s32 GetAudioOutputVolume() const;
+  virtual std::unique_ptr<AudioStream> CreateAudioStream() = 0;
 
   virtual void OnSystemCreated() = 0;
   virtual void OnSystemPaused(bool paused) = 0;
@@ -199,7 +198,6 @@ protected:
   void UpdateSoftwareCursor();
 
   bool SaveState(const char* filename);
-  void CreateAudioStream();
 
   std::unique_ptr<HostDisplay> m_display;
   std::unique_ptr<AudioStream> m_audio_stream;

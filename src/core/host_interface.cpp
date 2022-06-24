@@ -55,34 +55,6 @@ void HostInterface::Shutdown()
     System::Shutdown();
 }
 
-void HostInterface::CreateAudioStream()
-{
-  Log_InfoPrintf("Creating '%s' audio stream, sample rate = %u, channels = %u, buffer size = %u",
-                 Settings::GetAudioBackendName(g_settings.audio_backend), AUDIO_SAMPLE_RATE, AUDIO_CHANNELS,
-                 g_settings.audio_buffer_size);
-
-  m_audio_stream = CreateAudioStream(g_settings.audio_backend);
-
-  if (!m_audio_stream ||
-      !m_audio_stream->Reconfigure(AUDIO_SAMPLE_RATE, AUDIO_SAMPLE_RATE, AUDIO_CHANNELS, g_settings.audio_buffer_size))
-  {
-    ReportFormattedError("Failed to create or configure audio stream, falling back to null output.");
-    m_audio_stream.reset();
-    m_audio_stream = AudioStream::CreateNullAudioStream();
-    m_audio_stream->Reconfigure(AUDIO_SAMPLE_RATE, AUDIO_SAMPLE_RATE, AUDIO_CHANNELS, g_settings.audio_buffer_size);
-  }
-
-  m_audio_stream->SetOutputVolume(GetAudioOutputVolume());
-
-  if (System::IsValid())
-    g_spu.SetAudioStream(m_audio_stream.get());
-}
-
-s32 HostInterface::GetAudioOutputVolume() const
-{
-  return g_settings.audio_output_muted ? 0 : g_settings.audio_output_volume;
-}
-
 bool HostInterface::BootSystem(std::shared_ptr<SystemBootParameters> parameters)
 {
   if (!parameters->state_stream)
@@ -106,7 +78,11 @@ bool HostInterface::BootSystem(std::shared_ptr<SystemBootParameters> parameters)
   m_display->SetDisplayStretch(g_settings.display_stretch);
 
   // create the audio stream. this will never fail, since we'll just fall back to null
-  CreateAudioStream();
+  m_audio_stream = CreateAudioStream();
+  m_audio_stream->Reconfigure(AUDIO_SAMPLE_RATE, AUDIO_SAMPLE_RATE, AUDIO_CHANNELS, g_settings.audio_buffer_size);
+
+  if (System::IsValid())
+    g_spu.SetAudioStream(m_audio_stream.get());
 
   if (!System::Boot(*parameters))
   {
@@ -718,7 +694,8 @@ void HostInterface::CheckForSettingsChanges(const Settings& old_settings)
       }
       DebugAssert(m_audio_stream);
       m_audio_stream.reset();
-      CreateAudioStream();
+      m_audio_stream = CreateAudioStream();
+      m_audio_stream->Reconfigure(AUDIO_SAMPLE_RATE, AUDIO_SAMPLE_RATE, AUDIO_CHANNELS, g_settings.audio_buffer_size);
       m_audio_stream->PauseOutput(System::IsPaused());
     }
 
@@ -748,8 +725,6 @@ void HostInterface::CheckForSettingsChanges(const Settings& old_settings)
       if (g_settings.cpu_recompiler_icache != old_settings.cpu_recompiler_icache)
         CPU::ClearICache();
     }
-
-    m_audio_stream->SetOutputVolume(GetAudioOutputVolume());
 
     if (g_settings.gpu_resolution_scale != old_settings.gpu_resolution_scale ||
         g_settings.gpu_multisamples != old_settings.gpu_multisamples ||

@@ -258,11 +258,6 @@ struct Settings
             !cpu_recompiler_memory_exceptions);
   }
 
-  ALWAYS_INLINE s32 GetAudioOutputVolume(bool fast_forwarding) const
-  {
-    return audio_output_muted ? 0 : (fast_forwarding ? audio_fast_forward_volume : audio_output_volume);
-  }
-
   float GetDisplayAspectRatioValue() const;
 
   ALWAYS_INLINE static bool IsPerGameMemoryCardType(MemoryCardType type)
