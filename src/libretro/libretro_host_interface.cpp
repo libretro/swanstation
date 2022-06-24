@@ -566,33 +566,6 @@ void LibretroHostInterface::retro_run_frame()
   auto* const audio_stream = dynamic_cast<LibretroAudioStream*>(m_audio_stream.get());
   DebugAssert(audio_stream);
   audio_stream->UploadToFrontend();
-
-  if (libretro_msg_interface_version >= 1)
-  {
-    if (g_settings.display_show_fps)
-    {
-      frame_count++;
-      if (frame_count % 64 == 0)
-      {
-        System::UpdatePerformanceCounters();
-        char message_buffer[64];
-        message_buffer[0] = '\0';
-        float internal_fps = (System::GetFPS() * System::GetThrottleFrequency()) / System::GetVPS();
-        snprintf(message_buffer, sizeof(message_buffer), "Internal FPS: %.2f", internal_fps);
-        const char * fps_message = message_buffer;
-        retro_message_ext ifps = {};
-        ifps.msg = fps_message;
-        ifps.duration = 3000;
-        ifps.priority = 1;
-        ifps.level = RETRO_LOG_INFO;
-        ifps.target = RETRO_MESSAGE_TARGET_OSD;
-        ifps.type = RETRO_MESSAGE_TYPE_STATUS;
-        ifps.progress = -1;
-        g_retro_environment_callback(RETRO_ENVIRONMENT_SET_MESSAGE_EXT, &ifps);
-        frame_count = 0;
-      }
-    }
-  }
 }
 
 unsigned LibretroHostInterface::retro_get_region()

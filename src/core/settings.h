@@ -144,7 +144,6 @@ struct Settings
   bool display_stretch = false;
   bool display_post_processing = false;
   bool display_show_osd_messages = true;
-  bool display_show_fps = false;
   bool display_show_vps = false;
   bool display_show_speed = false;
   bool display_show_resolution = false;
