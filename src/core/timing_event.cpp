@@ -1,11 +1,9 @@
 #include "timing_event.h"
 #include "common/assert.h"
-#include "common/log.h"
 #include "common/state_wrapper.h"
 #include "cpu_core.h"
 #include "cpu_core_private.h"
 #include "system.h"
-Log_SetChannel(TimingEvents);
 
 namespace TimingEvents {
 
@@ -326,10 +324,7 @@ bool DoState(StateWrapper& sw)
 
       TimingEvent* event = FindActiveEvent(event_name.c_str());
       if (!event)
-      {
-        Log_WarningPrintf("Save state has event '%s', but couldn't find this event when loading.", event_name.c_str());
         continue;
-      }
 
       // Using reschedule is safe here since we call sort afterwards.
       event->m_downcount = downcount;
@@ -344,7 +339,6 @@ bool DoState(StateWrapper& sw)
       sw.Do(&last_event_run_time);
     }
 
-    Log_DevPrintf("Loaded %u events from save state.", event_count);
     SortEvents();
   }
   else
@@ -360,8 +354,6 @@ bool DoState(StateWrapper& sw)
       sw.Do(&event->m_period);
       sw.Do(&event->m_interval);
     }
-
-    Log_DevPrintf("Wrote %u events to save state.", s_active_event_count);
   }
 
   return !sw.HasError();

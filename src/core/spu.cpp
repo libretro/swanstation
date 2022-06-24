@@ -984,8 +984,10 @@ SPU::ADSRPhase SPU::GetNextADSRPhase(ADSRPhase phase)
     default:
     case ADSRPhase::Release:
       // end of release disables the voice
-      return ADSRPhase::Off;
+      break;
   }
+
+  return ADSRPhase::Off;
 }
 
 struct ADSRTableEntry
@@ -1055,21 +1057,15 @@ s16 SPU::VolumeEnvelope::Tick(s16 current_level)
   if (exponential)
   {
     if (decreasing)
-    {
       this_step = (this_step * current_level) >> 15;
-    }
     else
     {
       if (current_level >= 0x6000)
       {
         if (rate < 40)
-        {
           this_step >>= 2;
-        }
         else if (rate >= 44)
-        {
           counter >>= 2;
-        }
         else
         {
           this_step >>= 1;
@@ -1327,9 +1323,7 @@ ALWAYS_INLINE_RELEASE std::tuple<s32, s32> SPU::SampleVoice(u32 voice_index)
     volume = ApplyVolume(sample, voice.regs.adsr_volume);
   }
   else
-  {
     volume = 0;
-  }
 
   voice.last_volume = volume;
 
@@ -1439,8 +1433,6 @@ void SPU::ReverbWrite(u32 address, s16 data)
 static constexpr std::array<s16, 20> s_reverb_resample_coefficients = {
   -1, 2, -10, 35, -103, 266, -616, 1332, -2960, 10246, 10246, -2960, 1332, -616, 266, -103, 35, -10, 2, -1,
 };
-static s16 s_last_reverb_input[2];
-static s32 s_last_reverb_output[2];
 
 ALWAYS_INLINE static s32 Reverb4422(const s16* src)
 {
@@ -1457,22 +1449,14 @@ ALWAYS_INLINE static s32 Reverb4422(const s16* src)
 template<bool phase>
 ALWAYS_INLINE static s32 Reverb2244(const s16* src)
 {
-  s32 out; // 32-bits is adequate(it won't overflow)
+  s32 out = 0; // 32-bits is adequate(it won't overflow)
+  // Middle non-zero
   if (phase)
-  {
-    // Middle non-zero
-    out = src[9];
-  }
-  else
-  {
-    out = 0;
-    for (u32 i = 0; i < 20; i++)
-      out += s_reverb_resample_coefficients[i] * src[i];
-
-    out >>= 14;
-    out = std::clamp<s32>(out, -32768, 32767);
-  }
-
+    return src[9];
+  for (u32 i = 0; i < 20; i++)
+    out += s_reverb_resample_coefficients[i] * src[i];
+  out >>= 14;
+  out = std::clamp<s32>(out, -32768, 32767);
   return out;
 }
 
@@ -1485,7 +1469,6 @@ ALWAYS_INLINE static s16 ReverbNeg(s16 samp)
 {
   if (samp == -32768)
     return 0x7FFF;
-
   return -samp;
 }
 
@@ -1495,17 +1478,13 @@ ALWAYS_INLINE static s32 IIASM(const s16 IIR_ALPHA, const s16 insamp)
   {
     if (insamp == -32768)
       return 0;
-    else
-      return insamp * -65536;
+    return insamp * -65536;
   }
-  else
-    return insamp * (32768 - IIR_ALPHA);
+  return insamp * (32768 - IIR_ALPHA);
 }
 
 void SPU::ProcessReverb(s16 left_in, s16 right_in, s32* left_out, s32* right_out)
 {
-  s_last_reverb_input[0] = left_in;
-  s_last_reverb_input[1] = right_in;
   m_reverb_downsample_buffer[0][m_reverb_resample_buffer_position | 0x00] = left_in;
   m_reverb_downsample_buffer[0][m_reverb_resample_buffer_position | 0x40] = left_in;
   m_reverb_downsample_buffer[1][m_reverb_resample_buffer_position | 0x00] = right_in;
@@ -1582,8 +1561,8 @@ void SPU::ProcessReverb(s16 left_in, s16 right_in, s32* left_out, s32* right_out
 
   m_reverb_resample_buffer_position = (m_reverb_resample_buffer_position + 1) & 0x3F;
 
-  s_last_reverb_output[0] = *left_out = ApplyVolume(out[0], m_reverb_registers.vLOUT);
-  s_last_reverb_output[1] = *right_out = ApplyVolume(out[1], m_reverb_registers.vROUT);
+  *left_out = ApplyVolume(out[0], m_reverb_registers.vLOUT);
+  *right_out = ApplyVolume(out[1], m_reverb_registers.vROUT);
 }
 
 void SPU::Execute(TickCount ticks)

@@ -2,7 +2,6 @@
 #include "cdrom.h"
 #include "common/align.h"
 #include "common/assert.h"
-#include "common/log.h"
 #include "common/make_array.h"
 #include "common/state_wrapper.h"
 #include "cpu_code_cache.h"
@@ -20,7 +19,6 @@
 #include <cstdio>
 #include <tuple>
 #include <utility>
-Log_SetChannel(Bus);
 
 namespace Bus {
 
@@ -205,13 +203,8 @@ void SetExpansionROM(std::vector<u8> data)
 
 void SetBIOS(const std::vector<u8>& image)
 {
-  if (image.size() != static_cast<u32>(BIOS_SIZE))
-  {
-    Panic("Incorrect BIOS image size");
-    return;
-  }
-
-  std::memcpy(g_bios, image.data(), BIOS_SIZE);
+  if (image.size() == static_cast<u32>(BIOS_SIZE))
+    std::memcpy(g_bios, image.data(), BIOS_SIZE);
 }
 
 std::tuple<TickCount, TickCount, TickCount> CalculateMemoryTiming(MEMDELAY mem_delay, COMDELAY common_delay)
@@ -258,41 +251,23 @@ void RecalculateMemoryTimings()
     CalculateMemoryTiming(m_MEMCTRL.cdrom_delay_size, m_MEMCTRL.common_delay);
   std::tie(m_spu_access_time[0], m_spu_access_time[1], m_spu_access_time[2]) =
     CalculateMemoryTiming(m_MEMCTRL.spu_delay_size, m_MEMCTRL.common_delay);
-
-  Log_TracePrintf("BIOS Memory Timing: %u bit bus, byte=%d, halfword=%d, word=%d",
-                  m_MEMCTRL.bios_delay_size.data_bus_16bit ? 16 : 8, m_bios_access_time[0] + 1,
-                  m_bios_access_time[1] + 1, m_bios_access_time[2] + 1);
-  Log_TracePrintf("CDROM Memory Timing: %u bit bus, byte=%d, halfword=%d, word=%d",
-                  m_MEMCTRL.cdrom_delay_size.data_bus_16bit ? 16 : 8, m_cdrom_access_time[0] + 1,
-                  m_cdrom_access_time[1] + 1, m_cdrom_access_time[2] + 1);
-  Log_TracePrintf("SPU Memory Timing: %u bit bus, byte=%d, halfword=%d, word=%d",
-                  m_MEMCTRL.spu_delay_size.data_bus_16bit ? 16 : 8, m_spu_access_time[0] + 1, m_spu_access_time[1] + 1,
-                  m_spu_access_time[2] + 1);
 }
 
 bool AllocateMemory(bool enable_8mb_ram)
 {
   if (!m_memory_arena.Create(MEMORY_ARENA_SIZE, true, false))
-  {
-    Log_ErrorPrint("Failed to create memory arena");
     return false;
-  }
 
   // Create the base views.
   const u32 ram_size = enable_8mb_ram ? RAM_8MB_SIZE : RAM_2MB_SIZE;
   const u32 ram_mask = enable_8mb_ram ? RAM_8MB_MASK : RAM_2MB_MASK;
   g_ram = static_cast<u8*>(m_memory_arena.CreateViewPtr(MEMORY_ARENA_RAM_OFFSET, ram_size, true, false));
   if (!g_ram)
-  {
-    Log_ErrorPrintf("Failed to create base views of memory (%u bytes RAM)", ram_size);
     return false;
-  }
 
   g_ram_mask = ram_mask;
   g_ram_size = ram_size;
   m_ram_code_page_count = enable_8mb_ram ? RAM_8MB_CODE_PAGE_COUNT : RAM_2MB_CODE_PAGE_COUNT;
-
-  Log_InfoPrintf("RAM is %u bytes at %p", g_ram_size, g_ram);
   return true;
 }
 
@@ -367,22 +342,14 @@ void UpdateFastmemViews(CPUFastmemMode mode)
     {
       m_fastmem_base = static_cast<u8*>(m_memory_arena.FindBaseAddressForMapping(FASTMEM_REGION_SIZE));
       if (!m_fastmem_base)
-      {
-        Log_ErrorPrint("Failed to find base address for fastmem");
         return;
-      }
-
-      Log_InfoPrintf("Fastmem base: %p", m_fastmem_base);
     }
 
     auto MapRAM = [](u32 base_address) {
       u8* map_address = m_fastmem_base + base_address;
       auto view = m_memory_arena.CreateView(MEMORY_ARENA_RAM_OFFSET, g_ram_size, true, false, map_address);
       if (!view)
-      {
-        Log_ErrorPrintf("Failed to map RAM at fastmem area %p (offset 0x%08X)", map_address, g_ram_size);
         return;
-      }
 
       // mark all pages with code as non-writable
       for (u32 i = 0; i < m_ram_code_page_count; i++)
@@ -391,10 +358,7 @@ void UpdateFastmemViews(CPUFastmemMode mode)
         {
           u8* page_address = map_address + (i * HOST_PAGE_SIZE);
           if (!m_memory_arena.SetPageProtection(page_address, HOST_PAGE_SIZE, true, false, false))
-          {
-            Log_ErrorPrintf("Failed to write-protect code page at %p", page_address);
             return;
-          }
         }
       }
 
@@ -408,11 +372,7 @@ void UpdateFastmemViews(CPUFastmemMode mode)
       u8* map_address = m_fastmem_base + start_address;
       auto view = m_memory_arena.CreateReservedView(end_address_inclusive - start_address + 1, map_address);
       if (!view)
-      {
-        Log_ErrorPrintf("Failed to map reserved region %p (size 0x%08X)", map_address,
-                        end_address_inclusive - start_address + 1);
         return;
-      }
 
       m_fastmem_reserved_views.push_back(std::move(view.value()));
 #endif
@@ -442,8 +402,6 @@ void UpdateFastmemViews(CPUFastmemMode mode)
   {
     m_fastmem_lut = static_cast<u8**>(std::calloc(FASTMEM_LUT_NUM_SLOTS, sizeof(u8*)));
     Assert(m_fastmem_lut);
-
-    Log_InfoPrintf("Fastmem base (software): %p", m_fastmem_lut);
   }
 
   auto MapRAM = [](u32 base_address) {
@@ -480,12 +438,10 @@ bool CanUseFastmemForAddress(VirtualMemoryAddress address)
   switch (m_fastmem_mode)
   {
 #ifdef WITH_MMAP_FASTMEM
+    // Currently since we don't map the mirrors, don't use fastmem for them.
+    // This is because the swapping of page code bits for SMC is too expensive.
     case CPUFastmemMode::MMap:
-    {
-      // Currently since we don't map the mirrors, don't use fastmem for them.
-      // This is because the swapping of page code bits for SMC is too expensive.
       return (paddr < RAM_MIRROR_END);
-    }
 #endif
 
     case CPUFastmemMode::LUT:
@@ -493,8 +449,10 @@ bool CanUseFastmemForAddress(VirtualMemoryAddress address)
 
     case CPUFastmemMode::Disabled:
     default:
-      return false;
+      break;
   }
+
+  return false;
 }
 
 bool IsRAMCodePage(u32 index)
@@ -531,11 +489,7 @@ void SetCodePageFastmemProtection(u32 page_index, bool writable)
     for (const auto& view : m_fastmem_ram_views)
     {
       u8* page_address = static_cast<u8*>(view.GetBasePointer()) + (page_index * HOST_PAGE_SIZE);
-      if (!m_memory_arena.SetPageProtection(page_address, HOST_PAGE_SIZE, true, writable, false))
-      {
-        Log_ErrorPrintf("Failed to %s code page %u (0x%08X) @ %p", writable ? "unprotect" : "protect", page_index,
-                        page_index * static_cast<u32>(HOST_PAGE_SIZE), page_address);
-      }
+      m_memory_arena.SetPageProtection(page_address, HOST_PAGE_SIZE, true, writable, false);
     }
 
     return;
@@ -560,12 +514,7 @@ void ClearRAMCodePageFlags()
   {
     // unprotect fastmem pages
     for (const auto& view : m_fastmem_ram_views)
-    {
-      if (!m_memory_arena.SetPageProtection(view.GetBasePointer(), view.GetMappingSize(), true, true, false))
-      {
-        Log_ErrorPrintf("Failed to unprotect code pages for fastmem view @ %p", view.GetBasePointer());
-      }
-    }
+      m_memory_arena.SetPageProtection(view.GetBasePointer(), view.GetMappingSize(), true, true, false);
   }
 #endif
 
@@ -659,9 +608,6 @@ u8* GetMemoryRegionPointer(MemoryRegion region)
     case MemoryRegion::RAMMirror3:
       return (g_ram + ((RAM_8MB_SIZE * 3) & g_ram_mask));
 
-    case MemoryRegion::EXP1:
-      return nullptr;
-
     case MemoryRegion::Scratchpad:
       return CPU::g_state.dcache.data();
 
@@ -669,8 +615,11 @@ u8* GetMemoryRegionPointer(MemoryRegion region)
       return g_bios;
 
     default:
-      return nullptr;
+    case MemoryRegion::EXP1:
+      break;
   }
+
+  return nullptr;
 }
 
 static ALWAYS_INLINE_RELEASE bool MaskedMemoryCompare(const u8* pattern, const u8* mask, u32 pattern_length,
@@ -733,28 +682,8 @@ std::optional<PhysicalMemoryAddress> SearchMemory(PhysicalMemoryAddress start_ad
 static TickCount DoInvalidAccess(MemoryAccessType type, MemoryAccessSize size, PhysicalMemoryAddress address,
                                  u32& value)
 {
-  SmallString str;
-  str.AppendString("Invalid bus ");
-  if (size == MemoryAccessSize::Byte)
-    str.AppendString("byte");
-  if (size == MemoryAccessSize::HalfWord)
-    str.AppendString("word");
-  if (size == MemoryAccessSize::Word)
-    str.AppendString("dword");
-  str.AppendCharacter(' ');
-  if (type == MemoryAccessType::Read)
-    str.AppendString("read");
-  else
-    str.AppendString("write");
-
-  str.AppendFormattedString(" at address 0x%08X", address);
-  if (type == MemoryAccessType::Write)
-    str.AppendFormattedString(" (value 0x%08X)", value);
-
-  Log_ErrorPrint(str);
   if (type == MemoryAccessType::Read)
     value = UINT32_C(0xFFFFFFFF);
-
   return (type == MemoryAccessType::Read) ? 1 : 0;
 }
 
@@ -849,9 +778,7 @@ ALWAYS_INLINE static TickCount DoBIOSAccess(u32 offset, u32& value)
   {
     offset &= UINT32_C(0x7FFFF);
     if constexpr (size == MemoryAccessSize::Byte)
-    {
       value = ZeroExtend32(g_bios[offset]);
-    }
     else if constexpr (size == MemoryAccessSize::HalfWord)
     {
       u16 temp;
@@ -859,13 +786,7 @@ ALWAYS_INLINE static TickCount DoBIOSAccess(u32 offset, u32& value)
       value = ZeroExtend32(temp);
     }
     else
-    {
       std::memcpy(&value, &g_bios[offset], sizeof(u32));
-    }
-  }
-  else
-  {
-    // Writes are ignored.
   }
 
   return m_bios_access_time[static_cast<u32>(size)];
@@ -876,29 +797,21 @@ static TickCount DoEXP1Access(u32 offset, u32& value)
 {
   if constexpr (type == MemoryAccessType::Read)
   {
+    // EXP1 not present.
     if (m_exp1_rom.empty())
-    {
-      // EXP1 not present.
       value = UINT32_C(0xFFFFFFFF);
-    }
+    // Bit 0 - Action Replay On/Off
     else if (offset == 0x20018)
-    {
-      // Bit 0 - Action Replay On/Off
       value = UINT32_C(1);
-    }
     else
     {
       const u32 transfer_size = u32(1) << static_cast<u32>(size);
       if ((offset + transfer_size) > m_exp1_rom.size())
-      {
         value = UINT32_C(0);
-      }
       else
       {
         if constexpr (size == MemoryAccessSize::Byte)
-        {
           value = ZeroExtend32(m_exp1_rom[offset]);
-        }
         else if constexpr (size == MemoryAccessSize::HalfWord)
         {
           u16 halfword;
@@ -906,21 +819,13 @@ static TickCount DoEXP1Access(u32 offset, u32& value)
           value = ZeroExtend32(halfword);
         }
         else
-        {
           std::memcpy(&value, &m_exp1_rom[offset], sizeof(value));
-        }
-
-        // Log_DevPrintf("EXP1 read: 0x%08X -> 0x%08X", EXP1_BASE | offset, value);
       }
     }
 
     return m_exp1_access_time[static_cast<u32>(size)];
   }
-  else
-  {
-    Log_WarningPrintf("EXP1 write: 0x%08X <- 0x%08X", EXP1_BASE | offset, value);
-    return 0;
-  }
+  return 0;
 }
 
 template<MemoryAccessType type, MemoryAccessSize size>
@@ -930,91 +835,40 @@ static TickCount DoEXP2Access(u32 offset, u32& value)
   {
     // rx/tx buffer empty
     if (offset == 0x21)
-    {
       value = 0x04 | 0x08;
-    }
+    // nocash expansion area
     else if (offset >= 0x60 && offset <= 0x67)
-    {
-      // nocash expansion area
       value = UINT32_C(0xFFFFFFFF);
-    }
     else
-    {
-      Log_WarningPrintf("EXP2 read: 0x%08X", EXP2_BASE | offset);
       value = UINT32_C(0xFFFFFFFF);
-    }
 
     return m_exp2_access_time[static_cast<u32>(size)];
   }
-  else
+  if (offset == 0x23 || offset == 0x80)
   {
-    if (offset == 0x23 || offset == 0x80)
-    {
-      if (value == '\r')
-      {
-      }
-      else if (value == '\n')
-      {
-        if (!m_tty_line_buffer.empty())
-        {
-          Log_InfoPrintf("TTY: %s", m_tty_line_buffer.c_str());
-        }
-        m_tty_line_buffer.clear();
-      }
-      else
-      {
-        m_tty_line_buffer += static_cast<char>(Truncate8(value));
-      }
-    }
-    else if (offset == 0x41 || offset == 0x42)
-    {
-      Log_DevPrintf("BIOS POST status: %02X", value & UINT32_C(0x0F));
-    }
-    else if (offset == 0x70)
-    {
-      Log_DevPrintf("BIOS POST2 status: %02X", value & UINT32_C(0x0F));
-    }
+    if (value == '\r') { }
+    else if (value == '\n')
+      m_tty_line_buffer.clear();
     else
-    {
-      Log_WarningPrintf("EXP2 write: 0x%08X <- 0x%08X", EXP2_BASE | offset, value);
-    }
-
-    return 0;
+      m_tty_line_buffer += static_cast<char>(Truncate8(value));
   }
+  return 0;
 }
 
 template<MemoryAccessType type>
 ALWAYS_INLINE static TickCount DoEXP3Access(u32 offset, u32& value)
 {
   if constexpr (type == MemoryAccessType::Read)
-  {
-    Log_WarningPrintf("EXP3 read: 0x%08X -> 0x%08X", offset, EXP3_BASE | offset);
     value = UINT32_C(0xFFFFFFFF);
-
-    return 0;
-  }
-  else
-  {
-    if (offset == 0)
-      Log_WarningPrintf("BIOS POST3 status: %02X", value & UINT32_C(0x0F));
-
-    return 0;
-  }
+  return 0;
 }
 
 template<MemoryAccessType type>
 ALWAYS_INLINE static TickCount DoUnknownEXPAccess(u32 address, u32& value)
 {
   if constexpr (type == MemoryAccessType::Read)
-  {
-    Log_ErrorPrintf("Unknown EXP read: 0x%08X", address);
     return -1;
-  }
-  else
-  {
-    Log_WarningPrintf("Unknown EXP write: 0x%08X <- 0x%08X", address, value);
-    return 0;
-  }
+  return 0;
 }
 
 template<MemoryAccessType type, MemoryAccessSize size>
@@ -1038,8 +892,8 @@ ALWAYS_INLINE static TickCount DoMemoryControlAccess(u32 offset, u32& value)
       m_MEMCTRL.regs[index] = new_value;
       RecalculateMemoryTimings();
     }
-    return 0;
   }
+  return 0;
 }
 
 template<MemoryAccessType type, MemoryAccessSize size>
@@ -1047,30 +901,15 @@ ALWAYS_INLINE static TickCount DoMemoryControl2Access(u32 offset, u32& value)
 {
   if constexpr (type == MemoryAccessType::Read)
   {
-    if (offset == 0x00)
-    {
-      value = m_ram_size_reg;
-    }
-    else
-    {
+    if (offset != 0x00)
       return DoInvalidAccess(type, size, MEMCTRL2_BASE | offset, value);
-    }
-
+    value = m_ram_size_reg;
     return 2;
   }
-  else
-  {
-    if (offset == 0x00)
-    {
-      m_ram_size_reg = value;
-    }
-    else
-    {
-      return DoInvalidAccess(type, size, MEMCTRL2_BASE | offset, value);
-    }
-
-    return 0;
-  }
+  if (offset != 0x00)
+    return DoInvalidAccess(type, size, MEMCTRL2_BASE | offset, value);
+  m_ram_size_reg = value;
+  return 0;
 }
 
 template<MemoryAccessType type, MemoryAccessSize size>
@@ -1082,11 +921,8 @@ ALWAYS_INLINE static TickCount DoPadAccess(u32 offset, u32& value)
     value = FIXUP_HALFWORD_READ_VALUE(size, offset, value);
     return 2;
   }
-  else
-  {
-    g_pad.WriteRegister(FIXUP_HALFWORD_OFFSET(size, offset), FIXUP_HALFWORD_WRITE_VALUE(size, offset, value));
-    return 0;
-  }
+  g_pad.WriteRegister(FIXUP_HALFWORD_OFFSET(size, offset), FIXUP_HALFWORD_WRITE_VALUE(size, offset, value));
+  return 0;
 }
 
 template<MemoryAccessType type, MemoryAccessSize size>
@@ -1098,11 +934,8 @@ ALWAYS_INLINE static TickCount DoSIOAccess(u32 offset, u32& value)
     value = FIXUP_HALFWORD_READ_VALUE(size, offset, value);
     return 2;
   }
-  else
-  {
-    g_sio.WriteRegister(FIXUP_HALFWORD_OFFSET(size, offset), FIXUP_HALFWORD_WRITE_VALUE(size, offset, value));
-    return 0;
-  }
+  g_sio.WriteRegister(FIXUP_HALFWORD_OFFSET(size, offset), FIXUP_HALFWORD_WRITE_VALUE(size, offset, value));
+  return 0;
 }
 
 template<MemoryAccessType type, MemoryAccessSize size>
@@ -1140,19 +973,15 @@ ALWAYS_INLINE static TickCount DoCDROMAccess(u32 offset, u32& value)
     switch (size)
     {
       case MemoryAccessSize::Word:
-      {
         g_cdrom.WriteRegister(offset, Truncate8(value & 0xFFu));
         g_cdrom.WriteRegister(offset + 1u, Truncate8((value >> 8) & 0xFFu));
         g_cdrom.WriteRegister(offset + 2u, Truncate8((value >> 16) & 0xFFu));
         g_cdrom.WriteRegister(offset + 3u, Truncate8((value >> 24) & 0xFFu));
-      }
       break;
 
       case MemoryAccessSize::HalfWord:
-      {
         g_cdrom.WriteRegister(offset, Truncate8(value & 0xFFu));
         g_cdrom.WriteRegister(offset + 1u, Truncate8((value >> 8) & 0xFFu));
-      }
       break;
 
       case MemoryAccessSize::Byte:
@@ -1160,9 +989,8 @@ ALWAYS_INLINE static TickCount DoCDROMAccess(u32 offset, u32& value)
         g_cdrom.WriteRegister(offset, Truncate8(value));
         break;
     }
-
-    return 0;
   }
+  return 0;
 }
 
 template<MemoryAccessType type, MemoryAccessSize size>
@@ -1174,11 +1002,8 @@ ALWAYS_INLINE static TickCount DoGPUAccess(u32 offset, u32& value)
     value = FIXUP_WORD_READ_VALUE(size, offset, value);
     return 2;
   }
-  else
-  {
-    g_gpu->WriteRegister(FIXUP_WORD_OFFSET(size, offset), FIXUP_WORD_WRITE_VALUE(size, offset, value));
-    return 0;
-  }
+  g_gpu->WriteRegister(FIXUP_WORD_OFFSET(size, offset), FIXUP_WORD_WRITE_VALUE(size, offset, value));
+  return 0;
 }
 
 template<MemoryAccessType type, MemoryAccessSize size>
@@ -1190,11 +1015,8 @@ ALWAYS_INLINE static TickCount DoMDECAccess(u32 offset, u32& value)
     value = FIXUP_WORD_READ_VALUE(size, offset, value);
     return 2;
   }
-  else
-  {
-    g_mdec.WriteRegister(FIXUP_WORD_OFFSET(size, offset), FIXUP_WORD_WRITE_VALUE(size, offset, value));
-    return 0;
-  }
+  g_mdec.WriteRegister(FIXUP_WORD_OFFSET(size, offset), FIXUP_WORD_WRITE_VALUE(size, offset, value));
+  return 0;
 }
 
 template<MemoryAccessType type, MemoryAccessSize size>
@@ -1206,11 +1028,8 @@ ALWAYS_INLINE static TickCount DoAccessInterruptController(u32 offset, u32& valu
     value = FIXUP_WORD_READ_VALUE(size, offset, value);
     return 2;
   }
-  else
-  {
-    g_interrupt_controller.WriteRegister(FIXUP_WORD_OFFSET(size, offset), FIXUP_WORD_WRITE_VALUE(size, offset, value));
-    return 0;
-  }
+  g_interrupt_controller.WriteRegister(FIXUP_WORD_OFFSET(size, offset), FIXUP_WORD_WRITE_VALUE(size, offset, value));
+  return 0;
 }
 
 template<MemoryAccessType type, MemoryAccessSize size>
@@ -1222,11 +1041,8 @@ ALWAYS_INLINE static TickCount DoAccessTimers(u32 offset, u32& value)
     value = FIXUP_WORD_READ_VALUE(size, offset, value);
     return 2;
   }
-  else
-  {
-    g_timers.WriteRegister(FIXUP_WORD_OFFSET(size, offset), FIXUP_WORD_WRITE_VALUE(size, offset, value));
-    return 0;
-  }
+  g_timers.WriteRegister(FIXUP_WORD_OFFSET(size, offset), FIXUP_WORD_WRITE_VALUE(size, offset, value));
+  return 0;
 }
 
 template<MemoryAccessType type, MemoryAccessSize size>
@@ -1246,9 +1062,7 @@ ALWAYS_INLINE static TickCount DoAccessSPU(u32 offset, u32& value)
       break;
 
       case MemoryAccessSize::HalfWord:
-      {
         value = ZeroExtend32(g_spu.ReadRegister(offset));
-      }
       break;
 
       case MemoryAccessSize::Byte:
@@ -1262,7 +1076,6 @@ ALWAYS_INLINE static TickCount DoAccessSPU(u32 offset, u32& value)
 
     return m_spu_access_time[static_cast<u32>(size)];
   }
-  else
   {
     // 32-bit writes are written as two 16-bit writes.
     // TODO: Ignore if address is not aligned.
@@ -1290,9 +1103,8 @@ ALWAYS_INLINE static TickCount DoAccessSPU(u32 offset, u32& value)
         break;
       }
     }
-
-    return 0;
   }
+  return 0;
 }
 
 template<MemoryAccessType type, MemoryAccessSize size>
@@ -1304,11 +1116,8 @@ ALWAYS_INLINE static TickCount DoDMAAccess(u32 offset, u32& value)
     value = FIXUP_WORD_READ_VALUE(size, offset, value);
     return 2;
   }
-  else
-  {
-    g_dma.WriteRegister(FIXUP_WORD_OFFSET(size, offset), FIXUP_WORD_WRITE_VALUE(size, offset, value));
-    return 0;
-  }
+  g_dma.WriteRegister(FIXUP_WORD_OFFSET(size, offset), FIXUP_WORD_WRITE_VALUE(size, offset, value));
+  return 0;
 }
 
 } // namespace Bus
@@ -1338,14 +1147,11 @@ ALWAYS_INLINE_RELEASE bool DoInstructionRead(PhysicalMemoryAddress address, void
 
     return true;
   }
-  else
-  {
-    if (raise_exceptions)
-      CPU::RaiseException(address, Cop0Registers::CAUSE::MakeValueForException(Exception::IBE, false, false, 0));
+  if (raise_exceptions)
+    CPU::RaiseException(address, Cop0Registers::CAUSE::MakeValueForException(Exception::IBE, false, false, 0));
 
-    std::memset(data, 0, sizeof(u32) * word_count);
-    return false;
-  }
+  std::memset(data, 0, sizeof(u32) * word_count);
+  return false;
 }
 
 TickCount GetInstructionReadTicks(VirtualMemoryAddress address)
@@ -1355,17 +1161,10 @@ TickCount GetInstructionReadTicks(VirtualMemoryAddress address)
   address &= PHYSICAL_MEMORY_ADDRESS_MASK;
 
   if (address < RAM_MIRROR_END)
-  {
     return RAM_READ_TICKS;
-  }
   else if (address >= BIOS_BASE && address < (BIOS_BASE + BIOS_SIZE))
-  {
     return m_bios_access_time[static_cast<u32>(MemoryAccessSize::Word)];
-  }
-  else
-  {
-    return 0;
-  }
+  return 0;
 }
 
 TickCount GetICacheFillTicks(VirtualMemoryAddress address)
@@ -1375,18 +1174,11 @@ TickCount GetICacheFillTicks(VirtualMemoryAddress address)
   address &= PHYSICAL_MEMORY_ADDRESS_MASK;
 
   if (address < RAM_MIRROR_END)
-  {
     return 1 * ((ICACHE_LINE_SIZE - (address & (ICACHE_LINE_SIZE - 1))) / sizeof(u32));
-  }
   else if (address >= BIOS_BASE && address < (BIOS_BASE + BIOS_SIZE))
-  {
     return m_bios_access_time[static_cast<u32>(MemoryAccessSize::Word)] *
            ((ICACHE_LINE_SIZE - (address & (ICACHE_LINE_SIZE - 1))) / sizeof(u32));
-  }
-  else
-  {
-    return 0;
-  }
+  return 0;
 }
 
 void CheckAndUpdateICacheTags(u32 line_count, TickCount uncached_ticks)
@@ -1409,9 +1201,7 @@ void CheckAndUpdateICacheTags(u32 line_count, TickCount uncached_ticks)
     g_state.pending_ticks += ticks;
   }
   else
-  {
     g_state.pending_ticks += uncached_ticks;
-  }
 }
 
 u32 FillICache(VirtualMemoryAddress address)
@@ -1473,7 +1263,6 @@ ALWAYS_INLINE_RELEASE static void WriteICache(VirtualMemoryAddress address, u32 
 
 static void WriteCacheControl(u32 value)
 {
-  Log_DevPrintf("Cache control <- 0x%08X", value);
   g_state.cache_control.bits = value;
 }
 
@@ -1557,7 +1346,6 @@ static ALWAYS_INLINE TickCount DoMemoryAccess(VirtualMemoryAddress address, u32&
 
     case 0x06: // KSEG2
     case 0x07: // KSEG2
-    {
       if (address == 0xFFFE0130)
       {
         if constexpr (type == MemoryAccessType::Read)
@@ -1567,108 +1355,56 @@ static ALWAYS_INLINE TickCount DoMemoryAccess(VirtualMemoryAddress address, u32&
 
         return 0;
       }
-      else
-      {
-        if constexpr (type == MemoryAccessType::Read)
-          value = UINT32_C(0xFFFFFFFF);
-
-        return -1;
-      }
-    }
+      if constexpr (type == MemoryAccessType::Read)
+        value = UINT32_C(0xFFFFFFFF);
+      return -1;
   }
 
   if (address < RAM_MIRROR_END)
-  {
     return DoRAMAccess<type, size, false>(address, value);
-  }
   else if (address >= BIOS_BASE && address < (BIOS_BASE + BIOS_SIZE))
-  {
     return DoBIOSAccess<type, size>(static_cast<u32>(address - BIOS_BASE), value);
-  }
   else if (address < EXP1_BASE)
-  {
     return DoInvalidAccess(type, size, address, value);
-  }
   else if (address < (EXP1_BASE + EXP1_SIZE))
-  {
     return DoEXP1Access<type, size>(address & EXP1_MASK, value);
-  }
   else if (address < MEMCTRL_BASE)
-  {
     return DoInvalidAccess(type, size, address, value);
-  }
   else if (address < (MEMCTRL_BASE + MEMCTRL_SIZE))
-  {
     return DoMemoryControlAccess<type, size>(address & MEMCTRL_MASK, value);
-  }
   else if (address < (PAD_BASE + PAD_SIZE))
-  {
     return DoPadAccess<type, size>(address & PAD_MASK, value);
-  }
   else if (address < (SIO_BASE + SIO_SIZE))
-  {
     return DoSIOAccess<type, size>(address & SIO_MASK, value);
-  }
   else if (address < (MEMCTRL2_BASE + MEMCTRL2_SIZE))
-  {
     return DoMemoryControl2Access<type, size>(address & MEMCTRL2_MASK, value);
-  }
   else if (address < (INTERRUPT_CONTROLLER_BASE + INTERRUPT_CONTROLLER_SIZE))
-  {
     return DoAccessInterruptController<type, size>(address & INTERRUPT_CONTROLLER_MASK, value);
-  }
   else if (address < (DMA_BASE + DMA_SIZE))
-  {
     return DoDMAAccess<type, size>(address & DMA_MASK, value);
-  }
   else if (address < (TIMERS_BASE + TIMERS_SIZE))
-  {
     return DoAccessTimers<type, size>(address & TIMERS_MASK, value);
-  }
   else if (address < CDROM_BASE)
-  {
     return DoInvalidAccess(type, size, address, value);
-  }
   else if (address < (CDROM_BASE + GPU_SIZE))
-  {
     return DoCDROMAccess<type, size>(address & CDROM_MASK, value);
-  }
   else if (address < (GPU_BASE + GPU_SIZE))
-  {
     return DoGPUAccess<type, size>(address & GPU_MASK, value);
-  }
   else if (address < (MDEC_BASE + MDEC_SIZE))
-  {
     return DoMDECAccess<type, size>(address & MDEC_MASK, value);
-  }
   else if (address < SPU_BASE)
-  {
     return DoInvalidAccess(type, size, address, value);
-  }
   else if (address < (SPU_BASE + SPU_SIZE))
-  {
     return DoAccessSPU<type, size>(address & SPU_MASK, value);
-  }
   else if (address < EXP2_BASE)
-  {
     return DoInvalidAccess(type, size, address, value);
-  }
   else if (address < (EXP2_BASE + EXP2_SIZE))
-  {
     return DoEXP2Access<type, size>(address & EXP2_MASK, value);
-  }
   else if (address < EXP3_BASE)
-  {
     return DoUnknownEXPAccess<type>(address, value);
-  }
   else if (address < (EXP3_BASE + EXP3_SIZE))
-  {
     return DoEXP3Access<type>(address & EXP3_MASK, value);
-  }
-  else
-  {
-    return DoInvalidAccess(type, size, address, value);
-  }
+  return DoInvalidAccess(type, size, address, value);
 }
 
 template<MemoryAccessType type, MemoryAccessSize size>
@@ -1786,21 +1522,17 @@ bool SafeReadInstruction(VirtualMemoryAddress addr, u32* value)
     case 0x00: // KUSEG 0M-512M
     case 0x04: // KSEG0 - physical memory cached
     case 0x05: // KSEG1 - physical memory uncached
-    {
       // TODO: Check icache.
       return DoInstructionRead<false, false, 1, false>(addr, value);
-    }
-
     case 0x01: // KUSEG 512M-1024M
     case 0x02: // KUSEG 1024M-1536M
     case 0x03: // KUSEG 1536M-2048M
     case 0x06: // KSEG2
     case 0x07: // KSEG2
     default:
-    {
-      return false;
-    }
+      break;
   }
+  return false;
 }
 
 bool ReadMemoryByte(VirtualMemoryAddress addr, u8* value)

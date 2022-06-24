@@ -1,10 +1,8 @@
 #include "gpu_backend.h"
 #include "common/align.h"
-#include "common/log.h"
 #include "common/state_wrapper.h"
 #include "common/timer.h"
 #include "settings.h"
-Log_SetChannel(GPUBackend);
 
 std::unique_ptr<GPUBackend> g_gpu_backend;
 
@@ -174,7 +172,6 @@ void GPUBackend::StartGPUThread()
   m_gpu_loop_done.store(false);
   m_use_gpu_thread = true;
   m_gpu_thread = std::thread(&GPUBackend::RunGPULoop, this);
-  Log_InfoPrint("GPU thread started.");
 }
 
 void GPUBackend::StopGPUThread()
@@ -186,7 +183,6 @@ void GPUBackend::StopGPUThread()
   WakeGPUThread();
   m_gpu_thread.join();
   m_use_gpu_thread = false;
-  Log_InfoPrint("GPU thread stopped.");
 }
 
 void GPUBackend::Sync(bool allow_sleep)

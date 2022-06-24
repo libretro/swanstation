@@ -1,8 +1,6 @@
 #include "interrupt_controller.h"
-#include "common/log.h"
 #include "common/state_wrapper.h"
 #include "cpu_core.h"
-Log_SetChannel(InterruptController);
 
 InterruptController g_interrupt_controller;
 
@@ -49,9 +47,9 @@ u32 InterruptController::ReadRegister(u32 offset)
       return m_interrupt_mask_register;
 
     default:
-      Log_ErrorPrintf("Invalid read at offset 0x%08X", offset);
-      return UINT32_C(0xFFFFFFFF);
+      break;
   }
+  return UINT32_C(0xFFFFFFFF);
 }
 
 void InterruptController::WriteRegister(u32 offset, u32 value)
@@ -59,25 +57,16 @@ void InterruptController::WriteRegister(u32 offset, u32 value)
   switch (offset)
   {
     case 0x00: // I_STATUS
-    {
-      if ((m_interrupt_status_register & ~value) != 0)
-        Log_DebugPrintf("Clearing bits 0x%08X", (m_interrupt_status_register & ~value));
-
       m_interrupt_status_register = m_interrupt_status_register & (value & REGISTER_WRITE_MASK);
       UpdateCPUInterruptRequest();
-    }
     break;
 
     case 0x04: // I_MASK
-    {
-      Log_DebugPrintf("Interrupt mask <- 0x%08X", value);
       m_interrupt_mask_register = value & REGISTER_WRITE_MASK;
       UpdateCPUInterruptRequest();
-    }
     break;
 
     default:
-      Log_ErrorPrintf("Invalid write at offset 0x%08X", offset);
       break;
   }
 }

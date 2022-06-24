@@ -1,10 +1,8 @@
 #include "timers.h"
-#include "common/log.h"
 #include "common/state_wrapper.h"
 #include "gpu.h"
 #include "interrupt_controller.h"
 #include "system.h"
-Log_SetChannel(Timers);
 
 Timers g_timers;
 
@@ -193,10 +191,7 @@ u32 Timers::ReadRegister(u32 offset)
   const u32 timer_index = (offset >> 4) & u32(0x03);
   const u32 port_offset = offset & u32(0x0F);
   if (timer_index >= 3)
-  {
-    Log_ErrorPrintf("Timer read out of range: offset 0x%02X", offset);
     return UINT32_C(0xFFFFFFFF);
-  }
 
   CounterState& cs = m_states[timer_index];
 
@@ -237,9 +232,9 @@ u32 Timers::ReadRegister(u32 offset)
       return cs.target;
 
     default:
-      Log_ErrorPrintf("Read unknown register in timer %u (offset 0x%02X)", timer_index, offset);
-      return UINT32_C(0xFFFFFFFF);
+      break;
   }
+  return UINT32_C(0xFFFFFFFF);
 }
 
 void Timers::WriteRegister(u32 offset, u32 value)
@@ -247,10 +242,7 @@ void Timers::WriteRegister(u32 offset, u32 value)
   const u32 timer_index = (offset >> 4) & u32(0x03);
   const u32 port_offset = offset & u32(0x0F);
   if (timer_index >= 3)
-  {
-    Log_ErrorPrintf("Timer write out of range: offset 0x%02X value 0x%08X", offset, value);
     return;
-  }
 
   CounterState& cs = m_states[timer_index];
 
@@ -269,7 +261,6 @@ void Timers::WriteRegister(u32 offset, u32 value)
     case 0x00:
     {
       const u32 old_counter = cs.counter;
-      Log_DebugPrintf("Timer %u write counter %u", timer_index, value);
       cs.counter = value & u32(0xFFFF);
       CheckForIRQ(timer_index, old_counter);
       if (timer_index == 2 || !cs.external_counting_enabled)
@@ -281,7 +272,6 @@ void Timers::WriteRegister(u32 offset, u32 value)
     {
       static constexpr u32 WRITE_MASK = 0b1110001111111111;
 
-      Log_DebugPrintf("Timer %u write mode register 0x%04X", timer_index, value);
       cs.mode.bits = (value & WRITE_MASK) | (cs.mode.bits & ~WRITE_MASK);
       cs.use_external_clock = (cs.mode.clock_source & (timer_index == 2 ? 2 : 1)) != 0;
       cs.counter = 0;
@@ -296,7 +286,6 @@ void Timers::WriteRegister(u32 offset, u32 value)
 
     case 0x08:
     {
-      Log_DebugPrintf("Timer %u write target 0x%04X", timer_index, ZeroExtend32(Truncate16(value)));
       cs.target = value & u32(0xFFFF);
       CheckForIRQ(timer_index, cs.counter);
       if (timer_index == 2 || !cs.external_counting_enabled)
@@ -305,7 +294,6 @@ void Timers::WriteRegister(u32 offset, u32 value)
     break;
 
     default:
-      Log_ErrorPrintf("Write unknown register in timer %u (offset 0x%02X, value 0x%X)", timer_index, offset, value);
       break;
   }
 }
@@ -344,7 +332,6 @@ void Timers::UpdateIRQ(u32 index)
   if (cs.mode.interrupt_request_n || (!cs.mode.irq_repeat && cs.irq_done))
     return;
 
-  Log_DebugPrintf("Raising timer %u IRQ", index);
   cs.irq_done = true;
   g_interrupt_controller.InterruptRequest(
     static_cast<InterruptController::IRQ>(static_cast<u32>(InterruptController::IRQ::TMR0) + index));

@@ -1,7 +1,6 @@
 #include "dma.h"
 #include "bus.h"
 #include "cdrom.h"
-#include "common/log.h"
 #include "common/state_wrapper.h"
 #include "common/string_util.h"
 #include "cpu_code_cache.h"
@@ -12,7 +11,6 @@
 #include "pad.h"
 #include "spu.h"
 #include "system.h"
-Log_SetChannel(DMA);
 
 static u32 GetAddressMask()
 {
@@ -103,20 +101,11 @@ u32 DMA::ReadRegister(u32 offset)
     switch (offset & UINT32_C(0x0F))
     {
       case 0x00:
-      {
-        Log_TracePrintf("DMA%u base address -> 0x%08X", channel_index, m_state[channel_index].base_address);
         return m_state[channel_index].base_address;
-      }
       case 0x04:
-      {
-        Log_TracePrintf("DMA%u block control -> 0x%08X", channel_index, m_state[channel_index].block_control.bits);
         return m_state[channel_index].block_control.bits;
-      }
       case 0x08:
-      {
-        Log_TracePrintf("DMA%u channel control -> 0x%08X", channel_index, m_state[channel_index].channel_control.bits);
         return m_state[channel_index].channel_control.bits;
-      }
       default:
         break;
     }
@@ -124,18 +113,11 @@ u32 DMA::ReadRegister(u32 offset)
   else
   {
     if (offset == 0x70)
-    {
-      Log_TracePrintf("DPCR -> 0x%08X", m_DPCR.bits);
       return m_DPCR.bits;
-    }
     else if (offset == 0x74)
-    {
-      Log_TracePrintf("DPCR -> 0x%08X", m_DPCR.bits);
       return m_DICR.bits;
-    }
   }
 
-  Log_ErrorPrintf("Unhandled register read: %02X", offset);
   return UINT32_C(0xFFFFFFFF);
 }
 
@@ -150,12 +132,10 @@ void DMA::WriteRegister(u32 offset, u32 value)
       case 0x00:
       {
         state.base_address = value & BASE_ADDRESS_MASK;
-        Log_TracePrintf("DMA channel %u base address <- 0x%08X", channel_index, state.base_address);
         return;
       }
       case 0x04:
       {
-        Log_TracePrintf("DMA channel %u block control <- 0x%08X", channel_index, value);
         state.block_control.bits = value;
         return;
       }
@@ -170,7 +150,6 @@ void DMA::WriteRegister(u32 offset, u32 value)
 
         state.channel_control.bits = (state.channel_control.bits & ~ChannelState::ChannelControl::WRITE_MASK) |
                                      (value & ChannelState::ChannelControl::WRITE_MASK);
-        Log_TracePrintf("DMA channel %u channel control <- 0x%08X", channel_index, state.channel_control.bits);
 
         // start/trigger bit must be enabled for OTC
         if (static_cast<Channel>(channel_index) == Channel::OTC)
@@ -191,7 +170,6 @@ void DMA::WriteRegister(u32 offset, u32 value)
     {
       case 0x70:
       {
-        Log_TracePrintf("DPCR <- 0x%08X", value);
         m_DPCR.bits = value;
 
         for (u32 i = 0; i < NUM_CHANNELS; i++)
@@ -208,7 +186,6 @@ void DMA::WriteRegister(u32 offset, u32 value)
 
       case 0x74:
       {
-        Log_TracePrintf("DCIR <- 0x%08X", value);
         m_DICR.bits = (m_DICR.bits & ~DICR_WRITE_MASK) | (value & DICR_WRITE_MASK);
         m_DICR.bits = m_DICR.bits & ~(value & DICR_RESET_MASK);
         m_DICR.UpdateMasterFlag();
@@ -219,8 +196,6 @@ void DMA::WriteRegister(u32 offset, u32 value)
         break;
     }
   }
-
-  Log_ErrorPrintf("Unhandled register write: %02X <- %08X", offset, value);
 }
 
 void DMA::SetRequest(Channel channel, bool request)
@@ -258,10 +233,7 @@ void DMA::UpdateIRQ()
 {
   m_DICR.UpdateMasterFlag();
   if (m_DICR.master_flag)
-  {
-    Log_TracePrintf("Firing DMA master interrupt");
     g_interrupt_controller.InterruptRequest(InterruptController::IRQ::DMA);
-  }
 }
 
 // Plenty of games seem to suffer from this issue where they have a linked list DMA going while polling the
@@ -276,14 +248,6 @@ enum : u32
 
 TickCount DMA::GetTransferSliceTicks() const
 {
-#ifdef _DEBUG
-  if (g_pad.IsTransmitting())
-  {
-    Log_DebugPrintf("DMA transfer while transmitting pad - using lower slice size of %u vs %u",
-                    SLICE_SIZE_WHEN_TRANSMITTING_PAD, m_max_slice_ticks);
-  }
-#endif
-
   return g_pad.IsTransmitting() ? SLICE_SIZE_WHEN_TRANSMITTING_PAD : m_max_slice_ticks;
 }
 
@@ -309,9 +273,6 @@ bool DMA::TransferChannel(Channel channel)
     case SyncMode::Manual:
     {
       const u32 word_count = cs.block_control.manual.GetWordCount();
-      Log_DebugPrintf("DMA%u: Copying %u words %s 0x%08X", static_cast<u32>(channel), word_count,
-                      copy_to_device ? "from" : "to", current_address & mask);
-
       TickCount used_ticks;
       if (copy_to_device)
         used_ticks = TransferMemoryToDevice(channel, current_address & mask, increment, word_count);
@@ -325,13 +286,7 @@ bool DMA::TransferChannel(Channel channel)
     case SyncMode::LinkedList:
     {
       if (!copy_to_device)
-      {
-        Panic("Linked list not implemented for DMA reads");
         return true;
-      }
-
-      Log_DebugPrintf("DMA%u: Copying linked list starting at 0x%08X to device", static_cast<u32>(channel),
-                      current_address & mask);
 
       u8* ram_pointer = Bus::g_ram;
       TickCount remaining_ticks = GetTransferSliceTicks();
@@ -344,8 +299,6 @@ bool DMA::TransferChannel(Channel channel)
 
         const u32 word_count = header >> 24;
         const u32 next_address = header & UINT32_C(0x00FFFFFF);
-        Log_TracePrintf(" .. linked list entry at 0x%08X size=%u(%u words) next=0x%08X", current_address & mask,
-                        word_count * UINT32_C(4), word_count, next_address);
         if (word_count > 0)
         {
           CPU::AddPendingTicks(5);
@@ -373,21 +326,12 @@ bool DMA::TransferChannel(Channel channel)
         HaltTransfer(GetTransferHaltTicks());
         return false;
       }
-      else
-      {
-        // linked list not yet complete
-        return true;
-      }
+      // linked list not yet complete
     }
-    break;
+    return true;
 
     case SyncMode::Request:
     {
-      Log_DebugPrintf("DMA%u: Copying %u blocks of size %u (%u total words) %s 0x%08X", static_cast<u32>(channel),
-                      cs.block_control.request.GetBlockCount(), cs.block_control.request.GetBlockSize(),
-                      cs.block_control.request.GetBlockCount() * cs.block_control.request.GetBlockSize(),
-                      copy_to_device ? "from" : "to", current_address & mask);
-
       const u32 block_size = cs.block_control.request.GetBlockSize();
       u32 blocks_remaining = cs.block_control.request.GetBlockCount();
       TickCount ticks_remaining = GetTransferSliceTicks();
@@ -440,7 +384,6 @@ bool DMA::TransferChannel(Channel channel)
     break;
 
     default:
-      Panic("Unimplemented sync mode");
       break;
   }
 
@@ -448,7 +391,6 @@ bool DMA::TransferChannel(Channel channel)
   cs.channel_control.enable_busy = false;
   if (m_DICR.IsIRQEnabled(channel))
   {
-    Log_DebugPrintf("Set DMA interrupt for channel %u", static_cast<u32>(channel));
     m_DICR.SetIRQFlag(channel);
     UpdateIRQ();
   }
@@ -459,7 +401,6 @@ bool DMA::TransferChannel(Channel channel)
 void DMA::HaltTransfer(TickCount duration)
 {
   m_halt_ticks_remaining += duration;
-  Log_DebugPrintf("Halting DMA for %d ticks", m_halt_ticks_remaining);
   if (m_unhalt_event->IsActive())
     return;
 
@@ -469,7 +410,6 @@ void DMA::HaltTransfer(TickCount duration)
 
 void DMA::UnhaltTransfer(TickCount ticks)
 {
-  Log_DebugPrintf("Resuming DMA after %d ticks, %d ticks late", ticks, -(m_halt_ticks_remaining - ticks));
   m_halt_ticks_remaining -= ticks;
   m_unhalt_event->Deactivate();
 
@@ -539,7 +479,6 @@ TickCount DMA::TransferMemoryToDevice(Channel channel, u32 address, u32 incremen
     case Channel::MDECout:
     case Channel::PIO:
     default:
-      Log_ErrorPrintf("Unhandled DMA channel %u for device write", static_cast<u32>(channel));
       break;
   }
 
@@ -597,7 +536,6 @@ TickCount DMA::TransferDeviceToMemory(Channel channel, u32 address, u32 incremen
       break;
 
     default:
-      Log_ErrorPrintf("Unhandled DMA channel %u for device read", static_cast<u32>(channel));
       std::fill_n(dest_pointer, word_count, UINT32_C(0xFFFFFFFF));
       break;
   }
