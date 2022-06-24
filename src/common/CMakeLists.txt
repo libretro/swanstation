@@ -110,8 +110,6 @@ add_library(common
   vulkan/texture.h
   vulkan/util.cpp
   vulkan/util.h
-  wav_writer.cpp
-  wav_writer.h
   window_info.cpp
   window_info.h
 )

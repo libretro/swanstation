@@ -4,7 +4,6 @@
 #include "common/file_system.h"
 #include "common/log.h"
 #include "common/state_wrapper.h"
-#include "common/wav_writer.h"
 #include "dma.h"
 #include "host_interface.h"
 #include "interrupt_controller.h"
@@ -47,7 +46,6 @@ void SPU::Shutdown()
 {
   m_tick_event.reset();
   m_transfer_event.reset();
-  m_dump_writer.reset();
   m_audio_stream = nullptr;
 }
 
@@ -1017,29 +1015,6 @@ void SPU::GeneratePendingSamples()
   m_tick_event->InvokeEarly(force_exec);
 }
 
-bool SPU::StartDumpingAudio(const char* filename)
-{
-  m_dump_writer.reset();
-  m_dump_writer = std::make_unique<Common::WAVWriter>();
-  if (!m_dump_writer->Open(filename, SAMPLE_RATE, 2))
-  {
-    Log_ErrorPrintf("Failed to open '%s'", filename);
-    m_dump_writer.reset();
-    return false;
-  }
-  return true;
-}
-
-bool SPU::StopDumpingAudio()
-{
-  if (!m_dump_writer)
-    return false;
-
-  m_dump_writer.reset();
-
-  return true;
-}
-
 void SPU::Voice::KeyOn()
 {
   current_address = regs.adpcm_start_address & ~u16(1);
@@ -1829,9 +1804,6 @@ void SPU::Execute(TickCount ticks)
         }
       }
     }
-
-    if (m_dump_writer)
-      m_dump_writer->WriteFrames(output_frame_start, frames_in_this_batch);
 
     m_audio_stream->EndWrite(frames_in_this_batch);
     remaining_frames -= frames_in_this_batch;

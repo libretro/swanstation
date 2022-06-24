@@ -9,7 +9,6 @@
 class StateWrapper;
 
 namespace Common {
-class WAVWriter;
 }
 
 class TimingEvent;
@@ -40,15 +39,6 @@ public:
 
   // Executes the SPU, generating any pending samples.
   void GeneratePendingSamples();
-
-  /// Returns true if currently dumping audio.
-  ALWAYS_INLINE bool IsDumpingAudio() const { return static_cast<bool>(m_dump_writer); }
-
-  /// Starts dumping audio to file.
-  bool StartDumpingAudio(const char* filename);
-
-  /// Stops dumping audio to file, if started.
-  bool StopDumpingAudio();
 
   /// Access to SPU RAM.
   const std::array<u8, RAM_SIZE>& GetRAM() const { return m_ram; }
@@ -372,7 +362,6 @@ private:
 
   std::unique_ptr<TimingEvent> m_tick_event;
   std::unique_ptr<TimingEvent> m_transfer_event;
-  std::unique_ptr<Common::WAVWriter> m_dump_writer;
   AudioStream* m_audio_stream = nullptr;
   TickCount m_ticks_carry = 0;
   TickCount m_cpu_ticks_per_spu_tick = 0;
