@@ -152,10 +152,6 @@ bool SafeWriteMemoryWord(VirtualMemoryAddress addr, u32 value);
 void SetExternalInterrupt(u8 bit);
 void ClearExternalInterrupt(u8 bit);
 
-void DisassembleAndPrint(u32 addr);
-void DisassembleAndLog(u32 addr);
-void DisassembleAndPrint(u32 addr, u32 instructions_before, u32 instructions_after);
-
 // Breakpoint callback - if the callback returns false, the breakpoint will be removed.
 using BreakpointCallback = bool (*)(VirtualMemoryAddress address);
 

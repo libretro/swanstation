@@ -4,7 +4,6 @@
 #include "common/log.h"
 #include "cpu_core.h"
 #include "cpu_core_private.h"
-#include "cpu_disasm.h"
 #include "settings.h"
 #include "system.h"
 #include "timing_event.h"
@@ -587,9 +586,6 @@ recompile:
 
     if (block->recompile_count >= RECOMPILE_COUNT_TO_FALL_BACK_TO_INTERPRETER)
     {
-      Log_PerfPrintf("Block 0x%08X has been recompiled %u times in %u frames, falling back to interpreter",
-                     block->GetPC(), block->recompile_count, frame_diff);
-
       FallbackExistingBlockToInterpreter(block);
       return false;
     }
@@ -605,7 +601,6 @@ recompile:
 
   if (!CompileBlock(block))
   {
-    Log_PerfPrintf("Failed to recompile block 0x%08X, falling back to interpreter.", block->GetPC());
     FallbackExistingBlockToInterpreter(block);
     return false;
   }
@@ -717,25 +712,9 @@ bool CompileBlock(CodeBlock* block)
   }
 
   if (!block->instructions.empty())
-  {
     block->instructions.back().is_last_instruction = true;
-
-#ifdef _DEBUG
-    SmallString disasm;
-    Log_DebugPrintf("Block at 0x%08X", block->GetPC());
-    for (const CodeBlockInstruction& cbi : block->instructions)
-    {
-      CPU::DisassembleInstruction(&disasm, cbi.pc, cbi.instruction.bits);
-      Log_DebugPrintf("[%s %s 0x%08X] %08X %s", cbi.is_branch_delay_slot ? "BD" : "  ",
-                      cbi.is_load_delay_slot ? "LD" : "  ", cbi.pc, cbi.instruction.bits, disasm.GetCharArray());
-    }
-#endif
-  }
   else
-  {
-    Log_WarningPrintf("Empty block compiled at 0x%08X", block->key.GetPC());
     return false;
-  }
 
 #ifdef WITH_RECOMPILER
   if (g_settings.IsUsingRecompiler())

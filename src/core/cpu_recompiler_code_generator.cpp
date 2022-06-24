@@ -2,7 +2,6 @@
 #include "common/log.h"
 #include "cpu_core.h"
 #include "cpu_core_private.h"
-#include "cpu_disasm.h"
 #include "gte.h"
 #include "pgxp.h"
 #include "settings.h"

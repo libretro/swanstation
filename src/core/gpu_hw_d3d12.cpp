@@ -175,7 +175,6 @@ void GPU_HW_D3D12::MapBatchVertexPointer(u32 required_vertices)
   const u32 required_space = required_vertices * sizeof(BatchVertex);
   if (!m_vertex_stream_buffer.ReserveMemory(required_space, sizeof(BatchVertex)))
   {
-    Log_PerfPrintf("Executing command buffer while waiting for %u bytes in vertex stream buffer", required_space);
     g_d3d12_context->ExecuteCommandList(false);
     RestoreGraphicsAPIState();
     if (!m_vertex_stream_buffer.ReserveMemory(required_space, sizeof(BatchVertex)))
@@ -203,7 +202,6 @@ void GPU_HW_D3D12::UploadUniformBuffer(const void* data, u32 data_size)
 {
   if (!m_uniform_stream_buffer.ReserveMemory(data_size, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT))
   {
-    Log_PerfPrintf("Executing command buffer while waiting for %u bytes in uniform stream buffer", data_size);
     g_d3d12_context->ExecuteCommandList(false);
     RestoreGraphicsAPIState();
     if (!m_uniform_stream_buffer.ReserveMemory(data_size, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT))
@@ -758,13 +756,8 @@ bool GPU_HW_D3D12::CreateTextureReplacementStreamBuffer()
 {
   if (m_texture_replacment_stream_buffer.IsValid())
     return true;
-
   if (!m_texture_replacment_stream_buffer.Create(TEXTURE_REPLACEMENT_BUFFER_SIZE))
-  {
-    Log_ErrorPrint("Failed to allocate texture replacement streaming buffer");
     return false;
-  }
-
   return true;
 }
 
@@ -780,24 +773,17 @@ bool GPU_HW_D3D12::BlitVRAMReplacementTexture(const TextureReplacementTexture* t
     if (!m_vram_write_replacement_texture.Create(tex->GetWidth(), tex->GetHeight(), 1, DXGI_FORMAT_R8G8B8A8_UNORM,
                                                  DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_UNKNOWN,
                                                  D3D12_RESOURCE_FLAG_NONE))
-    {
-      Log_ErrorPrint("Failed to create VRAM write replacement texture");
       return false;
-    }
   }
 
   const u32 copy_pitch = Common::AlignUpPow2<u32>(tex->GetWidth() * sizeof(u32), D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
   const u32 required_size = copy_pitch * tex->GetHeight();
   if (!m_texture_replacment_stream_buffer.ReserveMemory(required_size, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT))
   {
-    Log_PerfPrint("Executing command buffer while waiting for texture replacement buffer space");
     g_d3d12_context->ExecuteCommandList(false);
     RestoreGraphicsAPIState();
     if (!m_texture_replacment_stream_buffer.ReserveMemory(required_size, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT))
-    {
-      Log_ErrorPrintf("Failed to allocate %u bytes from texture replacement streaming buffer", required_size);
       return false;
-    }
   }
 
   // buffer -> texture
@@ -1031,7 +1017,6 @@ void GPU_HW_D3D12::UpdateVRAM(u32 x, u32 y, u32 width, u32 height, const void* d
   const u32 alignment = D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT; // ???
   if (!m_texture_stream_buffer.ReserveMemory(data_size, alignment))
   {
-    Log_PerfPrintf("Executing command buffer while waiting for %u bytes in stream buffer", data_size);
     g_d3d12_context->ExecuteCommandList(false);
     RestoreGraphicsAPIState();
     if (!m_texture_stream_buffer.ReserveMemory(data_size, alignment))

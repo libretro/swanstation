@@ -249,7 +249,6 @@ void GPU_HW_Vulkan::MapBatchVertexPointer(u32 required_vertices)
   const u32 required_space = required_vertices * sizeof(BatchVertex);
   if (!m_vertex_stream_buffer.ReserveMemory(required_space, sizeof(BatchVertex)))
   {
-    Log_PerfPrintf("Executing command buffer while waiting for %u bytes in vertex stream buffer", required_space);
     ExecuteCommandBuffer(false, true);
     if (!m_vertex_stream_buffer.ReserveMemory(required_space, sizeof(BatchVertex)))
       Panic("Failed to reserve vertex stream buffer memory");
@@ -277,7 +276,6 @@ void GPU_HW_Vulkan::UploadUniformBuffer(const void* data, u32 data_size)
   const u32 alignment = static_cast<u32>(g_vulkan_context->GetUniformBufferAlignment());
   if (!m_uniform_stream_buffer.ReserveMemory(data_size, alignment))
   {
-    Log_PerfPrintf("Executing command buffer while waiting for %u bytes in uniform stream buffer", data_size);
     ExecuteCommandBuffer(false, true);
     if (!m_uniform_stream_buffer.ReserveMemory(data_size, alignment))
       Panic("Failed to reserve uniform stream buffer memory");
@@ -1616,7 +1614,6 @@ void GPU_HW_Vulkan::UpdateVRAM(u32 x, u32 y, u32 width, u32 height, const void* 
                                                                       g_vulkan_context->GetTexelBufferAlignment()));
   if (!m_texture_stream_buffer.ReserveMemory(data_size, alignment))
   {
-    Log_PerfPrintf("Executing command buffer while waiting for %u bytes in stream buffer", data_size);
     ExecuteCommandBuffer(false, true);
     if (!m_texture_stream_buffer.ReserveMemory(data_size, alignment))
     {
@@ -1800,10 +1797,7 @@ bool GPU_HW_Vulkan::CreateTextureReplacementStreamBuffer()
     return true;
 
   if (!m_texture_replacment_stream_buffer.Create(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, TEXTURE_REPLACEMENT_BUFFER_SIZE))
-  {
-    Log_ErrorPrint("Failed to allocate texture replacement streaming buffer");
     return false;
-  }
 
   Vulkan::Util::SetObjectName(g_vulkan_context->GetDevice(), m_texture_replacment_stream_buffer.GetBuffer(),
                               "Texture Replacement Stream Buffer");
@@ -1828,23 +1822,16 @@ bool GPU_HW_Vulkan::BlitVRAMReplacementTexture(const TextureReplacementTexture* 
     if (!m_vram_write_replacement_texture.Create(tex->GetWidth(), tex->GetHeight(), 1, 1, VK_FORMAT_R8G8B8A8_UNORM,
                                                  VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_TILING_OPTIMAL,
                                                  VK_IMAGE_USAGE_TRANSFER_DST_BIT))
-    {
-      Log_ErrorPrint("Failed to create VRAM write replacement texture");
       return false;
-    }
   }
 
   const u32 required_size = tex->GetWidth() * tex->GetHeight() * sizeof(u32);
   const u32 alignment = static_cast<u32>(g_vulkan_context->GetBufferImageGranularity());
   if (!m_texture_replacment_stream_buffer.ReserveMemory(required_size, alignment))
   {
-    Log_PerfPrint("Executing command buffer while waiting for texture replacement buffer space");
     ExecuteCommandBuffer(false, true);
     if (!m_texture_replacment_stream_buffer.ReserveMemory(required_size, alignment))
-    {
-      Log_ErrorPrintf("Failed to allocate %u bytes from texture replacement streaming buffer", required_size);
       return false;
-    }
   }
 
   // upload to buffer

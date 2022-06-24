@@ -251,17 +251,6 @@ u32 ReadRegister(u32 index)
 
 void WriteRegister(u32 index, u32 value)
 {
-#if 0
-  if (index < 32)
-  {
-    Log_DebugPrintf("DataReg(%u) <- 0x%08X", index, value);
-  }
-  else
-  {
-    Log_DebugPrintf("ControlReg(%u) <- 0x%08X", index, value);
-  }
-#endif
-
   switch (index)
   {
     case 1:  // V0[z]

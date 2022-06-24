@@ -3,7 +3,6 @@
 #include "common/file_system.h"
 #include "common/log.h"
 #include "common/md5_digest.h"
-#include "cpu_disasm.h"
 #include <array>
 #include <cerrno>
 Log_SetChannel(BIOS);
@@ -160,12 +159,6 @@ void PatchBIOS(u8* image, u32 image_size, u32 address, u32 value, u32 mask /*= U
   std::memcpy(&existing_value, &image[offset], sizeof(existing_value));
   u32 new_value = (existing_value & ~mask) | value;
   std::memcpy(&image[offset], &new_value, sizeof(new_value));
-
-  SmallString old_disasm, new_disasm;
-  CPU::DisassembleInstruction(&old_disasm, address, existing_value);
-  CPU::DisassembleInstruction(&new_disasm, address, new_value);
-  Log_DevPrintf("BIOS-Patch 0x%08X (+0x%X): 0x%08X %s -> %08X %s", address, offset, existing_value,
-                old_disasm.GetCharArray(), new_value, new_disasm.GetCharArray());
 }
 
 bool PatchBIOSEnableTTY(u8* image, u32 image_size, const Hash& hash)

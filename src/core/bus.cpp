@@ -8,7 +8,6 @@
 #include "cpu_code_cache.h"
 #include "cpu_core.h"
 #include "cpu_core_private.h"
-#include "cpu_disasm.h"
 #include "dma.h"
 #include "gpu.h"
 #include "host_interface.h"

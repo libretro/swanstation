@@ -1,13 +1,11 @@
 #include "gpu_sw.h"
 #include "common/align.h"
 #include "common/assert.h"
-#include "common/log.h"
 #include "common/make_array.h"
 #include "common/platform.h"
 #include "host_display.h"
 #include "system.h"
 #include <algorithm>
-Log_SetChannel(GPU_SW);
 
 #if defined(CPU_X64)
 #include <emmintrin.h>
@@ -597,8 +595,6 @@ void GPU_SW::DispatchRenderCommand()
 
       if ((max_x - min_x) >= MAX_PRIMITIVE_WIDTH || (max_y - min_y) >= MAX_PRIMITIVE_HEIGHT)
       {
-        Log_DebugPrintf("Culling too-large polygon: %d,%d %d,%d %d,%d", cmd->vertices[0].x, cmd->vertices[0].y,
-                        cmd->vertices[1].x, cmd->vertices[1].y, cmd->vertices[2].x, cmd->vertices[2].y);
       }
       else
       {
@@ -618,9 +614,6 @@ void GPU_SW::DispatchRenderCommand()
         // Cull polygons which are too large.
         if ((max_x_123 - min_x_123) >= MAX_PRIMITIVE_WIDTH || (max_y_123 - min_y_123) >= MAX_PRIMITIVE_HEIGHT)
         {
-          Log_DebugPrintf("Culling too-large polygon (quad second half): %d,%d %d,%d %d,%d", cmd->vertices[2].x,
-                          cmd->vertices[2].y, cmd->vertices[1].x, cmd->vertices[1].y, cmd->vertices[0].x,
-                          cmd->vertices[0].y);
         }
         else
         {
@@ -677,10 +670,7 @@ void GPU_SW::DispatchRenderCommand()
           cmd->height = static_cast<u16>((width_and_height >> 16) & VRAM_HEIGHT_MASK);
 
           if (cmd->width >= MAX_PRIMITIVE_WIDTH || cmd->height >= MAX_PRIMITIVE_HEIGHT)
-          {
-            Log_DebugPrintf("Culling too-large rectangle: %d,%d %dx%d", cmd->x, cmd->y, cmd->width, cmd->height);
             return;
-          }
         }
         break;
       }
@@ -742,11 +732,7 @@ void GPU_SW::DispatchRenderCommand()
         const auto [min_x, max_x] = MinMax(cmd->vertices[0].x, cmd->vertices[1].x);
         const auto [min_y, max_y] = MinMax(cmd->vertices[0].y, cmd->vertices[1].y);
         if ((max_x - min_x) >= MAX_PRIMITIVE_WIDTH || (max_y - min_y) >= MAX_PRIMITIVE_HEIGHT)
-        {
-          Log_DebugPrintf("Culling too-large line: %d,%d - %d,%d", cmd->vertices[0].y, cmd->vertices[0].y,
-                          cmd->vertices[1].x, cmd->vertices[1].y);
           return;
-        }
 
         const u32 clip_left = static_cast<u32>(std::clamp<s32>(min_x, m_drawing_area.left, m_drawing_area.right));
         const u32 clip_right = static_cast<u32>(std::clamp<s32>(max_x, m_drawing_area.left, m_drawing_area.right)) + 1u;
@@ -786,8 +772,6 @@ void GPU_SW::DispatchRenderCommand()
           const auto [min_y, max_y] = MinMax(cmd->vertices[i - 1].x, cmd->vertices[i].y);
           if ((max_x - min_x) >= MAX_PRIMITIVE_WIDTH || (max_y - min_y) >= MAX_PRIMITIVE_HEIGHT)
           {
-            Log_DebugPrintf("Culling too-large line: %d,%d - %d,%d", cmd->vertices[i - 1].x, cmd->vertices[i - 1].y,
-                            cmd->vertices[i].x, cmd->vertices[i].y);
           }
           else
           {

@@ -2,10 +2,8 @@
 #include "bus.h"
 #include "common/align.h"
 #include "common/file_system.h"
-#include "common/log.h"
 #include "common/state_wrapper.h"
 #include "cpu_core_private.h"
-#include "cpu_disasm.h"
 #include "cpu_recompiler_thunks.h"
 #include "gte.h"
 #include "host_interface.h"
@@ -13,8 +11,6 @@
 #include "settings.h"
 #include "system.h"
 #include "timing_event.h"
-
-Log_SetChannel(CPU::Core);
 
 namespace CPU {
 
@@ -174,18 +170,6 @@ ALWAYS_INLINE_RELEASE static void RaiseException(u32 CAUSE_bits, u32 EPC, u32 ve
   g_state.cop0_regs.EPC = EPC;
   g_state.cop0_regs.cause.bits = (g_state.cop0_regs.cause.bits & ~Cop0Registers::CAUSE::EXCEPTION_WRITE_MASK) |
                                  (CAUSE_bits & Cop0Registers::CAUSE::EXCEPTION_WRITE_MASK);
-
-#ifdef _DEBUG
-  if (g_state.cop0_regs.cause.Excode != Exception::INT && g_state.cop0_regs.cause.Excode != Exception::Syscall &&
-      g_state.cop0_regs.cause.Excode != Exception::BP)
-  {
-    Log_DevPrintf("Exception %u at 0x%08X (epc=0x%08X, BD=%s, CE=%u)",
-                  static_cast<u8>(g_state.cop0_regs.cause.Excode.GetValue()), g_state.current_instruction_pc,
-                  g_state.cop0_regs.EPC, g_state.cop0_regs.cause.BD ? "true" : "false",
-                  g_state.cop0_regs.cause.CE.GetValue());
-    DisassembleAndPrint(g_state.current_instruction_pc, 4, 0);
-  }
-#endif
 
   if (g_state.cop0_regs.cause.BD)
   {
@@ -362,34 +346,29 @@ ALWAYS_INLINE_RELEASE static void WriteCop0Reg(Cop0Reg reg, u32 value)
     case Cop0Reg::BPC:
     {
       g_state.cop0_regs.BPC = value;
-      Log_DevPrintf("COP0 BPC <- %08X", value);
     }
     break;
 
     case Cop0Reg::BPCM:
     {
       g_state.cop0_regs.BPCM = value;
-      Log_DevPrintf("COP0 BPCM <- %08X", value);
     }
     break;
 
     case Cop0Reg::BDA:
     {
       g_state.cop0_regs.BDA = value;
-      Log_DevPrintf("COP0 BDA <- %08X", value);
     }
     break;
 
     case Cop0Reg::BDAM:
     {
       g_state.cop0_regs.BDAM = value;
-      Log_DevPrintf("COP0 BDAM <- %08X", value);
     }
     break;
 
     case Cop0Reg::JUMPDEST:
     {
-      Log_WarningPrintf("Ignoring write to Cop0 JUMPDEST");
     }
     break;
 
@@ -397,7 +376,6 @@ ALWAYS_INLINE_RELEASE static void WriteCop0Reg(Cop0Reg reg, u32 value)
     {
       g_state.cop0_regs.dcic.bits =
         (g_state.cop0_regs.dcic.bits & ~Cop0Registers::DCIC::WRITE_MASK) | (value & Cop0Registers::DCIC::WRITE_MASK);
-      Log_DevPrintf("COP0 DCIC <- %08X (now %08X)", value, g_state.cop0_regs.dcic.bits);
       UpdateDebugDispatcherFlag();
     }
     break;
@@ -406,7 +384,6 @@ ALWAYS_INLINE_RELEASE static void WriteCop0Reg(Cop0Reg reg, u32 value)
     {
       g_state.cop0_regs.sr.bits =
         (g_state.cop0_regs.sr.bits & ~Cop0Registers::SR::WRITE_MASK) | (value & Cop0Registers::SR::WRITE_MASK);
-      Log_DebugPrintf("COP0 SR <- %08X (now %08X)", value, g_state.cop0_regs.sr.bits);
       CheckForPendingInterrupt();
     }
     break;
@@ -415,13 +392,11 @@ ALWAYS_INLINE_RELEASE static void WriteCop0Reg(Cop0Reg reg, u32 value)
     {
       g_state.cop0_regs.cause.bits =
         (g_state.cop0_regs.cause.bits & ~Cop0Registers::CAUSE::WRITE_MASK) | (value & Cop0Registers::CAUSE::WRITE_MASK);
-      Log_DebugPrintf("COP0 CAUSE <- %08X (now %08X)", value, g_state.cop0_regs.cause.bits);
       CheckForPendingInterrupt();
     }
     break;
 
     default:
-      Log_DevPrintf("Unknown COP0 reg write %u (%08X)", ZeroExtend32(static_cast<u8>(reg)), value);
       break;
   }
 }
@@ -439,7 +414,6 @@ ALWAYS_INLINE_RELEASE void Cop0ExecutionBreakpointCheck()
   if (bpcm == 0 || ((pc ^ bpc) & bpcm) != 0u)
     return;
 
-  Log_DevPrintf("Cop0 execution breakpoint at %08X", pc);
   g_state.cop0_regs.dcic.status_any_break = true;
   g_state.cop0_regs.dcic.status_bpc_code_break = true;
   DispatchCop0Breakpoint();
@@ -465,8 +439,6 @@ ALWAYS_INLINE_RELEASE void Cop0DataBreakpointCheck(VirtualMemoryAddress address)
   if (bdam == 0 || ((address ^ bda) & bdam) != 0u)
     return;
 
-  Log_DevPrintf("Cop0 data breakpoint for %08X at %08X", address, g_state.current_instruction_pc);
-
   g_state.cop0_regs.dcic.status_any_break = true;
   g_state.cop0_regs.dcic.status_bda_data_break = true;
   if constexpr (type == MemoryAccessType::Read)
@@ -475,47 +447,6 @@ ALWAYS_INLINE_RELEASE void Cop0DataBreakpointCheck(VirtualMemoryAddress address)
     g_state.cop0_regs.dcic.status_bda_data_write_break = true;
 
   DispatchCop0Breakpoint();
-}
-
-#ifdef _DEBUG
-
-static void TracePrintInstruction()
-{
-  const u32 pc = g_state.current_instruction_pc;
-  const u32 bits = g_state.current_instruction.bits;
-
-  TinyString instr;
-  TinyString comment;
-  DisassembleInstruction(&instr, pc, bits);
-  DisassembleInstructionComment(&comment, pc, bits, &g_state.regs);
-  if (!comment.IsEmpty())
-  {
-    for (u32 i = instr.GetLength(); i < 30; i++)
-      instr.AppendCharacter(' ');
-    instr.AppendString("; ");
-    instr.AppendString(comment);
-  }
-
-  std::printf("%08x: %08x %s\n", pc, bits, instr.GetCharArray());
-}
-
-#endif
-
-static void PrintInstruction(u32 bits, u32 pc, Registers* regs, const char* prefix)
-{
-  TinyString instr;
-  TinyString comment;
-  DisassembleInstruction(&instr, pc, bits);
-  DisassembleInstructionComment(&comment, pc, bits, regs);
-  if (!comment.IsEmpty())
-  {
-    for (u32 i = instr.GetLength(); i < 30; i++)
-      instr.AppendCharacter(' ');
-    instr.AppendString("; ");
-    instr.AppendString(comment);
-  }
-
-  Log_DevPrintf("%s%08x: %08x %s", prefix, pc, bits, instr.GetCharArray());
 }
 
 ALWAYS_INLINE static constexpr bool AddOverflow(u32 old_value, u32 add_value, u32 new_value)
@@ -528,48 +459,11 @@ ALWAYS_INLINE static constexpr bool SubOverflow(u32 old_value, u32 sub_value, u3
   return (((new_value ^ old_value) & (old_value ^ sub_value)) & UINT32_C(0x80000000)) != 0;
 }
 
-void DisassembleAndPrint(u32 addr, const char* prefix)
-{
-  u32 bits = 0;
-  SafeReadMemoryWord(addr, &bits);
-  PrintInstruction(bits, addr, &g_state.regs, prefix);
-}
-
-void DisassembleAndPrint(u32 addr, u32 instructions_before /* = 0 */, u32 instructions_after /* = 0 */)
-{
-  u32 disasm_addr = addr - (instructions_before * sizeof(u32));
-  for (u32 i = 0; i < instructions_before; i++)
-  {
-    DisassembleAndPrint(disasm_addr, "");
-    disasm_addr += sizeof(u32);
-  }
-
-  // <= to include the instruction itself
-  for (u32 i = 0; i <= instructions_after; i++)
-  {
-    DisassembleAndPrint(disasm_addr, (i == 0) ? "---->" : "");
-    disasm_addr += sizeof(u32);
-  }
-}
-
 template<PGXPMode pgxp_mode, bool debug>
 ALWAYS_INLINE_RELEASE static void ExecuteInstruction()
 {
 restart_instruction:
   const Instruction inst = g_state.current_instruction;
-
-#if 0
-  if (g_state.current_instruction_pc == 0x80030000)
-  {
-    TRACE_EXECUTION = true;
-    __debugbreak();
-  }
-#endif
-
-#ifdef _DEBUG
-  if (TRACE_EXECUTION)
-    TracePrintInstruction();
-#endif
 
   // Skip nops. Makes PGXP-CPU quicker, but also the regular interpreter.
   if (inst.bits == 0)
@@ -1319,7 +1213,6 @@ restart_instruction:
     {
       if (InUserMode() && !g_state.cop0_regs.sr.CU0)
       {
-        Log_WarningPrintf("Coprocessor 0 not present in user mode");
         RaiseException(Exception::CpU);
         return;
       }
@@ -1349,7 +1242,6 @@ restart_instruction:
           break;
 
           default:
-            Log_ErrorPrintf("Unhandled instruction at %08X: %08X", g_state.current_instruction_pc, inst.bits);
             break;
         }
       }
@@ -1374,7 +1266,6 @@ restart_instruction:
             break;
 
           default:
-            Log_ErrorPrintf("Unhandled instruction at %08X: %08X", g_state.current_instruction_pc, inst.bits);
             break;
         }
       }
@@ -1385,7 +1276,6 @@ restart_instruction:
     {
       if (!g_state.cop0_regs.sr.CE2)
       {
-        Log_WarningPrintf("Coprocessor 2 not enabled");
         RaiseException(Exception::CpU);
         return;
       }
@@ -1438,7 +1328,6 @@ restart_instruction:
           break;
 
           default:
-            Log_ErrorPrintf("Unhandled instruction at %08X: %08X", g_state.current_instruction_pc, inst.bits);
             break;
         }
       }
@@ -1453,7 +1342,6 @@ restart_instruction:
     {
       if (!g_state.cop0_regs.sr.CE2)
       {
-        Log_WarningPrintf("Coprocessor 2 not enabled");
         RaiseException(Exception::CpU);
         return;
       }
@@ -1475,7 +1363,6 @@ restart_instruction:
     {
       if (!g_state.cop0_regs.sr.CE2)
       {
-        Log_WarningPrintf("Coprocessor 2 not enabled");
         RaiseException(Exception::CpU);
         return;
       }
@@ -1511,8 +1398,6 @@ restart_instruction:
       if (SafeReadInstruction(g_state.current_instruction_pc, &ram_value) &&
           ram_value != g_state.current_instruction.bits)
       {
-        Log_ErrorPrintf("Stale icache at 0x%08X - ICache: %08X RAM: %08X", g_state.current_instruction_pc,
-                        g_state.current_instruction.bits, ram_value);
         g_state.current_instruction.bits = ram_value;
         goto restart_instruction;
       }
@@ -1554,7 +1439,6 @@ void UpdateDebugDispatcherFlag()
   if (use_debug_dispatcher == g_state.use_debug_dispatcher)
     return;
 
-  Log_DevPrintf("%s debug dispatcher", use_debug_dispatcher ? "Now using" : "No longer using");
   g_state.use_debug_dispatcher = use_debug_dispatcher;
   ForceDispatcherExit();
 }
@@ -1605,8 +1489,6 @@ bool AddBreakpoint(VirtualMemoryAddress address, bool auto_clear, bool enabled)
   if (HasBreakpointAtAddress(address))
     return false;
 
-  Log_InfoPrintf("Adding breakpoint at %08X, auto clear = %u", address, static_cast<unsigned>(auto_clear));
-
   Breakpoint bp{address, nullptr, auto_clear ? 0 : s_breakpoint_counter++, 0, auto_clear, enabled};
   s_breakpoints.push_back(std::move(bp));
   UpdateDebugDispatcherFlag();
@@ -1624,8 +1506,6 @@ bool AddBreakpointWithCallback(VirtualMemoryAddress address, BreakpointCallback 
 {
   if (HasBreakpointAtAddress(address))
     return false;
-
-  Log_InfoPrintf("Adding breakpoint with callback at %08X", address);
 
   Breakpoint bp{address, callback, 0, 0, false, true};
   s_breakpoints.push_back(std::move(bp));

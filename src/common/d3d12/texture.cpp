@@ -243,14 +243,9 @@ bool Texture::BeginStreamUpdate(u32 x, u32 y, u32 width, u32 height, void** out_
 
   if (!g_d3d12_context->GetTextureStreamBuffer().ReserveMemory(upload_size, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT))
   {
-    Log_PerfPrintf("Executing command buffer while waiting for %u bytes (%ux%u) in upload buffer", upload_size, width,
-                   height);
     g_d3d12_context->ExecuteCommandList(false);
     if (!g_d3d12_context->GetTextureStreamBuffer().ReserveMemory(upload_size, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT))
-    {
-      Log_ErrorPrintf("Failed to reserve %u bytes for %ux%u upload", upload_size, width, height);
       return false;
-    }
   }
 
   *out_data = g_d3d12_context->GetTextureStreamBuffer().GetCurrentHostPointer();

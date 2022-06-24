@@ -18,8 +18,7 @@ ALWAYS_INLINE static constexpr std::tuple<T, T> MinMax(T v1, T v2)
 {
   if (v1 > v2)
     return std::tie(v2, v1);
-  else
-    return std::tie(v1, v2);
+  return std::tie(v1, v2);
 }
 
 ALWAYS_INLINE static bool ShouldUseUVLimits()
@@ -91,7 +90,6 @@ bool GPU_HW::Initialize(HostDisplay* host_display)
 
   UpdateSoftwareRenderer(false);
 
-  PrintSettingsToLog();
   return true;
 }
 
@@ -192,8 +190,6 @@ void GPU_HW::UpdateHWSettings(bool* framebuffer_changed, bool* shaders_changed)
   }
 
   UpdateSoftwareRenderer(true);
-
-  PrintSettingsToLog();
 }
 
 u32 GPU_HW::CalculateResolutionScale() const
@@ -268,21 +264,6 @@ std::tuple<u32, u32> GPU_HW::GetFullDisplayResolution(bool scaled /* = true */)
 {
   const u32 scale = scaled ? m_resolution_scale : 1u;
   return std::make_tuple(m_crtc_state.display_width * scale, m_crtc_state.display_height * scale);
-}
-
-void GPU_HW::PrintSettingsToLog()
-{
-  Log_InfoPrintf("Resolution Scale: %u (%ux%u), maximum %u", m_resolution_scale, VRAM_WIDTH * m_resolution_scale,
-                 VRAM_HEIGHT * m_resolution_scale, m_max_resolution_scale);
-  Log_InfoPrintf("Multisampling: %ux%s", m_multisamples, m_per_sample_shading ? " (per sample shading)" : "");
-  Log_InfoPrintf("Dithering: %s%s", m_true_color ? "Disabled" : "Enabled",
-                 (!m_true_color && m_scaled_dithering) ? " (Scaled)" : "");
-  Log_InfoPrintf("Texture Filtering: %s", Settings::GetTextureFilterDisplayName(m_texture_filtering));
-  Log_InfoPrintf("Dual-source blending: %s", m_supports_dual_source_blend ? "Supported" : "Not supported");
-  Log_InfoPrintf("Using UV limits: %s", m_using_uv_limits ? "YES" : "NO");
-  Log_InfoPrintf("Depth buffer: %s", m_pgxp_depth_buffer ? "YES" : "NO");
-  Log_InfoPrintf("Downsampling: %s", Settings::GetDownsampleModeDisplayName(m_downsample_mode));
-  Log_InfoPrintf("Using software renderer for readbacks: %s", m_sw_renderer ? "YES" : "NO");
 }
 
 void GPU_HW::UpdateVRAMReadTexture()
@@ -1108,7 +1089,6 @@ void GPU_HW::ResetBatchVertexDepth()
   if (m_pgxp_depth_buffer)
     return;
 
-  Log_PerfPrint("Resetting batch vertex depth");
   FlushRender();
   UpdateDepthBufferFromMaskBit();
 

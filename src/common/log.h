@@ -56,8 +56,6 @@ void Writev(const char* channelName, const char* functionName, LOGLEVEL level, c
 #define Log_ErrorPrintf(...) Log::Writef(___LogChannel___, __func__, LOGLEVEL_ERROR, __VA_ARGS__)
 #define Log_WarningPrint(msg) Log::Write(___LogChannel___, __func__, LOGLEVEL_WARNING, msg)
 #define Log_WarningPrintf(...) Log::Writef(___LogChannel___, __func__, LOGLEVEL_WARNING, __VA_ARGS__)
-#define Log_PerfPrint(msg) Log::Write(___LogChannel___, __func__, LOGLEVEL_PERF, msg)
-#define Log_PerfPrintf(...) Log::Writef(___LogChannel___, __func__, LOGLEVEL_PERF, __VA_ARGS__)
 #define Log_InfoPrint(msg) Log::Write(___LogChannel___, __func__, LOGLEVEL_INFO, msg)
 #define Log_InfoPrintf(...) Log::Writef(___LogChannel___, __func__, LOGLEVEL_INFO, __VA_ARGS__)
 #define Log_VerbosePrint(msg) Log::Write(___LogChannel___, __func__, LOGLEVEL_VERBOSE, msg)

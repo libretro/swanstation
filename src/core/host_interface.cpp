@@ -57,14 +57,6 @@ void HostInterface::Shutdown()
 
 bool HostInterface::BootSystem(std::shared_ptr<SystemBootParameters> parameters)
 {
-  if (!parameters->state_stream)
-  {
-    if (parameters->filename.empty())
-      Log_InfoPrintf("Boot Filename: <BIOS/Shell>");
-    else
-      Log_InfoPrintf("Boot Filename: %s", parameters->filename.c_str());
-  }
-
   if (!AcquireHostDisplay())
   {
     ReportError(g_host_interface->TranslateString("System", "Failed to acquire host display."));
