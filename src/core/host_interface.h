@@ -176,9 +176,6 @@ protected:
   /// Call when host display size changes, use with "match display" aspect ratio setting.
   virtual void OnHostDisplayResized();
 
-  /// Sets the user directory to the program directory, i.e. "portable mode".
-  void SetUserDirectoryToProgramDirectory();
-
   /// Quick switch between software and hardware rendering.
   void ToggleSoftwareRendering();
 

@@ -184,12 +184,12 @@ bool IsPALRegion()
   return s_region == ConsoleRegion::PAL;
 }
 
-TickCount GetMaxSliceTicks()
+TickCount GetMaxSliceTicks(void)
 {
   return s_max_slice_ticks;
 }
 
-void UpdateOverclock()
+void UpdateOverclock(void)
 {
   g_ticks_per_second = ScaleTicksToOverclock(MASTER_CLOCK);
   s_max_slice_ticks = ScaleTicksToOverclock(MASTER_CLOCK / 10);
@@ -199,14 +199,9 @@ void UpdateOverclock()
   g_timers.CPUClocksChanged();
 }
 
-u32 GetFrameNumber()
+u32 GetFrameNumber(void)
 {
   return s_frame_number;
-}
-
-u32 GetInternalFrameNumber()
-{
-  return s_internal_frame_number;
 }
 
 void FrameDone()
@@ -221,10 +216,6 @@ void IncrementInternalFrameNumber()
   s_internal_frame_number++;
 }
 
-const std::string& GetRunningPath()
-{
-  return s_running_game_path;
-}
 const std::string& GetRunningCode()
 {
   return s_running_game_code;
@@ -240,38 +231,20 @@ float GetThrottleFrequency()
   return s_throttle_frequency;
 }
 
-bool IsExeFileName(const char* path)
+/// Returns true if the filename is a PlayStation executable we can inject.
+static bool IsExeFileName(const char* path)
 {
   const char* extension = std::strrchr(path, '.');
   return (extension &&
           (StringUtil::Strcasecmp(extension, ".exe") == 0 || StringUtil::Strcasecmp(extension, ".psexe") == 0));
 }
 
-bool IsPsfFileName(const char* path)
+/// Returns true if the filename is a Portable Sound Format file we can uncompress/load.
+static bool IsPsfFileName(const char* path)
 {
   const char* extension = std::strrchr(path, '.');
   return (extension &&
           (StringUtil::Strcasecmp(extension, ".psf") == 0 || StringUtil::Strcasecmp(extension, ".minipsf") == 0));
-}
-
-bool IsLoadableFilename(const char* path)
-{
-  static constexpr auto extensions = make_array(".bin", ".cue", ".img", ".iso", ".chd", ".ecm", ".mds", // discs
-                                                ".exe", ".psexe",                                       // exes
-                                                ".psf", ".minipsf",                                     // psf
-                                                ".m3u",                                                 // playlists
-                                                ".pbp");
-  const char* extension = std::strrchr(path, '.');
-  if (!extension)
-    return false;
-
-  for (const char* test_extension : extensions)
-  {
-    if (StringUtil::Strcasecmp(extension, test_extension) == 0)
-      return true;
-  }
-
-  return false;
 }
 
 ConsoleRegion GetConsoleRegionForDiscRegion(DiscRegion region)
@@ -1333,22 +1306,6 @@ bool SaveState(ByteStream* state, u32 screenshot_size /* = 256 */)
   return true;
 }
 
-void SingleStepCPU()
-{
-  const u32 old_frame_number = s_frame_number;
-
-  g_gpu->RestoreGraphicsAPIState();
-
-  CPU::SingleStep();
-
-  g_spu.GeneratePendingSamples();
-
-  if (s_frame_number != old_frame_number && s_cheat_list)
-    s_cheat_list->Apply();
-
-  g_gpu->ResetGraphicsAPIState();
-}
-
 void DoRunFrame()
 {
   g_gpu->RestoreGraphicsAPIState();
@@ -1404,16 +1361,6 @@ void RunFrame()
 
   if (s_memory_saves_enabled)
     DoMemorySaveStates();
-}
-
-float GetTargetSpeed()
-{
-  return s_target_speed;
-}
-
-void SetTargetSpeed(float speed)
-{
-  s_target_speed = speed;
 }
 
 void SetThrottleFrequency(float frequency)
@@ -1590,7 +1537,7 @@ Controller* GetController(u32 slot)
   return g_pad.GetController(slot);
 }
 
-void UpdateControllers()
+void UpdateControllers(void)
 {
   for (u32 i = 0; i < NUM_CONTROLLER_AND_CARD_PORTS; i++)
   {
@@ -1609,7 +1556,7 @@ void UpdateControllers()
   }
 }
 
-void UpdateControllerSettings()
+void UpdateControllerSettings(void)
 {
   for (u32 i = 0; i < NUM_CONTROLLER_AND_CARD_PORTS; i++)
   {
@@ -1742,20 +1689,7 @@ void UpdatePerGameMemoryCards()
   }
 }
 
-bool HasMemoryCard(u32 slot)
-{
-  return (g_pad.GetMemoryCard(slot) != nullptr);
-}
-
-void SwapMemoryCards()
-{
-  std::unique_ptr<MemoryCard> first = g_pad.RemoveMemoryCard(0);
-  std::unique_ptr<MemoryCard> second = g_pad.RemoveMemoryCard(1);
-  g_pad.SetMemoryCard(0, std::move(second));
-  g_pad.SetMemoryCard(1, std::move(first));
-}
-
-void UpdateMultitaps()
+void UpdateMultitaps(void)
 {
   switch (g_settings.multitap_mode)
   {
@@ -2216,8 +2150,6 @@ void DoRunahead()
   s32 frames_to_run = static_cast<s32>(s_runahead_frames) - static_cast<s32>(s_runahead_states.size());
   if (frames_to_run > 0)
   {
-    Common::Timer timer2;
-
     g_spu.SetAudioStream(s_runahead_audio_stream.get());
 
     while (frames_to_run > 0)

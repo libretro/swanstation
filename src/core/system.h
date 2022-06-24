@@ -26,7 +26,6 @@ struct SystemBootParameters
 
   std::string filename;
   std::optional<bool> override_fast_boot;
-  std::optional<bool> override_fullscreen;
   std::optional<bool> override_start_paused;
   std::unique_ptr<ByteStream> state_stream;
   u32 media_playlist_index = 0;
@@ -56,15 +55,6 @@ enum class State
 };
 
 extern TickCount g_ticks_per_second;
-
-/// Returns true if the filename is a PlayStation executable we can inject.
-bool IsExeFileName(const char* path);
-
-/// Returns true if the filename is a Portable Sound Format file we can uncompress/load.
-bool IsPsfFileName(const char* path);
-
-/// Returns true if the filename is one we can load.
-bool IsLoadableFilename(const char* path);
 
 /// Returns the preferred console type for a disc.
 ConsoleRegion GetConsoleRegionForDiscRegion(DiscRegion region);
@@ -129,19 +119,11 @@ void UpdateOverclock();
 bool InjectEXEFromBuffer(const void* buffer, u32 buffer_size, bool patch_loader = true);
 
 u32 GetFrameNumber();
-u32 GetInternalFrameNumber();
 void FrameDone();
 void IncrementInternalFrameNumber();
 
-const std::string& GetRunningPath();
 const std::string& GetRunningCode();
 const std::string& GetRunningTitle();
-
-float GetFPS();
-float GetVPS();
-float GetEmulationSpeed();
-float GetAverageFrameTime();
-float GetWorstFrameTime();
 float GetThrottleFrequency();
 
 bool Boot(const SystemBootParameters& params);
@@ -154,12 +136,7 @@ bool SaveState(ByteStream* state, u32 screenshot_size = 256);
 /// Recreates the GPU component, saving/loading the state so it is preserved. Call when the GPU renderer changes.
 bool RecreateGPU(GPURenderer renderer, bool update_display = true);
 
-void SingleStepCPU();
 void RunFrame();
-
-/// Sets target emulation speed.
-float GetTargetSpeed();
-void SetTargetSpeed(float speed);
 
 /// Adjusts the throttle frequency, i.e. how many times we should sleep per second.
 void SetThrottleFrequency(float frequency);
@@ -171,9 +148,7 @@ void UpdateControllerSettings();
 void ResetControllers();
 void UpdateMemoryCardTypes();
 void UpdatePerGameMemoryCards();
-bool HasMemoryCard(u32 slot);
-void SwapMemoryCards();
-void UpdateMultitaps();
+void UpdateMultitaps(void);
 
 bool HasMedia();
 std::string GetMediaFileName();
