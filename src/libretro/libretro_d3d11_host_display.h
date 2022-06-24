@@ -33,13 +33,8 @@ public:
 
   bool ChangeRenderWindow(const WindowInfo& new_wi) override;
 
-  bool SupportsFullscreen() const override;
-  bool IsFullscreen() override;
-  bool SetFullscreen(bool fullscreen, u32 width, u32 height, float refresh_rate) override;
   AdapterAndModeList GetAdapterAndModeList() override;
   void DestroyRenderSurface() override;
-
-  bool SetPostProcessingChain(const std::string_view& config) override;
 
   std::unique_ptr<HostDisplayTexture> CreateTexture(u32 width, u32 height, u32 layers, u32 levels, u32 samples,
                                                     HostDisplayPixelFormat format, const void* data, u32 data_stride,
@@ -54,8 +49,6 @@ public:
   void EndSetDisplayPixels() override;
 
   bool Render() override;
-  bool RenderScreenshot(u32 width, u32 height, std::vector<u32>* out_pixels, u32* out_stride,
-                        HostDisplayPixelFormat* out_format) override;
 
 protected:
   static constexpr u32 DISPLAY_UNIFORM_BUFFER_SIZE = 16;

@@ -1353,51 +1353,6 @@ bool SaveState(ByteStream* state, u32 screenshot_size /* = 256 */)
       return false;
   }
 
-  // save screenshot
-  if (screenshot_size > 0)
-  {
-    // assume this size is the width
-    HostDisplay* display = g_host_interface->GetDisplay();
-    const float display_aspect_ratio = display->GetDisplayAspectRatio();
-    const u32 screenshot_width = screenshot_size;
-    const u32 screenshot_height =
-      std::max(1u, static_cast<u32>(static_cast<float>(screenshot_width) /
-                                    ((display_aspect_ratio > 0.0f) ? display_aspect_ratio : 1.0f)));
-    Log_VerbosePrintf("Saving %ux%u screenshot for state", screenshot_width, screenshot_height);
-
-    std::vector<u32> screenshot_buffer;
-    u32 screenshot_stride;
-    HostDisplayPixelFormat screenshot_format;
-    if (display->RenderScreenshot(screenshot_width, screenshot_height, &screenshot_buffer, &screenshot_stride,
-                                  &screenshot_format) ||
-        !display->ConvertTextureDataToRGBA8(screenshot_width, screenshot_height, screenshot_buffer, screenshot_stride,
-                                            HostDisplayPixelFormat::RGBA8))
-    {
-      if (screenshot_stride != (screenshot_width * sizeof(u32)))
-      {
-        Log_WarningPrintf("Failed to save %ux%u screenshot for save state due to incorrect stride(%u)",
-                          screenshot_width, screenshot_height, screenshot_stride);
-      }
-      else
-      {
-        if (display->UsesLowerLeftOrigin())
-          display->FlipTextureDataRGBA8(screenshot_width, screenshot_height, screenshot_buffer, screenshot_stride);
-
-        header.offset_to_screenshot = static_cast<u32>(state->GetPosition());
-        header.screenshot_width = screenshot_width;
-        header.screenshot_height = screenshot_height;
-        header.screenshot_size = static_cast<u32>(screenshot_buffer.size() * sizeof(u32));
-        if (!state->Write2(screenshot_buffer.data(), header.screenshot_size))
-          return false;
-      }
-    }
-    else
-    {
-      Log_WarningPrintf("Failed to save %ux%u screenshot for save state due to render/conversion failure",
-                        screenshot_width, screenshot_height);
-    }
-  }
-
   // write data
   {
     header.offset_to_data = static_cast<u32>(state->GetPosition());

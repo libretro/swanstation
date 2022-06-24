@@ -123,29 +123,9 @@ void LibretroHostDisplay::ResizeRenderWindow(s32 new_window_width, s32 new_windo
   m_window_info.surface_height = new_window_height;
 }
 
-bool LibretroHostDisplay::SupportsFullscreen() const
-{
-  return false;
-}
-
-bool LibretroHostDisplay::IsFullscreen()
-{
-  return false;
-}
-
-bool LibretroHostDisplay::SetFullscreen(bool fullscreen, u32 width, u32 height, float refresh_rate)
-{
-  return false;
-}
-
 HostDisplay::AdapterAndModeList LibretroHostDisplay::GetAdapterAndModeList()
 {
   return {};
-}
-
-bool LibretroHostDisplay::SetPostProcessingChain(const std::string_view& config)
-{
-  return false;
 }
 
 std::unique_ptr<HostDisplayTexture> LibretroHostDisplay::CreateTexture(u32 width, u32 height, u32 layers, u32 levels,
@@ -267,10 +247,4 @@ bool LibretroHostDisplay::Render()
     g_retro_video_refresh_callback(nullptr, 0, 0, 0);
 
   return true;
-}
-
-bool LibretroHostDisplay::RenderScreenshot(u32 width, u32 height, std::vector<u32>* out_pixels, u32* out_stride,
-                                         HostDisplayPixelFormat* out_format)
-{
-  return false;
 }

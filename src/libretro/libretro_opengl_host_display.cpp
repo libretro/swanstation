@@ -436,32 +436,12 @@ bool LibretroOpenGLHostDisplay::ChangeRenderWindow(const WindowInfo& new_wi)
   return true;
 }
 
-bool LibretroOpenGLHostDisplay::SupportsFullscreen() const
-{
-  return false;
-}
-
-bool LibretroOpenGLHostDisplay::IsFullscreen()
-{
-  return false;
-}
-
-bool LibretroOpenGLHostDisplay::SetFullscreen(bool fullscreen, u32 width, u32 height, float refresh_rate)
-{
-  return false;
-}
-
 HostDisplay::AdapterAndModeList LibretroOpenGLHostDisplay::GetAdapterAndModeList()
 {
   return {};
 }
 
 void LibretroOpenGLHostDisplay::DestroyRenderSurface() {}
-
-bool LibretroOpenGLHostDisplay::SetPostProcessingChain(const std::string_view& config)
-{
-  return false;
-}
 
 bool LibretroOpenGLHostDisplay::CreateResources()
 {
@@ -598,35 +578,6 @@ bool LibretroOpenGLHostDisplay::Render()
   g_retro_video_refresh_callback(RETRO_HW_FRAME_BUFFER_VALID, display_width, display_height, 0);
 
   GL::Program::ResetLastProgram();
-  return true;
-}
-
-bool LibretroOpenGLHostDisplay::RenderScreenshot(u32 width, u32 height, std::vector<u32>* out_pixels, u32* out_stride,
-                                                 HostDisplayPixelFormat* out_format)
-{
-  GL::Texture texture;
-  if (!texture.Create(width, height, 1, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, nullptr) || !texture.CreateFramebuffer())
-    return false;
-
-  glDisable(GL_SCISSOR_TEST);
-  texture.BindFramebuffer(GL_FRAMEBUFFER);
-  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT);
-
-  if (HasDisplayTexture())
-  {
-    const auto [left, top, draw_width, draw_height] = CalculateDrawRect(width, height, 0);
-    RenderDisplay(left, height - top - draw_height, draw_width, draw_height, m_display_texture_handle,
-                  m_display_texture_width, m_display_texture_height, m_display_texture_view_x, m_display_texture_view_y,
-                  m_display_texture_view_width, m_display_texture_view_height, m_display_linear_filtering);
-  }
-
-  out_pixels->resize(width * height);
-  *out_stride = sizeof(u32) * width;
-  *out_format = HostDisplayPixelFormat::RGBA8;
-  glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, out_pixels->data());
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
   return true;
 }
 

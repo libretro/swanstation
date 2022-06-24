@@ -59,32 +59,12 @@ void* LibretroVulkanHostDisplay::GetRenderContext() const
   return nullptr;
 }
 
-bool LibretroVulkanHostDisplay::SupportsFullscreen() const
-{
-  return false;
-}
-
-bool LibretroVulkanHostDisplay::IsFullscreen()
-{
-  return false;
-}
-
-bool LibretroVulkanHostDisplay::SetFullscreen(bool fullscreen, u32 width, u32 height, float refresh_rate)
-{
-  return false;
-}
-
 HostDisplay::AdapterAndModeList LibretroVulkanHostDisplay::GetAdapterAndModeList()
 {
   return {};
 }
 
 void LibretroVulkanHostDisplay::DestroyRenderSurface() {}
-
-bool LibretroVulkanHostDisplay::SetPostProcessingChain(const std::string_view& config)
-{
-  return false;
-}
 
 static constexpr std::array<VkFormat, static_cast<u32>(HostDisplayPixelFormat::Count)> s_display_pixel_format_mapping =
   {{VK_FORMAT_UNDEFINED, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_R5G6B5_UNORM_PACK16,
@@ -594,63 +574,6 @@ bool LibretroVulkanHostDisplay::Render()
   g_vulkan_context->MoveToNextCommandBuffer();
 
   g_retro_video_refresh_callback(RETRO_HW_FRAME_BUFFER_VALID, display_width, display_height, 0);
-  return true;
-}
-
-bool LibretroVulkanHostDisplay::RenderScreenshot(u32 width, u32 height, std::vector<u32>* out_pixels, u32* out_stride,
-                                                 HostDisplayPixelFormat* out_format)
-{
-  *out_format = HostDisplayPixelFormat::RGBA8;
-  *out_stride = sizeof(u32) * width;
-  out_pixels->resize(width * height);
-
-  // if we don't have a texture (display off), then just write out nothing.
-  if (!HasDisplayTexture())
-  {
-    std::fill(out_pixels->begin(), out_pixels->end(), static_cast<u32>(0));
-    return true;
-  }
-
-  Vulkan::Texture tex;
-  Vulkan::StagingTexture staging_tex;
-  if (!tex.Create(width, height, 1, 1, FRAMEBUFFER_FORMAT, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_VIEW_TYPE_2D,
-                  VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT) ||
-      !staging_tex.Create(Vulkan::StagingBuffer::Type::Readback, FRAMEBUFFER_FORMAT, width, height))
-  {
-    return false;
-  }
-
-  const VkFramebuffer fb = tex.CreateFramebuffer(m_frame_render_pass);
-  if (!fb)
-    return false;
-
-  tex.TransitionToLayout(g_vulkan_context->GetCurrentCommandBuffer(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-
-  const VkClearValue clear_value = {};
-  const VkRenderPassBeginInfo rp = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-                                    nullptr,
-                                    m_frame_render_pass,
-                                    fb,
-                                    {{0, 0}, {width, height}},
-                                    1u,
-                                    &clear_value};
-  vkCmdBeginRenderPass(g_vulkan_context->GetCurrentCommandBuffer(), &rp, VK_SUBPASS_CONTENTS_INLINE);
-
-  const auto [left, top, draw_width, draw_height] = CalculateDrawRect(width, height, 0);
-  RenderDisplay(left, top, draw_width, draw_height, m_display_texture_handle, m_display_texture_width,
-                m_display_texture_height, m_display_texture_view_x, m_display_texture_view_y,
-                m_display_texture_view_width, m_display_texture_view_height, m_display_linear_filtering);
-
-  vkCmdEndRenderPass(g_vulkan_context->GetCurrentCommandBuffer());
-  tex.TransitionToLayout(g_vulkan_context->GetCurrentCommandBuffer(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
-  staging_tex.CopyFromTexture(tex, 0, 0, 0, 0, 0, 0, width, height);
-  staging_tex.ReadTexels(0, 0, width, height, out_pixels->data(), *out_stride);
-
-  // destroying these immediately should be safe since nothing's going to access them, and it's not part of the command
-  // stream
-  vkDestroyFramebuffer(g_vulkan_context->GetDevice(), fb, nullptr);
-  staging_tex.Destroy(false);
-  tex.Destroy(false);
   return true;
 }
 

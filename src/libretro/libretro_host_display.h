@@ -26,13 +26,8 @@ public:
 
   bool ChangeRenderWindow(const WindowInfo& wi) override;
   void ResizeRenderWindow(s32 new_window_width, s32 new_window_height) override;
-  bool SupportsFullscreen() const override;
-  bool IsFullscreen() override;
-  bool SetFullscreen(bool fullscreen, u32 width, u32 height, float refresh_rate) override;
   AdapterAndModeList GetAdapterAndModeList() override;
   void DestroyRenderSurface() override;
-
-  bool SetPostProcessingChain(const std::string_view& config) override;
 
   bool CreateResources() override;
   void DestroyResources() override;
@@ -46,8 +41,6 @@ public:
                        u32 height, void* out_data, u32 out_data_stride) override;
 
   bool Render() override;
-  bool RenderScreenshot(u32 width, u32 height, std::vector<u32>* out_pixels, u32* out_stride,
-                        HostDisplayPixelFormat* out_format) override;
 
   bool SupportsDisplayPixelFormat(HostDisplayPixelFormat format) const override;
 

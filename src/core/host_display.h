@@ -94,14 +94,9 @@ public:
   virtual void DestroyRenderDevice() = 0;
   virtual void DestroyRenderSurface() = 0;
   virtual bool ChangeRenderWindow(const WindowInfo& wi) = 0;
-  virtual bool SupportsFullscreen() const = 0;
-  virtual bool IsFullscreen() = 0;
-  virtual bool SetFullscreen(bool fullscreen, u32 width, u32 height, float refresh_rate) = 0;
   virtual AdapterAndModeList GetAdapterAndModeList() = 0;
   virtual bool CreateResources() = 0;
   virtual void DestroyResources() = 0;
-
-  virtual bool SetPostProcessingChain(const std::string_view& config) = 0;
 
   /// Call when the window size changes externally to recreate any resources.
   virtual void ResizeRenderWindow(s32 new_window_width, s32 new_window_height) = 0;
@@ -118,10 +113,6 @@ public:
 
   /// Returns false if the window was completely occluded.
   virtual bool Render() = 0;
-
-  /// Renders the display with postprocessing to the specified image.
-  virtual bool RenderScreenshot(u32 width, u32 height, std::vector<u32>* out_pixels, u32* out_stride,
-                                HostDisplayPixelFormat* out_format) = 0;
 
   const void* GetDisplayTextureHandle() const { return m_display_texture_handle; }
   const s32 GetDisplayTopMargin() const { return m_display_top_margin; }
@@ -182,9 +173,6 @@ public:
   }
 
   static u32 GetDisplayPixelFormatSize(HostDisplayPixelFormat format);
-  static bool ConvertTextureDataToRGBA8(u32 width, u32 height, std::vector<u32>& texture_data, u32& texture_data_stride,
-                                        HostDisplayPixelFormat format);
-  static void FlipTextureDataRGBA8(u32 width, u32 height, std::vector<u32>& texture_data, u32 texture_data_stride);
 
   virtual bool SupportsDisplayPixelFormat(HostDisplayPixelFormat format) const = 0;
 
@@ -220,23 +208,6 @@ public:
   /// Helper function for converting window coordinates to display coordinates.
   std::tuple<float, float> ConvertWindowCoordinatesToDisplayCoordinates(s32 window_x, s32 window_y, s32 window_width,
                                                                         s32 window_height, s32 top_margin) const;
-
-  /// Helper function to save texture data to a PNG. If flip_y is set, the image will be flipped aka OpenGL.
-  bool WriteTextureToFile(const void* texture_handle, u32 x, u32 y, u32 width, u32 height,
-                          HostDisplayPixelFormat format, std::string filename, bool clear_alpha = true,
-                          bool flip_y = false, u32 resize_width = 0, u32 resize_height = 0,
-                          bool compress_on_thread = false);
-
-  /// Helper function to save current display texture to PNG.
-  bool WriteDisplayTextureToFile(std::string filename, bool full_resolution = true, bool apply_aspect_ratio = true,
-                                 bool compress_on_thread = false);
-
-  /// Helper function to save current display texture to a buffer.
-  bool WriteDisplayTextureToBuffer(std::vector<u32>* buffer, u32 resize_width = 0, u32 resize_height = 0,
-                                   bool clear_alpha = true);
-
-  /// Helper function to save screenshot to PNG.
-  bool WriteScreenshotToFile(std::string filename, bool compress_on_thread = false);
 
 protected:
   ALWAYS_INLINE bool HasSoftwareCursor() const { return static_cast<bool>(m_cursor_texture); }

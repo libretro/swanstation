@@ -318,26 +318,6 @@ bool LibretroD3D11HostDisplay::ChangeRenderWindow(const WindowInfo& new_wi)
 
 void LibretroD3D11HostDisplay::DestroyRenderSurface() {}
 
-bool LibretroD3D11HostDisplay::SetPostProcessingChain(const std::string_view& config)
-{
-  return false;
-}
-
-bool LibretroD3D11HostDisplay::SupportsFullscreen() const
-{
-  return false;
-}
-
-bool LibretroD3D11HostDisplay::IsFullscreen()
-{
-  return false;
-}
-
-bool LibretroD3D11HostDisplay::SetFullscreen(bool fullscreen, u32 width, u32 height, float refresh_rate)
-{
-  return false;
-}
-
 bool LibretroD3D11HostDisplay::CreateResources()
 {
   HRESULT hr;
@@ -438,12 +418,6 @@ bool LibretroD3D11HostDisplay::Render()
   m_context->PSSetShaderResources(0, 1, m_framebuffer.GetD3DSRVArray());
   g_retro_video_refresh_callback(RETRO_HW_FRAME_BUFFER_VALID, display_width, display_height, 0);
   return true;
-}
-
-bool LibretroD3D11HostDisplay::RenderScreenshot(u32 width, u32 height, std::vector<u32>* out_pixels, u32* out_stride,
-                                                HostDisplayPixelFormat* out_format)
-{
-  return false;
 }
 
 void LibretroD3D11HostDisplay::RenderDisplay(s32 left, s32 top, s32 width, s32 height, void* texture_handle,
