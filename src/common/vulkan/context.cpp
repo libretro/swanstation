@@ -8,7 +8,6 @@
 #include "../log.h"
 #include "../string_util.h"
 #include "../window_info.h"
-#include "swap_chain.h"
 #include "util.h"
 #include <algorithm>
 #include <array>
@@ -39,8 +38,6 @@ Context::Context(VkInstance instance, VkPhysicalDevice physical_device, bool own
 
 Context::~Context()
 {
-  StopPresentThread();
-
   if (m_device != VK_NULL_HANDLE)
     WaitForGPUIdle();
 
@@ -95,125 +92,6 @@ bool Context::CheckValidationLayerAvailablility()
           std::find_if(layer_list.begin(), layer_list.end(), [](const auto& it) {
             return strcmp(it.layerName, "VK_LAYER_KHRONOS_validation") == 0;
           }) != layer_list.end());
-}
-
-VkInstance Context::CreateVulkanInstance(const WindowInfo* wi, bool enable_debug_utils, bool enable_validation_layer)
-{
-  ExtensionList enabled_extensions;
-  if (!SelectInstanceExtensions(&enabled_extensions, wi, enable_debug_utils))
-    return VK_NULL_HANDLE;
-
-  VkApplicationInfo app_info = {};
-  app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-  app_info.pNext = nullptr;
-  app_info.pApplicationName = "DuckStation";
-  app_info.applicationVersion = VK_MAKE_VERSION(0, 1, 0);
-  app_info.pEngineName = "DuckStation";
-  app_info.engineVersion = VK_MAKE_VERSION(0, 1, 0);
-  app_info.apiVersion = VK_MAKE_VERSION(1, 0, 0);
-
-  VkInstanceCreateInfo instance_create_info = {};
-  instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-  instance_create_info.pNext = nullptr;
-  instance_create_info.flags = 0;
-  instance_create_info.pApplicationInfo = &app_info;
-  instance_create_info.enabledExtensionCount = static_cast<uint32_t>(enabled_extensions.size());
-  instance_create_info.ppEnabledExtensionNames = enabled_extensions.data();
-  instance_create_info.enabledLayerCount = 0;
-  instance_create_info.ppEnabledLayerNames = nullptr;
-
-  // Enable debug layer on debug builds
-  if (enable_validation_layer)
-  {
-    static const char* layer_names[] = {"VK_LAYER_KHRONOS_validation"};
-    instance_create_info.enabledLayerCount = 1;
-    instance_create_info.ppEnabledLayerNames = layer_names;
-  }
-
-  VkInstance instance;
-  VkResult res = vkCreateInstance(&instance_create_info, nullptr, &instance);
-  if (res != VK_SUCCESS)
-  {
-    LOG_VULKAN_ERROR(res, "vkCreateInstance failed: ");
-    return nullptr;
-  }
-
-  return instance;
-}
-
-bool Context::SelectInstanceExtensions(ExtensionList* extension_list, const WindowInfo* wi, bool enable_debug_utils)
-{
-  u32 extension_count = 0;
-  VkResult res = vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
-  if (res != VK_SUCCESS)
-  {
-    LOG_VULKAN_ERROR(res, "vkEnumerateInstanceExtensionProperties failed: ");
-    return false;
-  }
-
-  if (extension_count == 0)
-  {
-    Log_ErrorPrintf("Vulkan: No extensions supported by instance.");
-    return false;
-  }
-
-  std::vector<VkExtensionProperties> available_extension_list(extension_count);
-  res = vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, available_extension_list.data());
-  Assert(res == VK_SUCCESS);
-
-  for (const auto& extension_properties : available_extension_list)
-    Log_InfoPrintf("Available extension: %s", extension_properties.extensionName);
-
-  auto SupportsExtension = [&](const char* name, bool required) {
-    if (std::find_if(available_extension_list.begin(), available_extension_list.end(),
-                     [&](const VkExtensionProperties& properties) {
-                       return !strcmp(name, properties.extensionName);
-                     }) != available_extension_list.end())
-    {
-      Log_InfoPrintf("Enabling extension: %s", name);
-      extension_list->push_back(name);
-      return true;
-    }
-
-    if (required)
-      Log_ErrorPrintf("Vulkan: Missing required extension %s.", name);
-
-    return false;
-  };
-
-  // Common extensions
-  if (wi && wi->type != WindowInfo::Type::Surfaceless && !SupportsExtension(VK_KHR_SURFACE_EXTENSION_NAME, true))
-    return false;
-
-#if defined(VK_USE_PLATFORM_WIN32_KHR)
-  if (wi && wi->type == WindowInfo::Type::Win32 && !SupportsExtension(VK_KHR_WIN32_SURFACE_EXTENSION_NAME, true))
-    return false;
-#endif
-#if defined(VK_USE_PLATFORM_XLIB_KHR)
-  if (wi && wi->type == WindowInfo::Type::X11 && !SupportsExtension(VK_KHR_XLIB_SURFACE_EXTENSION_NAME, true))
-    return false;
-#endif
-#if defined(VK_USE_PLATFORM_WAYLAND_KHR)
-  if (wi && wi->type == WindowInfo::Type::Wayland && !SupportsExtension(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME, true))
-    return false;
-#endif
-#if defined(VK_USE_PLATFORM_ANDROID_KHR)
-  if (wi && wi->type == WindowInfo::Type::Android && !SupportsExtension(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME, true))
-    return false;
-#endif
-#if defined(VK_USE_PLATFORM_METAL_EXT)
-  if (wi && wi->type == WindowInfo::Type::MacOS && !SupportsExtension(VK_EXT_METAL_SURFACE_EXTENSION_NAME, true))
-    return false;
-#endif
-
-  if (wi && wi->type == WindowInfo::Type::Display && !SupportsExtension(VK_KHR_DISPLAY_EXTENSION_NAME, true))
-    return false;
-
-  // VK_EXT_debug_utils
-  if (enable_debug_utils && !SupportsExtension(VK_EXT_DEBUG_UTILS_EXTENSION_NAME, false))
-    Log_WarningPrintf("Vulkan: Debug report requested, but extension is not available.");
-
-  return true;
 }
 
 Context::GPUList Context::EnumerateGPUs(VkInstance instance)
@@ -287,102 +165,6 @@ Context::GPUNameList Context::EnumerateGPUNames(VkInstance instance)
   }
 
   return gpu_names;
-}
-
-bool Context::Create(std::string_view gpu_name, const WindowInfo* wi, std::unique_ptr<SwapChain>* out_swap_chain,
-                     bool threaded_presentation, bool enable_debug_utils, bool enable_validation_layer)
-{
-  AssertMsg(!g_vulkan_context, "Has no current context");
-
-  if (!Vulkan::LoadVulkanLibrary())
-  {
-    Log_ErrorPrintf("Failed to load Vulkan library");
-    return false;
-  }
-
-  const bool enable_surface = (wi && wi->type != WindowInfo::Type::Surfaceless);
-  VkInstance instance = CreateVulkanInstance(wi, enable_debug_utils, enable_validation_layer);
-  if (instance == VK_NULL_HANDLE)
-  {
-    Vulkan::UnloadVulkanLibrary();
-    return false;
-  }
-
-  if (!Vulkan::LoadVulkanInstanceFunctions(instance))
-  {
-    Log_ErrorPrintf("Failed to load Vulkan instance functions");
-    vkDestroyInstance(instance, nullptr);
-    Vulkan::UnloadVulkanLibrary();
-    return false;
-  }
-
-  GPUList gpus = EnumerateGPUs(instance);
-  if (gpus.empty())
-  {
-    vkDestroyInstance(instance, nullptr);
-    Vulkan::UnloadVulkanLibrary();
-    return false;
-  }
-
-  u32 gpu_index = 0;
-  GPUNameList gpu_names = EnumerateGPUNames(instance);
-  if (!gpu_name.empty())
-  {
-    for (; gpu_index < static_cast<u32>(gpu_names.size()); gpu_index++)
-    {
-      Log_InfoPrintf("GPU %u: %s", static_cast<u32>(gpu_index), gpu_names[gpu_index].c_str());
-      if (gpu_names[gpu_index] == gpu_name)
-        break;
-    }
-
-    if (gpu_index == static_cast<u32>(gpu_names.size()))
-    {
-      Log_WarningPrintf("Requested GPU '%s' not found, using first (%s)", std::string(gpu_name).c_str(),
-                        gpu_names[0].c_str());
-      gpu_index = 0;
-    }
-  }
-  else
-  {
-    Log_InfoPrintf("No GPU requested, using first (%s)", gpu_names[0].c_str());
-  }
-
-  VkSurfaceKHR surface = VK_NULL_HANDLE;
-  WindowInfo wi_copy;
-  if (wi)
-    wi_copy = *wi;
-
-  if (enable_surface &&
-      (surface = SwapChain::CreateVulkanSurface(instance, gpus[gpu_index], &wi_copy)) == VK_NULL_HANDLE)
-  {
-    vkDestroyInstance(instance, nullptr);
-    Vulkan::UnloadVulkanLibrary();
-    return false;
-  }
-
-  g_vulkan_context.reset(new Context(instance, gpus[gpu_index], true));
-
-  // Enable debug reports if the "Host GPU" log category is enabled.
-  if (enable_debug_utils)
-    g_vulkan_context->EnableDebugUtils();
-
-  // Attempt to create the device.
-  if (!g_vulkan_context->CreateDevice(surface, enable_validation_layer, nullptr, 0, nullptr, 0, nullptr) ||
-      !g_vulkan_context->CreateGlobalDescriptorPool() || !g_vulkan_context->CreateCommandBuffers() ||
-      (enable_surface && (*out_swap_chain = SwapChain::Create(wi_copy, surface, true)) == nullptr))
-  {
-    // Since we are destroying the instance, we're also responsible for destroying the surface.
-    if (surface != VK_NULL_HANDLE)
-      vkDestroySurfaceKHR(instance, surface, nullptr);
-
-    g_vulkan_context.reset();
-    return false;
-  }
-
-  if (threaded_presentation)
-    g_vulkan_context->StartPresentThread();
-
-  return true;
 }
 
 bool Context::CreateFromExistingInstance(VkInstance instance, VkPhysicalDevice gpu, VkSurfaceKHR surface,
@@ -827,7 +609,6 @@ void Context::WaitForFenceCounter(u64 fence_counter)
 
 void Context::WaitForGPUIdle()
 {
-  WaitForPresentComplete();
   vkDeviceWaitIdle(m_device);
 }
 
@@ -879,24 +660,7 @@ void Context::SubmitCommandBuffer(VkSemaphore wait_semaphore /* = VK_NULL_HANDLE
   // This command buffer now has commands, so can't be re-used without waiting.
   resources.needs_fence_wait = true;
 
-  std::unique_lock<std::mutex> lock(m_present_mutex);
-  WaitForPresentComplete(lock);
-
-  if (!submit_on_thread || !m_present_thread.joinable())
-  {
-    DoSubmitCommandBuffer(m_current_frame, wait_semaphore, signal_semaphore);
-    if (present_swap_chain != VK_NULL_HANDLE)
-      DoPresent(signal_semaphore, present_swap_chain, present_image_index);
-    return;
-  }
-
-  m_queued_present.command_buffer_index = m_current_frame;
-  m_queued_present.present_swap_chain = present_swap_chain;
-  m_queued_present.present_image_index = present_image_index;
-  m_queued_present.wait_semaphore = wait_semaphore;
-  m_queued_present.signal_semaphore = signal_semaphore;
-  m_present_done.store(false);
-  m_present_queued_cv.notify_one();
+  DoSubmitCommandBuffer(m_current_frame, wait_semaphore, signal_semaphore);
 }
 
 void Context::DoSubmitCommandBuffer(u32 index, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore)
@@ -928,88 +692,6 @@ void Context::DoSubmitCommandBuffer(u32 index, VkSemaphore wait_semaphore, VkSem
   }
 }
 
-void Context::DoPresent(VkSemaphore wait_semaphore, VkSwapchainKHR present_swap_chain, uint32_t present_image_index)
-{
-  // Should have a signal semaphore.
-  Assert(wait_semaphore != VK_NULL_HANDLE);
-  VkPresentInfoKHR present_info = {VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
-                                   nullptr,
-                                   1,
-                                   &wait_semaphore,
-                                   1,
-                                   &present_swap_chain,
-                                   &present_image_index,
-                                   nullptr};
-  const Vulkan::Util::DebugScope debugScope(m_present_queue, "Context::DoPresent: %u", present_image_index);
-  VkResult res = vkQueuePresentKHR(m_present_queue, &present_info);
-  if (res != VK_SUCCESS)
-  {
-    // VK_ERROR_OUT_OF_DATE_KHR is not fatal, just means we need to recreate our swap chain.
-    if (res != VK_ERROR_OUT_OF_DATE_KHR && res != VK_SUBOPTIMAL_KHR)
-      LOG_VULKAN_ERROR(res, "vkQueuePresentKHR failed: ");
-
-    m_last_present_failed.store(true);
-  }
-}
-
-void Context::WaitForPresentComplete()
-{
-  if (m_present_done.load())
-    return;
-
-  std::unique_lock<std::mutex> lock(m_present_mutex);
-  WaitForPresentComplete(lock);
-}
-
-void Context::WaitForPresentComplete(std::unique_lock<std::mutex>& lock)
-{
-  if (m_present_done.load())
-    return;
-
-  m_present_done_cv.wait(lock, [this]() { return m_present_done.load(); });
-}
-
-void Context::PresentThread()
-{
-  std::unique_lock<std::mutex> lock(m_present_mutex);
-  while (!m_present_thread_done.load())
-  {
-    m_present_queued_cv.wait(lock, [this]() { return !m_present_done.load() || m_present_thread_done.load(); });
-
-    if (m_present_done.load())
-      continue;
-
-    DoSubmitCommandBuffer(m_queued_present.command_buffer_index, m_queued_present.wait_semaphore,
-                          m_queued_present.signal_semaphore);
-    DoPresent(m_queued_present.signal_semaphore, m_queued_present.present_swap_chain,
-              m_queued_present.present_image_index);
-    m_present_done.store(true);
-    m_present_done_cv.notify_one();
-  }
-}
-
-void Context::StartPresentThread()
-{
-  Assert(!m_present_thread.joinable());
-  m_present_thread_done.store(false);
-  m_present_thread = std::thread(&Context::PresentThread, this);
-}
-
-void Context::StopPresentThread()
-{
-  if (!m_present_thread.joinable())
-    return;
-
-  {
-    std::unique_lock<std::mutex> lock(m_present_mutex);
-    WaitForPresentComplete(lock);
-    m_present_thread_done.store(true);
-    m_present_queued_cv.notify_one();
-  }
-
-  m_present_thread.join();
-}
-
 void Context::MoveToNextCommandBuffer()
 {
   ActivateCommandBuffer((m_current_frame + 1) % NUM_COMMAND_BUFFERS);
@@ -1018,9 +700,6 @@ void Context::MoveToNextCommandBuffer()
 void Context::ActivateCommandBuffer(u32 index)
 {
   FrameResources& resources = m_frame_resources[index];
-
-  if (!m_present_done.load() && m_queued_present.command_buffer_index == index)
-    WaitForPresentComplete();
 
   // Wait for the GPU to finish with all resources for this command buffer.
   if (resources.fence_counter > m_completed_fence_counter)
@@ -1059,16 +738,8 @@ void Context::ExecuteCommandBuffer(bool wait_for_completion)
   const u32 current_frame = m_current_frame;
   SubmitCommandBuffer();
   MoveToNextCommandBuffer();
-
   if (wait_for_completion)
     WaitForCommandBufferCompletion(current_frame);
-}
-
-bool Context::CheckLastPresentFail()
-{
-  bool res = m_last_present_failed;
-  m_last_present_failed = false;
-  return res;
 }
 
 void Context::DeferBufferDestruction(VkBuffer object)

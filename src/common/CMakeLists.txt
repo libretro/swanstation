@@ -104,13 +104,10 @@ add_library(common
   vulkan/staging_texture.h
   vulkan/stream_buffer.cpp
   vulkan/stream_buffer.h
-  vulkan/swap_chain.cpp
-  vulkan/swap_chain.h
   vulkan/texture.cpp
   vulkan/texture.h
   vulkan/util.cpp
   vulkan/util.h
-  window_info.cpp
   window_info.h
 )
 

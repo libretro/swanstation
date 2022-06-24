@@ -8,21 +8,13 @@
 #include "../types.h"
 #include "vulkan_loader.h"
 #include <array>
-#include <atomic>
-#include <condition_variable>
 #include <functional>
 #include <map>
 #include <memory>
-#include <mutex>
 #include <string>
-#include <thread>
 #include <vector>
 
-struct WindowInfo;
-
 namespace Vulkan {
-
-class SwapChain;
 
 class Context
 {
@@ -37,18 +29,11 @@ public:
   // Determines if the Vulkan validation layer is available on the system.
   static bool CheckValidationLayerAvailablility();
 
-  // Helper method to create a Vulkan instance.
-  static VkInstance CreateVulkanInstance(const WindowInfo* wi, bool enable_debug_utils, bool enable_validation_layer);
-
   // Returns a list of Vulkan-compatible GPUs.
   using GPUList = std::vector<VkPhysicalDevice>;
   using GPUNameList = std::vector<std::string>;
   static GPUList EnumerateGPUs(VkInstance instance);
   static GPUNameList EnumerateGPUNames(VkInstance instance);
-
-  // Creates a new context and sets it up as global.
-  static bool Create(std::string_view gpu_name, const WindowInfo* wi, std::unique_ptr<SwapChain>* out_swap_chain,
-                     bool threaded_presentation, bool enable_debug_utils, bool enable_validation_layer);
 
   // Creates a new context from a pre-existing instance.
   static bool CreateFromExistingInstance(VkInstance instance, VkPhysicalDevice gpu, VkSurfaceKHR surface,
@@ -159,10 +144,6 @@ public:
   void MoveToNextCommandBuffer();
 
   void ExecuteCommandBuffer(bool wait_for_completion);
-  void WaitForPresentComplete();
-
-  // Was the last present submitted to the queue a failure? If so, we must recreate our swapchain.
-  bool CheckLastPresentFail();
 
   // Schedule a vulkan resource for destruction later on. This will occur when the command buffer
   // is next re-used, and the GPU has finished working with the specified resource.
@@ -184,7 +165,6 @@ private:
   Context(VkInstance instance, VkPhysicalDevice physical_device, bool owns_device);
 
   using ExtensionList = std::vector<const char*>;
-  static bool SelectInstanceExtensions(ExtensionList* extension_list, const WindowInfo* wi, bool enable_debug_utils);
   bool SelectDeviceExtensions(ExtensionList* extension_list, bool enable_surface);
   bool SelectDeviceFeatures(const VkPhysicalDeviceFeatures* required_features);
   bool CreateDevice(VkSurfaceKHR surface, bool enable_validation_layer, const char** required_device_extensions,
@@ -201,11 +181,6 @@ private:
   void WaitForCommandBufferCompletion(u32 index);
 
   void DoSubmitCommandBuffer(u32 index, VkSemaphore wait_semaphore, VkSemaphore signal_semaphore);
-  void DoPresent(VkSemaphore wait_semaphore, VkSwapchainKHR present_swap_chain, uint32_t present_image_index);
-  void WaitForPresentComplete(std::unique_lock<std::mutex>& lock);
-  void PresentThread();
-  void StartPresentThread();
-  void StopPresentThread();
 
   struct FrameResources
   {
@@ -239,25 +214,6 @@ private:
   u32 m_current_frame;
 
   bool m_owns_device = false;
-
-  std::atomic_bool m_last_present_failed{false};
-  std::atomic_bool m_present_done{true};
-  std::mutex m_present_mutex;
-  std::condition_variable m_present_queued_cv;
-  std::condition_variable m_present_done_cv;
-  std::thread m_present_thread;
-  std::atomic_bool m_present_thread_done{false};
-
-  struct QueuedPresent
-  {
-    VkSemaphore wait_semaphore;
-    VkSemaphore signal_semaphore;
-    VkSwapchainKHR present_swap_chain;
-    u32 command_buffer_index;
-    u32 present_image_index;
-  };
-
-  QueuedPresent m_queued_present = {};
 
   // Render pass cache
   using RenderPassCacheKey = std::tuple<VkFormat, VkFormat, VkSampleCountFlagBits, VkAttachmentLoadOp>;
