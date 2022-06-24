@@ -112,7 +112,6 @@ public:
   ~Database();
 
   const Entry* GetEntry(const std::string& code) const;
-  void SetEntry(const std::string& code, const std::string& name, const Entry& entry, const char* save_path);
 
   bool Load(const std::string_view& ini_data);
 

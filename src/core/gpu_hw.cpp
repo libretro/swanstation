@@ -1,7 +1,6 @@
 #include "gpu_hw.h"
 #include "common/align.h"
 #include "common/assert.h"
-#include "common/log.h"
 #include "common/state_wrapper.h"
 #include "cpu_core.h"
 #include "gpu_sw_backend.h"
@@ -11,7 +10,6 @@
 #include <cmath>
 #include <sstream>
 #include <tuple>
-Log_SetChannel(GPU_HW);
 
 template<typename T>
 ALWAYS_INLINE static constexpr std::tuple<T, T> MinMax(T v1, T v2)
@@ -209,8 +207,6 @@ u32 GPU_HW::CalculateResolutionScale() const
                                              (NTSC_VERTICAL_ACTIVE_END - NTSC_VERTICAL_ACTIVE_START));
     const s32 preferred_scale =
       static_cast<s32>(std::ceil(static_cast<float>(m_host_display->GetWindowHeight()) / height));
-    Log_InfoPrintf("Height = %d, preferred scale = %d", height, preferred_scale);
-
     scale = static_cast<u32>(std::clamp<s32>(preferred_scale, 1, m_max_resolution_scale));
   }
 
@@ -218,7 +214,6 @@ u32 GPU_HW::CalculateResolutionScale() const
       !Common::IsPow2(scale))
   {
     const u32 new_scale = Common::PreviousPow2(scale);
-    Log_InfoPrintf("Resolution scale %ux not supported for adaptive smoothing, using %ux", scale, new_scale);
 
     if (g_settings.gpu_resolution_scale != 0)
     {
@@ -620,9 +615,6 @@ void GPU_HW::LoadVertices()
 
       if ((max_x - min_x) >= MAX_PRIMITIVE_WIDTH || (max_y - min_y) >= MAX_PRIMITIVE_HEIGHT)
       {
-        Log_DebugPrintf("Culling too-large polygon: %d,%d %d,%d %d,%d", native_vertex_positions[0][0],
-                        native_vertex_positions[0][1], native_vertex_positions[1][0], native_vertex_positions[1][1],
-                        native_vertex_positions[2][0], native_vertex_positions[2][1]);
       }
       else
       {
@@ -653,9 +645,6 @@ void GPU_HW::LoadVertices()
         // Cull polygons which are too large.
         if ((max_x_123 - min_x_123) >= MAX_PRIMITIVE_WIDTH || (max_y_123 - min_y_123) >= MAX_PRIMITIVE_HEIGHT)
         {
-          Log_DebugPrintf("Culling too-large polygon (quad second half): %d,%d %d,%d %d,%d",
-                          native_vertex_positions[2][0], native_vertex_positions[2][1], native_vertex_positions[1][0],
-                          native_vertex_positions[1][1], native_vertex_positions[0][0], native_vertex_positions[0][1]);
         }
         else
         {
@@ -730,11 +719,7 @@ void GPU_HW::LoadVertices()
           rectangle_height = static_cast<s32>((width_and_height >> 16) & VRAM_HEIGHT_MASK);
 
           if (rectangle_width >= MAX_PRIMITIVE_WIDTH || rectangle_height >= MAX_PRIMITIVE_HEIGHT)
-          {
-            Log_DebugPrintf("Culling too-large rectangle: %d,%d %dx%d", pos_x, pos_y, rectangle_width,
-                            rectangle_height);
             return;
-          }
         }
         break;
       }
@@ -839,10 +824,7 @@ void GPU_HW::LoadVertices()
         const auto [min_x, max_x] = MinMax(start_x, end_x);
         const auto [min_y, max_y] = MinMax(start_y, end_y);
         if ((max_x - min_x) >= MAX_PRIMITIVE_WIDTH || (max_y - min_y) >= MAX_PRIMITIVE_HEIGHT)
-        {
-          Log_DebugPrintf("Culling too-large line: %d,%d - %d,%d", start_x, start_y, end_x, end_y);
           return;
-        }
 
         const u32 clip_left = static_cast<u32>(std::clamp<s32>(min_x, m_drawing_area.left, m_drawing_area.right));
         const u32 clip_right = static_cast<u32>(std::clamp<s32>(max_x, m_drawing_area.left, m_drawing_area.right)) + 1u;
@@ -906,7 +888,6 @@ void GPU_HW::LoadVertices()
           const auto [min_y, max_y] = MinMax(start_y, end_y);
           if ((max_x - min_x) >= MAX_PRIMITIVE_WIDTH || (max_y - min_y) >= MAX_PRIMITIVE_HEIGHT)
           {
-            Log_DebugPrintf("Culling too-large line: %d,%d - %d,%d", start_x, start_y, end_x, end_y);
           }
           else
           {
@@ -1243,7 +1224,6 @@ void GPU_HW::DispatchRenderCommand()
                                         (m_draw_mode.mode_reg.IsUsingPalette() &&
                                          m_draw_mode.GetTexturePaletteRectangle().Intersects(m_vram_dirty_rect))))
       {
-        // Log_DevPrintf("Invalidating VRAM read cache due to drawing area overlap");
         if (!IsFlushed())
           FlushRender();
 
@@ -1369,15 +1349,6 @@ void GPU_HW::FlushRender()
   {
     m_renderer_stats.num_batches++;
     DrawBatchVertices(m_batch.GetRenderMode(), m_batch_base_vertex, vertex_count);
-  }
-}
-
-void GPU_HW::DrawRendererStats(bool is_idle_frame)
-{
-  if (!is_idle_frame)
-  {
-    m_last_renderer_stats = m_renderer_stats;
-    m_renderer_stats = {};
   }
 }
 

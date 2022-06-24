@@ -1,7 +1,6 @@
 #include "host_display.h"
 #include "common/align.h"
 #include "common/assert.h"
-#include "common/file_system.h"
 #include "common/log.h"
 #include "common/string_util.h"
 #include "common/timer.h"
@@ -116,35 +115,6 @@ bool HostDisplay::SetSoftwareCursor(const void* pixels, u32 width, u32 height, u
   if (!tex)
     return false;
 
-  SetSoftwareCursor(std::move(tex), scale);
-  return true;
-}
-
-bool HostDisplay::SetSoftwareCursor(const char* path, float scale /*= 1.0f*/)
-{
-  auto fp = FileSystem::OpenManagedCFile(path, "rb");
-  if (!fp)
-  {
-    return false;
-  }
-
-  int width, height, file_channels;
-  u8* pixel_data = stbi_load_from_file(fp.get(), &width, &height, &file_channels, 4);
-  if (!pixel_data)
-  {
-    const char* error_reason = stbi_failure_reason();
-    Log_ErrorPrintf("Failed to load image from '%s': %s", path, error_reason ? error_reason : "unknown error");
-    return false;
-  }
-
-  std::unique_ptr<HostDisplayTexture> tex =
-    CreateTexture(static_cast<u32>(width), static_cast<u32>(height), 1, 1, 1, HostDisplayPixelFormat::RGBA8, pixel_data,
-                  sizeof(u32) * static_cast<u32>(width), false);
-  stbi_image_free(pixel_data);
-  if (!tex)
-    return false;
-
-  Log_InfoPrintf("Loaded %dx%d image from '%s' for software cursor", width, height, path);
   SetSoftwareCursor(std::move(tex), scale);
   return true;
 }

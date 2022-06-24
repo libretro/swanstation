@@ -171,9 +171,6 @@ public:
   // Returns the video clock frequency.
   TickCount GetCRTCFrequency() const;
 
-  // Dumps raw VRAM to a file.
-  bool DumpVRAMToFile(const char* filename);
-
 protected:
   TickCount CRTCTicksToSystemTicks(TickCount crtc_ticks, TickCount fractional_ticks) const;
   TickCount SystemTicksToCRTCTicks(TickCount sysclk_ticks, TickCount* fractional_ticks) const;
@@ -194,9 +191,6 @@ protected:
   {
     return std::make_tuple(static_cast<u8>(rgb24), static_cast<u8>(rgb24 >> 8), static_cast<u8>(rgb24 >> 16));
   }
-
-  static bool DumpVRAMToFile(const char* filename, u32 width, u32 height, u32 stride, const void* buffer,
-                             bool remove_alpha);
 
   void SoftReset();
 
@@ -276,7 +270,6 @@ protected:
   virtual void FlushRender();
   virtual void ClearDisplay();
   virtual void UpdateDisplay();
-  virtual void DrawRendererStats(bool is_idle_frame);
 
   ALWAYS_INLINE void AddDrawTriangleTicks(s32 x1, s32 y1, s32 x2, s32 y2, s32 x3, s32 y3, bool shaded, bool textured,
                                           bool semitransparent)

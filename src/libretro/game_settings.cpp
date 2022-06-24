@@ -1,7 +1,6 @@
 #include "game_settings.h"
 #include "common/assert.h"
 #include "common/byte_stream.h"
-#include "common/file_system.h"
 #include "common/log.h"
 #include "common/string.h"
 #include "common/string_util.h"
@@ -1101,56 +1100,6 @@ bool Database::Load(const std::string_view& ini_data)
 
   Log_InfoPrintf("Loaded settings for %zu games", sections.size());
   return true;
-}
-
-void Database::SetEntry(const std::string& code, const std::string& name, const Entry& entry, const char* save_path)
-{
-  if (save_path)
-  {
-    CSimpleIniA ini;
-    if (FileSystem::FileExists(save_path))
-    {
-      auto fp = FileSystem::OpenManagedCFile(save_path, "rb");
-      if (fp)
-      {
-        SI_Error err = ini.LoadFile(fp.get());
-        if (err != SI_OK)
-          Log_ErrorPrintf("Failed to parse game settings ini: %d. Contents will be lost.", static_cast<int>(err));
-      }
-      else
-      {
-        Log_ErrorPrintf("Failed to open existing settings ini: '%s'", save_path);
-      }
-    }
-
-    ini.Delete(code.c_str(), nullptr, false);
-    ini.SetValue(code.c_str(), nullptr, nullptr, SmallString::FromFormat("# %s (%s)", code.c_str(), name.c_str()),
-                 false);
-    StoreIniSection(entry, code.c_str(), ini);
-
-    const bool did_exist = FileSystem::FileExists(save_path);
-    auto fp = FileSystem::OpenManagedCFile(save_path, "wb");
-    if (fp)
-    {
-      // write file comment so simpleini doesn't get confused
-      if (!did_exist)
-        std::fputs("# DuckStation Game Settings\n\n", fp.get());
-
-      SI_Error err = ini.SaveFile(fp.get());
-      if (err != SI_OK)
-        Log_ErrorPrintf("Failed to save game settings ini: %d", static_cast<int>(err));
-    }
-    else
-    {
-      Log_ErrorPrintf("Failed to open settings ini for saving: '%s'", save_path);
-    }
-  }
-
-  auto it = m_entries.find(code);
-  if (it != m_entries.end())
-    it->second = entry;
-  else
-    m_entries.emplace(code, entry);
 }
 
 std::optional<std::string> Entry::GetValueForKey(const std::string_view& key) const

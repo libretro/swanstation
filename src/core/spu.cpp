@@ -1,7 +1,6 @@
 #include "spu.h"
 #include "cdrom.h"
 #include "common/audio_stream.h"
-#include "common/file_system.h"
 #include "common/state_wrapper.h"
 #include "dma.h"
 #include "host_interface.h"

@@ -1,7 +1,6 @@
 #include "cpu_core.h"
 #include "bus.h"
 #include "common/align.h"
-#include "common/file_system.h"
 #include "common/state_wrapper.h"
 #include "cpu_core_private.h"
 #include "cpu_recompiler_thunks.h"

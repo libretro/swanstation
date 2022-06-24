@@ -302,7 +302,6 @@ protected:
   void CopyVRAM(u32 src_x, u32 src_y, u32 dst_x, u32 dst_y, u32 width, u32 height) override;
   void DispatchRenderCommand() override;
   void FlushRender() override;
-  void DrawRendererStats(bool is_idle_frame) override;
 
   void CalcScissorRect(int* left, int* top, int* right, int* bottom);
 

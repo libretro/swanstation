@@ -194,9 +194,6 @@ public:
   /// Sets the software cursor to the specified image.
   bool SetSoftwareCursor(const void* pixels, u32 width, u32 height, u32 stride, float scale = 1.0f);
 
-  /// Sets the software cursor to the specified path (png image).
-  bool SetSoftwareCursor(const char* path, float scale = 1.0f);
-
   /// Disables the software cursor.
   void ClearSoftwareCursor();
 
