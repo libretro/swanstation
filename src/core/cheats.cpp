@@ -2,7 +2,6 @@
 #include "bus.h"
 #include "common/assert.h"
 #include "common/byte_stream.h"
-#include "common/file_system.h"
 #include "common/log.h"
 #include "common/string.h"
 #include "common/string_util.h"
@@ -188,15 +187,6 @@ static const std::string* FindKey(const KeyValuePairVector& kvp, const char* sea
   return nullptr;
 }
 
-bool CheatList::LoadFromPCSXRFile(const char* filename)
-{
-  std::optional<std::string> str = FileSystem::ReadFileToString(filename);
-  if (!str.has_value() || str->empty())
-    return false;
-
-  return LoadFromPCSXRString(str.value());
-}
-
 bool CheatList::LoadFromPCSXRString(const std::string& str)
 {
   std::istringstream iss(str);
@@ -310,15 +300,6 @@ bool CheatList::LoadFromPCSXRString(const std::string& str)
 
   Log_InfoPrintf("Loaded %zu cheats (PCSXR format)", m_codes.size());
   return !m_codes.empty();
-}
-
-bool CheatList::LoadFromLibretroFile(const char* filename)
-{
-  std::optional<std::string> str = FileSystem::ReadFileToString(filename);
-  if (!str.has_value() || str->empty())
-    return false;
-
-  return LoadFromLibretroString(str.value());
 }
 
 bool CheatList::LoadFromLibretroString(const std::string& str)
@@ -582,224 +563,6 @@ void CheatList::SetCode(u32 index, CheatCode cc)
 void CheatList::RemoveCode(u32 i)
 {
   m_codes.erase(m_codes.begin() + i);
-}
-
-std::optional<CheatList::Format> CheatList::DetectFileFormat(const char* filename)
-{
-  std::optional<std::string> str = FileSystem::ReadFileToString(filename);
-  if (!str.has_value() || str->empty())
-    return std::nullopt;
-
-  return DetectFileFormat(str.value());
-}
-
-CheatList::Format CheatList::DetectFileFormat(const std::string& str)
-{
-  std::istringstream iss(str);
-  std::string line;
-  while (std::getline(iss, line))
-  {
-    char* start = line.data();
-    while (*start != '\0' && std::isspace(SignedCharToInt(*start)))
-      start++;
-
-    // skip empty lines
-    if (*start == '\0')
-      continue;
-
-    char* end = start + std::strlen(start) - 1;
-    while (end > start && std::isspace(SignedCharToInt(*end)))
-    {
-      *end = '\0';
-      end--;
-    }
-
-    // eat comments
-    if (start[0] == '#' || start[0] == ';')
-      continue;
-
-    if (std::strncmp(line.data(), "cheats", 6) == 0)
-      return Format::Libretro;
-
-    // pcsxr if we see brackets
-    if (start[0] == '[')
-      return Format::PCSXR;
-
-    // otherwise if it's a code, it's probably epsxe
-    if (std::isdigit(start[0]))
-      return Format::EPSXe;
-  }
-
-  return Format::Count;
-}
-
-bool CheatList::LoadFromFile(const char* filename, Format format)
-{
-  if (!FileSystem::FileExists(filename))
-    return false;
-
-  std::optional<std::string> str = FileSystem::ReadFileToString(filename);
-  if (!str.has_value())
-    return false;
-
-  if (str->empty())
-    return true;
-
-  return LoadFromString(str.value(), format);
-}
-
-bool CheatList::LoadFromString(const std::string& str, Format format)
-{
-  if (format == Format::Autodetect)
-    format = DetectFileFormat(str);
-
-  if (format == Format::PCSXR)
-    return LoadFromPCSXRString(str);
-  else if (format == Format::Libretro)
-    return LoadFromLibretroString(str);
-  format = Format::EPSXe;
-  return LoadFromEPSXeString(str);
-}
-
-bool CheatList::SaveToPCSXRFile(const char* filename)
-{
-  auto fp = FileSystem::OpenManagedCFile(filename, "wb");
-  if (!fp)
-    return false;
-
-  for (const CheatCode& cc : m_codes)
-  {
-    if (!cc.comments.empty())
-      std::fputs(cc.comments.c_str(), fp.get());
-    std::fprintf(fp.get(), "#group=%s\n", cc.group.c_str());
-    std::fprintf(fp.get(), "#type=%s\n", CheatCode::GetTypeName(cc.type));
-    std::fprintf(fp.get(), "#activation=%s\n", CheatCode::GetActivationName(cc.activation));
-    std::fprintf(fp.get(), "[%s%s]\n", cc.enabled ? "*" : "", cc.description.c_str());
-    for (const CheatCode::Instruction& i : cc.instructions)
-      std::fprintf(fp.get(), "%08X %04X\n", i.first, i.second);
-    std::fprintf(fp.get(), "\n");
-  }
-
-  std::fflush(fp.get());
-  return (std::ferror(fp.get()) == 0);
-}
-
-bool CheatList::LoadFromPackage(const std::string& game_code)
-{
-  std::unique_ptr<ByteStream> stream =
-    g_host_interface->OpenPackageFile("database/chtdb.txt", BYTESTREAM_OPEN_READ | BYTESTREAM_OPEN_STREAMED);
-  if (!stream)
-    return false;
-
-  std::string db_string = FileSystem::ReadStreamToString(stream.get());
-  stream.reset();
-  if (db_string.empty())
-    return false;
-
-  std::istringstream iss(db_string);
-  std::string line;
-  while (std::getline(iss, line))
-  {
-    char* start = line.data();
-    while (*start != '\0' && std::isspace(SignedCharToInt(*start)))
-      start++;
-
-    // skip empty lines
-    if (*start == '\0' || *start == ';')
-      continue;
-
-    char* end = start + std::strlen(start) - 1;
-    while (end > start && std::isspace(SignedCharToInt(*end)))
-    {
-      *end = '\0';
-      end--;
-    }
-
-    if (start == end)
-      continue;
-
-    if (start[0] != ':' || std::strcmp(&start[1], game_code.c_str()) != 0)
-      continue;
-
-    // game code match
-    CheatCode current_code;
-    while (std::getline(iss, line))
-    {
-      start = line.data();
-      while (*start != '\0' && std::isspace(SignedCharToInt(*start)))
-        start++;
-
-      // skip empty lines
-      if (*start == '\0' || *start == ';')
-        continue;
-
-      end = start + std::strlen(start) - 1;
-      while (end > start && std::isspace(SignedCharToInt(*end)))
-      {
-        *end = '\0';
-        end--;
-      }
-
-      if (start == end)
-        continue;
-
-      // stop adding codes when we hit a different game
-      if (start[0] == ':' && (!m_codes.empty() || current_code.Valid()))
-        break;
-
-      if (start[0] == '#')
-      {
-        start++;
-
-        if (current_code.Valid())
-        {
-          m_codes.push_back(std::move(current_code));
-          current_code = CheatCode();
-        }
-
-        // new code
-        char* slash = std::strrchr(start, '\\');
-        if (slash)
-        {
-          *slash = '\0';
-          current_code.group = start;
-          start = slash + 1;
-        }
-        if (current_code.group.empty())
-          current_code.group = "Ungrouped";
-
-        current_code.description = start;
-        continue;
-      }
-
-      while (!IsHexCharacter(*start) && start != end)
-        start++;
-      if (start == end)
-        continue;
-
-      char* end_ptr;
-      CheatCode::Instruction inst;
-      inst.first = static_cast<u32>(std::strtoul(start, &end_ptr, 16));
-      inst.second = 0;
-      if (end_ptr)
-      {
-        while (!IsHexCharacter(*end_ptr) && end_ptr != end)
-          end_ptr++;
-        if (end_ptr != end)
-          inst.second = static_cast<u32>(std::strtoul(end_ptr, nullptr, 16));
-      }
-      current_code.instructions.push_back(inst);
-    }
-
-    if (current_code.Valid())
-      m_codes.push_back(std::move(current_code));
-
-    Log_InfoPrintf("Loaded %zu codes from package for %s", m_codes.size(), game_code.c_str());
-    return !m_codes.empty();
-  }
-
-  Log_WarningPrintf("No codes found in package for %s", game_code.c_str());
-  return false;
 }
 
 u32 CheatList::GetEnabledCodeCount() const

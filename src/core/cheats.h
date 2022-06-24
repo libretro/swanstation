@@ -168,22 +168,11 @@ public:
   void DisableCode(u32 index);
   void SetCodeEnabled(u32 index, bool state);
 
-  static std::optional<Format> DetectFileFormat(const char* filename);
-  static Format DetectFileFormat(const std::string& str);
   static bool ParseLibretroCheat(CheatCode* cc, const char* line);
 
-  bool LoadFromFile(const char* filename, Format format);
-  bool LoadFromPCSXRFile(const char* filename);
-  bool LoadFromLibretroFile(const char* filename);
-
-  bool LoadFromString(const std::string& str, Format format);
   bool LoadFromPCSXRString(const std::string& str);
   bool LoadFromLibretroString(const std::string& str);
   bool LoadFromEPSXeString(const std::string& str);
-
-  bool SaveToPCSXRFile(const char* filename);
-
-  bool LoadFromPackage(const std::string& game_code);
 
   void Apply();
 

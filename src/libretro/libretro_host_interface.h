@@ -52,7 +52,6 @@ public:
   std::string GetStringSettingValue(const char* section, const char* key, const char* default_value = "") override;
   std::vector<std::string> GetSettingStringList(const char* section, const char* key) override;
   std::string GetBIOSDirectory() override;
-  std::unique_ptr<ByteStream> OpenPackageFile(const char* path, u32 flags) override;
 
   bool UpdateSystemAVInfo(bool use_resolution_scale);
 

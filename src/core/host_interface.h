@@ -142,10 +142,6 @@ public:
   /// Returns true if any BIOS images are found in the configured BIOS directory.
   bool HasAnyBIOSImages();
 
-  /// Opens a file in the DuckStation "package".
-  /// This is the APK for Android builds, or the program directory for standalone builds.
-  virtual std::unique_ptr<ByteStream> OpenPackageFile(const char* path, u32 flags) = 0;
-
   virtual void OnRunningGameChanged(const std::string& path, CDImage* image, const std::string& game_code,
                                     const std::string& game_title) = 0;
 protected:
