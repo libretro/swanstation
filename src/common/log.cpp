@@ -1,6 +1,5 @@
 #include "log.h"
 #include "assert.h"
-#include "file_system.h"
 #include "string.h"
 #include "timer.h"
 #include <cstdio>
@@ -45,17 +44,6 @@ static HANDLE s_hConsoleStdErr = NULL;
 static bool s_debug_output_enabled = false;
 static String s_debug_output_channel_filter;
 static LOGLEVEL s_debug_output_level_filter = LOGLEVEL_TRACE;
-
-static bool s_file_output_enabled = false;
-static bool s_file_output_timestamp = false;
-static String s_file_output_channel_filter;
-static LOGLEVEL s_file_output_level_filter = LOGLEVEL_TRACE;
-std::unique_ptr<std::FILE, void (*)(std::FILE*)> s_fileOutputHandle(nullptr, [](std::FILE* fp) {
-  if (fp)
-  {
-    std::fclose(fp);
-  }
-});
 
 void RegisterCallback(CallbackFunctionType callbackFunction, void* pUserParam)
 {
@@ -384,48 +372,6 @@ void SetDebugOutputParams(bool enabled, const char* channelFilter /* = nullptr *
 
   s_debug_output_channel_filter = (channelFilter != nullptr) ? channelFilter : "";
   s_debug_output_level_filter = levelFilter;
-}
-
-static void FileOutputLogCallback(void* pUserParam, const char* channelName, const char* functionName, LOGLEVEL level,
-                                  const char* message)
-{
-  if (level > s_file_output_level_filter || s_file_output_channel_filter.Find(channelName) >= 0)
-    return;
-
-  FormatLogMessageAndPrint(
-    channelName, functionName, level, message, true, false, true,
-    [](const char* message, int message_len) { std::fwrite(message, 1, message_len, s_fileOutputHandle.get()); });
-}
-
-void SetFileOutputParams(bool enabled, const char* filename, bool timestamps /* = true */,
-                         const char* channelFilter /* = nullptr */, LOGLEVEL levelFilter /* = LOGLEVEL_TRACE */)
-{
-  if (s_file_output_enabled != enabled)
-  {
-    if (enabled)
-    {
-      s_fileOutputHandle.reset(FileSystem::OpenCFile(filename, "wb"));
-      if (!s_fileOutputHandle)
-      {
-        Log::Writef("Log", __FUNCTION__, LOGLEVEL_ERROR, "Failed to open log file '%s'", filename);
-        return;
-      }
-
-      RegisterCallback(FileOutputLogCallback, nullptr);
-    }
-    else
-    {
-      UnregisterCallback(FileOutputLogCallback, nullptr);
-      s_fileOutputHandle.reset();
-    }
-
-    s_file_output_enabled = enabled;
-  }
-
-  std::lock_guard<std::mutex> guard(s_callback_mutex);
-  s_file_output_channel_filter = (channelFilter != nullptr) ? channelFilter : "";
-  s_file_output_level_filter = levelFilter;
-  s_file_output_timestamp = timestamps;
 }
 
 void SetFilterLevel(LOGLEVEL level)
