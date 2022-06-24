@@ -105,8 +105,6 @@ static std::string s_running_game_title;
 
 static float s_throttle_frequency = 60.0f;
 static float s_target_speed = 1.0f;
-static Common::Timer::Value s_frame_period = 0;
-static Common::Timer::Value s_next_frame_time = 0;
 
 static float s_average_frame_time_accumulator = 0.0f;
 static float s_worst_frame_time_accumulator = 0.0f;
@@ -210,7 +208,6 @@ void UpdateOverclock()
   g_cdrom.CPUClockChanged();
   g_gpu->CPUClockChanged();
   g_timers.CPUClocksChanged();
-  UpdateThrottlePeriod();
 }
 
 u32 GetFrameNumber()
@@ -881,8 +878,6 @@ bool Initialize(bool force_software_renderer)
   s_internal_frame_number = 1;
 
   s_throttle_frequency = 60.0f;
-  s_frame_period = 0;
-  s_next_frame_time = 0;
 
   s_average_frame_time_accumulator = 0.0f;
   s_worst_frame_time_accumulator = 0.0f;
@@ -975,7 +970,6 @@ bool Initialize(bool force_software_renderer)
     }
   }
 
-  UpdateThrottlePeriod();
   UpdateMemorySaveStateSettings();
   return true;
 }
@@ -1455,8 +1449,6 @@ void RunFrame()
 
   DoRunFrame();
 
-  s_next_frame_time += s_frame_period;
-
   if (s_memory_saves_enabled)
     DoMemorySaveStates();
 }
@@ -1469,92 +1461,11 @@ float GetTargetSpeed()
 void SetTargetSpeed(float speed)
 {
   s_target_speed = speed;
-  UpdateThrottlePeriod();
 }
 
 void SetThrottleFrequency(float frequency)
 {
   s_throttle_frequency = frequency;
-  UpdateThrottlePeriod();
-}
-
-void UpdateThrottlePeriod()
-{
-  if (s_target_speed > std::numeric_limits<double>::epsilon())
-  {
-    const double target_speed = std::max(static_cast<double>(s_target_speed), std::numeric_limits<double>::epsilon());
-    s_frame_period =
-      Common::Timer::ConvertSecondsToValue(1.0 / (static_cast<double>(s_throttle_frequency) * target_speed));
-  }
-  else
-  {
-    s_frame_period = 1;
-  }
-
-  ResetThrottler();
-}
-
-void ResetThrottler()
-{
-  s_next_frame_time = Common::Timer::GetValue();
-}
-
-void Throttle()
-{
-  // Reset the throttler on audio buffer overflow, so we don't end up out of phase.
-  if (g_host_interface->GetAudioStream()->DidUnderflow() && s_target_speed >= 1.0f)
-  {
-    Log_VerbosePrintf("Audio buffer underflowed, resetting throttler");
-    ResetThrottler();
-    return;
-  }
-
-  // Allow variance of up to 40ms either way.
-#ifndef __ANDROID__
-  static constexpr double MAX_VARIANCE_TIME_NS = 40 * 1000000;
-#else
-  static constexpr double MAX_VARIANCE_TIME_NS = 50 * 1000000;
-#endif
-
-  // Use unsigned for defined overflow/wrap-around.
-  const Common::Timer::Value time = Common::Timer::GetValue();
-  const double sleep_time = (s_next_frame_time >= time) ?
-                              Common::Timer::ConvertValueToNanoseconds(s_next_frame_time - time) :
-                              -Common::Timer::ConvertValueToNanoseconds(time - s_next_frame_time);
-  if (sleep_time < -MAX_VARIANCE_TIME_NS)
-  {
-    // Don't display the slow messages in debug, it'll always be slow...
-#ifndef _DEBUG
-    Log_VerbosePrintf("System too slow, lost %.2f ms", (-sleep_time - MAX_VARIANCE_TIME_NS) / 1000000.0);
-#endif
-    ResetThrottler();
-  }
-  else
-  {
-    Common::Timer::SleepUntil(s_next_frame_time, true);
-  }
-}
-
-void RunFrames()
-{
-  // If we're running more than this in a single loop... we're in for a bad time.
-  const u32 max_frames_to_run = 2;
-  u32 frames_run = 0;
-
-  Common::Timer::Value value = Common::Timer::GetValue();
-  while (frames_run < max_frames_to_run)
-  {
-    if (value < s_next_frame_time)
-      break;
-
-    RunFrame();
-    frames_run++;
-
-    value = Common::Timer::GetValue();
-  }
-
-  if (frames_run != 1)
-    Log_VerbosePrintf("Ran %u frames in a single host frame", frames_run);
 }
 
 void UpdatePerformanceCounters()
@@ -1599,7 +1510,6 @@ void ResetPerformanceCounters()
   s_average_frame_time_accumulator = 0.0f;
   s_worst_frame_time_accumulator = 0.0f;
   s_fps_timer.Reset();
-  ResetThrottler();
 }
 
 static bool LoadEXEToRAM(const char* filename, bool patch_bios)
@@ -2390,7 +2300,6 @@ void DoRewind()
     s_rewind_load_counter--;
   }
 
-  s_next_frame_time += s_frame_period;
 }
 
 void SaveRunaheadState()
