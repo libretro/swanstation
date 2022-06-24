@@ -506,13 +506,6 @@ void GPU::FinishVRAMWrite()
 
   if (m_blit_remaining_words == 0)
   {
-    if (g_settings.debugging.dump_cpu_to_vram_copies)
-    {
-      DumpVRAMToFile(StringUtil::StdStringFromFormat("cpu_to_vram_copy_%u.png", s_cpu_to_vram_dump_id++).c_str(),
-                     m_vram_transfer.width, m_vram_transfer.height, sizeof(u16) * m_vram_transfer.width,
-                     m_blit_buffer.data(), true);
-    }
-
     if (g_settings.texture_replacements.ShouldDumpVRAMWrite(m_vram_transfer.width, m_vram_transfer.height))
     {
       g_texture_replacements.DumpVRAMWrite(m_vram_transfer.width, m_vram_transfer.height,
@@ -574,13 +567,6 @@ bool GPU::HandleCopyRectangleVRAMToCPUCommand()
 
   // ensure VRAM shadow is up to date
   ReadVRAM(m_vram_transfer.x, m_vram_transfer.y, m_vram_transfer.width, m_vram_transfer.height);
-
-  if (g_settings.debugging.dump_vram_to_cpu_copies)
-  {
-    DumpVRAMToFile(StringUtil::StdStringFromFormat("vram_to_cpu_copy_%u.png", s_vram_to_cpu_dump_id++).c_str(),
-                   m_vram_transfer.width, m_vram_transfer.height, sizeof(u16) * VRAM_WIDTH,
-                   &m_vram_ptr[m_vram_transfer.y * VRAM_WIDTH + m_vram_transfer.x], true);
-  }
 
   // switch to pixel-by-pixel read state
   m_stats.num_vram_reads++;

@@ -164,21 +164,6 @@ struct Settings
   u32 gpu_fifo_size = 128;
   TickCount gpu_max_run_ahead = 128;
 
-  struct DebugSettings
-  {
-    bool show_vram = false;
-    bool dump_cpu_to_vram_copies = false;
-    bool dump_vram_to_cpu_copies = false;
-
-    // Mutable because the imgui window can close itself.
-    mutable bool show_gpu_state = false;
-    mutable bool show_cdrom_state = false;
-    mutable bool show_spu_state = false;
-    mutable bool show_timers_state = false;
-    mutable bool show_mdec_state = false;
-    mutable bool show_dma_state = false;
-  } debugging;
-
   // texture replacements
   struct TextureReplacementSettings
   {

@@ -858,30 +858,6 @@ void GPU_HW_OpenGL::UpdateDisplay()
 {
   GPU_HW::UpdateDisplay();
 
-  if (g_settings.debugging.show_vram)
-  {
-    if (IsUsingMultisampling())
-    {
-      UpdateVRAMReadTexture();
-
-      m_host_display->SetDisplayTexture(reinterpret_cast<void*>(static_cast<uintptr_t>(m_vram_read_texture.GetGLId())),
-                                        HostDisplayPixelFormat::RGBA8, m_vram_read_texture.GetWidth(),
-                                        static_cast<s32>(m_vram_read_texture.GetHeight()), 0,
-                                        m_vram_read_texture.GetHeight(), m_vram_read_texture.GetWidth(),
-                                        -static_cast<s32>(m_vram_read_texture.GetHeight()));
-    }
-    else
-    {
-      m_host_display->SetDisplayTexture(reinterpret_cast<void*>(static_cast<uintptr_t>(m_vram_texture.GetGLId())),
-                                        HostDisplayPixelFormat::RGBA8, m_vram_texture.GetWidth(),
-                                        static_cast<s32>(m_vram_texture.GetHeight()), 0, m_vram_texture.GetHeight(),
-                                        m_vram_texture.GetWidth(), -static_cast<s32>(m_vram_texture.GetHeight()));
-    }
-    m_host_display->SetDisplayParameters(VRAM_WIDTH, VRAM_HEIGHT, 0, 0, VRAM_WIDTH, VRAM_HEIGHT,
-                                         static_cast<float>(VRAM_WIDTH) / static_cast<float>(VRAM_HEIGHT));
-  }
-  else
-  {
     m_host_display->SetDisplayParameters(m_crtc_state.display_width, m_crtc_state.display_height,
                                          m_crtc_state.display_origin_left, m_crtc_state.display_origin_top,
                                          m_crtc_state.display_vram_width, m_crtc_state.display_vram_height,
@@ -976,7 +952,6 @@ void GPU_HW_OpenGL::UpdateDisplay()
       SetBlendMode();
       SetDepthFunc();
     }
-  }
 }
 
 void GPU_HW_OpenGL::ReadVRAM(u32 x, u32 y, u32 width, u32 height)

@@ -1424,31 +1424,6 @@ void GPU_HW_Vulkan::UpdateDisplay()
   VkCommandBuffer cmdbuf = g_vulkan_context->GetCurrentCommandBuffer();
   const Vulkan::Util::DebugScope debugScope(cmdbuf, "GPU_HW_Vulkan::UpdateDisplay");
 
-  if (g_settings.debugging.show_vram)
-  {
-    if (IsUsingMultisampling())
-    {
-      if (m_vram_dirty_rect.Intersects(
-            Common::Rectangle<u32>::FromExtents(m_crtc_state.display_vram_left, m_crtc_state.display_vram_top,
-                                                m_crtc_state.display_vram_width, m_crtc_state.display_vram_height)))
-      {
-        UpdateVRAMReadTexture();
-      }
-
-      m_host_display->SetDisplayTexture(&m_vram_read_texture, HostDisplayPixelFormat::RGBA8,
-                                        m_vram_read_texture.GetWidth(), m_vram_read_texture.GetHeight(), 0, 0,
-                                        m_vram_read_texture.GetWidth(), m_vram_read_texture.GetHeight());
-    }
-    else
-    {
-      m_host_display->SetDisplayTexture(&m_vram_texture, HostDisplayPixelFormat::RGBA8, m_vram_texture.GetWidth(),
-                                        m_vram_texture.GetHeight(), 0, 0, m_vram_texture.GetWidth(),
-                                        m_vram_texture.GetHeight());
-    }
-    m_host_display->SetDisplayParameters(VRAM_WIDTH, VRAM_HEIGHT, 0, 0, VRAM_WIDTH, VRAM_HEIGHT,
-                                         static_cast<float>(VRAM_WIDTH) / static_cast<float>(VRAM_HEIGHT));
-  }
-  else
   {
     m_host_display->SetDisplayParameters(m_crtc_state.display_width, m_crtc_state.display_height,
                                          m_crtc_state.display_origin_left, m_crtc_state.display_origin_top,

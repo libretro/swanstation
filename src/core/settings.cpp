@@ -312,16 +312,6 @@ void Settings::Load(SettingsInterface& si)
   log_to_window = si.GetBoolValue("Logging", "LogToWindow", false);
   log_to_file = si.GetBoolValue("Logging", "LogToFile", false);
 
-  debugging.show_vram = si.GetBoolValue("Debug", "ShowVRAM");
-  debugging.dump_cpu_to_vram_copies = si.GetBoolValue("Debug", "DumpCPUToVRAMCopies");
-  debugging.dump_vram_to_cpu_copies = si.GetBoolValue("Debug", "DumpVRAMToCPUCopies");
-  debugging.show_gpu_state = si.GetBoolValue("Debug", "ShowGPUState");
-  debugging.show_cdrom_state = si.GetBoolValue("Debug", "ShowCDROMState");
-  debugging.show_spu_state = si.GetBoolValue("Debug", "ShowSPUState");
-  debugging.show_timers_state = si.GetBoolValue("Debug", "ShowTimersState");
-  debugging.show_mdec_state = si.GetBoolValue("Debug", "ShowMDECState");
-  debugging.show_dma_state = si.GetBoolValue("Debug", "ShowDMAState");
-
   texture_replacements.enable_vram_write_replacements =
     si.GetBoolValue("TextureReplacements", "EnableVRAMWriteReplacements", false);
   texture_replacements.preload_textures = si.GetBoolValue("TextureReplacements", "PreloadTextures", false);
