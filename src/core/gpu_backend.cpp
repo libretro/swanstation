@@ -224,10 +224,9 @@ void GPUBackend::RunGPULoop()
       m_wake_gpu_thread_cv.wait(lock, [this]() { return m_gpu_loop_done.load() || GetPendingCommandSize() > 0; });
       m_gpu_thread_sleeping.store(false);
 
-      if (m_gpu_loop_done.load())
-        break;
-      else
+      if (!m_gpu_loop_done.load())
         continue;
+      break;
     }
 
     if (write_ptr < read_ptr)

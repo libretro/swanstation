@@ -66,7 +66,6 @@ public:
 
   ALWAYS_INLINE s32 GetWindowWidth() const { return static_cast<s32>(m_window_info.surface_width); }
   ALWAYS_INLINE s32 GetWindowHeight() const { return static_cast<s32>(m_window_info.surface_height); }
-  ALWAYS_INLINE float GetWindowScale() const { return m_window_info.surface_scale; }
 
   // Position is relative to the top-left corner of the window.
   ALWAYS_INLINE s32 GetMousePositionX() const { return m_mouse_position_x; }
@@ -117,10 +116,6 @@ public:
   const s32 GetDisplayWidth() const { return m_display_width; }
   const s32 GetDisplayHeight() const { return m_display_height; }
   const float GetDisplayAspectRatio() const { return m_display_aspect_ratio; }
-
-  bool UsesLowerLeftOrigin() const;
-  void SetDisplayMaxFPS(float max_fps);
-  bool ShouldSkipDisplayingFrame();
 
   void ClearDisplayTexture()
   {
@@ -215,8 +210,6 @@ protected:
 
   WindowInfo m_window_info;
 
-  u64 m_last_frame_displayed_time = 0;
-
   s32 m_mouse_position_x = 0;
   s32 m_mouse_position_y = 0;
 
@@ -227,7 +220,6 @@ protected:
   s32 m_display_active_width = 0;
   s32 m_display_active_height = 0;
   float m_display_aspect_ratio = 1.0f;
-  float m_display_frame_interval = 0.0f;
 
   void* m_display_texture_handle = nullptr;
   HostDisplayPixelFormat m_display_texture_format = HostDisplayPixelFormat::Count;

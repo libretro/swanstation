@@ -15,9 +15,6 @@ public:
   static double ConvertValueToMilliseconds(Value value);
   static double ConvertValueToNanoseconds(Value value);
   static Value ConvertSecondsToValue(double s);
-  static Value ConvertMillisecondsToValue(double s);
-  static Value ConvertNanosecondsToValue(double ns);
-  static void SleepUntil(Value value, bool exact);
 
   void Reset(void);
 
