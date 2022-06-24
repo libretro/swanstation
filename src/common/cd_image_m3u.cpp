@@ -155,10 +155,8 @@ std::string CDImageM3u::GetSubImageMetadata(u32 index, const std::string_view& t
     return m_entries[index].title;
   else if (type == "file_title")
     return std::string(FileSystem::GetFileTitleFromPath(m_entries[index].filename));
-#if defined(LIBRETRO)
   else if (type == "file_path")
     return std::string(m_entries[index].filename);
-#endif
 
   return CDImage::GetSubImageMetadata(index, type);
 }
