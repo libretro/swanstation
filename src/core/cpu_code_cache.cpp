@@ -189,8 +189,6 @@ static void SetFastMap(u32 pc, CodeBlock::HostCodePointer function)
 using BlockMap = std::unordered_map<u32, CodeBlock*>;
 using HostCodeMap = std::map<CodeBlock::HostCodePointer, CodeBlock*>;
 
-void LogCurrentState();
-
 /// Returns the block key for the current execution state.
 static CodeBlockKey GetNextBlockKey();
 
@@ -321,16 +319,6 @@ static void ExecuteImpl()
     reexecute_block:
       Assert(!(HasPendingInterrupt()));
 
-#if 0
-      const u32 tick = TimingEvents::GetGlobalTickCounter() + CPU::GetPendingTicks();
-      if (tick == 4188233674)
-        __debugbreak();
-#endif
-
-#if 0
-      LogCurrentState();
-#endif
-
       if (g_settings.cpu_recompiler_icache)
         CheckAndUpdateICacheTags(block->icache_line_count, block->uncached_fetch_ticks);
 
@@ -445,10 +433,6 @@ void ExecuteRecompiler()
 
     while (g_state.pending_ticks < g_state.downcount)
     {
-#if 0
-      LogCurrentState();
-#endif
-
       const u32 pc = g_state.regs.pc;
       s_single_block_asm_dispatcher(s_fast_map[pc >> 16][pc >> 2]);
     }
@@ -504,21 +488,6 @@ void Flush()
   if (g_settings.IsUsingRecompiler())
     CompileDispatcher();
 #endif
-}
-
-void LogCurrentState()
-{
-  const auto& regs = g_state.regs;
-  WriteToExecutionLog("tick=%u pc=%08X zero=%08X at=%08X v0=%08X v1=%08X a0=%08X a1=%08X a2=%08X a3=%08X t0=%08X "
-                      "t1=%08X t2=%08X t3=%08X t4=%08X t5=%08X t6=%08X t7=%08X s0=%08X s1=%08X s2=%08X s3=%08X s4=%08X "
-                      "s5=%08X s6=%08X s7=%08X t8=%08X t9=%08X k0=%08X k1=%08X gp=%08X sp=%08X fp=%08X ra=%08X ldr=%s "
-                      "ldv=%08X\n",
-                      TimingEvents::GetGlobalTickCounter() + GetPendingTicks(), regs.pc, regs.zero, regs.at, regs.v0,
-                      regs.v1, regs.a0, regs.a1, regs.a2, regs.a3, regs.t0, regs.t1, regs.t2, regs.t3, regs.t4, regs.t5,
-                      regs.t6, regs.t7, regs.s0, regs.s1, regs.s2, regs.s3, regs.s4, regs.s5, regs.s6, regs.s7, regs.t8,
-                      regs.t9, regs.k0, regs.k1, regs.gp, regs.sp, regs.fp, regs.ra,
-                      (g_state.next_load_delay_reg == Reg::count) ? "NONE" : GetRegName(g_state.next_load_delay_reg),
-                      (g_state.next_load_delay_reg == Reg::count) ? 0 : g_state.next_load_delay_value);
 }
 
 CodeBlockKey GetNextBlockKey()
@@ -1234,17 +1203,6 @@ void CPU::Recompiler::Thunks::ResolveBranch(CodeBlock* block, void* host_pc, voi
     // link blocks!
     LinkBlock(block, successor_block, host_pc, host_resolve_pc, host_pc_size);
   }
-}
-
-void CPU::Recompiler::Thunks::LogPC(u32 pc)
-{
-#if 0
-  CPU::CodeCache::LogCurrentState();
-#endif
-#if 0
-  if (TimingEvents::GetGlobalTickCounter() + GetPendingTicks() == 382856482)
-    __debugbreak();
-#endif
 }
 
 #endif // WITH_RECOMPILER

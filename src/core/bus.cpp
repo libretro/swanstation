@@ -959,10 +959,6 @@ static TickCount DoEXP2Access(u32 offset, u32& value)
         if (!m_tty_line_buffer.empty())
         {
           Log_InfoPrintf("TTY: %s", m_tty_line_buffer.c_str());
-#ifdef _DEBUG
-          if (CPU::IsTraceEnabled())
-            CPU::WriteToExecutionLog("TTY: %s\n", m_tty_line_buffer.c_str());
-#endif
         }
         m_tty_line_buffer.clear();
       }

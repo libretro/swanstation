@@ -34,7 +34,6 @@ void UncheckedWriteMemoryHalfWord(u32 address, u32 value);
 void UncheckedWriteMemoryWord(u32 address, u32 value);
 
 void ResolveBranch(CodeBlock* block, void* host_pc, void* host_resolve_pc, u32 host_pc_size);
-void LogPC(u32 pc);
 
 } // namespace Recompiler::Thunks
 

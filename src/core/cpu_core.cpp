@@ -13,7 +13,6 @@
 #include "settings.h"
 #include "system.h"
 #include "timing_event.h"
-#include <cstdio>
 
 Log_SetChannel(CPU::Core);
 
@@ -28,63 +27,11 @@ State g_state;
 bool g_using_interpreter = false;
 bool TRACE_EXECUTION = false;
 
-static std::FILE* s_log_file = nullptr;
-static bool s_log_file_opened = false;
-static bool s_trace_to_log = false;
-
 static constexpr u32 INVALID_BREAKPOINT_PC = UINT32_C(0xFFFFFFFF);
 static std::vector<Breakpoint> s_breakpoints;
 static u32 s_breakpoint_counter = 1;
 static u32 s_last_breakpoint_check_pc = INVALID_BREAKPOINT_PC;
 static bool s_single_step = false;
-
-bool IsTraceEnabled()
-{
-  return s_trace_to_log;
-}
-
-void StartTrace()
-{
-  if (s_trace_to_log)
-    return;
-
-  s_trace_to_log = true;
-  UpdateDebugDispatcherFlag();
-}
-
-void StopTrace()
-{
-  if (!s_trace_to_log)
-    return;
-
-  if (s_log_file)
-    std::fclose(s_log_file);
-
-  s_log_file_opened = false;
-  s_trace_to_log = false;
-  UpdateDebugDispatcherFlag();
-}
-
-void WriteToExecutionLog(const char* format, ...)
-{
-  if (!s_log_file_opened)
-  {
-    s_log_file = FileSystem::OpenCFile("cpu_log.txt", "wb");
-    s_log_file_opened = true;
-  }
-
-  if (s_log_file)
-  {
-    std::va_list ap;
-    va_start(ap, format);
-    std::vfprintf(s_log_file, format, ap);
-    va_end(ap);
-
-#ifdef _DEBUG
-    std::fflush(s_log_file);
-#endif
-  }
-}
 
 void Initialize()
 {
@@ -105,7 +52,6 @@ void Initialize()
 void Shutdown()
 {
   ClearBreakpoints();
-  StopTrace();
 }
 
 void Reset()
@@ -238,13 +184,6 @@ ALWAYS_INLINE_RELEASE static void RaiseException(u32 CAUSE_bits, u32 EPC, u32 ve
                   g_state.cop0_regs.EPC, g_state.cop0_regs.cause.BD ? "true" : "false",
                   g_state.cop0_regs.cause.CE.GetValue());
     DisassembleAndPrint(g_state.current_instruction_pc, 4, 0);
-    if (s_trace_to_log)
-    {
-      CPU::WriteToExecutionLog("Exception %u at 0x%08X (epc=0x%08X, BD=%s, CE=%u)\n",
-                               static_cast<u8>(g_state.cop0_regs.cause.Excode.GetValue()),
-                               g_state.current_instruction_pc, g_state.cop0_regs.EPC,
-                               g_state.cop0_regs.cause.BD ? "true" : "false", g_state.cop0_regs.cause.CE.GetValue());
-    }
   }
 #endif
 
@@ -577,23 +516,6 @@ static void PrintInstruction(u32 bits, u32 pc, Registers* regs, const char* pref
   }
 
   Log_DevPrintf("%s%08x: %08x %s", prefix, pc, bits, instr.GetCharArray());
-}
-
-static void LogInstruction(u32 bits, u32 pc, Registers* regs)
-{
-  TinyString instr;
-  TinyString comment;
-  DisassembleInstruction(&instr, pc, bits);
-  DisassembleInstructionComment(&comment, pc, bits, regs);
-  if (!comment.IsEmpty())
-  {
-    for (u32 i = instr.GetLength(); i < 30; i++)
-      instr.AppendCharacter(' ');
-    instr.AppendString("; ");
-    instr.AppendString(comment);
-  }
-
-  WriteToExecutionLog("%08x: %08x %s\n", pc, bits, instr.GetCharArray());
 }
 
 ALWAYS_INLINE static constexpr bool AddOverflow(u32 old_value, u32 add_value, u32 new_value)
@@ -1628,7 +1550,7 @@ void UpdateDebugDispatcherFlag()
   const bool has_cop0_breakpoints =
     dcic.super_master_enable_1 && dcic.super_master_enable_2 && dcic.execution_breakpoint_enable;
 
-  const bool use_debug_dispatcher = has_any_breakpoints || has_cop0_breakpoints || s_trace_to_log;
+  const bool use_debug_dispatcher = has_any_breakpoints || has_cop0_breakpoints;
   if (use_debug_dispatcher == g_state.use_debug_dispatcher)
     return;
 
@@ -1918,13 +1840,6 @@ static void ExecuteImpl()
       // fetch the next instruction - even if this fails, it'll still refetch on the flush so we can continue
       if (!FetchInstruction())
         continue;
-
-      // trace functionality
-      if constexpr (debug)
-      {
-        if (s_trace_to_log)
-          LogInstruction(g_state.current_instruction.bits, g_state.current_instruction_pc, &g_state.regs);
-      }
 
 #if 0 // GTE flag test debugging
       if (g_state.m_current_instruction_pc == 0x8002cdf4)
