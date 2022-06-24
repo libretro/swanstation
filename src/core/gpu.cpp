@@ -70,16 +70,6 @@ void GPU::CPUClockChanged()
 
 void GPU::UpdateResolutionScale() {}
 
-std::tuple<u32, u32> GPU::GetEffectiveDisplayResolution(bool scaled /* = true */)
-{
-  return std::tie(m_crtc_state.display_vram_width, m_crtc_state.display_vram_height);
-}
-
-std::tuple<u32, u32> GPU::GetFullDisplayResolution(bool scaled /* = true */)
-{
-  return std::tie(m_crtc_state.display_width, m_crtc_state.display_height);
-}
-
 void GPU::Reset(bool clear_vram)
 {
   m_GPUSTAT.bits = 0x14802000;

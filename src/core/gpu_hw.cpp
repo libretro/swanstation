@@ -19,6 +19,7 @@ ALWAYS_INLINE static constexpr std::tuple<T, T> MinMax(T v1, T v2)
   return std::tie(v1, v2);
 }
 
+
 ALWAYS_INLINE static bool ShouldUseUVLimits()
 {
   // We only need UV limits if PGXP is enabled, or texture filtering is enabled.
@@ -249,21 +250,8 @@ GPUDownsampleMode GPU_HW::GetDownsampleMode(u32 resolution_scale) const
   return g_settings.gpu_downsample_mode;
 }
 
-std::tuple<u32, u32> GPU_HW::GetEffectiveDisplayResolution(bool scaled /* = true */)
-{
-  const u32 scale = scaled ? m_resolution_scale : 1u;
-  return std::make_tuple(m_crtc_state.display_vram_width * scale, m_crtc_state.display_vram_height * scale);
-}
-
-std::tuple<u32, u32> GPU_HW::GetFullDisplayResolution(bool scaled /* = true */)
-{
-  const u32 scale = scaled ? m_resolution_scale : 1u;
-  return std::make_tuple(m_crtc_state.display_width * scale, m_crtc_state.display_height * scale);
-}
-
 void GPU_HW::UpdateVRAMReadTexture()
 {
-  m_renderer_stats.num_vram_read_texture_updates++;
   ClearVRAMDirtyRectangle();
 }
 
@@ -1341,15 +1329,11 @@ void GPU_HW::FlushRender()
 
   if (NeedsTwoPassRendering())
   {
-    m_renderer_stats.num_batches += 2;
     DrawBatchVertices(BatchRenderMode::OnlyOpaque, m_batch_base_vertex, vertex_count);
     DrawBatchVertices(BatchRenderMode::OnlyTransparent, m_batch_base_vertex, vertex_count);
   }
   else
-  {
-    m_renderer_stats.num_batches++;
     DrawBatchVertices(m_batch.GetRenderMode(), m_batch_base_vertex, vertex_count);
-  }
 }
 
 GPU_HW::ShaderCompileProgressTracker::ShaderCompileProgressTracker(std::string title, u32 total)

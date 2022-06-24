@@ -38,8 +38,6 @@ public:
   virtual bool DoState(StateWrapper& sw, HostDisplayTexture** host_texture, bool update_display) override;
 
   void UpdateResolutionScale() override final;
-  std::tuple<u32, u32> GetEffectiveDisplayResolution(bool scaled = true) override final;
-  std::tuple<u32, u32> GetFullDisplayResolution(bool scaled = true) override final;
 
 protected:
   enum : u32
@@ -161,13 +159,6 @@ protected:
     float u_depth_value;
   };
 
-  struct RendererStats
-  {
-    u32 num_batches;
-    u32 num_vram_read_texture_updates;
-    u32 num_uniform_buffer_updates;
-  };
-
   class ShaderCompileProgressTracker
   {
   public:
@@ -239,14 +230,9 @@ protected:
   ALWAYS_INLINE InterlacedRenderMode GetInterlacedRenderMode() const
   {
     if (IsInterlacedDisplayEnabled())
-    {
       return m_GPUSTAT.vertical_resolution ? InterlacedRenderMode::InterleavedFields :
                                              InterlacedRenderMode::SeparateFields;
-    }
-    else
-    {
-      return InterlacedRenderMode::None;
-    }
+    return InterlacedRenderMode::None;
   }
 
   /// Returns true if the specified texture filtering mode requires dual-source blending.
@@ -261,13 +247,9 @@ protected:
   {
     if (m_texture_filtering == GPUTextureFilter::Bilinear || m_texture_filtering == GPUTextureFilter::JINC2 ||
         m_texture_filtering == GPUTextureFilter::xBR)
-    {
       return true;
-    }
-
     if (transparency_mode == GPUTransparencyMode::Disabled || render_mode == BatchRenderMode::OnlyOpaque)
       return false;
-
     return true;
   }
 
@@ -388,10 +370,6 @@ protected:
 
   // Bounding box of VRAM area that the GPU has drawn into.
   Common::Rectangle<u32> m_vram_dirty_rect;
-
-  // Statistics
-  RendererStats m_renderer_stats = {};
-  RendererStats m_last_renderer_stats = {};
 
   // Changed state
   bool m_batch_ubo_dirty = true;

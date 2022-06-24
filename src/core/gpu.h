@@ -9,7 +9,6 @@
 #include <array>
 #include <deque>
 #include <memory>
-#include <tuple>
 #include <vector>
 
 class StateWrapper;
@@ -136,12 +135,6 @@ public:
 
   /// Updates the resolution scale when it's set to automatic.
   virtual void UpdateResolutionScale();
-
-  /// Returns the effective display resolution of the GPU.
-  virtual std::tuple<u32, u32> GetEffectiveDisplayResolution(bool scaled = true);
-
-  /// Returns the full display resolution of the GPU, including padding.
-  virtual std::tuple<u32, u32> GetFullDisplayResolution(bool scaled = true);
 
   float ComputeHorizontalFrequency() const;
   float ComputeVerticalFrequency() const;

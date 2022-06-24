@@ -22,9 +22,9 @@ ALWAYS_INLINE static constexpr std::tuple<T, T> MinMax(T v1, T v2)
 {
   if (v1 > v2)
     return std::tie(v2, v1);
-  else
-    return std::tie(v1, v2);
+  return std::tie(v1, v2);
 }
+
 
 GPU_SW::GPU_SW()
 {

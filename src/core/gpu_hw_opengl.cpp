@@ -836,8 +836,6 @@ void GPU_HW_OpenGL::UploadUniformBuffer(const void* data, u32 data_size)
   m_uniform_stream_buffer->Unmap(data_size);
 
   glBindBufferRange(GL_UNIFORM_BUFFER, 1, m_uniform_stream_buffer->GetGLBufferId(), res.buffer_offset, data_size);
-
-  m_renderer_stats.num_uniform_buffer_updates++;
 }
 
 void GPU_HW_OpenGL::ClearDisplay()

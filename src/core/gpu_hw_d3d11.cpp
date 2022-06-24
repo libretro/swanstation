@@ -703,8 +703,6 @@ void GPU_HW_D3D11::UploadUniformBuffer(const void* data, u32 data_size)
 
   m_context->VSSetConstantBuffers(0, 1, m_uniform_stream_buffer.GetD3DBufferArray());
   m_context->PSSetConstantBuffers(0, 1, m_uniform_stream_buffer.GetD3DBufferArray());
-
-  m_renderer_stats.num_uniform_buffer_updates++;
 }
 
 void GPU_HW_D3D11::SetViewport(u32 x, u32 y, u32 width, u32 height)
