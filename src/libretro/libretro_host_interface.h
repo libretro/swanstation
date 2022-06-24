@@ -73,7 +73,7 @@ public:
   void retro_cheat_set(unsigned index, bool enabled, const char* code);
 
 protected:
-  bool AcquireHostDisplay() override;
+  void AcquireHostDisplay() override;
   void ReleaseHostDisplay() override;
   std::unique_ptr<AudioStream> CreateAudioStream() override;
   void OnSystemCreated() override;

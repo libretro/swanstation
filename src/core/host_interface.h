@@ -139,7 +139,7 @@ public:
   virtual void OnRunningGameChanged(const std::string& path, CDImage* image, const std::string& game_code,
                                     const std::string& game_title) = 0;
 protected:
-  virtual bool AcquireHostDisplay() = 0;
+  virtual void AcquireHostDisplay() = 0;
   virtual void ReleaseHostDisplay() = 0;
   virtual std::unique_ptr<AudioStream> CreateAudioStream() = 0;
 

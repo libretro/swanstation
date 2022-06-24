@@ -57,12 +57,7 @@ void HostInterface::Shutdown()
 
 bool HostInterface::BootSystem(std::shared_ptr<SystemBootParameters> parameters)
 {
-  if (!AcquireHostDisplay())
-  {
-    ReportError(g_host_interface->TranslateString("System", "Failed to acquire host display."));
-    OnSystemDestroyed();
-    return false;
-  }
+  AcquireHostDisplay();
 
   // set host display settings
   m_display->SetDisplayLinearFiltering(g_settings.display_linear_filtering);
@@ -593,14 +588,9 @@ std::string HostInterface::GetUserDirectoryRelativePath(const char* format, ...)
   va_end(ap);
 
   if (m_user_directory.empty())
-  {
     return formatted_path;
-  }
-  else
-  {
-    return StringUtil::StdStringFromFormat("%s" FS_OSPATH_SEPARATOR_STR "%s", m_user_directory.c_str(),
+  return StringUtil::StdStringFromFormat("%s" FS_OSPATH_SEPARATOR_STR "%s", m_user_directory.c_str(),
                                            formatted_path.c_str());
-  }
 }
 
 std::string HostInterface::GetProgramDirectoryRelativePath(const char* format, ...) const
@@ -611,48 +601,32 @@ std::string HostInterface::GetProgramDirectoryRelativePath(const char* format, .
   va_end(ap);
 
   if (m_program_directory.empty())
-  {
     return formatted_path;
-  }
-  else
-  {
-    return StringUtil::StdStringFromFormat("%s" FS_OSPATH_SEPARATOR_STR "%s", m_program_directory.c_str(),
-                                           formatted_path.c_str());
-  }
+  return StringUtil::StdStringFromFormat("%s" FS_OSPATH_SEPARATOR_STR "%s", m_program_directory.c_str(),
+		  formatted_path.c_str());
 }
 
 std::string HostInterface::GetMemoryCardDirectory() const
 {
   if (g_settings.memory_card_directory.empty())
     return GetUserDirectoryRelativePath("memcards");
-  else
-    return g_settings.memory_card_directory;
+  return g_settings.memory_card_directory;
 }
 
 std::string HostInterface::GetSharedMemoryCardPath(u32 slot) const
 {
   if (g_settings.memory_card_directory.empty())
-  {
     return GetUserDirectoryRelativePath("memcards" FS_OSPATH_SEPARATOR_STR "shared_card_%u.mcd", slot + 1);
-  }
-  else
-  {
-    return StringUtil::StdStringFromFormat("%s" FS_OSPATH_SEPARATOR_STR "shared_card_%u.mcd",
+  return StringUtil::StdStringFromFormat("%s" FS_OSPATH_SEPARATOR_STR "shared_card_%u.mcd",
                                            g_settings.memory_card_directory.c_str(), slot + 1);
-  }
 }
 
 std::string HostInterface::GetGameMemoryCardPath(const char* game_code, u32 slot) const
 {
   if (g_settings.memory_card_directory.empty())
-  {
     return GetUserDirectoryRelativePath("memcards" FS_OSPATH_SEPARATOR_STR "%s_%u.mcd", game_code, slot + 1);
-  }
-  else
-  {
-    return StringUtil::StdStringFromFormat("%s" FS_OSPATH_SEPARATOR_STR "%s_%u.mcd",
+  return StringUtil::StdStringFromFormat("%s" FS_OSPATH_SEPARATOR_STR "%s_%u.mcd",
                                            g_settings.memory_card_directory.c_str(), game_code, slot + 1);
-  }
 }
 
 bool HostInterface::GetBoolSettingValue(const char* section, const char* key, bool default_value /*= false*/)

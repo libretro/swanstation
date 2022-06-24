@@ -659,20 +659,19 @@ void LibretroHostInterface::retro_cheat_set(unsigned index, bool enabled, const 
   cl->SetCode(index, std::move(cc));
 }
 
-bool LibretroHostInterface::AcquireHostDisplay()
+void LibretroHostInterface::AcquireHostDisplay()
 {
   // start in software mode, switch to hardware later
   struct retro_system_av_info avi;
   g_libretro_host_interface.GetSystemAVInfo(&avi, false);
 
   WindowInfo wi;
-  wi.surface_width = avi.geometry.base_width;
+  wi.surface_width  = avi.geometry.base_width;
   wi.surface_height = avi.geometry.base_height;
 
   m_display = std::make_unique<LibretroHostDisplay>();
   m_display->CreateRenderDevice(wi, {}, false, false);
   m_display->InitializeRenderDevice({}, false, false);
-  return true;
 }
 
 void LibretroHostInterface::ReleaseHostDisplay()
