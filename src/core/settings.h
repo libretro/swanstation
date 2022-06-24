@@ -12,26 +12,12 @@ class SettingsInterface
 public:
   virtual ~SettingsInterface();
 
-  virtual bool Save() = 0;
-  virtual void Clear() = 0;
-
   virtual int GetIntValue(const char* section, const char* key, int default_value = 0) = 0;
   virtual float GetFloatValue(const char* section, const char* key, float default_value = 0.0f) = 0;
   virtual bool GetBoolValue(const char* section, const char* key, bool default_value = false) = 0;
   virtual std::string GetStringValue(const char* section, const char* key, const char* default_value = "") = 0;
 
-  virtual void SetIntValue(const char* section, const char* key, int value) = 0;
-  virtual void SetFloatValue(const char* section, const char* key, float value) = 0;
-  virtual void SetBoolValue(const char* section, const char* key, bool value) = 0;
-  virtual void SetStringValue(const char* section, const char* key, const char* value) = 0;
-
   virtual std::vector<std::string> GetStringList(const char* section, const char* key) = 0;
-  virtual void SetStringList(const char* section, const char* key, const std::vector<std::string>& items) = 0;
-  virtual bool RemoveFromStringList(const char* section, const char* key, const char* item) = 0;
-  virtual bool AddToStringList(const char* section, const char* key, const char* item) = 0;
-
-  virtual void DeleteValue(const char* section, const char* key) = 0;
-  virtual void ClearSection(const char* section) = 0;
 };
 
 struct SettingInfo
@@ -285,7 +271,6 @@ struct Settings
   };
 
   void Load(SettingsInterface& si);
-  void Save(SettingsInterface& si) const;
 
   static std::optional<LOGLEVEL> ParseLogLevelName(const char* str);
   static const char* GetLogLevelName(LOGLEVEL level);

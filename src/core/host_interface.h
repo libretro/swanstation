@@ -161,14 +161,8 @@ protected:
   virtual void OnSystemDestroyed() = 0;
   virtual void OnControllerTypeChanged(u32 slot) = 0;
 
-  /// Restores all settings to defaults.
-  virtual void SetDefaultSettings(SettingsInterface& si);
-
   /// Loads settings to m_settings and any frontend-specific parameters.
   virtual void LoadSettings(SettingsInterface& si);
-
-  /// Saves current settings variables to ini.
-  virtual void SaveSettings(SettingsInterface& si);
 
   /// Checks and fixes up any incompatible settings.
   virtual void FixIncompatibleSettings(bool display_osd_messages);
