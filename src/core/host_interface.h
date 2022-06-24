@@ -136,12 +136,6 @@ public:
   /// BIOS image within 512KB and 4MB will be used.
   std::optional<std::vector<u8>> FindBIOSImageInDirectory(ConsoleRegion region, const char* directory);
 
-  /// Returns a list of filenames and descriptions for BIOS images in a directory.
-  std::vector<std::pair<std::string, const BIOS::ImageInfo*>> FindBIOSImagesInDirectory(const char* directory);
-
-  /// Returns true if any BIOS images are found in the configured BIOS directory.
-  bool HasAnyBIOSImages();
-
   virtual void OnRunningGameChanged(const std::string& path, CDImage* image, const std::string& game_code,
                                     const std::string& game_title) = 0;
 protected:
@@ -174,9 +168,6 @@ protected:
 
   /// Quick switch between software and hardware rendering.
   void ToggleSoftwareRendering();
-
-  /// Adjusts the internal (render) resolution of the hardware backends.
-  void ModifyResolutionScale(s32 increment);
 
   /// Updates software cursor state, based on controllers.
   void UpdateSoftwareCursor();

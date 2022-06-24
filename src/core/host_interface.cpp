@@ -246,9 +246,7 @@ std::optional<std::vector<u8>> HostInterface::GetBIOSImage(ConsoleRegion region)
   std::optional<BIOS::Image> image = BIOS::LoadImageFromFile(
     StringUtil::StdStringFromFormat("%s" FS_OSPATH_SEPARATOR_STR "%s", bios_dir.c_str(), bios_name.c_str()).c_str());
   if (!image.has_value())
-  {
     return FindBIOSImageInDirectory(region, bios_dir.c_str());
-  }
 
   BIOS::Hash found_hash = BIOS::GetHash(*image);
   Log_DevPrintf("Hash for BIOS '%s': %s", bios_name.c_str(), found_hash.ToString().c_str());
@@ -321,41 +319,6 @@ std::optional<std::vector<u8>> HostInterface::FindBIOSImageInDirectory(ConsoleRe
 		  fallback_info->description);
 
   return fallback_image;
-}
-
-std::vector<std::pair<std::string, const BIOS::ImageInfo*>>
-HostInterface::FindBIOSImagesInDirectory(const char* directory)
-{
-  std::vector<std::pair<std::string, const BIOS::ImageInfo*>> results;
-
-  FileSystem::FindResultsArray files;
-  FileSystem::FindFiles(directory, "*",
-                        FILESYSTEM_FIND_FILES | FILESYSTEM_FIND_HIDDEN_FILES | FILESYSTEM_FIND_RELATIVE_PATHS, &files);
-
-  for (FILESYSTEM_FIND_DATA& fd : files)
-  {
-    if (fd.Size != BIOS::BIOS_SIZE && fd.Size != BIOS::BIOS_SIZE_PS2 && fd.Size != BIOS::BIOS_SIZE_PS3)
-      continue;
-
-    std::string full_path(
-      StringUtil::StdStringFromFormat("%s" FS_OSPATH_SEPARATOR_STR "%s", directory, fd.FileName.c_str()));
-
-    std::optional<BIOS::Image> found_image = BIOS::LoadImageFromFile(full_path.c_str());
-    if (!found_image)
-      continue;
-
-    BIOS::Hash found_hash = BIOS::GetHash(*found_image);
-    const BIOS::ImageInfo* ii = BIOS::GetImageInfoForHash(found_hash);
-    results.emplace_back(std::move(fd.FileName), ii);
-  }
-
-  return results;
-}
-
-bool HostInterface::HasAnyBIOSImages()
-{
-  const std::string dir = GetBIOSDirectory();
-  return (FindBIOSImageInDirectory(ConsoleRegion::Auto, dir.c_str()).has_value());
 }
 
 std::string HostInterface::GetShaderCacheBasePath() const
@@ -779,24 +742,6 @@ void HostInterface::ToggleSoftwareRendering()
   AddFormattedOSDMessage(5.0f, TranslateString("OSDMessage", "Switching to %s renderer..."),
                          Settings::GetRendererDisplayName(new_renderer));
   System::RecreateGPU(new_renderer);
-}
-
-void HostInterface::ModifyResolutionScale(s32 increment)
-{
-  const u32 new_resolution_scale = std::clamp<u32>(
-    static_cast<u32>(static_cast<s32>(g_settings.gpu_resolution_scale) + increment), 1, GPU::MAX_RESOLUTION_SCALE);
-  if (new_resolution_scale == g_settings.gpu_resolution_scale)
-    return;
-
-  g_settings.gpu_resolution_scale = new_resolution_scale;
-
-  if (!System::IsShutdown())
-  {
-    g_gpu->RestoreGraphicsAPIState();
-    g_gpu->UpdateSettings();
-    g_gpu->ResetGraphicsAPIState();
-    System::ClearMemorySaveStates();
-  }
 }
 
 void HostInterface::UpdateSoftwareCursor()

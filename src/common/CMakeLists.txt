@@ -26,8 +26,6 @@ add_library(common
   cd_subchannel_replacement.h
   cd_xa.cpp
   cd_xa.h
-  crash_handler.cpp
-  crash_handler.h
   cue_parser.cpp
   cue_parser.h
   dimensional_array.h
