@@ -49,15 +49,7 @@ protected:
     return s16((s32(sample) * s32(volume)) / 100);
   }
 
-  ALWAYS_INLINE u32 GetBufferSpace() const { return (m_max_samples - m_buffer.GetSize()); }
-
   bool SetBufferSize(u32 buffer_size);
-  bool IsDeviceOpen() const { return (m_output_sample_rate > 0); }
-
-  void EnsureBuffer(u32 size);
-  void LockedEmptyBuffers();
-  u32 GetSamplesAvailable() const;
-  void DropFrames(u32 count);
 
   u32 m_output_sample_rate = 0;
   u32 m_channels = 0;

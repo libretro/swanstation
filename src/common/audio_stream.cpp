@@ -38,7 +38,7 @@ void AudioStream::PauseOutput(bool paused)
 
 void AudioStream::Shutdown()
 {
-  if (!IsDeviceOpen())
+  if (m_output_sample_rate == 0)
     return;
 
   EmptyBuffers();
@@ -53,7 +53,19 @@ void AudioStream::BeginWrite(SampleType** buffer_ptr, u32* num_frames)
   m_buffer_mutex.lock();
 
   const u32 requested_frames = std::min(*num_frames, m_buffer_size);
-  EnsureBuffer(requested_frames * m_channels);
+  u32 size                   = requested_frames * m_channels;
+  u32 buffer_space           = m_max_samples - m_buffer.GetSize();
+  if (buffer_space < size)
+  {
+    std::unique_lock<std::mutex> lock(m_buffer_mutex, std::adopt_lock);
+    m_buffer_draining_cv.wait(lock, [this, size]() 
+		    {
+		    u32 buffer_space = m_max_samples - m_buffer.GetSize();
+		    return buffer_space >= size; 
+		    }
+		    );
+    lock.release();
+  }
 
   *buffer_ptr = m_buffer.GetWritePointer();
   *num_frames = std::min(m_buffer_size, m_buffer.GetContiguousSpace() / m_channels);
@@ -83,43 +95,9 @@ bool AudioStream::SetBufferSize(u32 buffer_size)
   return true;
 }
 
-u32 AudioStream::GetSamplesAvailable() const
-{
-  // TODO: Use atomic loads
-  u32 available_samples;
-  {
-    std::unique_lock<std::mutex> lock(m_buffer_mutex);
-    available_samples = m_buffer.GetSize();
-  }
-
-  return available_samples / m_channels;
-}
-
-void AudioStream::EnsureBuffer(u32 size)
-{
-  DebugAssert(size <= (m_buffer_size * m_channels));
-  if (GetBufferSpace() >= size)
-    return;
-
-  std::unique_lock<std::mutex> lock(m_buffer_mutex, std::adopt_lock);
-  m_buffer_draining_cv.wait(lock, [this, size]() { return GetBufferSpace() >= size; });
-  lock.release();
-}
-
-void AudioStream::DropFrames(u32 count)
-{
-  std::unique_lock<std::mutex> lock(m_buffer_mutex);
-  m_buffer.Remove(count);
-}
-
 void AudioStream::EmptyBuffers()
 {
   std::unique_lock<std::mutex> lock(m_buffer_mutex);
-  LockedEmptyBuffers();
-}
-
-void AudioStream::LockedEmptyBuffers()
-{
   m_buffer.Clear();
   m_buffer_filling.store(m_wait_for_buffer_fill);
 }
