@@ -71,9 +71,7 @@ protected:
   bool m_use_gpu_thread = false;
 
   std::mutex m_sync_mutex;
-  std::condition_variable m_sync_cpu_thread_cv;
   std::condition_variable m_wake_gpu_thread_cv;
-  bool m_sync_done = false;
 
   enum : u32
   {
