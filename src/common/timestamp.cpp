@@ -56,11 +56,7 @@ Timestamp::Timestamp()
 
 Timestamp::Timestamp(const Timestamp& copy)
 {
-#if defined(_WIN32)
   std::memcpy(&m_value, &copy.m_value, sizeof(m_value));
-#else
-  std::memcpy(&m_value, &copy.m_value, sizeof(m_value));
-#endif
 }
 
 void Timestamp::SetUnixTimestamp(UnixTimestampValue value)
