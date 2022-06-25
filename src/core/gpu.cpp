@@ -1062,7 +1062,6 @@ void GPU::WriteGP1(u32 value)
     {
       const u32 new_value = param & CRTCState::Regs::DISPLAY_ADDRESS_START_MASK;
 
-      System::IncrementInternalFrameNumber();
       if (m_crtc_state.regs.display_address_start != new_value)
       {
         SynchronizeCRTC();

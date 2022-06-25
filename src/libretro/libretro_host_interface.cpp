@@ -576,17 +576,13 @@ size_t LibretroHostInterface::retro_serialize_size()
 bool LibretroHostInterface::retro_serialize(void* data, size_t size)
 {
   std::unique_ptr<ByteStream> stream = ByteStream_CreateMemoryStream(data, static_cast<u32>(size));
-  if (!System::SaveState(stream.get(), 0))
-    return false;
-  return true;
+  return System::SaveState(stream.get());
 }
 
 bool LibretroHostInterface::retro_unserialize(const void* data, size_t size)
 {
   std::unique_ptr<ByteStream> stream = ByteStream_CreateReadOnlyMemoryStream(data, static_cast<u32>(size));
-  if (!System::LoadState(stream.get(), false))
-    return false;
-  return true;
+  return System::LoadState(stream.get());
 }
 
 void* LibretroHostInterface::retro_get_memory_data(unsigned id)
@@ -1021,7 +1017,6 @@ void LibretroHostInterface::CheckForSettingsChanges(const Settings& old_settings
 void LibretroHostInterface::OnRunningGameChanged(const std::string& path, CDImage* image, const std::string& game_code,
                                                  const std::string& game_title)
 {
-  Log_InfoPrintf("Running game changed: %s (%s)", System::GetRunningCode().c_str(), System::GetRunningTitle().c_str());
   if (UpdateGameSettings())
     UpdateSettings();
 }

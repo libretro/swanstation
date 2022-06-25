@@ -64,23 +64,19 @@ bool ReadExecutableFromImage(CDImage* cdi, std::string* out_executable_name, std
 
 std::string GetGameHashCodeForImage(CDImage* cdi);
 std::string GetGameCodeForImage(CDImage* cdi, bool fallback_to_hash);
-std::string GetGameCodeForPath(const char* image_path, bool fallback_to_hash);
 DiscRegion GetRegionForCode(std::string_view code);
 DiscRegion GetRegionFromSystemArea(CDImage* cdi);
 DiscRegion GetRegionForImage(CDImage* cdi);
 DiscRegion GetRegionForExe(const char* path);
 DiscRegion GetRegionForPsf(const char* path);
-std::optional<DiscRegion> GetRegionForPath(const char* image_path);
 
 State GetState();
 void SetState(State new_state);
-bool IsRunning();
 bool IsPaused();
 bool IsShutdown();
 bool IsValid();
 
 bool IsStartupCancelled();
-void CancelPendingStartup();
 
 ConsoleRegion GetRegion();
 bool IsPALRegion();
@@ -120,18 +116,16 @@ bool InjectEXEFromBuffer(const void* buffer, u32 buffer_size, bool patch_loader 
 
 u32 GetFrameNumber();
 void FrameDone();
-void IncrementInternalFrameNumber();
 
 const std::string& GetRunningCode();
-const std::string& GetRunningTitle();
 float GetThrottleFrequency();
 
 bool Boot(const SystemBootParameters& params);
 void Reset();
 void Shutdown();
 
-bool LoadState(ByteStream* state, bool update_display = true);
-bool SaveState(ByteStream* state, u32 screenshot_size = 256);
+bool LoadState(ByteStream* state);
+bool SaveState(ByteStream* state);
 
 /// Recreates the GPU component, saving/loading the state so it is preserved. Call when the GPU renderer changes.
 bool RecreateGPU(GPURenderer renderer, bool update_display = true);

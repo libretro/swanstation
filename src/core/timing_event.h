@@ -22,7 +22,6 @@ public:
   ALWAYS_INLINE bool IsActive() const { return m_active; }
 
   // Returns the number of ticks between each event.
-  ALWAYS_INLINE TickCount GetPeriod() const { return m_period; }
   ALWAYS_INLINE TickCount GetInterval() const { return m_interval; }
   ALWAYS_INLINE TickCount GetDowncount() const { return m_downcount; }
 

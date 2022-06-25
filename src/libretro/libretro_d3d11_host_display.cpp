@@ -38,7 +38,6 @@ public:
   ALWAYS_INLINE ID3D11Texture2D* GetD3DTexture() const { return m_texture.GetD3DTexture(); }
   ALWAYS_INLINE ID3D11ShaderResourceView* GetD3DSRV() const { return m_texture.GetD3DSRV(); }
   ALWAYS_INLINE ID3D11ShaderResourceView* const* GetD3DSRVArray() const { return m_texture.GetD3DSRVArray(); }
-  ALWAYS_INLINE bool IsDynamic() const { return m_dynamic; }
 
 private:
   D3D11::Texture m_texture;

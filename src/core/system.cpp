@@ -97,7 +97,7 @@ static ConsoleRegion s_region = ConsoleRegion::NTSC_U;
 TickCount g_ticks_per_second = MASTER_CLOCK;
 static TickCount s_max_slice_ticks = MASTER_CLOCK / 10;
 static u32 s_frame_number = 1;
-static u32 s_internal_frame_number = 1;
+static u32 s_internal_frame_number = 0;
 
 static std::string s_running_game_path;
 static std::string s_running_game_code;
@@ -142,11 +142,6 @@ void SetState(State new_state)
     CPU::ForceDispatcherExit();
 }
 
-bool IsRunning()
-{
-  return s_state == State::Running;
-}
-
 bool IsPaused()
 {
   return s_state == State::Paused;
@@ -165,12 +160,6 @@ bool IsValid()
 bool IsStartupCancelled()
 {
   return s_startup_cancelled.load();
-}
-
-void CancelPendingStartup()
-{
-  if (s_state == State::Starting)
-    s_startup_cancelled.store(true);
 }
 
 ConsoleRegion GetRegion()
@@ -210,19 +199,9 @@ void FrameDone()
   CPU::g_state.downcount = 0;
 }
 
-void IncrementInternalFrameNumber()
-{
-  s_internal_frame_number++;
-}
-
 const std::string& GetRunningCode()
 {
   return s_running_game_code;
-}
-
-const std::string& GetRunningTitle()
-{
-  return s_running_game_title;
 }
 
 float GetThrottleFrequency()
@@ -252,24 +231,16 @@ ConsoleRegion GetConsoleRegionForDiscRegion(DiscRegion region)
   {
     case DiscRegion::NTSC_J:
       return ConsoleRegion::NTSC_J;
-
+    case DiscRegion::PAL:
+      return ConsoleRegion::PAL;
     case DiscRegion::NTSC_U:
     case DiscRegion::Other:
     default:
-      return ConsoleRegion::NTSC_U;
+      break;
 
-    case DiscRegion::PAL:
-      return ConsoleRegion::PAL;
   }
-}
 
-std::string GetGameCodeForPath(const char* image_path, bool fallback_to_hash)
-{
-  std::unique_ptr<CDImage> cdi = CDImage::Open(image_path, CDImage::OpenFlags::None, nullptr);
-  if (!cdi)
-    return {};
-
-  return GetGameCodeForImage(cdi.get(), fallback_to_hash);
+  return ConsoleRegion::NTSC_U;
 }
 
 std::string GetGameCodeForImage(CDImage* cdi, bool fallback_to_hash)
@@ -324,8 +295,6 @@ std::string GetGameHashCodeForImage(CDImage* cdi)
   XXH64_update(state, &track_1_length, sizeof(track_1_length));
   const u64 hash = XXH64_digest(state);
   XXH64_freeState(state);
-
-  Log_InfoPrintf("Hash for '%s' - %" PRIX64, exe_name.c_str(), hash);
   return StringUtil::StdStringFromFormat("HASH-%" PRIX64, hash);
 }
 
@@ -542,20 +511,6 @@ DiscRegion GetRegionForPsf(const char* path)
     return DiscRegion::Other;
 
   return psf.GetRegion();
-}
-
-std::optional<DiscRegion> GetRegionForPath(const char* image_path)
-{
-  if (IsExeFileName(image_path))
-    return GetRegionForExe(image_path);
-  else if (IsPsfFileName(image_path))
-    return GetRegionForPsf(image_path);
-
-  std::unique_ptr<CDImage> cdi = CDImage::Open(image_path, CDImage::OpenFlags::None, nullptr);
-  if (!cdi)
-    return {};
-
-  return GetRegionForImage(cdi.get());
 }
 
 bool RecreateGPU(GPURenderer renderer, bool update_display /* = true*/)
@@ -816,7 +771,6 @@ bool Initialize(bool force_software_renderer)
   g_ticks_per_second = ScaleTicksToOverclock(MASTER_CLOCK);
   s_max_slice_ticks = ScaleTicksToOverclock(MASTER_CLOCK / 10);
   s_frame_number = 1;
-  s_internal_frame_number = 1;
 
   s_throttle_frequency = 60.0f;
 
@@ -1096,18 +1050,17 @@ void Reset()
   g_mdec.Reset();
   g_sio.Reset();
   s_frame_number = 1;
-  s_internal_frame_number = 0;
   TimingEvents::Reset();
 
   g_gpu->ResetGraphicsAPIState();
 }
 
-bool LoadState(ByteStream* state, bool update_display)
+bool LoadState(ByteStream* state)
 {
   if (IsShutdown())
     return false;
 
-  return DoLoadState(state, false, update_display);
+  return DoLoadState(state, false, false);
 }
 
 bool DoLoadState(ByteStream* state, bool force_software_renderer, bool update_display)
@@ -1249,7 +1202,7 @@ bool DoLoadState(ByteStream* state, bool force_software_renderer, bool update_di
   return true;
 }
 
-bool SaveState(ByteStream* state, u32 screenshot_size /* = 256 */)
+bool SaveState(ByteStream* state)
 {
   if (IsShutdown())
     return false;
