@@ -59,15 +59,6 @@ bool PlayStationMouse::DoState(StateWrapper& sw, bool apply_input_state)
   return true;
 }
 
-bool PlayStationMouse::GetButtonState(s32 button_code) const
-{
-  if (button_code < 0 || button_code >= static_cast<s32>(Button::Count))
-    return false;
-
-  const u16 bit = u16(1) << static_cast<u8>(button_code);
-  return ((m_button_state & bit) == 0);
-}
-
 void PlayStationMouse::SetButtonState(Button button, bool pressed)
 {
   static constexpr std::array<u8, static_cast<size_t>(Button::Count)> indices = {{11, 10}};
