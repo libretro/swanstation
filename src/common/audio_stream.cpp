@@ -15,28 +15,13 @@ bool AudioStream::Reconfigure(u32 input_sample_rate /* = DefaultInputSampleRate 
 {
   std::unique_lock<std::mutex> buffer_lock(m_buffer_mutex);
 
-  if (IsDeviceOpen())
-    CloseDevice();
-
   m_output_sample_rate = output_sample_rate;
   m_channels = channels;
   m_buffer_size = buffer_size;
   m_buffer_filling.store(m_wait_for_buffer_fill);
   m_output_paused = true;
 
-  if (!SetBufferSize(buffer_size))
-    return false;
-
-  if (!OpenDevice())
-  {
-    LockedEmptyBuffers();
-    m_buffer_size = 0;
-    m_output_sample_rate = 0;
-    m_channels = 0;
-    return false;
-  }
-
-  return true;
+  return SetBufferSize(buffer_size);
 }
 
 void AudioStream::PauseOutput(bool paused)
@@ -44,7 +29,6 @@ void AudioStream::PauseOutput(bool paused)
   if (m_output_paused == paused)
     return;
 
-  PauseDevice(paused);
   m_output_paused = paused;
 
   // Empty buffers on pause.
@@ -57,7 +41,6 @@ void AudioStream::Shutdown()
   if (!IsDeviceOpen())
     return;
 
-  CloseDevice();
   EmptyBuffers();
   m_buffer_size = 0;
   m_output_sample_rate = 0;

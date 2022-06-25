@@ -8,8 +8,5 @@ public:
   ~NullAudioStream();
 
 protected:
-  bool OpenDevice() override;
-  void PauseDevice(bool paused) override;
-  void CloseDevice() override;
   void FramesAvailable() override;
 };

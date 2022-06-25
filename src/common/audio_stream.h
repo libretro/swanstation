@@ -42,9 +42,6 @@ public:
   static std::unique_ptr<AudioStream> CreateNullAudioStream();
 
 protected:
-  virtual bool OpenDevice() = 0;
-  virtual void PauseDevice(bool paused) = 0;
-  virtual void CloseDevice() = 0;
   virtual void FramesAvailable() = 0;
 
   ALWAYS_INLINE static SampleType ApplyVolume(SampleType sample, u32 volume)

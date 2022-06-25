@@ -26,13 +26,4 @@ void LibretroAudioStream::UploadToFrontend()
   g_retro_audio_sample_batch_callback(output_buffer.data(), total_frames);
 }
 
-bool LibretroAudioStream::OpenDevice()
-{
-  return true;
-}
-
-void LibretroAudioStream::PauseDevice(bool paused) {}
-
-void LibretroAudioStream::CloseDevice() {}
-
 void LibretroAudioStream::FramesAvailable() {}
