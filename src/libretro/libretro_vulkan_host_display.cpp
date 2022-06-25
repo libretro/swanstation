@@ -275,16 +275,6 @@ bool LibretroVulkanHostDisplay::InitializeRenderDevice(std::string_view shader_c
   return true;
 }
 
-bool LibretroVulkanHostDisplay::HasRenderDevice() const
-{
-  return static_cast<bool>(g_vulkan_context);
-}
-
-bool LibretroVulkanHostDisplay::HasRenderSurface() const
-{
-  return true;
-}
-
 void LibretroVulkanHostDisplay::DestroyRenderDevice()
 {
   if (!g_vulkan_context)

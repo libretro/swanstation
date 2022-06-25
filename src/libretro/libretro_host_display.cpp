@@ -64,16 +64,6 @@ void* LibretroHostDisplay::GetRenderContext() const
   return nullptr;
 }
 
-bool LibretroHostDisplay::HasRenderDevice() const
-{
-  return true;
-}
-
-bool LibretroHostDisplay::HasRenderSurface() const
-{
-  return true;
-}
-
 bool LibretroHostDisplay::CreateRenderDevice(const WindowInfo& wi, std::string_view adapter_name, bool debug_device,
                                              bool threaded_presentation)
 {

@@ -68,16 +68,6 @@ void* LibretroD3D11HostDisplay::GetRenderContext() const
   return m_context.Get();
 }
 
-bool LibretroD3D11HostDisplay::HasRenderDevice() const
-{
-  return static_cast<bool>(m_device);
-}
-
-bool LibretroD3D11HostDisplay::HasRenderSurface() const
-{
-  return true;
-}
-
 static constexpr std::array<DXGI_FORMAT, static_cast<u32>(HostDisplayPixelFormat::Count)>
   s_display_pixel_format_mapping = {{DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM,
                                      DXGI_FORMAT_B5G6R5_UNORM, DXGI_FORMAT_B5G5R5A1_UNORM}};

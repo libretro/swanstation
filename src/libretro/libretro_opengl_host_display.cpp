@@ -214,16 +214,6 @@ static void APIENTRY GLDebugCallback(GLenum source, GLenum type, GLuint id, GLen
   }
 }
 
-bool LibretroOpenGLHostDisplay::HasRenderDevice() const
-{
-  return true;
-}
-
-bool LibretroOpenGLHostDisplay::HasRenderSurface() const
-{
-  return true;
-}
-
 static bool TryDesktopVersions(retro_hw_render_callback* cb)
 {
   static constexpr std::array<std::tuple<u32, u32>, 11> desktop_versions_to_try = {
