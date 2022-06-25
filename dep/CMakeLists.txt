@@ -1,7 +1,6 @@
 add_subdirectory(glad)
 add_subdirectory(stb)
 add_subdirectory(zlib)
-add_subdirectory(minizip)
 add_subdirectory(lzma)
 add_subdirectory(libFLAC)
 add_subdirectory(libchdr)
