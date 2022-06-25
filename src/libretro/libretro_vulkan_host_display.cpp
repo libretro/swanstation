@@ -291,16 +291,6 @@ void LibretroVulkanHostDisplay::DestroyRenderDevice()
   Vulkan::ResetVulkanLibraryFunctionPointers();
 }
 
-bool LibretroVulkanHostDisplay::MakeRenderContextCurrent()
-{
-  return true;
-}
-
-bool LibretroVulkanHostDisplay::DoneRenderContextCurrent()
-{
-  return true;
-}
-
 bool LibretroVulkanHostDisplay::CreateResources()
 {
   static constexpr char fullscreen_quad_vertex_shader[] = R"(

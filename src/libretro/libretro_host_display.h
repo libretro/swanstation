@@ -18,9 +18,6 @@ public:
                               bool threaded_presentation) override;
   void DestroyRenderDevice() override;
 
-  bool MakeRenderContextCurrent() override;
-  bool DoneRenderContextCurrent() override;
-
   bool ChangeRenderWindow(const WindowInfo& wi) override;
   void ResizeRenderWindow(s32 new_window_width, s32 new_window_height) override;
   void DestroyRenderSurface() override;

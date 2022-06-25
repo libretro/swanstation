@@ -314,7 +314,7 @@ bool LibretroOpenGLHostDisplay::CreateRenderDevice(const WindowInfo& wi, std::st
 }
 
 bool LibretroOpenGLHostDisplay::InitializeRenderDevice(std::string_view shader_cache_directory, bool debug_device,
-                                                       bool threaded_presentation)
+		bool threaded_presentation)
 {
   glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, reinterpret_cast<GLint*>(&m_uniform_buffer_alignment));
 
@@ -328,19 +328,7 @@ bool LibretroOpenGLHostDisplay::InitializeRenderDevice(std::string_view shader_c
     glEnable(GL_DEBUG_OUTPUT);
   }
 
-  if (!CreateResources())
-    return false;
-  return true;
-}
-
-bool LibretroOpenGLHostDisplay::MakeRenderContextCurrent()
-{
-  return true;
-}
-
-bool LibretroOpenGLHostDisplay::DoneRenderContextCurrent()
-{
-  return true;
+  return CreateResources();
 }
 
 void LibretroOpenGLHostDisplay::DestroyRenderDevice()

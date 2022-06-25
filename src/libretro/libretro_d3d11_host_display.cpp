@@ -181,12 +181,9 @@ bool LibretroD3D11HostDisplay::CreateRenderDevice(const WindowInfo& wi, std::str
 }
 
 bool LibretroD3D11HostDisplay::InitializeRenderDevice(std::string_view shader_cache_directory, bool debug_device,
-                                                      bool threaded_presentation)
+		bool threaded_presentation)
 {
-  if (!CreateResources())
-    return false;
-
-  return true;
+  return CreateResources();
 }
 
 void LibretroD3D11HostDisplay::DestroyRenderDevice()
@@ -196,16 +193,6 @@ void LibretroD3D11HostDisplay::DestroyRenderDevice()
   DestroyRenderSurface();
   m_context.Reset();
   m_device.Reset();
-}
-
-bool LibretroD3D11HostDisplay::MakeRenderContextCurrent()
-{
-  return true;
-}
-
-bool LibretroD3D11HostDisplay::DoneRenderContextCurrent()
-{
-  return true;
 }
 
 void LibretroD3D11HostDisplay::ResizeRenderWindow(s32 new_window_width, s32 new_window_height)

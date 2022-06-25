@@ -77,16 +77,6 @@ bool LibretroHostDisplay::InitializeRenderDevice(std::string_view shader_cache_d
   return true;
 }
 
-bool LibretroHostDisplay::MakeRenderContextCurrent()
-{
-  return true;
-}
-
-bool LibretroHostDisplay::DoneRenderContextCurrent()
-{
-  return true;
-}
-
 void LibretroHostDisplay::DestroyRenderDevice()
 {
   ClearSoftwareCursor();

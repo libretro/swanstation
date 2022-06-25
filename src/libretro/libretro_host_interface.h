@@ -40,8 +40,6 @@ public:
   void ReportMessage(const char* message) override;
   bool ConfirmMessage(const char* message) override;
   void AddOSDMessage(std::string message, float duration = 2.0f) override;
-  void AddKeyedOSDMessage(std::string key, std::string message, float duration = 2.0f) override;
-  void RemoveKeyedOSDMessage(std::string key) override;
   void DisplayLoadingScreen(const char* message, int progress_min = -1, int progress_max = -1,
                             int progress_value = -1) override;
 
@@ -50,7 +48,6 @@ public:
   std::string GetGameMemoryCardPath(const char* game_code, u32 slot) const override;
   std::string GetShaderCacheBasePath() const override;
   std::string GetStringSettingValue(const char* section, const char* key, const char* default_value = "") override;
-  std::vector<std::string> GetSettingStringList(const char* section, const char* key) override;
   std::string GetBIOSDirectory() override;
 
   bool UpdateSystemAVInfo(bool use_resolution_scale);
@@ -76,9 +73,6 @@ protected:
   void AcquireHostDisplay() override;
   void ReleaseHostDisplay() override;
   std::unique_ptr<AudioStream> CreateAudioStream() override;
-  void OnSystemCreated() override;
-  void OnSystemPaused(bool paused) override;
-  void OnSystemDestroyed() override;
   void CheckForSettingsChanges(const Settings& old_settings) override;
   void OnRunningGameChanged(const std::string& path, CDImage* image, const std::string& game_code,
                             const std::string& game_title) override;

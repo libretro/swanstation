@@ -311,10 +311,6 @@ void LibretroHostInterface::AddOSDMessage(std::string message, float duration /*
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_MESSAGE, &msg);
 }
 
-void LibretroHostInterface::AddKeyedOSDMessage(std::string key, std::string message, float duration /* = 2.0f */) {}
-
-void LibretroHostInterface::RemoveKeyedOSDMessage(std::string key) {}
-
 void LibretroHostInterface::retro_get_system_av_info(struct retro_system_av_info* info)
 {
   const bool use_resolution_scale = (g_settings.gpu_renderer != GPURenderer::Software);
@@ -690,12 +686,6 @@ std::unique_ptr<AudioStream> LibretroHostInterface::CreateAudioStream()
 {
   return std::make_unique<LibretroAudioStream>();
 }
-void LibretroHostInterface::OnSystemCreated() {}
-
-void LibretroHostInterface::OnSystemPaused(bool paused) {}
-
-void LibretroHostInterface::OnSystemDestroyed() {}
-
 void LibretroHostInterface::OnControllerTypeChanged(u32 slot) {}
 
 void LibretroHostInterface::SetMouseMode(bool relative, bool hide_cursor) {}
@@ -956,11 +946,6 @@ void LibretroHostInterface::LoadSettings()
   for (u32 i = 0; i < NUM_CONTROLLER_AND_CARD_PORTS; i++)
     g_settings.memory_card_paths[i] = GetSharedMemoryCardPath(i);
 
-}
-
-std::vector<std::string> LibretroHostInterface::GetSettingStringList(const char* section, const char* key)
-{
-  return {};
 }
 
 void LibretroHostInterface::UpdateSettings()

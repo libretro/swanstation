@@ -56,12 +56,6 @@ public:
     RightOrBottom
   };
 
-  struct AdapterAndModeList
-  {
-    std::vector<std::string> adapter_names;
-    std::vector<std::string> fullscreen_modes;
-  };
-
   virtual ~HostDisplay();
 
   ALWAYS_INLINE s32 GetWindowWidth() const { return static_cast<s32>(m_window_info.surface_width); }
@@ -84,8 +78,6 @@ public:
                                   bool threaded_presentation) = 0;
   virtual bool InitializeRenderDevice(std::string_view shader_cache_directory, bool debug_device,
                                       bool threaded_presentation) = 0;
-  virtual bool MakeRenderContextCurrent() = 0;
-  virtual bool DoneRenderContextCurrent() = 0;
   virtual void DestroyRenderDevice() = 0;
   virtual void DestroyRenderSurface() = 0;
   virtual bool ChangeRenderWindow(const WindowInfo& wi) = 0;

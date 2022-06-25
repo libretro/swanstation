@@ -79,14 +79,12 @@ bool HostInterface::BootSystem(std::shared_ptr<SystemBootParameters> parameters)
         g_host_interface->TranslateString("System", "System failed to boot. The log may contain more information."));
     }
 
-    OnSystemDestroyed();
     m_audio_stream.reset();
     ReleaseHostDisplay();
     return false;
   }
 
   UpdateSoftwareCursor();
-  OnSystemCreated();
 
   m_audio_stream->PauseOutput(false);
   return true;
@@ -107,8 +105,6 @@ void HostInterface::PauseSystem(bool paused)
   if (!paused)
     m_audio_stream->EmptyBuffers();
   m_audio_stream->PauseOutput(paused);
-
-  OnSystemPaused(paused);
 }
 
 void HostInterface::DestroySystem()
@@ -120,7 +116,6 @@ void HostInterface::DestroySystem()
   m_audio_stream.reset();
   UpdateSoftwareCursor();
   ReleaseHostDisplay();
-  OnSystemDestroyed();
 }
 
 void HostInterface::ReportError(const char* message)
@@ -192,16 +187,6 @@ void HostInterface::AddFormattedOSDMessage(float duration, const char* format, .
   va_end(ap);
 
   AddOSDMessage(std::move(message), duration);
-}
-
-void HostInterface::AddKeyedFormattedOSDMessage(std::string key, float duration, const char* format, ...)
-{
-  std::va_list ap;
-  va_start(ap, format);
-  std::string message = StringUtil::StdStringFromFormatV(format, ap);
-  va_end(ap);
-
-  AddKeyedOSDMessage(std::move(key), std::move(message), duration);
 }
 
 std::string HostInterface::GetBIOSDirectory()

@@ -68,10 +68,7 @@ public:
 
   /// Adds OSD messages, duration is in seconds.
   virtual void AddOSDMessage(std::string message, float duration = 2.0f) = 0;
-  virtual void AddKeyedOSDMessage(std::string key, std::string message, float duration = 2.0f) = 0;
-  virtual void RemoveKeyedOSDMessage(std::string key) = 0;
   void AddFormattedOSDMessage(float duration, const char* format, ...) printflike(3, 4);
-  void AddKeyedFormattedOSDMessage(std::string key, float duration, const char* format, ...) printflike(4, 5);
 
   /// Returns the base user directory path.
   ALWAYS_INLINE const std::string& GetUserDirectory() const { return m_user_directory; }
@@ -81,9 +78,6 @@ public:
 
   /// Returns a path relative to the application directory (for system files).
   std::string GetProgramDirectoryRelativePath(const char* format, ...) const printflike(2, 3);
-
-  /// Returns a string which can be used as part of a filename, based on the current date/time.
-  static TinyString GetTimestampStringForFileName();
 
   /// Displays a loading screen with the logo, rendered with ImGui. Use when executing possibly-time-consuming tasks
   /// such as compiling shaders when starting up.
@@ -117,9 +111,6 @@ public:
   /// Returns a float setting from the configuration.
   virtual float GetFloatSettingValue(const char* section, const char* key, float default_value = 0.0f);
 
-  /// Returns a string list from the configuration.
-  virtual std::vector<std::string> GetSettingStringList(const char* section, const char* key) = 0;
-
   /// Translates a string to the current language.
   virtual TinyString TranslateString(const char* context, const char* str, const char* disambiguation = nullptr,
                                      int n = -1) const;
@@ -143,9 +134,6 @@ protected:
   virtual void ReleaseHostDisplay() = 0;
   virtual std::unique_ptr<AudioStream> CreateAudioStream() = 0;
 
-  virtual void OnSystemCreated() = 0;
-  virtual void OnSystemPaused(bool paused) = 0;
-  virtual void OnSystemDestroyed() = 0;
   virtual void OnControllerTypeChanged(u32 slot) = 0;
 
   /// Loads settings to m_settings and any frontend-specific parameters.
