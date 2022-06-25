@@ -28,33 +28,16 @@ public:
   Timestamp();
   Timestamp(const Timestamp& copy);
 
-  // readers
-  UnixTimestampValue AsUnixTimestamp() const;
-  ExpandedTime AsExpandedTime() const;
-
-  // calculators
-  double DifferenceInSeconds(Timestamp& other) const;
-  s64 DifferenceInSecondsInt(Timestamp& other) const;
-
   // setters
-  void SetNow();
   void SetUnixTimestamp(UnixTimestampValue value);
-  void SetExpandedTime(const ExpandedTime& value);
 
   // string conversion
   String ToString(const char* format) const;
   void ToString(String& destination, const char* format) const;
 
-  // creators
-  static Timestamp Now();
-  static Timestamp FromUnixTimestamp(UnixTimestampValue value);
-  static Timestamp FromExpandedTime(const ExpandedTime& value);
-
 // windows-specific
 #ifdef _WIN32
-  FILETIME AsFileTime();
   void SetWindowsFileTime(const FILETIME* pFileTime);
-  static Timestamp FromWindowsFileTime(const FILETIME* pFileTime);
 #endif
 
   // operators
