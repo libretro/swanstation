@@ -122,52 +122,6 @@ std::unique_ptr<HostDisplayTexture> LibretroVulkanHostDisplay::CreateTexture(u32
   return std::make_unique<LibretroVulkanHostDisplayTexture>(std::move(texture), std::move(staging_texture), format);
 }
 
-void LibretroVulkanHostDisplay::UpdateTexture(HostDisplayTexture* texture, u32 x, u32 y, u32 width, u32 height,
-                                              const void* data, u32 data_stride)
-{
-  LibretroVulkanHostDisplayTexture* vk_texture = static_cast<LibretroVulkanHostDisplayTexture*>(texture);
-
-  Vulkan::StagingTexture* staging_texture;
-  if (vk_texture->GetStagingTexture().IsValid())
-  {
-    staging_texture = &vk_texture->GetStagingTexture();
-  }
-  else
-  {
-    // TODO: This should use a stream buffer instead for speed.
-    if (m_upload_staging_texture.IsValid())
-      m_upload_staging_texture.Flush();
-
-    if ((m_upload_staging_texture.GetWidth() < width || m_upload_staging_texture.GetHeight() < height) &&
-        !m_upload_staging_texture.Create(Vulkan::StagingBuffer::Type::Upload, VK_FORMAT_R8G8B8A8_UNORM, width, height))
-    {
-      Panic("Failed to create upload staging texture");
-    }
-
-    staging_texture = &m_upload_staging_texture;
-  }
-
-  staging_texture->WriteTexels(0, 0, width, height, data, data_stride);
-  staging_texture->CopyToTexture(0, 0, vk_texture->GetTexture(), x, y, 0, 0, width, height);
-}
-
-bool LibretroVulkanHostDisplay::DownloadTexture(const void* texture_handle, HostDisplayPixelFormat texture_format,
-                                                u32 x, u32 y, u32 width, u32 height, void* out_data,
-                                                u32 out_data_stride)
-{
-  Vulkan::Texture* texture = static_cast<Vulkan::Texture*>(const_cast<void*>(texture_handle));
-
-  if ((m_readback_staging_texture.GetWidth() < width || m_readback_staging_texture.GetHeight() < height) &&
-      !m_readback_staging_texture.Create(Vulkan::StagingBuffer::Type::Readback, texture->GetFormat(), width, height))
-  {
-    return false;
-  }
-
-  m_readback_staging_texture.CopyFromTexture(*texture, x, y, 0, 0, 0, 0, width, height);
-  m_readback_staging_texture.ReadTexels(0, 0, width, height, out_data, out_data_stride);
-  return true;
-}
-
 bool LibretroVulkanHostDisplay::SupportsDisplayPixelFormat(HostDisplayPixelFormat format) const
 {
   const VkFormat vk_format = s_display_pixel_format_mapping[static_cast<u32>(format)];

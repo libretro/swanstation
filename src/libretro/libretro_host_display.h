@@ -34,11 +34,6 @@ public:
   std::unique_ptr<HostDisplayTexture> CreateTexture(u32 width, u32 height, u32 layers, u32 levels, u32 samples,
                                                     HostDisplayPixelFormat format, const void* data, u32 data_stride,
                                                     bool dynamic = false) override;
-  void UpdateTexture(HostDisplayTexture* texture, u32 x, u32 y, u32 width, u32 height, const void* data,
-                     u32 data_stride) override;
-  bool DownloadTexture(const void* texture_handle, HostDisplayPixelFormat texture_format, u32 x, u32 y, u32 width,
-                       u32 height, void* out_data, u32 out_data_stride) override;
-
   bool Render() override;
 
   bool SupportsDisplayPixelFormat(HostDisplayPixelFormat format) const override;
