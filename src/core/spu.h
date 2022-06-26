@@ -334,7 +334,6 @@ private:
 
   ALWAYS_INLINE bool IsRAMIRQTriggerable() const { return m_SPUCNT.irq9_enable && !m_SPUSTAT.irq9_flag; }
   ALWAYS_INLINE bool CheckRAMIRQ(u32 address) const { return ((ZeroExtend32(m_irq_address) * 8) == address); }
-  void TriggerRAMIRQ();
   void CheckForLateRAMIRQs();
 
   void WriteToCaptureBuffer(u32 index, s16 value);
