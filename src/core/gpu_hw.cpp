@@ -195,9 +195,7 @@ u32 GPU_HW::CalculateResolutionScale() const
 {
   u32 scale;
   if (g_settings.gpu_resolution_scale != 0)
-  {
     scale = std::clamp<u32>(g_settings.gpu_resolution_scale, 1, m_max_resolution_scale);
-  }
   else
   {
     // Auto scaling. When the system is starting and all borders crop is enabled, the registers are zero, and
@@ -210,24 +208,9 @@ u32 GPU_HW::CalculateResolutionScale() const
       static_cast<s32>(std::ceil(static_cast<float>(m_host_display->GetWindowHeight()) / height));
     scale = static_cast<u32>(std::clamp<s32>(preferred_scale, 1, m_max_resolution_scale));
   }
-
   if (g_settings.gpu_downsample_mode == GPUDownsampleMode::Adaptive && m_supports_adaptive_downsampling && scale > 1 &&
-      !Common::IsPow2(scale))
-  {
-    const u32 new_scale = Common::PreviousPow2(scale);
-
-    if (g_settings.gpu_resolution_scale != 0)
-    {
-      g_host_interface->AddFormattedOSDMessage(
-        10.0f,
-        g_host_interface->TranslateString("OSDMessage",
-                                          "Resolution scale %ux not supported for adaptive smoothing, using %ux."),
-        scale, new_scale);
-    }
-
-    scale = new_scale;
-  }
-
+      !(IS_POW2(scale)))
+    return Common::PreviousPow2(scale);
   return scale;
 }
 
@@ -367,15 +350,11 @@ void GPU_HW::ComputePolygonUVLimits(BatchVertex* vertices, u32 num_vertices)
 
 void GPU_HW::SetBatchDepthBuffer(bool enabled)
 {
-  if (m_batch.use_depth_buffer == enabled)
-    return;
-
   if (GetBatchVertexCount() > 0)
   {
     FlushRender();
     EnsureVertexBufferSpaceForCurrentCommand();
   }
-
   m_batch.use_depth_buffer = enabled;
 }
 
@@ -571,14 +550,16 @@ void GPU_HW::LoadVertices()
       {
         if (!valid_w)
         {
-          SetBatchDepthBuffer(false);
+          if (m_batch.use_depth_buffer)
+            SetBatchDepthBuffer(false);
           for (BatchVertex& v : vertices)
             v.w = 1.0f;
         }
         else if (g_settings.gpu_pgxp_depth_buffer)
         {
           const bool use_depth = (m_batch.transparency_mode == GPUTransparencyMode::Disabled);
-          SetBatchDepthBuffer(use_depth);
+          if (m_batch.use_depth_buffer != use_depth)
+            SetBatchDepthBuffer(use_depth);
           if (use_depth)
             CheckForDepthClear(vertices.data(), num_vertices);
         }
@@ -716,7 +697,8 @@ void GPU_HW::LoadVertices()
         return;
 
       // we can split the rectangle up into potentially 8 quads
-      SetBatchDepthBuffer(false);
+      if (m_batch.use_depth_buffer)
+        SetBatchDepthBuffer(false);
       DebugAssert(GetBatchVertexSpace() >= MAX_VERTICES_FOR_RECTANGLE);
 
       // Split the rectangle into multiple quads if it's greater than 256x256, as the texture page should repeat.
@@ -780,7 +762,8 @@ void GPU_HW::LoadVertices()
 
     case GPUPrimitive::Line:
     {
-      SetBatchDepthBuffer(false);
+      if (m_batch.use_depth_buffer)
+        SetBatchDepthBuffer(false);
 
       if (!rc.polyline)
       {
