@@ -4035,7 +4035,7 @@ struct retro_core_options_v2 *options_intl[RETRO_LANGUAGE_LAST] = {
  *   be as painless as possible for core devs)
  */
 
-static INLINE void libretro_set_core_options(retro_environment_t g_retro_environment_callback,
+static INLINE void libretro_set_core_options(retro_environment_t cb,
       bool *categories_supported)
 {
    unsigned version  = 0;
@@ -4043,7 +4043,7 @@ static INLINE void libretro_set_core_options(retro_environment_t g_retro_environ
    unsigned language = 0;
 #endif
 
-   if (!g_retro_environment_callback || !categories_supported)
+   if (!cb || !categories_supported)
       return;
 
    *categories_supported = false;

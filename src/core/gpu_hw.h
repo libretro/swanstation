@@ -66,7 +66,15 @@ protected:
     ALWAYS_INLINE void Set(float x_, float y_, float z_, float w_, u32 color_, u32 texpage_, u16 packed_texcoord,
                            u32 uv_limits_)
     {
-      Set(x_, y_, z_, w_, color_, texpage_, packed_texcoord & 0xFF, (packed_texcoord >> 8), uv_limits_);
+      x         = x_;
+      y         = y_;
+      z         = z_;
+      w         = w_;
+      color     = color_;
+      texpage   = texpage_;
+      u         = packed_texcoord & 0xFF;
+      v         = (packed_texcoord >> 8);
+      uv_limits = uv_limits_;
     }
 
     ALWAYS_INLINE void Set(float x_, float y_, float z_, float w_, u32 color_, u32 texpage_, u16 u_, u16 v_,

@@ -293,12 +293,12 @@ std::string LibretroHostInterface::GetStringSettingValue(const char* section, co
   retro_variable var{name, default_value};
   if (g_retro_environment_callback(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
     return var.value;
-  else
-    return default_value;
+  return default_value;
 }
 
 void LibretroHostInterface::DisplayLoadingScreen(const char* message, int progress_min /*= -1*/,
-                                                int progress_max /*= -1*/, int progress_value /*= -1*/) {}
+		                                 int progress_max /*= -1*/, int progress_value /*= -1*/) {}
+
 
 void LibretroHostInterface::AddOSDMessage(std::string message, float duration /*= 2.0f*/)
 {
@@ -590,22 +590,24 @@ void* LibretroHostInterface::retro_get_memory_data(unsigned id)
   switch (id)
   {
     case RETRO_MEMORY_SYSTEM_RAM:
-      return System::IsShutdown() ? nullptr : Bus::g_ram;
-
-    case RETRO_MEMORY_SAVE_RAM: {
+      if (!System::IsShutdown())
+        return Bus::g_ram;
+      break;
+    case RETRO_MEMORY_SAVE_RAM:
+    {
       const MemoryCardType type = g_settings.memory_card_types[0];
-      if (System::IsShutdown()  || type != MemoryCardType::Libretro) {
-        return nullptr;
-      }
-      auto card = g_pad.GetMemoryCard(0);
+      if (System::IsShutdown()  || type != MemoryCardType::Libretro)
+        break;
+      auto card  = g_pad.GetMemoryCard(0);
       auto& data = card->GetData();
       return data.data();
-      break;
     }
 
     default:
-      return nullptr;
+      break;
   }
+
+  return nullptr;
 }
 
 size_t LibretroHostInterface::retro_get_memory_size(unsigned id)
@@ -615,17 +617,17 @@ size_t LibretroHostInterface::retro_get_memory_size(unsigned id)
     case RETRO_MEMORY_SYSTEM_RAM:
       return Bus::g_ram_size;
 
-    case RETRO_MEMORY_SAVE_RAM: {
+    case RETRO_MEMORY_SAVE_RAM:
+    {
       const MemoryCardType type = g_settings.memory_card_types[0];
-      if (System::IsShutdown()  || type != MemoryCardType::Libretro) {
-        return 0;
-      }
+      if (System::IsShutdown()  || type != MemoryCardType::Libretro)
+        break;
       return 128 * 1024;
     }
-
     default:
-      return 0;
+      break;
   }
+  return 0;
 }
 
 void LibretroHostInterface::retro_cheat_reset()
@@ -644,7 +646,7 @@ void LibretroHostInterface::retro_cheat_set(unsigned index, bool enabled, const 
 
   CheatCode cc;
   cc.description = StringUtil::StdStringFromFormat("Cheat%u", index);
-  cc.enabled = true;
+  cc.enabled     = true;
   if (!CheatList::ParseLibretroCheat(&cc, code))
     Log_ErrorPrintf("Failed to parse cheat %u '%s'", index, code);
 
@@ -653,15 +655,15 @@ void LibretroHostInterface::retro_cheat_set(unsigned index, bool enabled, const 
 
 void LibretroHostInterface::AcquireHostDisplay()
 {
+  WindowInfo wi;
   // start in software mode, switch to hardware later
   struct retro_system_av_info avi;
   g_libretro_host_interface.GetSystemAVInfo(&avi, false);
 
-  WindowInfo wi;
   wi.surface_width  = avi.geometry.base_width;
   wi.surface_height = avi.geometry.base_height;
 
-  m_display = std::make_unique<LibretroHostDisplay>();
+  m_display         = std::make_unique<LibretroHostDisplay>();
   m_display->CreateRenderDevice(wi, {}, false, false);
   m_display->InitializeRenderDevice({}, false, false);
 }
@@ -824,17 +826,11 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
   {
 
     if (multitap_mode == MultitapMode::Port1Only || multitap_mode == MultitapMode::Port2Only)
-    {
       port_allowed = (i < 5);
-    }
     else if (multitap_mode == MultitapMode::BothPorts)
-    {
       port_allowed = true;
-    }
     else
-    {
       port_allowed = (i < 2);
-    }
 
     const u32 active_controller = retropad_device[i];
     const bool analog_active = (port_allowed && (active_controller == RETRO_DEVICE_PS_DUALSHOCK || active_controller == RETRO_DEVICE_PS_ANALOG_JOYSTICK ||
@@ -880,8 +876,7 @@ std::string LibretroHostInterface::GetBIOSDirectory()
   const char* system_directory = nullptr;
   if (!g_retro_environment_callback(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_directory) || !system_directory)
     return GetProgramDirectoryRelativePath("system");
-  else
-    return system_directory;
+  return system_directory;
 }
 
 void LibretroHostInterface::LoadSettings()
@@ -1062,8 +1057,6 @@ void LibretroHostInterface::UpdateControllers()
         break;
 
       default:
-        ReportFormattedError("Unhandled controller type '%s'.",
-                             Settings::GetControllerTypeDisplayName(g_settings.controller_types[i]));
         break;
     }
   }
