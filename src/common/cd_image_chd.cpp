@@ -110,12 +110,12 @@ bool CDImageCHD::Open(const char* filename, Common::Error* error)
 
   if ((GetOpenFlags() & OpenFlags::PreCache) != OpenFlags::None)
   {
-    const chd_error err = chd_precache(m_chd);
-    if (err != CHDERR_NONE)
+    const chd_error _err = chd_precache(m_chd);
+    if (_err != CHDERR_NONE)
     {
-      Log_WarningPrintf("Failed to pre-cache CHD '%s': %s", filename, chd_error_string(err));
+      Log_WarningPrintf("Failed to pre-cache CHD '%s': %s", filename, chd_error_string(_err));
       if (error)
-        error->SetMessage(chd_error_string(err));
+        error->SetMessage(chd_error_string(_err));
     }
   }
 

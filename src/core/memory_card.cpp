@@ -79,10 +79,6 @@ void MemoryCard::ResetTransferState()
 bool MemoryCard::Transfer(const u8 data_in, u8* data_out)
 {
   bool ack = false;
-#ifdef _DEBUG
-  const State old_state = m_state;
-#endif
-
   switch (m_state)
   {
 
@@ -249,12 +245,9 @@ bool MemoryCard::Transfer(const u8 data_in, u8* data_out)
     break;
 
     default:
-      UnreachableCode();
       break;
   }
 
-  Log_DebugPrintf("Transfer, old_state=%u, new_state=%u, data_in=0x%02X, data_out=0x%02X, ack=%s",
-                  static_cast<u32>(old_state), static_cast<u32>(m_state), data_in, *data_out, ack ? "true" : "false");
   m_last_byte = data_in;
   return ack;
 }

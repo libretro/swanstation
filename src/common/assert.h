@@ -25,24 +25,15 @@ void Y_OnPanicReached(const char* szMessage, const char* szFunction, const char*
   {                                                                                                                    \
     Y_OnAssertFailed("Debug assertion failed: '" msg "'", __FUNCTION__, __FILE__, __LINE__);                           \
   }
-#define DebugUnreachableCode() Y_OnPanicReached("Unreachable code reached", __FUNCTION__, __FILE__, __LINE__)
 #else
 #define DebugAssert(expr)
 #define DebugAssertMsg(expr, msg)
-#define DebugUnreachableCode()
 #endif
 
 // Panics the application, displaying an error message.
 #define Panic(Message) Y_OnPanicReached("Panic triggered: '" Message "'", __FUNCTION__, __FILE__, __LINE__)
 
-// Kills the application, indicating a pure function call that should not have happened.
-#define PureCall() Y_OnPanicReached("PureCall encountered", __FUNCTION__, __FILE__, __LINE__)
-
-// Kills the application, indicating that code that was never supposed to be reached has been executed.
-#define UnreachableCode() Y_OnPanicReached("Unreachable code reached", __FUNCTION__, __FILE__, __LINE__)
-
 // Helper for switch cases.
-#define DefaultCaseIsUnreachable()                                                                                     \
-  default:                                                                                                             \
-    UnreachableCode();                                                                                                 \
-    break;
+#define DefaultCaseIsUnreachable() \
+  default: \
+    break

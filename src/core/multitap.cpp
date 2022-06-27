@@ -188,10 +188,6 @@ bool Multitap::Transfer(const u8 data_in, u8* data_out)
         m_transfer_all_controllers = (data_in & 0x01);
         m_controller_transfer_step = 0;
       }
-      else
-      {
-        UnreachableCode();
-      }
     }
     break;
 

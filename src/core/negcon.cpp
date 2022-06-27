@@ -140,7 +140,7 @@ bool NeGcon::Transfer(const u8 data_in, u8* data_out)
         m_transfer_state = TransferState::Ready;
         return true;
       }
-      return false;
+      break;
     }
 
     case TransferState::Ready:
@@ -153,7 +153,7 @@ bool NeGcon::Transfer(const u8 data_in, u8* data_out)
       }
 
       *data_out = 0xFF;
-      return false;
+      break;
     }
 
     case TransferState::IDMSB:
@@ -202,15 +202,14 @@ bool NeGcon::Transfer(const u8 data_in, u8* data_out)
     {
       *data_out = Truncate8(m_axis_state[static_cast<u8>(Axis::L)]);
       m_transfer_state = TransferState::Idle;
-      return false;
+      break;
     }
 
     default:
-    {
-      UnreachableCode();
-      return false;
-    }
+      break;
   }
+
+  return false;
 }
 
 std::unique_ptr<NeGcon> NeGcon::Create()

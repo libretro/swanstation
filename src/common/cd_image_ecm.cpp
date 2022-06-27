@@ -501,7 +501,6 @@ bool CDImageEcm::ReadChunks(u32 disc_offset, u32 size)
         break;
 
         default:
-          UnreachableCode();
           return false;
       }
 

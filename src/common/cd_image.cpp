@@ -220,7 +220,6 @@ u32 CDImage::Read(ReadMode read_mode, u32 sector_count, void* buffer)
         break;
 
       default:
-        UnreachableCode();
         break;
     }
   }

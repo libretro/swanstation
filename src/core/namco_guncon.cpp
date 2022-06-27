@@ -102,7 +102,7 @@ bool NamcoGunCon::Transfer(const u8 data_in, u8* data_out)
         m_transfer_state = TransferState::Ready;
         return true;
       }
-      return false;
+      break;
     }
 
     case TransferState::Ready:
@@ -115,7 +115,7 @@ bool NamcoGunCon::Transfer(const u8 data_in, u8* data_out)
       }
 
       *data_out = 0xFF;
-      return false;
+      break;
     }
 
     case TransferState::IDMSB:
@@ -165,15 +165,14 @@ bool NamcoGunCon::Transfer(const u8 data_in, u8* data_out)
     {
       *data_out = Truncate8(m_position_y >> 8);
       m_transfer_state = TransferState::Idle;
-      return false;
+      break;
     }
 
     default:
-    {
-      UnreachableCode();
-      return false;
-    }
+      break;
   }
+
+  return false;
 }
 
 void NamcoGunCon::UpdatePosition()

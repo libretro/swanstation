@@ -104,7 +104,6 @@ Value CodeGenerator::EmitLoadGuestMemory(const CodeBlockInstruction& cbi, const 
         break;
 
       default:
-        UnreachableCode();
         break;
     }
   }

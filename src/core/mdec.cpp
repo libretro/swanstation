@@ -309,7 +309,6 @@ void MDEC::Execute()
       }
 
       default:
-        UnreachableCode();
         return;
     }
   }

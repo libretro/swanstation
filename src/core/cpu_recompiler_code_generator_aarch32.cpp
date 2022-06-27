@@ -349,7 +349,6 @@ void CodeGenerator::EmitCopyValue(HostReg to_reg, const Value& value)
     break;
 
     default:
-      UnreachableCode();
       break;
   }
 }
@@ -533,7 +532,6 @@ void CodeGenerator::EmitInc(HostReg to_reg, RegSize size)
       m_emit->inc(GetHostReg32(to_reg));
       break;
     default:
-      UnreachableCode();
       break;
   }
 #endif
@@ -555,7 +553,6 @@ void CodeGenerator::EmitDec(HostReg to_reg, RegSize size)
       m_emit->dec(GetHostReg32(to_reg));
       break;
     default:
-      UnreachableCode();
       break;
   }
 #endif
@@ -841,7 +838,6 @@ void CodeGenerator::EmitSetConditionResult(HostReg to_reg, RegSize to_size, Cond
       break;
 
     default:
-      UnreachableCode();
       return;
   }
 
@@ -1053,9 +1049,6 @@ void CodeGenerator::EmitLoadCPUStructField(HostReg host_reg, RegSize guest_size,
       break;
 
     default:
-    {
-      UnreachableCode();
-    }
     break;
   }
 }
@@ -1080,9 +1073,6 @@ void CodeGenerator::EmitStoreCPUStructField(u32 offset, const Value& value)
       break;
 
     default:
-    {
-      UnreachableCode();
-    }
     break;
   }
 }
@@ -1150,9 +1140,6 @@ void CodeGenerator::EmitAddCPUStructField(u32 offset, const Value& value)
     break;
 
     default:
-    {
-      UnreachableCode();
-    }
     break;
   }
 }
@@ -1233,7 +1220,6 @@ void CodeGenerator::EmitLoadGuestRAMFastmem(const Value& address, RegSize size, 
       break;
 
     default:
-      UnreachableCode();
       break;
   }
 }
@@ -1283,7 +1269,6 @@ void CodeGenerator::EmitLoadGuestMemoryFastmem(const CodeBlockInstruction& cbi, 
       break;
 
     default:
-      UnreachableCode();
       break;
   }
 
@@ -1341,7 +1326,6 @@ void CodeGenerator::EmitLoadGuestMemorySlowmem(const CodeBlockInstruction& cbi, 
         break;
 
       default:
-        UnreachableCode();
         break;
     }
 
@@ -1389,7 +1373,6 @@ void CodeGenerator::EmitLoadGuestMemorySlowmem(const CodeBlockInstruction& cbi, 
         break;
 
       default:
-        UnreachableCode();
         break;
     }
   }
@@ -1442,7 +1425,6 @@ void CodeGenerator::EmitStoreGuestMemoryFastmem(const CodeBlockInstruction& cbi,
       break;
 
     default:
-      UnreachableCode();
       break;
   }
 
@@ -1502,7 +1484,6 @@ void CodeGenerator::EmitStoreGuestMemorySlowmem(const CodeBlockInstruction& cbi,
         break;
 
       default:
-        UnreachableCode();
         break;
     }
 
@@ -1548,7 +1529,6 @@ void CodeGenerator::EmitStoreGuestMemorySlowmem(const CodeBlockInstruction& cbi,
         break;
 
       default:
-        UnreachableCode();
         break;
     }
   }
@@ -1644,7 +1624,6 @@ void CodeGenerator::EmitLoadGlobal(HostReg host_reg, RegSize size, const void* p
       break;
 
     default:
-      UnreachableCode();
       break;
   }
 }
@@ -1669,7 +1648,6 @@ void CodeGenerator::EmitStoreGlobal(void* ptr, const Value& value)
       break;
 
     default:
-      UnreachableCode();
       break;
   }
 }
@@ -1877,7 +1855,6 @@ static a32::Condition TranslateCondition(Condition condition, bool invert)
       return invert ? a32::hi : a32::ls;
 
     default:
-      UnreachableCode();
       return a32::Condition::Never();
   }
 }
@@ -1916,7 +1893,6 @@ void CodeGenerator::EmitConditionalBranch(Condition condition, bool invert, Host
           m_emit->tst(GetHostReg32(value), GetHostReg32(value));
           break;
         default:
-          UnreachableCode();
           break;
       }
 
@@ -1941,7 +1917,6 @@ void CodeGenerator::EmitConditionalBranch(Condition condition, bool invert, Host
           m_emit->b(a32::ne, label);
           break;
         default:
-          UnreachableCode();
           break;
       }
 
@@ -1965,7 +1940,6 @@ void CodeGenerator::EmitConditionalBranch(Condition condition, bool invert, Host
           m_emit->b(a32::eq, label);
           break;
         default:
-          UnreachableCode();
           break;
       }
 
@@ -1977,7 +1951,6 @@ void CodeGenerator::EmitConditionalBranch(Condition condition, bool invert, Host
       return;
 
     default:
-      UnreachableCode();
       return;
   }
 }
@@ -2019,7 +1992,6 @@ void CodeGenerator::EmitConditionalBranch(Condition condition, bool invert, Host
       return;
 
     default:
-      UnreachableCode();
       return;
   }
 }
@@ -2044,7 +2016,6 @@ void CodeGenerator::EmitBranchIfBitClear(HostReg reg, RegSize size, u8 bit, Labe
       break;
 
     default:
-      UnreachableCode();
       break;
   }
 }

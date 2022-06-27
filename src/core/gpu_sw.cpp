@@ -794,7 +794,6 @@ void GPU_SW::DispatchRenderCommand()
     break;
 
     default:
-      UnreachableCode();
       break;
   }
 }

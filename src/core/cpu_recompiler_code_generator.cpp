@@ -269,7 +269,6 @@ Value CodeGenerator::ConvertValueSize(const Value& value, RegSize size, bool sig
         break;
     }
 
-    UnreachableCode();
     return Value{};
   }
 
@@ -1307,14 +1306,12 @@ bool CodeGenerator::Compile_Bitwise(const CodeBlockInstruction& cbi)
         break;
 
         default:
-          UnreachableCode();
           break;
       }
     }
     break;
 
     default:
-      UnreachableCode();
       break;
   }
 
@@ -1403,7 +1400,6 @@ bool CodeGenerator::Compile_Shift(const CodeBlockInstruction& cbi)
     break;
 
     default:
-      UnreachableCode();
       break;
   }
 
@@ -1478,7 +1474,6 @@ bool CodeGenerator::Compile_Load(const CodeBlockInstruction& cbi)
     break;
 
     default:
-      UnreachableCode();
       break;
   }
 
@@ -1581,7 +1576,6 @@ bool CodeGenerator::Compile_Store(const CodeBlockInstruction& cbi)
     break;
 
     default:
-      UnreachableCode();
       break;
   }
 
@@ -1793,7 +1787,6 @@ bool CodeGenerator::Compile_MoveHiLo(const CodeBlockInstruction& cbi)
     break;
 
     default:
-      UnreachableCode();
       break;
   }
 
@@ -1843,7 +1836,6 @@ bool CodeGenerator::Compile_Add(const CodeBlockInstruction& cbi)
     break;
 
     default:
-      UnreachableCode();
       return false;
   }
 
@@ -2258,7 +2250,6 @@ bool CodeGenerator::Compile_Branch(const CodeBlockInstruction& cbi)
           break;
 
           default:
-            UnreachableCode();
             break;
         }
       }
@@ -2459,11 +2450,7 @@ bool CodeGenerator::Compile_Branch(const CodeBlockInstruction& cbi)
         InstructionEpilogue(cbi);
         return true;
       }
-      else
-      {
-        UnreachableCode();
-        return false;
-      }
+      return false;
     }
 
     case InstructionOp::beq:
@@ -2530,7 +2517,6 @@ bool CodeGenerator::Compile_Branch(const CodeBlockInstruction& cbi)
     }
 
     default:
-      UnreachableCode();
       return false;
   }
 }

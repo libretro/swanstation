@@ -892,7 +892,6 @@ void GPU_HW::LoadVertices()
     break;
 
     default:
-      UnreachableCode();
       break;
   }
 }

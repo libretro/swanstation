@@ -96,7 +96,7 @@ bool PlayStationMouse::Transfer(const u8 data_in, u8* data_out)
         m_transfer_state = TransferState::Ready;
         return true;
       }
-      return false;
+      break;
     }
 
     case TransferState::Ready:
@@ -109,7 +109,7 @@ bool PlayStationMouse::Transfer(const u8 data_in, u8* data_out)
       }
 
       *data_out = 0xFF;
-      return false;
+      break;
     }
 
     case TransferState::IDMSB:
@@ -145,15 +145,14 @@ bool PlayStationMouse::Transfer(const u8 data_in, u8* data_out)
     {
       *data_out = static_cast<u8>(m_delta_y);
       m_transfer_state = TransferState::Idle;
-      return false;
+      break;
     }
 
     default:
-    {
-      UnreachableCode();
-      return false;
-    }
+      break;
   }
+
+  return false;
 }
 
 void PlayStationMouse::UpdatePosition()
