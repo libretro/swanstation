@@ -1899,21 +1899,21 @@ u32 WriteMemoryWord(u32 address, u32 value)
 
 u32 UncheckedReadMemoryByte(u32 address)
 {
-  u32 temp;
+  u32 temp = 0;
   g_state.pending_ticks += DoMemoryAccess<MemoryAccessType::Read, MemoryAccessSize::Byte>(address, temp);
   return temp;
 }
 
 u32 UncheckedReadMemoryHalfWord(u32 address)
 {
-  u32 temp;
+  u32 temp = 0;
   g_state.pending_ticks += DoMemoryAccess<MemoryAccessType::Read, MemoryAccessSize::HalfWord>(address, temp);
   return temp;
 }
 
 u32 UncheckedReadMemoryWord(u32 address)
 {
-  u32 temp;
+  u32 temp = 0;
   g_state.pending_ticks += DoMemoryAccess<MemoryAccessType::Read, MemoryAccessSize::Word>(address, temp);
   return temp;
 }
