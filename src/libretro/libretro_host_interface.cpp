@@ -1168,7 +1168,7 @@ void LibretroHostInterface::UpdateControllersAnalogController(u32 index)
     analog_press = 1;
     controller->SetButtonState(AnalogController::Button::Analog, (L1 && R1 && L3 && R3));
   }
-  if (!L1 || !R1 || !L3 || !R3)
+  if (!L1 && !R1 && !L3 && !R3)
   {
     analog_press = 0;
   }
