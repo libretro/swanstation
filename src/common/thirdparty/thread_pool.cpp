@@ -35,13 +35,6 @@ ThreadPool::~ThreadPool() {
   }
 }
 
-void ThreadPool::Wait() {
-  std::unique_lock<std::mutex> lock(mu_);
-  if (!work_.empty()) {
-    work_done_condvar_.wait(lock, [this] { return work_.empty(); });
-  }
-}
-
 ThreadPool::ThreadPool(int num_workers)
     : num_workers_(num_workers), exit_(false) {
   assert(num_workers_ > 0);

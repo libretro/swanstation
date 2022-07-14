@@ -102,9 +102,6 @@ class ThreadPool {
   auto ScheduleAndGetFuture(FuncT&& func, ArgsT&&... args)
       -> std::future<decltype(INVOKE_MACRO(func, ArgsT, args))>;
 
-  // Wait for all outstanding work to be completed.
-  void Wait();
-
   // Return the number of outstanding functions to be executed.
   int OutstandingWorkSize() const;
 

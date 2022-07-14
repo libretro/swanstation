@@ -26,9 +26,6 @@ public:
   void Reset();
   void Signal();
   void Wait();
-  bool TryWait(u32 timeout_in_ms);
-
-  static void WaitForMultiple(Event** events, u32 num_events);
 
 private:
 #if defined(_WIN32) && defined(USE_WIN32_EVENT_OBJECTS)

@@ -34,25 +34,9 @@ void Event::Wait()
   WaitForSingleObject(reinterpret_cast<HANDLE>(m_event_handle), INFINITE);
 }
 
-bool Event::TryWait(u32 timeout_in_ms)
-{
-  return (WaitForSingleObject(reinterpret_cast<HANDLE>(m_event_handle), timeout_in_ms) == WAIT_OBJECT_0);
-}
-
 void Event::Reset()
 {
   ResetEvent(reinterpret_cast<HANDLE>(m_event_handle));
-}
-
-void Event::WaitForMultiple(Event** events, u32 num_events)
-{
-  DebugAssert(num_events > 0);
-
-  HANDLE* event_handles = (HANDLE*)alloca(sizeof(HANDLE) * num_events);
-  for (u32 i = 0; i < num_events; i++)
-    event_handles[i] = reinterpret_cast<HANDLE>(events[i]->m_event_handle);
-
-  WaitForMultipleObjects(num_events, event_handles, TRUE, INFINITE);
 }
 
 #elif defined(_WIN32)
@@ -90,37 +74,11 @@ void Event::Wait()
   LeaveCriticalSection(&m_cs);
 }
 
-bool Event::TryWait(u32 timeout_in_ms)
-{
-  m_waiters.fetch_add(1);
-
-  const u32 start = GetTickCount();
-
-  EnterCriticalSection(&m_cs);
-  while (!m_signaled.load() && (GetTickCount() - start) < timeout_in_ms)
-    SleepConditionVariableCS(&m_cv, &m_cs, INFINITE);
-
-  const bool result = m_signaled.load();
-
-  if (m_waiters.fetch_sub(1) == 1 && result && m_auto_reset)
-    m_signaled.store(false);
-
-  LeaveCriticalSection(&m_cs);
-
-  return result;
-}
-
 void Event::Reset()
 {
   EnterCriticalSection(&m_cs);
   m_signaled.store(false);
   LeaveCriticalSection(&m_cs);
-}
-
-void Event::WaitForMultiple(Event** events, u32 num_events)
-{
-  for (u32 i = 0; i < num_events; i++)
-    events[i]->Wait();
 }
 
 #elif defined(__linux__) || defined(__APPLE__) || defined(__HAIKU__)
@@ -159,43 +117,11 @@ void Event::Wait()
   pthread_mutex_unlock(&m_mutex);
 }
 
-bool Event::TryWait(u32 timeout_in_ms)
-{
-  m_waiters.fetch_add(1);
-
-  struct timespec ts;
-  clock_gettime(CLOCK_REALTIME, &ts);
-  ts.tv_sec += timeout_in_ms / 1000;
-  ts.tv_nsec += (timeout_in_ms % 1000) * 1000000;
-
-  pthread_mutex_lock(&m_mutex);
-  while (!m_signaled.load())
-  {
-    if (pthread_cond_timedwait(&m_cv, &m_mutex, &ts) != 0)
-      break;
-  }
-
-  const bool result = m_signaled.load();
-
-  if (m_waiters.fetch_sub(1) == 1 && result && m_auto_reset)
-    m_signaled.store(false);
-
-  pthread_mutex_unlock(&m_mutex);
-
-  return result;
-}
-
 void Event::Reset()
 {
   pthread_mutex_lock(&m_mutex);
   m_signaled.store(false);
   pthread_mutex_unlock(&m_mutex);
-}
-
-void Event::WaitForMultiple(Event** events, u32 num_events)
-{
-  for (u32 i = 0; i < num_events; i++)
-    events[i]->Wait();
 }
 
 #else
@@ -222,32 +148,11 @@ void Event::Wait()
     m_signaled.store(false);
 }
 
-bool Event::TryWait(u32 timeout_in_ms)
-{
-  m_waiters.fetch_add(1);
-
-  std::unique_lock lock(m_mutex);
-  const bool result =
-    m_cv.wait_for(lock, std::chrono::milliseconds(timeout_in_ms), [this]() { return m_signaled.load(); });
-
-  if (m_waiters.fetch_sub(1) == 1 && result && m_auto_reset)
-    m_signaled.store(false);
-
-  return result;
-}
-
 void Event::Reset()
 {
   std::unique_lock lock(m_mutex);
   m_signaled.store(false);
 }
-
-void Event::WaitForMultiple(Event** events, u32 num_events)
-{
-  for (u32 i = 0; i < num_events; i++)
-    events[i]->Wait();
-}
-
 #endif
 
 } // namespace Common
