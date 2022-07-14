@@ -46,7 +46,6 @@ public:
   // if seek failed, returns false.
   virtual bool SeekAbsolute(u64 Offset) = 0;
   virtual bool SeekRelative(s64 Offset) = 0;
-  virtual bool SeekToEnd() = 0;
 
   // gets the current offset in the stream
   virtual u64 GetPosition() const = 0;
@@ -79,36 +78,11 @@ protected:
   ByteStream& operator=(const ByteStream&) = delete;
 };
 
-class NullByteStream : public ByteStream
-{
-public:
-  NullByteStream();
-  ~NullByteStream();
-
-  virtual bool ReadByte(u8* pDestByte) override final;
-  virtual u32 Read(void* pDestination, u32 ByteCount) override final;
-  virtual bool Read2(void* pDestination, u32 ByteCount, u32* pNumberOfBytesRead /* = nullptr */) override final;
-  virtual bool WriteByte(u8 SourceByte) override final;
-  virtual u32 Write(const void* pSource, u32 ByteCount) override final;
-  virtual bool Write2(const void* pSource, u32 ByteCount, u32* pNumberOfBytesWritten /* = nullptr */) override final;
-  virtual bool SeekAbsolute(u64 Offset) override final;
-  virtual bool SeekRelative(s64 Offset) override final;
-  virtual bool SeekToEnd() override final;
-  virtual u64 GetSize() const override final;
-  virtual u64 GetPosition() const override final;
-  virtual bool Flush() override final;
-  virtual bool Commit() override final;
-  virtual bool Discard() override final;
-};
-
 class MemoryByteStream : public ByteStream
 {
 public:
   MemoryByteStream(void* pMemory, u32 MemSize);
   virtual ~MemoryByteStream();
-
-  u8* GetMemoryPointer() const { return m_pMemory; }
-  u32 GetMemorySize() const { return m_iSize; }
 
   virtual bool ReadByte(u8* pDestByte) override;
   virtual u32 Read(void* pDestination, u32 ByteCount) override;
@@ -118,7 +92,6 @@ public:
   virtual bool Write2(const void* pSource, u32 ByteCount, u32* pNumberOfBytesWritten /* = nullptr */) override;
   virtual bool SeekAbsolute(u64 Offset) override;
   virtual bool SeekRelative(s64 Offset) override;
-  virtual bool SeekToEnd() override;
   virtual u64 GetSize() const override;
   virtual u64 GetPosition() const override;
   virtual bool Flush() override;
@@ -137,9 +110,6 @@ public:
   ReadOnlyMemoryByteStream(const void* pMemory, u32 MemSize);
   virtual ~ReadOnlyMemoryByteStream();
 
-  const u8* GetMemoryPointer() const { return m_pMemory; }
-  u32 GetMemorySize() const { return m_iSize; }
-
   virtual bool ReadByte(u8* pDestByte) override;
   virtual u32 Read(void* pDestination, u32 ByteCount) override;
   virtual bool Read2(void* pDestination, u32 ByteCount, u32* pNumberOfBytesRead /* = nullptr */) override;
@@ -148,7 +118,6 @@ public:
   virtual bool Write2(const void* pSource, u32 ByteCount, u32* pNumberOfBytesWritten /* = nullptr */) override;
   virtual bool SeekAbsolute(u64 Offset) override;
   virtual bool SeekRelative(s64 Offset) override;
-  virtual bool SeekToEnd() override;
   virtual u64 GetSize() const override;
   virtual u64 GetPosition() const override;
   virtual bool Flush() override;
@@ -167,13 +136,8 @@ public:
   GrowableMemoryByteStream(void* pInitialMem, u32 InitialMemSize);
   virtual ~GrowableMemoryByteStream();
 
-  u8* GetMemoryPointer() const { return m_pMemory; }
-  u32 GetMemorySize() const { return m_iMemorySize; }
-
   void Resize(u32 new_size);
   void ResizeMemory(u32 new_size);
-  void EnsureSpace(u32 space);
-  void ShrinkToFit();
 
   virtual bool ReadByte(u8* pDestByte) override;
   virtual u32 Read(void* pDestination, u32 ByteCount) override;
@@ -183,7 +147,6 @@ public:
   virtual bool Write2(const void* pSource, u32 ByteCount, u32* pNumberOfBytesWritten /* = nullptr */) override;
   virtual bool SeekAbsolute(u64 Offset) override;
   virtual bool SeekRelative(s64 Offset) override;
-  virtual bool SeekToEnd() override;
   virtual u64 GetSize() const override;
   virtual u64 GetPosition() const override;
   virtual bool Flush() override;
@@ -216,16 +179,3 @@ std::unique_ptr<GrowableMemoryByteStream> ByteStream_CreateGrowableMemoryStream(
 
 // readable memory stream
 std::unique_ptr<ReadOnlyMemoryByteStream> ByteStream_CreateReadOnlyMemoryStream(const void* pMemory, u32 Size);
-
-// null memory stream
-std::unique_ptr<NullByteStream> ByteStream_CreateNullStream();
-
-// copies one stream's contents to another. rewinds source streams automatically, and returns it back to its old
-// position.
-bool ByteStream_CopyStream(ByteStream* pDestinationStream, ByteStream* pSourceStream);
-
-// appends one stream's contents to another.
-bool ByteStream_AppendStream(ByteStream* pSourceStream, ByteStream* pDestinationStream);
-
-// copies a number of bytes from one to another
-u32 ByteStream_CopyBytes(ByteStream* pSourceStream, u32 byteCount, ByteStream* pDestinationStream);

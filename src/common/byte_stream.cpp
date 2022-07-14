@@ -155,20 +155,6 @@ public:
     return true;
   }
 
-  virtual bool SeekToEnd() override
-  {
-    if (m_errorState)
-      return false;
-
-    if (_fseeki64(m_pFile, 0, SEEK_END) != 0)
-    {
-      m_errorState = true;
-      return false;
-    }
-
-    return true;
-  }
-
   virtual u64 GetPosition() const override { return _ftelli64(m_pFile); }
 
   virtual u64 GetSize() const override
@@ -202,20 +188,6 @@ public:
       return false;
 
     if (fseeko(m_pFile, static_cast<off_t>(Offset), SEEK_CUR) != 0)
-    {
-      m_errorState = true;
-      return false;
-    }
-
-    return true;
-  }
-
-  virtual bool SeekToEnd() override
-  {
-    if (m_errorState)
-      return false;
-
-    if (fseeko(m_pFile, 0, SEEK_END) != 0)
     {
       m_errorState = true;
       return false;
@@ -378,90 +350,6 @@ private:
   std::string m_temporaryFileName;
 };
 
-NullByteStream::NullByteStream() {}
-
-NullByteStream::~NullByteStream() {}
-
-bool NullByteStream::ReadByte(u8* pDestByte)
-{
-  *pDestByte = 0;
-  return true;
-}
-
-u32 NullByteStream::Read(void* pDestination, u32 ByteCount)
-{
-  if (ByteCount > 0)
-    std::memset(pDestination, 0, ByteCount);
-
-  return ByteCount;
-}
-
-bool NullByteStream::Read2(void* pDestination, u32 ByteCount, u32* pNumberOfBytesRead /* = nullptr */)
-{
-  if (ByteCount > 0)
-    std::memset(pDestination, 0, ByteCount);
-
-  if (pNumberOfBytesRead)
-    *pNumberOfBytesRead = ByteCount;
-
-  return true;
-}
-
-bool NullByteStream::WriteByte(u8 SourceByte)
-{
-  return true;
-}
-
-u32 NullByteStream::Write(const void* pSource, u32 ByteCount)
-{
-  return ByteCount;
-}
-
-bool NullByteStream::Write2(const void* pSource, u32 ByteCount, u32* pNumberOfBytesWritten /* = nullptr */)
-{
-  return true;
-}
-
-bool NullByteStream::SeekAbsolute(u64 Offset)
-{
-  return true;
-}
-
-bool NullByteStream::SeekRelative(s64 Offset)
-{
-  return true;
-}
-
-bool NullByteStream::SeekToEnd()
-{
-  return true;
-}
-
-u64 NullByteStream::GetSize() const
-{
-  return 0;
-}
-
-u64 NullByteStream::GetPosition() const
-{
-  return 0;
-}
-
-bool NullByteStream::Flush()
-{
-  return true;
-}
-
-bool NullByteStream::Commit()
-{
-  return true;
-}
-
-bool NullByteStream::Discard()
-{
-  return true;
-}
-
 MemoryByteStream::MemoryByteStream(void* pMemory, u32 MemSize)
 {
   m_iPosition = 0;
@@ -558,12 +446,6 @@ bool MemoryByteStream::SeekRelative(s64 Offset)
     return false;
 
   m_iPosition += Offset32;
-  return true;
-}
-
-bool MemoryByteStream::SeekToEnd()
-{
-  m_iPosition = m_iSize;
   return true;
 }
 
@@ -671,12 +553,6 @@ bool ReadOnlyMemoryByteStream::SeekRelative(s64 Offset)
   return true;
 }
 
-bool ReadOnlyMemoryByteStream::SeekToEnd()
-{
-  m_iPosition = m_iSize;
-  return true;
-}
-
 u64 ReadOnlyMemoryByteStream::GetSize() const
 {
   return (u64)m_iSize;
@@ -750,27 +626,6 @@ void GrowableMemoryByteStream::ResizeMemory(u32 new_size)
   {
     m_pPrivateMemory = m_pMemory = (u8*)std::realloc(m_pPrivateMemory, new_size);
     m_iMemorySize = new_size;
-  }
-}
-
-void GrowableMemoryByteStream::EnsureSpace(u32 space)
-{
-  if ((m_iSize + space) >= m_iMemorySize)
-    return;
-
-  Grow((m_iSize + space) - m_iMemorySize);
-}
-
-void GrowableMemoryByteStream::ShrinkToFit()
-{
-  if (!m_pPrivateMemory || m_iSize == m_iMemorySize)
-    return;
-
-  u8* new_ptr = static_cast<u8*>(std::realloc(m_pPrivateMemory, m_iSize));
-  if (new_ptr)
-  {
-    m_pPrivateMemory = new_ptr;
-    m_iMemorySize = m_iSize;
   }
 }
 
@@ -856,12 +711,6 @@ bool GrowableMemoryByteStream::SeekRelative(s64 Offset)
     return false;
 
   m_iPosition += Offset32;
-  return true;
-}
-
-bool GrowableMemoryByteStream::SeekToEnd()
-{
-  m_iPosition = m_iSize;
   return true;
 }
 
@@ -1322,11 +1171,6 @@ std::unique_ptr<ReadOnlyMemoryByteStream> ByteStream_CreateReadOnlyMemoryStream(
   return std::make_unique<ReadOnlyMemoryByteStream>(pMemory, Size);
 }
 
-std::unique_ptr<NullByteStream> ByteStream_CreateNullStream()
-{
-  return std::make_unique<NullByteStream>();
-}
-
 std::unique_ptr<GrowableMemoryByteStream> ByteStream_CreateGrowableMemoryStream(void* pInitialMemory, u32 InitialSize)
 {
   return std::make_unique<GrowableMemoryByteStream>(pInitialMemory, InitialSize);
@@ -1335,79 +1179,4 @@ std::unique_ptr<GrowableMemoryByteStream> ByteStream_CreateGrowableMemoryStream(
 std::unique_ptr<GrowableMemoryByteStream> ByteStream_CreateGrowableMemoryStream()
 {
   return std::make_unique<GrowableMemoryByteStream>(nullptr, 0);
-}
-
-bool ByteStream_CopyStream(ByteStream* pDestinationStream, ByteStream* pSourceStream)
-{
-  const u32 chunkSize = 4096;
-  u8 chunkData[chunkSize];
-
-  u64 oldSourcePosition = pSourceStream->GetPosition();
-  if (!pSourceStream->SeekAbsolute(0) || !pDestinationStream->SeekAbsolute(0))
-    return false;
-
-  bool success = false;
-  for (;;)
-  {
-    u32 nBytes = pSourceStream->Read(chunkData, chunkSize);
-    if (nBytes == 0)
-    {
-      success = true;
-      break;
-    }
-
-    if (pDestinationStream->Write(chunkData, nBytes) != nBytes)
-      break;
-  }
-
-  return (pSourceStream->SeekAbsolute(oldSourcePosition) && success);
-}
-
-bool ByteStream_AppendStream(ByteStream* pSourceStream, ByteStream* pDestinationStream)
-{
-  const u32 chunkSize = 4096;
-  u8 chunkData[chunkSize];
-
-  u64 oldSourcePosition = pSourceStream->GetPosition();
-  if (!pSourceStream->SeekAbsolute(0))
-    return false;
-
-  bool success = false;
-  for (;;)
-  {
-    u32 nBytes = pSourceStream->Read(chunkData, chunkSize);
-    if (nBytes == 0)
-    {
-      success = true;
-      break;
-    }
-
-    if (pDestinationStream->Write(chunkData, nBytes) != nBytes)
-      break;
-  }
-
-  return (pSourceStream->SeekAbsolute(oldSourcePosition) && success);
-}
-
-u32 ByteStream_CopyBytes(ByteStream* pSourceStream, u32 byteCount, ByteStream* pDestinationStream)
-{
-  const u32 chunkSize = 4096;
-  u8 chunkData[chunkSize];
-
-  u32 remaining = byteCount;
-  while (remaining > 0)
-  {
-    u32 toCopy = std::min(remaining, chunkSize);
-    u32 bytesRead = pSourceStream->Read(chunkData, toCopy);
-    if (bytesRead == 0)
-      break;
-
-    u32 bytesWritten = pDestinationStream->Write(chunkData, bytesRead);
-    if (bytesWritten == 0)
-      break;
-
-    remaining -= bytesWritten;
-  }
-
-  return byteCount - remaining;
 }
