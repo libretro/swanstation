@@ -7,20 +7,10 @@
 #include <cinttypes>
 #include <cmath>
 
-static constexpr u32 MAX_TRACK_NUMBER = 99;
 static constexpr int ALL_SUBCODE_SIZE = 96;
 
-static u32 BEToU32(const u8* val)
-{
-  return (static_cast<u32>(val[0]) << 24) | (static_cast<u32>(val[1]) << 16) | (static_cast<u32>(val[2]) << 8) |
-         static_cast<u32>(val[3]);
-}
-
-static void U16ToBE(u8* beval, u16 leval)
-{
-  beval[0] = static_cast<u8>(leval >> 8);
-  beval[1] = static_cast<u8>(leval);
-}
+#if defined(_WIN32) && !defined(_UWP)
+static constexpr u32 MAX_TRACK_NUMBER = 99;
 
 // Adapted from
 // https://github.com/saramibreak/DiscImageCreator/blob/5a8fe21730872d67991211f1319c87f0780f2d0f/DiscImageCreator/convert.cpp
@@ -51,7 +41,19 @@ static void DeinterleaveSubcode(const u8* subcode_in, u8* subcode_out)
   }
 }
 
-#if defined(_WIN32) && !defined(_UWP)
+static u32 BEToU32(const u8* val)
+{
+  return (static_cast<u32>(val[0]) << 24) | (static_cast<u32>(val[1]) << 16) | (static_cast<u32>(val[2]) << 8) |
+         static_cast<u32>(val[3]);
+}
+
+
+static void U16ToBE(u8* beval, u16 leval)
+{
+  beval[0] = static_cast<u8>(leval >> 8);
+  beval[1] = static_cast<u8>(leval);
+}
+
 
 // The include order here is critical.
 // clang-format off
