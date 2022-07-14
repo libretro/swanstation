@@ -93,13 +93,6 @@ public:
       Do(&values[i]);
   }
 
-  template<typename T>
-  void DoPODArray(T* values, size_t count)
-  {
-    for (size_t i = 0; i < count; i++)
-      DoPOD(&values[i]);
-  }
-
   void DoBytes(void* data, size_t length);
 
   void Do(bool* value_ptr);

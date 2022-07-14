@@ -34,15 +34,6 @@ struct Rectangle
     bottom = bottom_;
   }
 
-  /// Sets the rectangle using the specified top-left position and extents.
-  constexpr void SetExtents(T x, T y, T width, T height)
-  {
-    left = x;
-    top = y;
-    right = x + width;
-    bottom = y + height;
-  }
-
   /// Returns a new rectangle from the specified position and size.
   static Rectangle FromExtents(T x, T y, T width, T height) { return Rectangle(x, y, x + width, y + height); }
 
@@ -57,9 +48,6 @@ struct Rectangle
 
   /// Returns true if the rectangles's width/height can be considered valid.
   constexpr bool Valid() const { return left <= right && top <= bottom; }
-
-  /// Returns false if the rectangle does not have any extents (zero size).
-  constexpr bool HasExtents() const { return left < right && top < bottom; }
 
   /// Assignment operator.
   constexpr Rectangle& operator=(const Rectangle& rhs)
@@ -111,15 +99,6 @@ struct Rectangle
 
 #undef ARITHMETIC_OPERATOR
 
-#ifdef _WINDEF_
-  /// Casts this rectangle to a Win32 RECT structure if compatible.
-  template<bool _ = true, typename = typename std::enable_if_t<std::is_same_v<T, s32> && _>>
-  const RECT* AsRECT() const
-  {
-    return reinterpret_cast<const RECT*>(this);
-  }
-#endif
-
   /// Tests for intersection between two rectangles.
   constexpr bool Intersects(const Rectangle& rhs) const
   {
@@ -165,24 +144,11 @@ struct Rectangle
     bottom = std::clamp(bottom, y1, y2);
   }
 
-  /// Clamps the rectangle to the specified size.
-  constexpr void ClampSize(T width, T height)
-  {
-    right = std::min(right, left + width);
-    bottom = std::min(bottom, top + height);
-  }
-
   /// Returns a new rectangle with clamped coordinates.
   constexpr Rectangle Clamped(T x1, T y1, T x2, T y2) const
   {
     return Rectangle(std::clamp(left, x1, x2), std::clamp(top, y1, y2), std::clamp(right, x1, x2),
                      std::clamp(bottom, y1, y2));
-  }
-
-  /// Returns a new rectangle with clamped size.
-  constexpr Rectangle ClampedSize(T width, T height) const
-  {
-    return Rectangle(left, top, std::min(right, left + width), std::min(bottom, top + height));
   }
 
   T left;

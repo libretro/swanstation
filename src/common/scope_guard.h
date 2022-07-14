@@ -20,7 +20,6 @@ public:
   }
 
   ~ScopeGuard() { Exit(); }
-  void Dismiss() { m_finalizer.reset(); }
   void Exit()
   {
     if (m_finalizer)
