@@ -318,8 +318,6 @@ bool GPU::HandleRenderPolygonCommand()
     SetTexturePalette(Truncate16(FifoPeek(2) >> 16));
   }
 
-  m_stats.num_vertices += num_vertices;
-  m_stats.num_polygons++;
   m_render_command.bits = rc.bits;
   m_fifo.RemoveOne();
 
@@ -345,8 +343,6 @@ bool GPU::HandleRenderRectangleCommand()
   const TickCount setup_ticks = 16;
   AddCommandTicks(setup_ticks);
 
-  m_stats.num_vertices++;
-  m_stats.num_polygons++;
   m_render_command.bits = rc.bits;
   m_fifo.RemoveOne();
 
@@ -364,8 +360,6 @@ bool GPU::HandleRenderLineCommand()
   if (IsInterlacedRenderingEnabled() && IsCRTCScanlinePending())
     SynchronizeCRTC();
 
-  m_stats.num_vertices += 2;
-  m_stats.num_polygons++;
   m_render_command.bits = rc.bits;
   m_fifo.RemoveOne();
 
@@ -421,7 +415,6 @@ bool GPU::HandleFillRectangleCommand()
   if (width > 0 && height > 0)
     FillVRAM(dst_x, dst_y, width, height, color);
 
-  m_stats.num_vram_fills++;
   AddCommandTicks(46 + ((width / 8) + 9) * height);
   EndCommand();
   return true;
@@ -494,7 +487,6 @@ void GPU::FinishVRAMWrite()
   m_blit_buffer.clear();
   m_vram_transfer = {};
   m_blitter_state = BlitterState::Idle;
-  m_stats.num_vram_writes++;
 }
 
 bool GPU::HandleCopyRectangleVRAMToCPUCommand()
@@ -516,7 +508,6 @@ bool GPU::HandleCopyRectangleVRAMToCPUCommand()
   ReadVRAM(m_vram_transfer.x, m_vram_transfer.y, m_vram_transfer.width, m_vram_transfer.height);
 
   // switch to pixel-by-pixel read state
-  m_stats.num_vram_reads++;
   m_blitter_state = BlitterState::ReadingVRAM;
   m_command_total_words = 0;
   return true;
@@ -542,7 +533,6 @@ bool GPU::HandleCopyRectangleVRAMToVRAMCommand()
     CopyVRAM(src_x, src_y, dst_x, dst_y, width, height);
   }
 
-  m_stats.num_vram_copies++;
   AddCommandTicks(width * height * 2);
   EndCommand();
   return true;

@@ -93,7 +93,6 @@ protected:
   void DrawLine(const GPUBackendDrawLineCommand* cmd) override;
   void DrawRectangle(const GPUBackendDrawRectangleCommand* cmd) override;
   void FlushRender() override;
-  void DrawingAreaChanged() override;
 
   //////////////////////////////////////////////////////////////////////////
   // Rasterization

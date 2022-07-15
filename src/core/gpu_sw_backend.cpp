@@ -870,8 +870,6 @@ void GPU_SW_Backend::CopyVRAM(u32 src_x, u32 src_y, u32 dst_x, u32 dst_y, u32 wi
 
 void GPU_SW_Backend::FlushRender() {}
 
-void GPU_SW_Backend::DrawingAreaChanged() {}
-
 GPU_SW_Backend::DrawLineFunction GPU_SW_Backend::GetDrawLineFunction(bool shading_enable, bool transparency_enable,
                                                                      bool dithering_enable)
 {

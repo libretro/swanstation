@@ -298,7 +298,6 @@ void GPUBackend::HandleCommand(const GPUBackendCommand* cmd)
     {
       FlushRender();
       m_drawing_area = static_cast<const GPUBackendSetDrawingAreaCommand*>(cmd)->new_area;
-      DrawingAreaChanged();
     }
     break;
 

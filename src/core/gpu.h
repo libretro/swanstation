@@ -252,7 +252,6 @@ protected:
   void WriteGP1(u32 value);
   void EndCommand();
   void ExecuteCommands();
-  void HandleGetGPUInfoCommand(u32 value);
 
   // Rendering in the backend
   virtual void ReadVRAM(u32 x, u32 y, u32 width, u32 height);
@@ -529,18 +528,6 @@ protected:
 
   TickCount m_max_run_ahead = 128;
   u32 m_fifo_size = 128;
-
-  struct Stats
-  {
-    u32 num_vram_reads;
-    u32 num_vram_fills;
-    u32 num_vram_writes;
-    u32 num_vram_copies;
-    u32 num_vertices;
-    u32 num_polygons;
-  };
-  Stats m_stats = {};
-  Stats m_last_stats = {};
 
 private:
   using GP0CommandHandler = bool (GPU::*)();

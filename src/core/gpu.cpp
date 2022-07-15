@@ -1163,51 +1163,46 @@ void GPU::WriteGP1(u32 value)
     case 0x1E:
     case 0x1F:
     {
-      HandleGetGPUInfoCommand(value);
-    }
-    break;
+	    const u8 subcommand = Truncate8(value & 0x07);
+	    switch (subcommand)
+	    {
+		    case 0x00:
+		    case 0x01:
+		    case 0x06:
+		    case 0x07:
+			    // leave GPUREAD intact
+			    break;
 
-    default:
-      break;
-  }
-}
+		    case 0x02: // Get Texture Window
+			    {
+				    m_GPUREAD_latch = m_draw_mode.texture_window_value;
+			    }
+			    break;
 
-void GPU::HandleGetGPUInfoCommand(u32 value)
-{
-  const u8 subcommand = Truncate8(value & 0x07);
-  switch (subcommand)
-  {
-    case 0x00:
-    case 0x01:
-    case 0x06:
-    case 0x07:
-      // leave GPUREAD intact
-      break;
+		    case 0x03: // Get Draw Area Top Left
+			    {
+				    m_GPUREAD_latch =
+					    ((m_drawing_area.left & UINT32_C(0b1111111111)) | ((m_drawing_area.top & UINT32_C(0b1111111111)) << 10));
+			    }
+			    break;
 
-    case 0x02: // Get Texture Window
-    {
-      m_GPUREAD_latch = m_draw_mode.texture_window_value;
-    }
-    break;
+		    case 0x04: // Get Draw Area Bottom Right
+			    {
+				    m_GPUREAD_latch =
+					    ((m_drawing_area.right & UINT32_C(0b1111111111)) | ((m_drawing_area.bottom & UINT32_C(0b1111111111)) << 10));
+			    }
+			    break;
 
-    case 0x03: // Get Draw Area Top Left
-    {
-      m_GPUREAD_latch =
-        ((m_drawing_area.left & UINT32_C(0b1111111111)) | ((m_drawing_area.top & UINT32_C(0b1111111111)) << 10));
-    }
-    break;
+		    case 0x05: // Get Drawing Offset
+			    {
+				    m_GPUREAD_latch =
+					    ((m_drawing_offset.x & INT32_C(0b11111111111)) | ((m_drawing_offset.y & INT32_C(0b11111111111)) << 11));
+			    }
+			    break;
 
-    case 0x04: // Get Draw Area Bottom Right
-    {
-      m_GPUREAD_latch =
-        ((m_drawing_area.right & UINT32_C(0b1111111111)) | ((m_drawing_area.bottom & UINT32_C(0b1111111111)) << 10));
-    }
-    break;
-
-    case 0x05: // Get Drawing Offset
-    {
-      m_GPUREAD_latch =
-        ((m_drawing_offset.x & INT32_C(0b11111111111)) | ((m_drawing_offset.y & INT32_C(0b11111111111)) << 11));
+		    default:
+			    break;
+	    }
     }
     break;
 

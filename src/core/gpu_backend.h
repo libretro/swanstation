@@ -56,7 +56,6 @@ protected:
   virtual void DrawRectangle(const GPUBackendDrawRectangleCommand* cmd) = 0;
   virtual void DrawLine(const GPUBackendDrawLineCommand* cmd) = 0;
   virtual void FlushRender() = 0;
-  virtual void DrawingAreaChanged() = 0;
 
   void HandleCommand(const GPUBackendCommand* cmd);
 
