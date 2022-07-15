@@ -30,12 +30,7 @@ void RegisterCallback(CallbackFunctionType callbackFunction, void* pUserParam);
 void UnregisterCallback(CallbackFunctionType callbackFunction, void* pUserParam);
 
 // adds a standard console output
-bool IsConsoleOutputEnabled();
 void SetConsoleOutputParams(bool enabled, const char* channelFilter = nullptr, LOGLEVEL levelFilter = LOGLEVEL_TRACE);
-
-// adds a debug console output [win32/android only]
-bool IsDebugOutputEnabled();
-void SetDebugOutputParams(bool enabled, const char* channelFilter = nullptr, LOGLEVEL levelFilter = LOGLEVEL_TRACE);
 
 // Sets global filtering level, messages below this level won't be sent to any of the logging sinks.
 void SetFilterLevel(LOGLEVEL level);

@@ -117,17 +117,9 @@ bool CDImageDeviceWin32::Open(const char* filename, Common::Error* error)
   if (m_hDevice == INVALID_HANDLE_VALUE)
   {
     m_hDevice = CreateFile(filename, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, NULL);
-    if (m_hDevice != INVALID_HANDLE_VALUE)
-    {
-      m_use_sptd = false;
-    }
-    else
-    {
-      if (error)
-        error->SetWin32(GetLastError());
-
+    if (m_hDevice == INVALID_HANDLE_VALUE)
       return false;
-    }
+    m_use_sptd = false;
   }
 
   // Set it to 4x speed. A good balance between readahead and spinning up way too high.
@@ -149,9 +141,6 @@ bool CDImageDeviceWin32::Open(const char* filename, Common::Error* error)
                        &bytes_returned, nullptr) ||
       toc.LastTrack < toc.FirstTrack)
   {
-    if (error)
-      error->SetWin32(GetLastError());
-
     return false;
   }
 

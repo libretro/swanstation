@@ -418,14 +418,6 @@ static bool GetRelativePathForUriPath(const char* path, const char* filename, st
 }
 
 #endif // __ANDROID__
-
-ChangeNotifier::ChangeNotifier(const String& directoryPath, bool recursiveWatch)
-  : m_directoryPath(directoryPath), m_recursiveWatch(recursiveWatch)
-{
-}
-
-ChangeNotifier::~ChangeNotifier() {}
-
 void CanonicalizePath(char* Destination, u32 cbDestination, const char* Path, bool OSPath /*= true*/)
 {
   u32 i, j;
@@ -776,55 +768,6 @@ std::string_view GetFileTitleFromPath(const std::string_view& path)
   return filename.substr(0, pos);
 }
 
-std::vector<std::string> GetRootDirectoryList()
-{
-  std::vector<std::string> results;
-
-#if defined(_WIN32) && !defined(_UWP)
-  char buf[256];
-  if (GetLogicalDriveStringsA(sizeof(buf), buf) != 0)
-  {
-    const char* ptr = buf;
-    while (*ptr != '\0')
-    {
-      const std::size_t len = std::strlen(ptr);
-      results.emplace_back(ptr, len);
-      ptr += len + 1u;
-    }
-  }
-#elif defined(_UWP)
-  if (const auto install_location = winrt::Windows::ApplicationModel::Package::Current().InstalledLocation();
-      install_location)
-  {
-    if (const auto path = install_location.Path(); !path.empty())
-      results.push_back(StringUtil::WideStringToUTF8String(path));
-  }
-
-  if (const auto local_location = winrt::Windows::Storage::ApplicationData::Current().LocalFolder(); local_location)
-  {
-    if (const auto path = local_location.Path(); !path.empty())
-      results.push_back(StringUtil::WideStringToUTF8String(path));
-  }
-
-  const auto devices = winrt::Windows::Storage::KnownFolders::RemovableDevices();
-  const auto folders_task(devices.GetFoldersAsync());
-  for (const auto& storage_folder : folders_task.get())
-  {
-    const auto path = storage_folder.Path();
-    if (!path.empty())
-      results.push_back(StringUtil::WideStringToUTF8String(path));
-  }
-#else
-  const char* home_path = std::getenv("HOME");
-  if (home_path)
-    results.push_back(home_path);
-
-  results.push_back("/");
-#endif
-
-  return results;
-}
-
 std::string BuildRelativePath(const std::string_view& filename, const std::string_view& new_filename)
 {
   std::string new_string;
@@ -861,116 +804,6 @@ FileSystem::ManagedCFilePtr OpenManagedCFile(const char* filename, const char* m
   return ManagedCFilePtr(OpenCFile(filename, mode), [](std::FILE* fp) { std::fclose(fp); });
 }
 
-#ifdef _UWP
-std::FILE* OpenCFileUWP(const wchar_t* wfilename, const wchar_t* mode)
-{
-  DWORD access = 0;
-  DWORD share = 0;
-  DWORD disposition = 0;
-
-  int flags = 0;
-  const wchar_t* tmode = mode;
-  while (*tmode)
-  {
-    if (*tmode == L'r' && *(tmode + 1) == L'+')
-    {
-      access = GENERIC_READ | GENERIC_WRITE;
-      share = 0;
-      disposition = OPEN_EXISTING;
-      flags |= _O_RDWR;
-      tmode += 2;
-    }
-    else if (*tmode == L'w' && *(tmode + 1) == L'+')
-    {
-      access = GENERIC_READ | GENERIC_WRITE;
-      share = 0;
-      disposition = CREATE_ALWAYS;
-      flags |= _O_RDWR | _O_CREAT | _O_TRUNC;
-      tmode += 2;
-    }
-    else if (*tmode == L'a' && *(tmode + 1) == L'+')
-    {
-      access = GENERIC_READ | GENERIC_WRITE;
-      share = 0;
-      disposition = CREATE_ALWAYS;
-      flags |= _O_RDWR | _O_APPEND | _O_CREAT | _O_TRUNC;
-      tmode += 2;
-    }
-    else if (*tmode == L'r')
-    {
-      access = GENERIC_READ;
-      share = 0;
-      disposition = OPEN_EXISTING;
-      flags |= _O_RDONLY;
-      tmode++;
-    }
-    else if (*tmode == L'w')
-    {
-      access = GENERIC_WRITE;
-      share = 0;
-      disposition = CREATE_ALWAYS;
-      flags |= _O_WRONLY | _O_CREAT | _O_TRUNC;
-      tmode++;
-    }
-    else if (*tmode == L'a')
-    {
-      access = GENERIC_READ | GENERIC_WRITE;
-      share = 0;
-      disposition = CREATE_ALWAYS;
-      flags |= _O_WRONLY | _O_APPEND | _O_CREAT | _O_TRUNC;
-      tmode++;
-    }
-    else if (*tmode == L'b')
-    {
-      flags |= _O_BINARY;
-      tmode++;
-    }
-    else if (*tmode == L'S')
-    {
-      flags |= _O_SEQUENTIAL;
-      tmode++;
-    }
-    else if (*tmode == L'R')
-    {
-      flags |= _O_RANDOM;
-      tmode++;
-    }
-    else
-    {
-      Log_ErrorPrintf("Unknown mode flags: '%s'", StringUtil::WideStringToUTF8String(mode).c_str());
-      return nullptr;
-    }
-  }
-
-  HANDLE hFile = CreateFileFromAppW(wfilename, access, share, nullptr, disposition, 0, nullptr);
-  if (hFile == INVALID_HANDLE_VALUE)
-    return nullptr;
-
-  if (flags & _O_APPEND && !SetFilePointerEx(hFile, LARGE_INTEGER{}, nullptr, FILE_END))
-  {
-    Log_ErrorPrintf("SetFilePointerEx() failed: %08X", GetLastError());
-    CloseHandle(hFile);
-    return nullptr;
-  }
-
-  int fd = _open_osfhandle(reinterpret_cast<intptr_t>(hFile), flags);
-  if (fd < 0)
-  {
-    CloseHandle(hFile);
-    return nullptr;
-  }
-
-  std::FILE* fp = _wfdopen(fd, mode);
-  if (!fp)
-  {
-    _close(fd);
-    return nullptr;
-  }
-
-  return fp;
-}
-#endif // _UWP
-
 std::FILE* OpenCFile(const char* filename, const char* mode)
 {
 #ifdef _WIN32
@@ -991,13 +824,7 @@ std::FILE* OpenCFile(const char* filename, const char* mode)
 
       std::FILE* fp;
       if (_wfopen_s(&fp, wfilename, wmode) != 0)
-      {
-#ifdef _UWP
-        return OpenCFileUWP(wfilename, wmode);
-#else
         return nullptr;
-#endif
-      }
 
       return fp;
     }
@@ -1104,146 +931,7 @@ bool WriteBinaryFile(const char* filename, const void* data, size_t data_length)
   return true;
 }
 
-bool WriteFileToString(const char* filename, const std::string_view& sv)
-{
-  ManagedCFilePtr fp = OpenManagedCFile(filename, "wb");
-  if (!fp)
-    return false;
-
-  if (sv.length() > 0 && std::fwrite(sv.data(), 1u, sv.length(), fp.get()) != sv.length())
-    return false;
-
-  return true;
-}
-
-std::string ReadStreamToString(ByteStream* stream, bool seek_to_start /* = true */)
-{
-  u64 pos = stream->GetPosition();
-  u64 size = stream->GetSize();
-  if (pos > 0 && seek_to_start)
-  {
-    if (!stream->SeekAbsolute(0))
-      return {};
-
-    pos = 0;
-  }
-
-  Assert(size >= pos);
-  size -= pos;
-  if (size == 0 || size > std::numeric_limits<u32>::max())
-    return {};
-
-  std::string ret;
-  ret.resize(static_cast<size_t>(size));
-  if (!stream->Read2(ret.data(), static_cast<u32>(size)))
-    return {};
-
-  return ret;
-}
-
-bool WriteStreamToString(const std::string_view& sv, ByteStream* stream)
-{
-  if (sv.size() > std::numeric_limits<u32>::max())
-    return false;
-
-  return stream->Write2(sv.data(), static_cast<u32>(sv.size()));
-}
-
-std::vector<u8> ReadBinaryStream(ByteStream* stream, bool seek_to_start /*= true*/)
-{
-  u64 pos = stream->GetPosition();
-  u64 size = stream->GetSize();
-  if (pos > 0 && seek_to_start)
-  {
-    if (!stream->SeekAbsolute(0))
-      return {};
-
-    pos = 0;
-  }
-
-  Assert(size >= pos);
-  size -= pos;
-  if (size == 0 || size > std::numeric_limits<u32>::max())
-    return {};
-
-  std::vector<u8> ret;
-  ret.resize(static_cast<size_t>(size));
-  if (!stream->Read2(ret.data(), static_cast<u32>(size)))
-    return {};
-
-  return ret;
-}
-
-bool WriteBinaryToSTream(ByteStream* stream, const void* data, size_t data_length)
-{
-  if (data_length > std::numeric_limits<u32>::max())
-    return false;
-
-  return stream->Write2(data, static_cast<u32>(data_length));
-}
-
-void BuildOSPath(char* Destination, u32 cbDestination, const char* Path)
-{
-  u32 i;
-  u32 pathLength = static_cast<u32>(std::strlen(Path));
-
-  if (Destination == Path)
-  {
-    // fast path
-    for (i = 0; i < pathLength; i++)
-    {
-      if (Destination[i] == '/')
-        Destination[i] = FS_OSPATH_SEPARATOR_CHARACTER;
-    }
-  }
-  else
-  {
-    // slow path
-    pathLength = std::max(pathLength, cbDestination - 1);
-    for (i = 0; i < pathLength; i++)
-    {
-      Destination[i] = (Path[i] == '/') ? FS_OSPATH_SEPARATOR_CHARACTER : Path[i];
-    }
-
-    Destination[pathLength] = '\0';
-  }
-}
-
-void BuildOSPath(String& Destination, const char* Path)
-{
-  u32 i;
-  u32 pathLength;
-
-  if (Destination.GetWriteableCharArray() == Path)
-  {
-    // fast path
-    pathLength = Destination.GetLength();
-    ;
-    for (i = 0; i < pathLength; i++)
-    {
-      if (Destination[i] == '/')
-        Destination[i] = FS_OSPATH_SEPARATOR_CHARACTER;
-    }
-  }
-  else
-  {
-    // slow path
-    pathLength = static_cast<u32>(std::strlen(Path));
-    Destination.Resize(pathLength);
-    for (i = 0; i < pathLength; i++)
-    {
-      Destination[i] = (Path[i] == '/') ? FS_OSPATH_SEPARATOR_CHARACTER : Path[i];
-    }
-  }
-}
-
-void BuildOSPath(String& Destination)
-{
-  BuildOSPath(Destination, Destination);
-}
-
 #ifdef _WIN32
-
 static u32 TranslateWin32Attributes(u32 Win32Attributes)
 {
   u32 r = 0;
@@ -1274,157 +962,6 @@ static DWORD WrapGetFileAttributes(const wchar_t* path)
 static const u32 READ_DIRECTORY_CHANGES_NOTIFY_FILTER = FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME |
                                                         FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE |
                                                         FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_CREATION;
-
-class ChangeNotifierWin32 : public FileSystem::ChangeNotifier
-{
-public:
-  ChangeNotifierWin32(HANDLE hDirectory, const String& directoryPath, bool recursiveWatch)
-    : FileSystem::ChangeNotifier(directoryPath, recursiveWatch), m_hDirectory(hDirectory),
-      m_directoryChangeQueued(false)
-  {
-    m_bufferSize = 16384;
-    m_pBuffer = new u8[m_bufferSize];
-  }
-
-  virtual ~ChangeNotifierWin32()
-  {
-    // if there is outstanding io, cancel it
-    if (m_directoryChangeQueued)
-    {
-      CancelIo(m_hDirectory);
-
-      DWORD bytesTransferred;
-      GetOverlappedResult(m_hDirectory, &m_overlapped, &bytesTransferred, TRUE);
-    }
-
-    CloseHandle(m_hDirectory);
-    delete[] m_pBuffer;
-  }
-
-  virtual void EnumerateChanges(EnumerateChangesCallback callback, void* pUserData) override
-  {
-    DWORD bytesRead;
-    if (!GetOverlappedResult(m_hDirectory, &m_overlapped, &bytesRead, FALSE))
-    {
-      if (GetLastError() == ERROR_IO_INCOMPLETE)
-        return;
-
-      CancelIo(m_hDirectory);
-      m_directoryChangeQueued = false;
-
-      QueueReadDirectoryChanges();
-      return;
-    }
-
-    // not queued any more
-    m_directoryChangeQueued = false;
-
-    // has any bytes?
-    if (bytesRead > 0)
-    {
-      const u8* pCurrentPointer = m_pBuffer;
-      PathString fileName;
-      for (;;)
-      {
-        const FILE_NOTIFY_INFORMATION* pFileNotifyInformation =
-          reinterpret_cast<const FILE_NOTIFY_INFORMATION*>(pCurrentPointer);
-
-        // translate the event
-        u32 changeEvent = 0;
-        if (pFileNotifyInformation->Action == FILE_ACTION_ADDED)
-          changeEvent = ChangeEvent_FileAdded;
-        else if (pFileNotifyInformation->Action == FILE_ACTION_REMOVED)
-          changeEvent = ChangeEvent_FileRemoved;
-        else if (pFileNotifyInformation->Action == FILE_ACTION_MODIFIED)
-          changeEvent = ChangeEvent_FileModified;
-        else if (pFileNotifyInformation->Action == FILE_ACTION_RENAMED_OLD_NAME)
-          changeEvent = ChangeEvent_RenamedOldName;
-        else if (pFileNotifyInformation->Action == FILE_ACTION_RENAMED_NEW_NAME)
-          changeEvent = ChangeEvent_RenamedNewName;
-
-        // translate the filename
-        int fileNameLength =
-          WideCharToMultiByte(CP_UTF8, 0, pFileNotifyInformation->FileName,
-                              pFileNotifyInformation->FileNameLength / sizeof(WCHAR), nullptr, 0, nullptr, nullptr);
-        DebugAssert(fileNameLength >= 0);
-        fileName.Resize(fileNameLength);
-        fileNameLength = WideCharToMultiByte(CP_UTF8, 0, pFileNotifyInformation->FileName,
-                                             pFileNotifyInformation->FileNameLength / sizeof(WCHAR),
-                                             fileName.GetWriteableCharArray(), fileName.GetLength(), nullptr, nullptr);
-        if (fileNameLength != (int)fileName.GetLength())
-          fileName.Resize(fileNameLength);
-
-        // prepend the base path
-        fileName.PrependFormattedString("%s\\", m_directoryPath.GetCharArray());
-
-        // construct change info
-        ChangeInfo changeInfo;
-        changeInfo.Path = fileName;
-        changeInfo.Event = changeEvent;
-
-        // invoke callback
-        callback(&changeInfo, pUserData);
-
-        // has a next entry?
-        if (pFileNotifyInformation->NextEntryOffset == 0)
-          break;
-
-        pCurrentPointer += pFileNotifyInformation->NextEntryOffset;
-        DebugAssert(pCurrentPointer < (m_pBuffer + m_bufferSize));
-      }
-    }
-
-    // re-queue the operation
-    QueueReadDirectoryChanges();
-  }
-
-  bool QueueReadDirectoryChanges()
-  {
-    DebugAssert(!m_directoryChangeQueued);
-
-    std::memset(&m_overlapped, 0, sizeof(m_overlapped));
-    if (ReadDirectoryChangesW(m_hDirectory, m_pBuffer, m_bufferSize, m_recursiveWatch,
-                              READ_DIRECTORY_CHANGES_NOTIFY_FILTER, nullptr, &m_overlapped, nullptr) == FALSE)
-      return false;
-
-    m_directoryChangeQueued = true;
-    return true;
-  }
-
-private:
-  HANDLE m_hDirectory;
-  OVERLAPPED m_overlapped;
-  bool m_directoryChangeQueued;
-  u8* m_pBuffer;
-  u32 m_bufferSize;
-};
-
-std::unique_ptr<ChangeNotifier> CreateChangeNotifier(const char* path, bool recursiveWatch)
-{
-  // open the directory up
-  std::wstring path_wstr(StringUtil::UTF8StringToWideString(path));
-#ifndef _UWP
-  HANDLE hDirectory =
-    CreateFileW(path_wstr.c_str(), FILE_LIST_DIRECTORY, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
-                OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, nullptr);
-#else
-  CREATEFILE2_EXTENDED_PARAMETERS ep = {};
-  ep.dwSize = sizeof(ep);
-  ep.dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
-  ep.dwFileFlags = FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED;
-  HANDLE hDirectory = CreateFile2FromAppW(path_wstr.c_str(), FILE_LIST_DIRECTORY,
-                                          FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, OPEN_EXISTING, &ep);
-#endif
-  if (hDirectory == nullptr)
-    return nullptr;
-
-  // queue up the overlapped io
-  auto pChangeNotifier = std::make_unique<ChangeNotifierWin32>(hDirectory, path, recursiveWatch);
-  if (!pChangeNotifier->QueueReadDirectoryChanges())
-    return nullptr;
-
-  return pChangeNotifier;
-}
 
 static u32 RecursiveFindFiles(const char* OriginPath, const char* ParentPath, const char* Path, const char* Pattern,
                               u32 Flags, FileSystem::FindResultsArray* pResults)
@@ -1756,8 +1293,7 @@ bool FileSystem::CreateDirectory(const char* Path, bool Recursive)
     u32 Attributes = WrapGetFileAttributes(wpath.c_str());
     if (Attributes != INVALID_FILE_ATTRIBUTES && Attributes & FILE_ATTRIBUTE_DIRECTORY)
       return true;
-    else
-      return false;
+    return false;
   }
   else if (lastError == ERROR_PATH_NOT_FOUND)
   {
@@ -1808,11 +1344,8 @@ bool FileSystem::CreateDirectory(const char* Path, bool Recursive)
     // ok
     return true;
   }
-  else
-  {
-    // unhandled error
-    return false;
-  }
+  // unhandled error
+  return false;
 }
 
 bool FileSystem::DeleteFile(const char* Path)
@@ -1864,99 +1397,6 @@ bool FileSystem::RenamePath(const char* OldPath, const char* NewPath)
   return true;
 }
 
-static bool RecursiveDeleteDirectory(const std::wstring& wpath, bool Recursive)
-{
-  // ensure it exists
-  const DWORD fileAttributes = WrapGetFileAttributes(wpath.c_str());
-  if (fileAttributes == INVALID_FILE_ATTRIBUTES || fileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-    return false;
-
-  // non-recursive case just try removing the directory
-  if (!Recursive)
-  {
-#ifndef _UWP
-    return (RemoveDirectoryW(wpath.c_str()) == TRUE);
-#else
-    return (RemoveDirectoryFromAppW(wpath.c_str()) == TRUE);
-#endif
-  }
-
-  // doing a recursive delete
-  std::wstring fileName = wpath;
-  fileName += L"\\*";
-
-  // is there any files?
-  WIN32_FIND_DATAW findData;
-#ifndef _UWP
-  HANDLE hFind = FindFirstFileW(fileName.c_str(), &findData);
-#else
-  HANDLE hFind =
-    FindFirstFileExFromAppW(fileName.c_str(), FindExInfoBasic, &findData, FindExSearchNameMatch, nullptr, 0);
-#endif
-  if (hFind == INVALID_HANDLE_VALUE)
-    return false;
-
-  // search through files
-  do
-  {
-    // skip . and ..
-    if (findData.cFileName[0] == L'.')
-    {
-      if ((findData.cFileName[1] == L'\0') || (findData.cFileName[1] == L'.' && findData.cFileName[2] == L'\0'))
-      {
-        continue;
-      }
-    }
-
-    // found a directory?
-    fileName = wpath;
-    fileName += L"\\";
-    fileName += findData.cFileName;
-    if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-    {
-      // recurse into that
-      if (!RecursiveDeleteDirectory(fileName, true))
-      {
-        FindClose(hFind);
-        return false;
-      }
-    }
-    else
-    {
-      // found a file, so delete it
-#ifndef _UWP
-      const BOOL result = DeleteFileW(fileName.c_str());
-#else
-      const BOOL result = DeleteFileFromAppW(fileName.c_str());
-#endif
-      if (!result)
-      {
-        FindClose(hFind);
-        return false;
-      }
-    }
-  } while (FindNextFileW(hFind, &findData));
-  FindClose(hFind);
-
-  // nuke the directory itself
-#ifndef _UWP
-  const BOOL result = RemoveDirectoryW(wpath.c_str());
-#else
-  const BOOL result = RemoveDirectoryFromAppW(wpath.c_str());
-#endif
-  if (!result)
-    return false;
-
-  // done
-  return true;
-}
-
-bool FileSystem::DeleteDirectory(const char* Path, bool Recursive)
-{
-  const std::wstring wpath(StringUtil::UTF8StringToWideString(Path));
-  return RecursiveDeleteDirectory(wpath, Recursive);
-}
-
 std::string GetProgramPath()
 {
   std::wstring buffer;
@@ -1987,35 +1427,7 @@ std::string GetProgramPath()
   return utf8_path;
 }
 
-std::string GetWorkingDirectory()
-{
-  DWORD required_size = GetCurrentDirectoryW(0, nullptr);
-  if (!required_size)
-    return {};
-
-  std::wstring buffer;
-  buffer.resize(required_size - 1);
-
-  if (!GetCurrentDirectoryW(static_cast<DWORD>(buffer.size() + 1), buffer.data()))
-    return {};
-
-  return StringUtil::WideStringToUTF8String(buffer);
-}
-
-bool SetWorkingDirectory(const char* path)
-{
-  const std::wstring wpath(StringUtil::UTF8StringToWideString(path));
-  return (SetCurrentDirectoryW(wpath.c_str()) == TRUE);
-}
-
 #else
-
-std::unique_ptr<ChangeNotifier> CreateChangeNotifier(const char* path, bool recursiveWatch)
-{
-  Log_ErrorPrintf("FileSystem::CreateChangeNotifier(%s) not implemented", path);
-  return nullptr;
-}
-
 static u32 RecursiveFindFiles(const char* OriginPath, const char* ParentPath, const char* Path, const char* Pattern,
                               u32 Flags, FindResultsArray* pResults)
 {
@@ -2268,8 +1680,7 @@ bool FileExists(const char* Path)
 
   if (S_ISDIR(sysStatData.st_mode))
     return false;
-  else
-    return true;
+  return true;
 }
 
 bool DirectoryExists(const char* Path)
@@ -2397,12 +1808,6 @@ bool RenamePath(const char* OldPath, const char* NewPath)
   return true;
 }
 
-bool DeleteDirectory(const char* Path, bool Recursive)
-{
-  Log_ErrorPrintf("FileSystem::DeleteDirectory(%s) not implemented", Path);
-  return false;
-}
-
 std::string GetProgramPath()
 {
 #if defined(__linux__)
@@ -2472,33 +1877,6 @@ std::string GetProgramPath()
   return {};
 #endif
 }
-
-std::string GetWorkingDirectory()
-{
-  std::string buffer;
-  buffer.resize(PATH_MAX);
-  while (!getcwd(buffer.data(), buffer.size()))
-  {
-    if (errno != ERANGE)
-    {
-      buffer.clear();
-      break;
-    }
-
-    buffer.resize(buffer.size() * 2);
-  }
-
-  if (!buffer.empty())
-    buffer.resize(std::strlen(buffer.c_str()));
-
-  return buffer;
-}
-
-bool SetWorkingDirectory(const char* path)
-{
-  return (chdir(path) == 0);
-}
-
 #endif
 
 } // namespace FileSystem

@@ -41,10 +41,6 @@ static HANDLE s_hConsoleStdOut = NULL;
 static HANDLE s_hConsoleStdErr = NULL;
 #endif
 
-static bool s_debug_output_enabled = false;
-static String s_debug_output_channel_filter;
-static LOGLEVEL s_debug_output_level_filter = LOGLEVEL_TRACE;
-
 void RegisterCallback(CallbackFunctionType callbackFunction, void* pUserParam)
 {
   RegisteredCallback Callback;
@@ -67,16 +63,6 @@ void UnregisterCallback(CallbackFunctionType callbackFunction, void* pUserParam)
       break;
     }
   }
-}
-
-bool IsConsoleOutputEnabled()
-{
-  return s_console_output_enabled;
-}
-
-bool IsDebugOutputEnabled()
-{
-  return s_debug_output_enabled;
 }
 
 static void ExecuteCallbacks(const char* channelName, const char* functionName, LOGLEVEL level, const char* message)
@@ -247,37 +233,6 @@ static void ConsoleOutputLogCallback(void* pUserParam, const char* channelName, 
 #endif
 }
 
-static void DebugOutputLogCallback(void* pUserParam, const char* channelName, const char* functionName, LOGLEVEL level,
-                                   const char* message)
-{
-  if (!s_debug_output_enabled || level > s_debug_output_level_filter ||
-      s_debug_output_channel_filter.Find(functionName) >= 0)
-  {
-    return;
-  }
-
-#if defined(_WIN32)
-  FormatLogMessageAndPrintW(channelName, functionName, level, message, true, false, true,
-                            [](const wchar_t* message, int message_len) { OutputDebugStringW(message); });
-#elif defined(__ANDROID__)
-  static const int logPriority[LOGLEVEL_COUNT] = {
-    ANDROID_LOG_INFO,  // NONE
-    ANDROID_LOG_ERROR, // ERROR
-    ANDROID_LOG_WARN,  // WARNING
-    ANDROID_LOG_INFO,  // PERF
-    ANDROID_LOG_INFO,  // INFO
-    ANDROID_LOG_INFO,  // VERBOSE
-    ANDROID_LOG_DEBUG, // DEV
-    ANDROID_LOG_DEBUG, // PROFILE
-    ANDROID_LOG_DEBUG, // DEBUG
-    ANDROID_LOG_DEBUG, // TRACE
-  };
-
-  __android_log_write(logPriority[level], channelName, message);
-#else
-#endif
-}
-
 void SetConsoleOutputParams(bool Enabled, const char* ChannelFilter, LOGLEVEL LevelFilter)
 {
   s_console_output_channel_filter = (ChannelFilter != NULL) ? ChannelFilter : "";
@@ -356,22 +311,6 @@ void SetConsoleOutputParams(bool Enabled, const char* ChannelFilter, LOGLEVEL Le
     RegisterCallback(ConsoleOutputLogCallback, nullptr);
   else
     UnregisterCallback(ConsoleOutputLogCallback, nullptr);
-}
-
-void SetDebugOutputParams(bool enabled, const char* channelFilter /* = nullptr */,
-                          LOGLEVEL levelFilter /* = LOGLEVEL_TRACE */)
-{
-  if (s_debug_output_enabled != enabled)
-  {
-    s_debug_output_enabled = enabled;
-    if (enabled)
-      RegisterCallback(DebugOutputLogCallback, nullptr);
-    else
-      UnregisterCallback(DebugOutputLogCallback, nullptr);
-  }
-
-  s_debug_output_channel_filter = (channelFilter != nullptr) ? channelFilter : "";
-  s_debug_output_level_filter = levelFilter;
 }
 
 void SetFilterLevel(LOGLEVEL level)
