@@ -55,7 +55,7 @@ static retro_log_callback s_libretro_log_callback = {};
 static bool s_libretro_log_callback_valid = false;
 static bool s_libretro_log_callback_registered = false;
 static bool libretro_supports_option_categories = false;
-static int analog_press = -1;
+static bool analog_press = false;
 static bool port_allowed = false;
 static unsigned libretro_msg_interface_version = 0;
 
@@ -1163,14 +1163,14 @@ void LibretroHostInterface::UpdateControllersAnalogController(u32 index)
   const u16 R3 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3);
 
   // Workaround for the fact it will otherwise spam the analog button.
-  if (L1 && R1 && L3 && R3 && analog_press == 0)
+  if (!analog_press && L1 && R1 && L3 && R3)
   {
-    analog_press = 1;
+    analog_press = true;
     controller->SetButtonState(AnalogController::Button::Analog, (L1 && R1 && L3 && R3));
   }
-  if (!L1 && !R1 && !L3 && !R3)
+  if (analog_press && !L1 && !R1 && !L3 && !R3)
   {
-    analog_press = 0;
+    analog_press = false;
   }
 }
 
