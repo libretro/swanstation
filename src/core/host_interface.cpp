@@ -227,13 +227,6 @@ std::optional<std::vector<u8>> HostInterface::GetBIOSImage(ConsoleRegion region)
     StringUtil::StdStringFromFormat("%s" FS_OSPATH_SEPARATOR_STR "%s", bios_dir.c_str(), bios_name.c_str()).c_str());
   if (!image.has_value())
     return FindBIOSImageInDirectory(region, bios_dir.c_str());
-
-  BIOS::Hash found_hash = BIOS::GetHash(*image);
-  Log_DevPrintf("Hash for BIOS '%s': %s", bios_name.c_str(), found_hash.ToString().c_str());
-
-  if (!BIOS::IsValidHashForRegion(region, found_hash))
-    Log_WarningPrintf("Hash for BIOS '%s' does not match region. This may cause issues.", bios_name.c_str());
-
   return image;
 }
 

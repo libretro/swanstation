@@ -108,15 +108,6 @@ std::optional<Image> LoadImageFromFile(const char* filename)
   return ret;
 }
 
-std::optional<Hash> GetHashForFile(const char* filename)
-{
-  auto image = LoadImageFromFile(filename);
-  if (!image)
-    return std::nullopt;
-
-  return GetHash(*image);
-}
-
 const ImageInfo* GetImageInfoForHash(const Hash& hash)
 {
   for (const ImageInfo& ii : s_image_infos)

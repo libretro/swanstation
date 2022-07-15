@@ -57,7 +57,6 @@ static_assert(sizeof(PSEXEHeader) == 0x800);
 
 Hash GetHash(const Image& image);
 std::optional<Image> LoadImageFromFile(const char* filename);
-std::optional<Hash> GetHashForFile(const char* filename);
 
 const ImageInfo* GetImageInfoForHash(const Hash& hash);
 bool IsValidHashForRegion(ConsoleRegion region, const Hash& hash);
