@@ -191,6 +191,16 @@ void GPU_HW::UpdateHWSettings(bool* framebuffer_changed, bool* shaders_changed)
   UpdateSoftwareRenderer(true);
 }
 
+static u32 PreviousPow2(u32 value)
+{
+  value |= (value >> 1);
+  value |= (value >> 2);
+  value |= (value >> 4);
+  value |= (value >> 8);
+  value |= (value >> 16);
+  return value - (value >> 1);
+}
+
 u32 GPU_HW::CalculateResolutionScale() const
 {
   u32 scale;
@@ -210,7 +220,7 @@ u32 GPU_HW::CalculateResolutionScale() const
   }
   if (g_settings.gpu_downsample_mode == GPUDownsampleMode::Adaptive && m_supports_adaptive_downsampling && scale > 1 &&
       !(IS_POW2(scale)))
-    return Common::PreviousPow2(scale);
+    return PreviousPow2(scale);
   return scale;
 }
 

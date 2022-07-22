@@ -126,13 +126,18 @@ ALWAYS_INLINE u32 VRAM16ToOutput<HostDisplayPixelFormat::BGRA8, u32>(u16 value)
   return ZeroExtend32(b) | (ZeroExtend32(g) << 8) | (ZeroExtend32(r) << 16) | (0xFF000000u);
 }
 
+static u32 AlignDownPow2(u32 value, unsigned int alignment)
+{
+  return value & (~(alignment - 1));
+}
+
 template<>
 ALWAYS_INLINE void CopyOutRow16<HostDisplayPixelFormat::RGBA5551, u16>(const u16* src_ptr, u16* dst_ptr, u32 width)
 {
   u32 col = 0;
 
 #if defined(CPU_X64)
-  const u32 aligned_width = Common::AlignDownPow2(width, 8);
+  const u32 aligned_width = AlignDownPow2(width, 8);
   for (; col < aligned_width; col += 8)
   {
     const __m128i single_mask = _mm_set1_epi16(0x1F);
@@ -146,7 +151,7 @@ ALWAYS_INLINE void CopyOutRow16<HostDisplayPixelFormat::RGBA5551, u16>(const u16
     dst_ptr += 8;
   }
 #elif defined(CPU_AARCH64)
-  const u32 aligned_width = Common::AlignDownPow2(width, 8);
+  const u32 aligned_width = AlignDownPow2(width, 8);
   for (; col < aligned_width; col += 8)
   {
     const uint16x8_t single_mask = vdupq_n_u16(0x1F);
@@ -171,7 +176,7 @@ ALWAYS_INLINE void CopyOutRow16<HostDisplayPixelFormat::RGB565, u16>(const u16* 
   u32 col = 0;
 
 #if defined(CPU_X64)
-  const u32 aligned_width = Common::AlignDownPow2(width, 8);
+  const u32 aligned_width = AlignDownPow2(width, 8);
   for (; col < aligned_width; col += 8)
   {
     const __m128i single_mask = _mm_set1_epi16(0x1F);
@@ -186,7 +191,7 @@ ALWAYS_INLINE void CopyOutRow16<HostDisplayPixelFormat::RGB565, u16>(const u16* 
     dst_ptr += 8;
   }
 #elif defined(CPU_AARCH64)
-  const u32 aligned_width = Common::AlignDownPow2(width, 8);
+  const u32 aligned_width = AlignDownPow2(width, 8);
   const uint16x8_t single_mask = vdupq_n_u16(0x1F);
   for (; col < aligned_width; col += 8)
   {
