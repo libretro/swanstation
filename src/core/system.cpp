@@ -1734,7 +1734,7 @@ void UpdateRunningGame(const char* path, CDImage* image)
   s_running_game_code.clear();
   s_running_game_title.clear();
 
-  if (path && std::strlen(path) > 0)
+  if (path && path[0] != '\0')
   {
     s_running_game_path = path;
     g_host_interface->GetGameInfo(path, image, &s_running_game_code, &s_running_game_title);

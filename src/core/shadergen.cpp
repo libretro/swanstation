@@ -370,7 +370,7 @@ void ShaderGen::DeclareVertexEntryPoint(
 
       for (const auto& [qualifiers, name] : additional_outputs)
       {
-        const char* qualifier_to_use = (std::strlen(qualifiers) > 0) ? qualifiers : qualifier;
+        const char* qualifier_to_use = (qualifiers && qualifiers[0] != '\0') ? qualifiers : qualifier;
         ss << "  " << qualifier_to_use << " " << name << ";\n";
       }
       ss << "};\n";
@@ -387,7 +387,7 @@ void ShaderGen::DeclareVertexEntryPoint(
 
       for (const auto& [qualifiers, name] : additional_outputs)
       {
-        const char* qualifier_to_use = (std::strlen(qualifiers) > 0) ? qualifiers : qualifier;
+        const char* qualifier_to_use = (qualifiers && qualifiers[0] != '\0') ? qualifiers : qualifier;
         ss << qualifier_to_use << " out " << name << ";\n";
       }
     }
@@ -429,7 +429,7 @@ void ShaderGen::DeclareVertexEntryPoint(
     u32 additional_counter = num_texcoord_outputs;
     for (const auto& [qualifiers, name] : additional_outputs)
     {
-      const char* qualifier_to_use = (std::strlen(qualifiers) > 0) ? qualifiers : qualifier;
+      const char* qualifier_to_use = (qualifiers && qualifiers[0] != '\0') ? qualifiers : qualifier;
       ss << "  " << qualifier_to_use << " out " << name << " : TEXCOORD" << additional_counter << ",\n";
       additional_counter++;
     }
@@ -463,7 +463,7 @@ void ShaderGen::DeclareFragmentEntryPoint(
 
       for (const auto& [qualifiers, name] : additional_inputs)
       {
-        const char* qualifier_to_use = (std::strlen(qualifiers) > 0) ? qualifiers : qualifier;
+        const char* qualifier_to_use = (qualifiers && qualifiers[0] != '\0') ? qualifiers : qualifier;
         ss << "  " << qualifier_to_use << " " << name << ";\n";
       }
       ss << "};\n";
@@ -480,7 +480,7 @@ void ShaderGen::DeclareFragmentEntryPoint(
 
       for (const auto& [qualifiers, name] : additional_inputs)
       {
-        const char* qualifier_to_use = (std::strlen(qualifiers) > 0) ? qualifiers : qualifier;
+        const char* qualifier_to_use = (qualifiers && qualifiers[0] != '\0') ? qualifiers : qualifier;
         ss << qualifier_to_use << " in " << name << ";\n";
       }
     }
@@ -533,7 +533,7 @@ void ShaderGen::DeclareFragmentEntryPoint(
     u32 additional_counter = num_texcoord_inputs;
     for (const auto& [qualifiers, name] : additional_inputs)
     {
-      const char* qualifier_to_use = (std::strlen(qualifiers) > 0) ? qualifiers : qualifier;
+      const char* qualifier_to_use = (qualifiers && qualifiers[0] != '\0') ? qualifiers : qualifier;
       ss << "  " << qualifier_to_use << " in " << name << " : TEXCOORD" << additional_counter << ",\n";
       additional_counter++;
     }
