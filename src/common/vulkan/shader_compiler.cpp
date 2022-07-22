@@ -95,16 +95,21 @@ static std::optional<SPIRVCodeVector> CompileShaderToSPV(EShLanguage stage, cons
   spv::SpvBuildLogger logger;
   glslang::GlslangToSpv(*intermediate, out_code, &logger);
 
+  const char *shdr_dbg_log   = shader->getInfoDebugLog();
+  const char *shdr_info_log  = shader->getInfoLog();
+  const char *prg_info_log   = program->getInfoLog();
+  const char *prg_dbg_log    = program->getInfoDebugLog();
+
   // Write out messages
   // Temporary: skip if it contains "Warning, version 450 is not yet complete; most version-specific
   // features are present, but some are missing."
-  if (std::strlen(shader->getInfoLog()) > 108)
+  if (std::strlen(shdr_info_log) > 108)
     Log_WarningPrintf("Shader info log: %s", shader->getInfoLog());
-  if (std::strlen(shader->getInfoDebugLog()) > 0)
+  if (shdr_dbg_log && shdr_dbg_log[0] != '\0')
     Log_WarningPrintf("Shader debug info log: %s", shader->getInfoDebugLog());
-  if (std::strlen(program->getInfoLog()) > 25)
+  if (std::strlen(prg_info_log) > 25)
     Log_WarningPrintf("Program info log: %s", program->getInfoLog());
-  if (std::strlen(program->getInfoDebugLog()) > 0)
+  if (prg_dbg_log && prg_dbg_log[0] != '\0')
     Log_WarningPrintf("Program debug info log: %s", program->getInfoDebugLog());
   std::string spv_messages = logger.getAllMessages();
   if (!spv_messages.empty())
