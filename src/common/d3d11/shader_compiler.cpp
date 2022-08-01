@@ -84,42 +84,6 @@ ComPtr<ID3DBlob> CompileShader(Type type, D3D_FEATURE_LEVEL feature_level, std::
   return blob;
 }
 
-ComPtr<ID3D11VertexShader> CompileAndCreateVertexShader(ID3D11Device* device, std::string_view code, bool debug)
-{
-  ComPtr<ID3DBlob> blob = CompileShader(Type::Vertex, device->GetFeatureLevel(), std::move(code), debug);
-  if (!blob)
-    return {};
-
-  return CreateVertexShader(device, blob.Get());
-}
-
-ComPtr<ID3D11GeometryShader> CompileAndCreateGeometryShader(ID3D11Device* device, std::string_view code, bool debug)
-{
-  ComPtr<ID3DBlob> blob = CompileShader(Type::Geometry, device->GetFeatureLevel(), std::move(code), debug);
-  if (!blob)
-    return {};
-
-  return CreateGeometryShader(device, blob.Get());
-}
-
-ComPtr<ID3D11PixelShader> CompileAndCreatePixelShader(ID3D11Device* device, std::string_view code, bool debug)
-{
-  ComPtr<ID3DBlob> blob = CompileShader(Type::Pixel, device->GetFeatureLevel(), std::move(code), debug);
-  if (!blob)
-    return {};
-
-  return CreatePixelShader(device, blob.Get());
-}
-
-ComPtr<ID3D11ComputeShader> CompileAndCreateComputeShader(ID3D11Device* device, std::string_view code, bool debug)
-{
-  ComPtr<ID3DBlob> blob = CompileShader(Type::Compute, device->GetFeatureLevel(), std::move(code), debug);
-  if (!blob)
-    return {};
-
-  return CreateComputeShader(device, blob.Get());
-}
-
 ComPtr<ID3D11VertexShader> CreateVertexShader(ID3D11Device* device, const void* bytecode, size_t bytecode_length)
 {
   ComPtr<ID3D11VertexShader> shader;

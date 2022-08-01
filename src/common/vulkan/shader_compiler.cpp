@@ -142,26 +142,6 @@ void DeinitializeGlslang()
   glslang_initialized = false;
 }
 
-std::optional<SPIRVCodeVector> CompileVertexShader(std::string_view source_code)
-{
-  return CompileShaderToSPV(EShLangVertex, "vs", source_code);
-}
-
-std::optional<SPIRVCodeVector> CompileGeometryShader(std::string_view source_code)
-{
-  return CompileShaderToSPV(EShLangGeometry, "gs", source_code);
-}
-
-std::optional<SPIRVCodeVector> CompileFragmentShader(std::string_view source_code)
-{
-  return CompileShaderToSPV(EShLangFragment, "ps", source_code);
-}
-
-std::optional<SPIRVCodeVector> CompileComputeShader(std::string_view source_code)
-{
-  return CompileShaderToSPV(EShLangCompute, "cs", source_code);
-}
-
 std::optional<ShaderCompiler::SPIRVCodeVector> CompileShader(Type type, std::string_view source_code, bool debug)
 {
   switch (type)

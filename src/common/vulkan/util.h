@@ -63,18 +63,6 @@ void BufferMemoryBarrier(VkCommandBuffer command_buffer, VkBuffer buffer, VkAcce
 // Create a shader module from the specified SPIR-V.
 VkShaderModule CreateShaderModule(const u32* spv, size_t spv_word_count);
 
-// Compile a vertex shader and create a shader module, discarding the intermediate SPIR-V.
-VkShaderModule CompileAndCreateVertexShader(std::string_view source_code);
-
-// Compile a geometry shader and create a shader module, discarding the intermediate SPIR-V.
-VkShaderModule CompileAndCreateGeometryShader(std::string_view source_code);
-
-// Compile a fragment shader and create a shader module, discarding the intermediate SPIR-V.
-VkShaderModule CompileAndCreateFragmentShader(std::string_view source_code);
-
-// Compile a compute shader and create a shader module, discarding the intermediate SPIR-V.
-VkShaderModule CompileAndCreateComputeShader(std::string_view source_code);
-
 const char* VkResultToString(VkResult res);
 const char* VkImageLayoutToString(VkImageLayout layout);
 void LogVulkanResult(int level, const char* func_name, VkResult res, const char* msg, ...) printflike(4, 5);

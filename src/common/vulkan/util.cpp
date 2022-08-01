@@ -303,42 +303,6 @@ VkShaderModule CreateShaderModule(const u32* spv, size_t spv_word_count)
   return module;
 }
 
-VkShaderModule CompileAndCreateVertexShader(std::string_view source_code)
-{
-  std::optional<ShaderCompiler::SPIRVCodeVector> code = ShaderCompiler::CompileVertexShader(source_code);
-  if (!code)
-    return VK_NULL_HANDLE;
-
-  return CreateShaderModule(code->data(), code->size());
-}
-
-VkShaderModule CompileAndCreateGeometryShader(std::string_view source_code)
-{
-  std::optional<ShaderCompiler::SPIRVCodeVector> code = ShaderCompiler::CompileGeometryShader(source_code);
-  if (!code)
-    return VK_NULL_HANDLE;
-
-  return CreateShaderModule(code->data(), code->size());
-}
-
-VkShaderModule CompileAndCreateFragmentShader(std::string_view source_code)
-{
-  std::optional<ShaderCompiler::SPIRVCodeVector> code = ShaderCompiler::CompileFragmentShader(source_code);
-  if (!code)
-    return VK_NULL_HANDLE;
-
-  return CreateShaderModule(code->data(), code->size());
-}
-
-VkShaderModule CompileAndCreateComputeShader(std::string_view source_code)
-{
-  std::optional<ShaderCompiler::SPIRVCodeVector> code = ShaderCompiler::CompileComputeShader(source_code);
-  if (!code)
-    return VK_NULL_HANDLE;
-
-  return CreateShaderModule(code->data(), code->size());
-}
-
 const char* VkResultToString(VkResult res)
 {
   switch (res)
