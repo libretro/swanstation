@@ -427,8 +427,6 @@ bool Context::CreateCommandBuffers()
       LOG_VULKAN_ERROR(res, "vkCreateCommandPool failed: ");
       return false;
     }
-    Vulkan::Util::SetObjectName(g_vulkan_context->GetDevice(), resources.command_pool, "Frame Command Pool %u",
-                                frame_index);
 
     VkCommandBufferAllocateInfo buffer_info = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO, nullptr,
                                                resources.command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1};
@@ -439,8 +437,6 @@ bool Context::CreateCommandBuffers()
       LOG_VULKAN_ERROR(res, "vkAllocateCommandBuffers failed: ");
       return false;
     }
-    Vulkan::Util::SetObjectName(g_vulkan_context->GetDevice(), resources.command_buffer, "Frame Command Buffer %u",
-                                frame_index);
 
     VkFenceCreateInfo fence_info = {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO, nullptr, VK_FENCE_CREATE_SIGNALED_BIT};
 
@@ -450,7 +446,6 @@ bool Context::CreateCommandBuffers()
       LOG_VULKAN_ERROR(res, "vkCreateFence failed: ");
       return false;
     }
-    Vulkan::Util::SetObjectName(g_vulkan_context->GetDevice(), resources.fence, "Frame Fence %u", frame_index);
     // TODO: A better way to choose the number of descriptors.
     VkDescriptorPoolSize pool_sizes[] = {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1024},
                                          {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1024},
@@ -470,9 +465,6 @@ bool Context::CreateCommandBuffers()
       LOG_VULKAN_ERROR(res, "vkCreateDescriptorPool failed: ");
       return false;
     }
-    Vulkan::Util::SetObjectName(g_vulkan_context->GetDevice(), resources.descriptor_pool, "Frame Descriptor Pool %u",
-                                frame_index);
-
     ++frame_index;
   }
 
@@ -532,7 +524,6 @@ bool Context::CreateGlobalDescriptorPool()
     LOG_VULKAN_ERROR(res, "vkCreateDescriptorPool failed: ");
     return false;
   }
-  Vulkan::Util::SetObjectName(g_vulkan_context->GetDevice(), m_global_descriptor_pool, "Global Descriptor Pool");
   return true;
 }
 
@@ -682,7 +673,6 @@ void Context::DoSubmitCommandBuffer(u32 index, VkSemaphore wait_semaphore, VkSem
     submit_info.signalSemaphoreCount = 1;
     submit_info.pSignalSemaphores = &signal_semaphore;
   }
-  const Vulkan::Util::DebugScope debugScope(m_graphics_queue, "Context::DoSubmitCommandBuffer: %u", index);
 
   VkResult res = vkQueueSubmit(m_graphics_queue, 1, &submit_info, resources.fence);
   if (res != VK_SUCCESS)
