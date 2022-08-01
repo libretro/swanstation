@@ -285,24 +285,6 @@ void BufferMemoryBarrier(VkCommandBuffer command_buffer, VkBuffer buffer, VkAcce
   vkCmdPipelineBarrier(command_buffer, src_stage_mask, dst_stage_mask, 0, 0, nullptr, 1, &buffer_info, 0, nullptr);
 }
 
-VkShaderModule CreateShaderModule(const u32* spv, size_t spv_word_count)
-{
-  VkShaderModuleCreateInfo info = {};
-  info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-  info.codeSize = spv_word_count * sizeof(u32);
-  info.pCode = spv;
-
-  VkShaderModule module;
-  VkResult res = vkCreateShaderModule(g_vulkan_context->GetDevice(), &info, nullptr, &module);
-  if (res != VK_SUCCESS)
-  {
-    LOG_VULKAN_ERROR(res, "vkCreateShaderModule failed: ");
-    return VK_NULL_HANDLE;
-  }
-
-  return module;
-}
-
 const char* VkResultToString(VkResult res)
 {
   switch (res)
