@@ -30,7 +30,7 @@ template<typename T, std::size_t rank, std::size_t... sizes>
 struct DimensionalArrayExplicitRank;
 
 // Workaround for VS2017 & VS 16.9.x
-#if defined(_MSC_VER) && (_MSC_VER < 1920 || _MSC_VER == 1928)
+#if defined(_MSC_VER)
 
 template<std::size_t rank, std::size_t... sizes>
 struct GetRankSize
