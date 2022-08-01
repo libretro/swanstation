@@ -58,42 +58,6 @@ Context::~Context()
   }
 }
 
-bool Context::CheckValidationLayerAvailablility()
-{
-  u32 extension_count = 0;
-  VkResult res = vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
-  if (res != VK_SUCCESS)
-  {
-    LOG_VULKAN_ERROR(res, "vkEnumerateInstanceExtensionProperties failed: ");
-    return false;
-  }
-
-  std::vector<VkExtensionProperties> extension_list(extension_count);
-  res = vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extension_list.data());
-  Assert(res == VK_SUCCESS);
-
-  u32 layer_count = 0;
-  res = vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
-  if (res != VK_SUCCESS)
-  {
-    LOG_VULKAN_ERROR(res, "vkEnumerateInstanceExtensionProperties failed: ");
-    return false;
-  }
-
-  std::vector<VkLayerProperties> layer_list(layer_count);
-  res = vkEnumerateInstanceLayerProperties(&layer_count, layer_list.data());
-  Assert(res == VK_SUCCESS);
-
-  // Check for both VK_EXT_debug_utils and VK_LAYER_LUNARG_standard_validation
-  return (std::find_if(extension_list.begin(), extension_list.end(),
-                       [](const auto& it) {
-                         return strcmp(it.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0;
-                       }) != extension_list.end() &&
-          std::find_if(layer_list.begin(), layer_list.end(), [](const auto& it) {
-            return strcmp(it.layerName, "VK_LAYER_KHRONOS_validation") == 0;
-          }) != layer_list.end());
-}
-
 Context::GPUList Context::EnumerateGPUs(VkInstance instance)
 {
   u32 gpu_count = 0;
@@ -115,56 +79,6 @@ Context::GPUList Context::EnumerateGPUs(VkInstance instance)
   }
 
   return gpus;
-}
-
-Context::GPUNameList Context::EnumerateGPUNames(VkInstance instance)
-{
-  u32 gpu_count = 0;
-  VkResult res = vkEnumeratePhysicalDevices(instance, &gpu_count, nullptr);
-  if (res != VK_SUCCESS || gpu_count == 0)
-  {
-    LOG_VULKAN_ERROR(res, "vkEnumeratePhysicalDevices failed: ");
-    return {};
-  }
-
-  GPUList gpus;
-  gpus.resize(gpu_count);
-
-  res = vkEnumeratePhysicalDevices(instance, &gpu_count, gpus.data());
-  if (res != VK_SUCCESS)
-  {
-    LOG_VULKAN_ERROR(res, "vkEnumeratePhysicalDevices failed: ");
-    return {};
-  }
-
-  GPUNameList gpu_names;
-  gpu_names.reserve(gpu_count);
-  for (u32 i = 0; i < gpu_count; i++)
-  {
-    VkPhysicalDeviceProperties props = {};
-    vkGetPhysicalDeviceProperties(gpus[i], &props);
-
-    std::string gpu_name(props.deviceName);
-
-    // handle duplicate adapter names
-    if (std::any_of(gpu_names.begin(), gpu_names.end(),
-                    [&gpu_name](const std::string& other) { return (gpu_name == other); }))
-    {
-      std::string original_adapter_name = std::move(gpu_name);
-
-      u32 current_extra = 2;
-      do
-      {
-        gpu_name = StringUtil::StdStringFromFormat("%s (%u)", original_adapter_name.c_str(), current_extra);
-        current_extra++;
-      } while (std::any_of(gpu_names.begin(), gpu_names.end(),
-                           [&gpu_name](const std::string& other) { return (gpu_name == other); }));
-    }
-
-    gpu_names.push_back(std::move(gpu_name));
-  }
-
-  return gpu_names;
 }
 
 bool Context::CreateFromExistingInstance(VkInstance instance, VkPhysicalDevice gpu, VkSurfaceKHR surface,

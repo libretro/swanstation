@@ -26,14 +26,9 @@ public:
 
   ~Context();
 
-  // Determines if the Vulkan validation layer is available on the system.
-  static bool CheckValidationLayerAvailablility();
-
   // Returns a list of Vulkan-compatible GPUs.
   using GPUList = std::vector<VkPhysicalDevice>;
-  using GPUNameList = std::vector<std::string>;
   static GPUList EnumerateGPUs(VkInstance instance);
-  static GPUNameList EnumerateGPUNames(VkInstance instance);
 
   // Creates a new context from a pre-existing instance.
   static bool CreateFromExistingInstance(VkInstance instance, VkPhysicalDevice gpu, VkSurfaceKHR surface,

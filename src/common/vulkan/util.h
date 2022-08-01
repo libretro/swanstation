@@ -15,14 +15,6 @@
 namespace Vulkan {
 namespace Util {
 
-inline constexpr u32 MakeRGBA8Color(float r, float g, float b, float a)
-{
-  return (static_cast<u32>(std::clamp(static_cast<int>(r * 255.0f), 0, 255)) << 0) |
-         (static_cast<u32>(std::clamp(static_cast<int>(g * 255.0f), 0, 255)) << 8) |
-         (static_cast<u32>(std::clamp(static_cast<int>(b * 255.0f), 0, 255)) << 16) |
-         (static_cast<u32>(std::clamp(static_cast<int>(a * 255.0f), 0, 255)) << 24);
-}
-
 bool IsDepthFormat(VkFormat format);
 bool IsCompressedFormat(VkFormat format);
 VkFormat GetLinearFormat(VkFormat format);
