@@ -93,7 +93,6 @@ bool HostInterface::BootSystem(std::shared_ptr<SystemBootParameters> parameters)
 void HostInterface::ResetSystem()
 {
   System::Reset();
-  AddOSDMessage(TranslateStdString("OSDMessage", "System reset."));
 }
 
 void HostInterface::PauseSystem(bool paused)
