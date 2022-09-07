@@ -52,12 +52,7 @@ bool MDEC::DoState(StateWrapper& sw)
   bool block_copy_out_pending = HasPendingBlockCopyOut();
   sw.Do(&block_copy_out_pending);
   if (sw.IsReading())
-  {
-    if (block_copy_out_pending)
-      m_block_copy_out_event->Activate();
-    else
-      m_block_copy_out_event->Deactivate();
-  }
+    m_block_copy_out_event->SetState(block_copy_out_pending);
 
   return !sw.HasError();
 }

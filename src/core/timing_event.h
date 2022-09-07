@@ -18,10 +18,12 @@ public:
               void* callback_param);
   ~TimingEvent();
 
+  ALWAYS_INLINE const std::string& GetName() const { return m_name; }
   ALWAYS_INLINE bool IsActive() const { return m_active; }
 
   // Returns the number of ticks between each event.
   ALWAYS_INLINE TickCount GetInterval() const { return m_interval; }
+  ALWAYS_INLINE TickCount GetDowncount() const { return m_downcount; }
 
   // Includes pending time.
   TickCount GetTicksSinceLastExecution() const;
@@ -45,8 +47,17 @@ public:
   void Activate();
   void Deactivate();
 
+  ALWAYS_INLINE void SetState(bool active)
+  {
+    if (active)
+      Activate();
+    else
+      Deactivate();
+  }
+
   // Directly alters the interval of the event.
   void SetInterval(TickCount interval) { m_interval = interval; }
+  void SetPeriod(TickCount period) { m_period = period; }
 
   TimingEvent* prev = nullptr;
   TimingEvent* next = nullptr;

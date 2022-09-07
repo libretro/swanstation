@@ -311,16 +311,10 @@ bool CDROM::DoState(StateWrapper& sw)
     if (m_reader.HasMedia())
       m_reader.QueueReadSector(m_requested_lba);
     UpdateCommandEvent();
-    if (!IsDriveIdle())
-      m_drive_event->Activate();
-    else
-      m_drive_event->Deactivate();
+    m_drive_event->SetState(!IsDriveIdle());
 
     // Time will get fixed up later.
-    if (m_command_second_response != Command::None)
-      m_command_second_response_event->Activate();
-    else
-      m_command_second_response_event->Deactivate();
+    m_command_second_response_event->SetState(m_command_second_response != Command::None);
   }
 
   return !sw.HasError();

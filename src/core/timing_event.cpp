@@ -48,7 +48,7 @@ void UpdateCPUDowncount()
 {
   if (!CPU::g_state.frame_done && (!CPU::HasPendingInterrupt() || CPU::g_using_interpreter))
   {
-    CPU::g_state.downcount = s_active_events_head->m_downcount;
+    CPU::g_state.downcount = s_active_events_head->GetDowncount();
   }
 }
 
@@ -248,7 +248,7 @@ static TimingEvent* FindActiveEvent(const char* name)
 {
   for (TimingEvent* event = s_active_events_head; event; event = event->next)
   {
-    if (event->m_name.compare(name) == 0)
+    if (event->GetName().compare(name) == 0)
       return event;
   }
 
@@ -263,7 +263,7 @@ void RunEvents()
   CPU::ResetPendingTicks();
   while (pending_ticks > 0)
   {
-    const TickCount time = std::min(pending_ticks, s_active_events_head->m_downcount);
+    const TickCount time = std::min(pending_ticks, s_active_events_head->GetDowncount());
     s_global_tick_counter += static_cast<u32>(time);
     pending_ticks -= time;
 
@@ -427,7 +427,7 @@ void TimingEvent::SetIntervalAndSchedule(TickCount ticks)
 
 void TimingEvent::SetPeriodAndSchedule(TickCount ticks)
 {
-  m_period = ticks;
+  SetPeriod(ticks);
   SetInterval(ticks);
   Schedule(ticks);
 }
