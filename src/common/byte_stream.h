@@ -78,25 +78,25 @@ protected:
   ByteStream& operator=(const ByteStream&) = delete;
 };
 
-class MemoryByteStream : public ByteStream
+class MemoryByteStream final : public ByteStream
 {
 public:
   MemoryByteStream(void* pMemory, u32 MemSize);
-  virtual ~MemoryByteStream();
+  ~MemoryByteStream() override;
 
-  virtual bool ReadByte(u8* pDestByte) override;
-  virtual u32 Read(void* pDestination, u32 ByteCount) override;
-  virtual bool Read2(void* pDestination, u32 ByteCount, u32* pNumberOfBytesRead /* = nullptr */) override;
-  virtual bool WriteByte(u8 SourceByte) override;
-  virtual u32 Write(const void* pSource, u32 ByteCount) override;
-  virtual bool Write2(const void* pSource, u32 ByteCount, u32* pNumberOfBytesWritten /* = nullptr */) override;
-  virtual bool SeekAbsolute(u64 Offset) override;
-  virtual bool SeekRelative(s64 Offset) override;
-  virtual u64 GetSize() const override;
-  virtual u64 GetPosition() const override;
-  virtual bool Flush() override;
-  virtual bool Commit() override;
-  virtual bool Discard() override;
+  bool ReadByte(u8* pDestByte) override;
+  u32 Read(void* pDestination, u32 ByteCount) override;
+  bool Read2(void* pDestination, u32 ByteCount, u32* pNumberOfBytesRead) override;
+  bool WriteByte(u8 SourceByte) override;
+  u32 Write(const void* pSource, u32 ByteCount) override;
+  bool Write2(const void* pSource, u32 ByteCount, u32* pNumberOfBytesWritten) override;
+  bool SeekAbsolute(u64 Offset) override;
+  bool SeekRelative(s64 Offset) override;
+  u64 GetSize() const override;
+  u64 GetPosition() const override;
+  bool Flush() override;
+  bool Commit() override;
+  bool Discard() override;
 
 private:
   u8* m_pMemory;
@@ -104,25 +104,25 @@ private:
   u32 m_iSize;
 };
 
-class ReadOnlyMemoryByteStream : public ByteStream
+class ReadOnlyMemoryByteStream final : public ByteStream
 {
 public:
   ReadOnlyMemoryByteStream(const void* pMemory, u32 MemSize);
-  virtual ~ReadOnlyMemoryByteStream();
+  ~ReadOnlyMemoryByteStream() override;
 
-  virtual bool ReadByte(u8* pDestByte) override;
-  virtual u32 Read(void* pDestination, u32 ByteCount) override;
-  virtual bool Read2(void* pDestination, u32 ByteCount, u32* pNumberOfBytesRead /* = nullptr */) override;
-  virtual bool WriteByte(u8 SourceByte) override;
-  virtual u32 Write(const void* pSource, u32 ByteCount) override;
-  virtual bool Write2(const void* pSource, u32 ByteCount, u32* pNumberOfBytesWritten /* = nullptr */) override;
-  virtual bool SeekAbsolute(u64 Offset) override;
-  virtual bool SeekRelative(s64 Offset) override;
-  virtual u64 GetSize() const override;
-  virtual u64 GetPosition() const override;
-  virtual bool Flush() override;
-  virtual bool Commit() override;
-  virtual bool Discard() override;
+  bool ReadByte(u8* pDestByte) override;
+  u32 Read(void* pDestination, u32 ByteCount) override;
+  bool Read2(void* pDestination, u32 ByteCount, u32* pNumberOfBytesRead) override;
+  bool WriteByte(u8 SourceByte) override;
+  u32 Write(const void* pSource, u32 ByteCount) override;
+  bool Write2(const void* pSource, u32 ByteCount, u32* pNumberOfBytesWritten) override;
+  bool SeekAbsolute(u64 Offset) override;
+  bool SeekRelative(s64 Offset) override;
+  u64 GetSize() const override;
+  u64 GetPosition() const override;
+  bool Flush() override;
+  bool Commit() override;
+  bool Discard() override;
 
 private:
   const u8* m_pMemory;
@@ -130,28 +130,28 @@ private:
   u32 m_iSize;
 };
 
-class GrowableMemoryByteStream : public ByteStream
+class GrowableMemoryByteStream final : public ByteStream
 {
 public:
   GrowableMemoryByteStream(void* pInitialMem, u32 InitialMemSize);
-  virtual ~GrowableMemoryByteStream();
+  ~GrowableMemoryByteStream() override;
 
   void Resize(u32 new_size);
   void ResizeMemory(u32 new_size);
 
-  virtual bool ReadByte(u8* pDestByte) override;
-  virtual u32 Read(void* pDestination, u32 ByteCount) override;
-  virtual bool Read2(void* pDestination, u32 ByteCount, u32* pNumberOfBytesRead /* = nullptr */) override;
-  virtual bool WriteByte(u8 SourceByte) override;
-  virtual u32 Write(const void* pSource, u32 ByteCount) override;
-  virtual bool Write2(const void* pSource, u32 ByteCount, u32* pNumberOfBytesWritten /* = nullptr */) override;
-  virtual bool SeekAbsolute(u64 Offset) override;
-  virtual bool SeekRelative(s64 Offset) override;
-  virtual u64 GetSize() const override;
-  virtual u64 GetPosition() const override;
-  virtual bool Flush() override;
-  virtual bool Commit() override;
-  virtual bool Discard() override;
+  bool ReadByte(u8* pDestByte) override;
+  u32 Read(void* pDestination, u32 ByteCount) override;
+  bool Read2(void* pDestination, u32 ByteCount, u32* pNumberOfBytesRead) override;
+  bool WriteByte(u8 SourceByte) override;
+  u32 Write(const void* pSource, u32 ByteCount) override;
+  bool Write2(const void* pSource, u32 ByteCount, u32* pNumberOfBytesWritten) override;
+  bool SeekAbsolute(u64 Offset) override;
+  bool SeekRelative(s64 Offset) override;
+  u64 GetSize() const override;
+  u64 GetPosition() const override;
+  bool Flush() override;
+  bool Commit() override;
+  bool Discard() override;
 
 private:
   void Grow(u32 MinimumGrowth);
