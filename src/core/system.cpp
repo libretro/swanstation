@@ -78,7 +78,6 @@ static void DoRunFrame();
 static bool CreateGPU(GPURenderer renderer);
 
 static bool SaveRewindState();
-static void DoRewind();
 
 static void SaveRunaheadState();
 static void DoRunahead();
@@ -110,11 +109,8 @@ static std::unique_ptr<CheatList> s_cheat_list;
 static bool s_memory_saves_enabled = false;
 
 static std::deque<MemorySaveState> s_rewind_states;
-static s32 s_rewind_load_frequency = -1;
-static s32 s_rewind_load_counter = -1;
 static s32 s_rewind_save_frequency = -1;
 static s32 s_rewind_save_counter = -1;
-static bool s_rewinding_first_save = false;
 
 static std::deque<MemorySaveState> s_runahead_states;
 static std::unique_ptr<AudioStream> s_runahead_audio_stream;
@@ -1293,12 +1289,6 @@ void DoRunFrame()
 
 void RunFrame()
 {
-  if (s_rewind_load_counter >= 0)
-  {
-    DoRewind();
-    return;
-  }
-
   if (s_runahead_frames > 0)
     DoRunahead();
 
@@ -1870,13 +1860,6 @@ void SetCheatList(std::unique_ptr<CheatList> cheats)
   s_cheat_list = std::move(cheats);
 }
 
-void CalculateRewindMemoryUsage(u32 num_saves, u64* ram_usage, u64* vram_usage)
-{
-  *ram_usage = MAX_SAVE_STATE_SIZE * static_cast<u64>(num_saves);
-  *vram_usage = (VRAM_WIDTH * VRAM_HEIGHT * 4) * static_cast<u64>(std::max(g_settings.gpu_resolution_scale, 1u)) *
-                static_cast<u64>(g_settings.gpu_multisamples) * static_cast<u64>(num_saves);
-}
-
 void ClearMemorySaveStates()
 {
   s_rewind_states.clear();
@@ -1893,21 +1876,12 @@ void UpdateMemorySaveStateSettings()
   {
     s_rewind_save_frequency = static_cast<s32>(std::ceil(g_settings.rewind_save_frequency * s_throttle_frequency));
     s_rewind_save_counter = 0;
-
-    u64 ram_usage, vram_usage;
-    CalculateRewindMemoryUsage(g_settings.rewind_save_slots, &ram_usage, &vram_usage);
-    Log_InfoPrintf(
-      "Rewind is enabled, saving every %d frames, with %u slots and %" PRIu64 "MB RAM and %" PRIu64 "MB VRAM usage",
-      std::max(s_rewind_save_frequency, 1), g_settings.rewind_save_slots, ram_usage / 1048576, vram_usage / 1048576);
   }
   else
   {
     s_rewind_save_frequency = -1;
     s_rewind_save_counter = -1;
   }
-
-  s_rewind_load_frequency = -1;
-  s_rewind_load_counter = -1;
 
   s_runahead_frames = g_settings.runahead_frames;
   s_runahead_replay_pending = false;
@@ -1984,65 +1958,6 @@ bool SaveRewindState()
   return true;
 }
 
-bool LoadRewindState(u32 skip_saves /*= 0*/, bool consume_state /*=true */)
-{
-  while (skip_saves > 0 && !s_rewind_states.empty())
-  {
-    s_rewind_states.pop_back();
-    skip_saves--;
-  }
-
-  if (s_rewind_states.empty())
-    return false;
-
-  if (!LoadMemoryState(s_rewind_states.back()))
-    return false;
-
-  if (consume_state)
-    s_rewind_states.pop_back();
-
-  return true;
-}
-
-bool IsRewinding()
-{
-  return (s_rewind_load_frequency >= 0);
-}
-
-void SetRewinding(bool enabled)
-{
-  if (enabled)
-  {
-    // Try to rewind at the replay speed, or one per second maximum.
-    const float load_frequency = std::min(g_settings.rewind_save_frequency, 1.0f);
-    s_rewind_load_frequency = static_cast<s32>(std::ceil(load_frequency * s_throttle_frequency));
-    s_rewind_load_counter = 0;
-  }
-  else
-  {
-    s_rewind_load_frequency = -1;
-    s_rewind_load_counter = -1;
-  }
-
-  s_rewinding_first_save = true;
-}
-
-void DoRewind()
-{
-  if (s_rewind_load_counter == 0)
-  {
-    const u32 skip_saves = BoolToUInt32(!s_rewinding_first_save);
-    s_rewinding_first_save = false;
-    LoadRewindState(skip_saves, false);
-    s_rewind_load_counter = s_rewind_load_frequency;
-  }
-  else
-  {
-    s_rewind_load_counter--;
-  }
-
-}
-
 void SaveRunaheadState()
 {
   // try to reuse the frontmost slot
@@ -2101,7 +2016,6 @@ void DoRunahead()
     // save this frame
     SaveRunaheadState();
   }
-
 }
 
 void DoMemorySaveStates()
@@ -2114,9 +2028,7 @@ void DoMemorySaveStates()
       s_rewind_save_counter = s_rewind_save_frequency;
     }
     else
-    {
       s_rewind_save_counter--;
-    }
   }
 
   if (s_runahead_frames > 0)
