@@ -62,7 +62,7 @@ bool GPU_HW_OpenGL::Initialize(HostDisplay* host_display)
     return false;
   }
 
-  SetCapabilities(host_display);
+  SetCapabilities();
 
   if (!GPU_HW::Initialize(host_display))
     return false;
@@ -297,7 +297,7 @@ std::tuple<s32, s32> GPU_HW_OpenGL::ConvertToFramebufferCoordinates(s32 x, s32 y
   return std::make_tuple(x, static_cast<s32>(static_cast<s32>(VRAM_HEIGHT) - y));
 }
 
-void GPU_HW_OpenGL::SetCapabilities(HostDisplay* host_display)
+void GPU_HW_OpenGL::SetCapabilities()
 {
   GLint max_texture_size = VRAM_WIDTH;
   glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
@@ -327,6 +327,10 @@ void GPU_HW_OpenGL::SetCapabilities(HostDisplay* host_display)
   m_use_texture_buffer_for_vram_writes = false;
 #else
   m_use_texture_buffer_for_vram_writes = (GLAD_GL_VERSION_3_1 || GLAD_GL_ES_VERSION_3_2);
+
+  // And Samsung's ANGLE/GLES driver?
+  if (std::strstr(reinterpret_cast<const char*>(glGetString(GL_RENDERER)), "ANGLE"))
+    m_use_texture_buffer_for_vram_writes = false;
 #endif
   m_texture_stream_buffer_size = VRAM_UPDATE_TEXTURE_BUFFER_SIZE;
   if (m_use_texture_buffer_for_vram_writes)

@@ -57,7 +57,7 @@ private:
 
   std::tuple<s32, s32> ConvertToFramebufferCoordinates(s32 x, s32 y);
 
-  void SetCapabilities(HostDisplay* host_display);
+  void SetCapabilities();
   bool CreateFramebuffer();
   void ClearFramebuffer();
   void CopyFramebufferForState(GLenum target, GLuint src_texture, u32 src_fbo, u32 src_x, u32 src_y, GLuint dst_texture,
