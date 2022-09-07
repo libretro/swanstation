@@ -105,9 +105,6 @@ static std::string s_running_game_title;
 
 static float s_throttle_frequency = 60.0f;
 
-static float s_average_frame_time_accumulator = 0.0f;
-static float s_worst_frame_time_accumulator = 0.0f;
-
 static std::unique_ptr<CheatList> s_cheat_list;
 
 static bool s_memory_saves_enabled = false;
@@ -773,9 +770,6 @@ bool Initialize(bool force_software_renderer)
   s_frame_number = 1;
 
   s_throttle_frequency = 60.0f;
-
-  s_average_frame_time_accumulator = 0.0f;
-  s_worst_frame_time_accumulator = 0.0f;
 
   TimingEvents::Initialize();
 
@@ -1865,20 +1859,9 @@ bool SwitchMediaSubImage(u32 index)
   return true;
 }
 
-bool HasCheatList()
-{
-  return static_cast<bool>(s_cheat_list);
-}
-
 CheatList* GetCheatList()
 {
   return s_cheat_list.get();
-}
-
-void ApplyCheatCode(const CheatCode& code)
-{
-  Assert(!IsShutdown());
-  code.Apply();
 }
 
 void SetCheatList(std::unique_ptr<CheatList> cheats)
