@@ -20,12 +20,10 @@
 
 #include "pgxp.h"
 #include "bus.h"
-#include "common/log.h"
 #include "cpu_core.h"
 #include "settings.h"
 #include <climits>
 #include <cmath>
-Log_SetChannel(PGXP);
 
 namespace PGXP {
 
@@ -291,10 +289,7 @@ void Initialize()
   {
     vertexCache = static_cast<PGXP_value*>(std::calloc(VERTEX_CACHE_SIZE, sizeof(PGXP_value)));
     if (!vertexCache)
-    {
-      Log_ErrorPrint("Failed to allocate memory for vertex cache, disabling.");
       g_settings.gpu_pgxp_vertex_cache = false;
-    }
   }
 
   if (vertexCache)

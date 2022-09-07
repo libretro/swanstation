@@ -1,11 +1,9 @@
 #include "multitap.h"
-#include "common/log.h"
 #include "common/state_wrapper.h"
 #include "common/types.h"
 #include "controller.h"
 #include "memory_card.h"
 #include "pad.h"
-Log_SetChannel(Multitap);
 
 Multitap::Multitap()
 {
@@ -143,11 +141,8 @@ bool Multitap::Transfer(const u8 data_in, u8* data_out)
     {
       ack = TransferMemoryCard(m_selected_slot, data_in, data_out);
 
-      if (!ack)
-      {
-        Log_DevPrintf("Memory card transfer ended");
+      if (!ack) /* Memory card transfer ended */
         m_transfer_state = TransferState::Idle;
-      }
     }
     break;
 
@@ -197,11 +192,8 @@ bool Multitap::Transfer(const u8 data_in, u8* data_out)
 
       ack = TransferController(m_selected_slot, data_in, data_out);
 
-      if (!ack)
-      {
-        Log_DevPrintf("Controller transfer ended");
+      if (!ack) /* Controller transfer ended */
         m_transfer_state = TransferState::Idle;
-      }
     }
     break;
 

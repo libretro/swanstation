@@ -1,10 +1,8 @@
 #include "shadergen.h"
 #include "common/assert.h"
-#include "common/log.h"
 #include <cstdio>
 #include <cstring>
 #include <glad.h>
-Log_SetChannel(ShaderGen);
 
 ShaderGen::ShaderGen(HostDisplay::RenderAPI render_api, bool supports_dual_source_blend)
 #ifdef USE_D3D12
@@ -74,7 +72,6 @@ void ShaderGen::SetGLSLVersionString()
   }
   else
   {
-    Log_ErrorPrintf("Invalid GLSL version string: '%s' ('%s')", glsl_version, glsl_version_start);
     if (glsl_es)
     {
       major_version = 3;

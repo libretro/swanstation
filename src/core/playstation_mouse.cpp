@@ -1,13 +1,11 @@
 #include "playstation_mouse.h"
 #include "common/assert.h"
-#include "common/log.h"
 #include "common/state_wrapper.h"
 #include "gpu.h"
 #include "host_display.h"
 #include "host_interface.h"
 #include "system.h"
 #include <array>
-Log_SetChannel(PlayStationMouse);
 
 PlayStationMouse::PlayStationMouse()
 {
@@ -165,9 +163,6 @@ void PlayStationMouse::UpdatePosition()
   const s32 delta_y = mouse_y - m_last_host_position_y;
   m_last_host_position_x = mouse_x;
   m_last_host_position_y = mouse_y;
-
-  if (delta_x != 0 || delta_y != 0)
-    Log_DevPrintf("dx=%d, dy=%d", delta_x, delta_y);
 
   m_delta_x = static_cast<s8>(std::clamp<s32>(delta_x, std::numeric_limits<s8>::min(), std::numeric_limits<s8>::max()));
   m_delta_y = static_cast<s8>(std::clamp<s32>(delta_y, std::numeric_limits<s8>::min(), std::numeric_limits<s8>::max()));

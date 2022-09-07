@@ -45,14 +45,4 @@ struct FileInfo
 };
 
 bool IsValid(const DataArray& data);
-u32 GetFreeBlockCount(const DataArray& data);
-std::vector<FileInfo> EnumerateFiles(const DataArray& data, bool include_deleted);
-bool ReadFile(const DataArray& data, const FileInfo& fi, std::vector<u8>* buffer);
-bool WriteFile(DataArray* data, const std::string_view& filename, const std::vector<u8>& buffer);
-bool DeleteFile(DataArray* data, const FileInfo& fi, bool clear_sectors);
-bool UndeleteFile(DataArray* data, const FileInfo& fi);
-bool ImportCard(DataArray* data, const char* filename);
-bool ImportCard(DataArray* data, const char* filename, std::vector<u8> file_data);
-bool ExportSave(DataArray* data, const FileInfo& fi, const char* filename);
-bool ImportSave(DataArray* data, const char* filename);
 } // namespace MemoryCardImage
