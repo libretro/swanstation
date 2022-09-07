@@ -7,7 +7,6 @@ add_subdirectory(libchdr)
 add_subdirectory(xxhash)
 add_subdirectory(glslang)
 add_subdirectory(vulkan-loader)
-add_subdirectory(simpleini)
 add_subdirectory(libretro-common)
 
 if(${CPU_ARCH} STREQUAL "aarch32" OR ${CPU_ARCH} STREQUAL "aarch64")

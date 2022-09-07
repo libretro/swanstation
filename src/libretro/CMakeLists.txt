@@ -25,7 +25,7 @@ if(WIN32)
   )
 endif()
 
-target_link_libraries(swanstation_libretro PRIVATE core common glad scmversion simpleini vulkan-loader libretro-common)
+target_link_libraries(swanstation_libretro PRIVATE core common glad scmversion vulkan-loader libretro-common)
 
 # no lib prefix
 set_target_properties(swanstation_libretro PROPERTIES PREFIX "")
