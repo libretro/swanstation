@@ -1198,7 +1198,6 @@ bool DoLoadState(ByteStream* state, bool force_software_renderer, bool update_di
   if (s_state == State::Starting)
     s_state = State::Running;
 
-  g_host_interface->GetAudioStream()->EmptyBuffers();
   return true;
 }
 
