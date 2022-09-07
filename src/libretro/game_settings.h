@@ -34,9 +34,6 @@ enum class Trait : u32
   Count
 };
 
-const char* GetTraitName(Trait trait);
-const char* GetTraitDisplayName(Trait trait);
-
 struct Entry
 {
   std::bitset<static_cast<int>(Trait::Count)> traits{};
@@ -93,30 +90,7 @@ struct Entry
   ALWAYS_INLINE void RemoveTrait(Trait trait) { traits[static_cast<int>(trait)] = false; }
   ALWAYS_INLINE void SetTrait(Trait trait, bool enabled) { traits[static_cast<int>(trait)] = enabled; }
 
-  bool LoadFromStream(ByteStream* stream);
-  bool SaveToStream(ByteStream* stream) const;
-
-  u32 GetUserSettingsCount() const;
-
   void ApplySettings(bool display_osd_messages) const;
-
-  // Key-based interface, used by Android.
-  std::optional<std::string> GetValueForKey(const std::string_view& key) const;
-  void SetValueForKey(const std::string_view& key, const std::optional<std::string>& value);
-};
-
-class Database
-{
-public:
-  Database();
-  ~Database();
-
-  const Entry* GetEntry(const std::string& code) const;
-
-  bool Load(const std::string_view& ini_data);
-
-private:
-  std::unordered_map<std::string, Entry> m_entries;
 };
 
 }; // namespace GameSettings
