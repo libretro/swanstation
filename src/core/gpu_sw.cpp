@@ -126,10 +126,12 @@ ALWAYS_INLINE u32 VRAM16ToOutput<HostDisplayPixelFormat::BGRA8, u32>(u16 value)
   return ZeroExtend32(b) | (ZeroExtend32(g) << 8) | (ZeroExtend32(r) << 16) | (0xFF000000u);
 }
 
+#if defined(CPU_X64) || defined(CPU_AARCH64)
 static u32 AlignDownPow2(u32 value, unsigned int alignment)
 {
   return value & (~(alignment - 1));
 }
+#endif
 
 template<>
 ALWAYS_INLINE void CopyOutRow16<HostDisplayPixelFormat::RGBA5551, u16>(const u16* src_ptr, u16* dst_ptr, u32 width)

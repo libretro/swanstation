@@ -213,9 +213,7 @@ static void ConsoleOutputLogCallback(void* pUserParam, const char* channelName, 
 {
   if (!s_console_output_enabled || level > s_console_output_level_filter ||
       s_console_output_channel_filter.Find(channelName) >= 0)
-  {
     return;
-  }
 
 #if defined(_WIN32)
   FormatLogMessageAndPrintW(channelName, functionName, level, message, true, true, true,

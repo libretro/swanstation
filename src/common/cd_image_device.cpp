@@ -7,7 +7,7 @@
 #include <cinttypes>
 #include <cmath>
 
-static constexpr int ALL_SUBCODE_SIZE = 96;
+#define ALL_SUBCODE_SIZE 96
 
 #if defined(_WIN32) && !defined(_UWP)
 static constexpr u32 MAX_TRACK_NUMBER = 99;
