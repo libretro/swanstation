@@ -81,14 +81,9 @@ struct Entry
   std::optional<ControllerType> controller_2_type;
   std::optional<MemoryCardType> memory_card_1_type;
   std::optional<MemoryCardType> memory_card_2_type;
-  std::string memory_card_1_shared_path;
-  std::string memory_card_2_shared_path;
-  std::string input_profile_name;
 
   ALWAYS_INLINE bool HasTrait(Trait trait) const { return traits[static_cast<int>(trait)]; }
   ALWAYS_INLINE void AddTrait(Trait trait) { traits[static_cast<int>(trait)] = true; }
-  ALWAYS_INLINE void RemoveTrait(Trait trait) { traits[static_cast<int>(trait)] = false; }
-  ALWAYS_INLINE void SetTrait(Trait trait, bool enabled) { traits[static_cast<int>(trait)] = enabled; }
 
   void ApplySettings(bool display_osd_messages) const;
 };

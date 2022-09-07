@@ -108,12 +108,8 @@ void Entry::ApplySettings(bool display_osd_messages) const
 
   if (memory_card_1_type.has_value())
     g_settings.memory_card_types[0] = memory_card_1_type.value();
-  if (!memory_card_1_shared_path.empty())
-    g_settings.memory_card_paths[0] = memory_card_1_shared_path;
   if (memory_card_2_type.has_value())
     g_settings.memory_card_types[1] = memory_card_2_type.value();
-  if (!memory_card_1_shared_path.empty())
-    g_settings.memory_card_paths[1] = memory_card_2_shared_path;
 
   if (HasTrait(Trait::ForceInterpreter))
   {
