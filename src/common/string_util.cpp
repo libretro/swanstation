@@ -148,22 +148,6 @@ std::size_t Strlcpy(char* dst, const char* src, std::size_t size)
   return len;
 }
 
-std::size_t Strlcpy(char* dst, const std::string_view& src, std::size_t size)
-{
-  std::size_t len = src.length();
-  if (len < size)
-  {
-    std::memcpy(dst, src.data(), len);
-    dst[len] = '\0';
-  }
-  else
-  {
-    std::memcpy(dst, src.data(), size - 1);
-    dst[size - 1] = '\0';
-  }
-  return len;
-}
-
 std::optional<std::vector<u8>> DecodeHex(const std::string_view& in)
 {
   std::vector<u8> data;
@@ -179,15 +163,6 @@ std::optional<std::vector<u8>> DecodeHex(const std::string_view& in)
   }
 
   return {data};
-}
-
-std::string EncodeHex(const u8* data, int length)
-{
-  std::stringstream ss;
-  for (int i = 0; i < length; i++)
-    ss << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(data[i]);
-  
-  return ss.str();
 }
 
 #ifdef _WIN32
