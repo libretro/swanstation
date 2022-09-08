@@ -126,12 +126,6 @@ State GetState()
   return s_state;
 }
 
-void SetState(State new_state)
-{
-  if (s_state != new_state)
-    s_state = new_state;
-}
-
 bool IsShutdown()
 {
   return s_state == State::Shutdown;
@@ -1984,11 +1978,6 @@ bool LoadRewindState(u32 skip_saves /*= 0*/, bool consume_state /*=true */)
     s_rewind_states.pop_back();
 
   return true;
-}
-
-bool IsRewinding()
-{
-  return (s_rewind_load_frequency >= 0);
 }
 
 void SetRewinding(bool enabled)

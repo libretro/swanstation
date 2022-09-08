@@ -164,9 +164,18 @@ void Timers::CheckForIRQ(u32 timer, u32 old_counter)
   }
 }
 
+static ALWAYS_INLINE_RELEASE TickCount UnscaleTicksToOverclock(TickCount ticks, TickCount* remainder)
+{
+  const u64 num =
+    (static_cast<u32>(ticks) * static_cast<u64>(g_settings.cpu_overclock_denominator)) + static_cast<u32>(*remainder);
+  const TickCount t = static_cast<u32>(num / g_settings.cpu_overclock_numerator);
+  *remainder = static_cast<u32>(num % g_settings.cpu_overclock_numerator);
+  return t;
+}
+
 void Timers::AddSysClkTicks(TickCount sysclk_ticks)
 {
-  sysclk_ticks = System::UnscaleTicksToOverclock(sysclk_ticks, &m_syclk_ticks_carry);
+  sysclk_ticks = g_settings.cpu_overclock_active ? UnscaleTicksToOverclock(sysclk_ticks, &m_syclk_ticks_carry) : sysclk_ticks;
 
   if (!m_states[0].external_counting_enabled && m_states[0].counting_enabled)
     AddTicks(0, sysclk_ticks);
@@ -319,9 +328,7 @@ void Timers::UpdateCountingEnabled(CounterState& cs)
     }
   }
   else
-  {
     cs.counting_enabled = true;
-  }
 
   cs.external_counting_enabled = cs.use_external_clock && cs.counting_enabled;
 }

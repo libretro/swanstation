@@ -69,7 +69,6 @@ DiscRegion GetRegionForExe(const char* path);
 DiscRegion GetRegionForPsf(const char* path);
 
 State GetState();
-void SetState(State new_state);
 bool IsShutdown();
 bool IsValid();
 
@@ -90,18 +89,6 @@ ALWAYS_INLINE_RELEASE TickCount ScaleTicksToOverclock(TickCount ticks)
 
   return static_cast<TickCount>((static_cast<u64>(static_cast<u32>(ticks)) * g_settings.cpu_overclock_numerator) /
                                 g_settings.cpu_overclock_denominator);
-}
-
-ALWAYS_INLINE_RELEASE TickCount UnscaleTicksToOverclock(TickCount ticks, TickCount* remainder)
-{
-  if (!g_settings.cpu_overclock_active)
-    return ticks;
-
-  const u64 num =
-    (static_cast<u32>(ticks) * static_cast<u64>(g_settings.cpu_overclock_denominator)) + static_cast<u32>(*remainder);
-  const TickCount t = static_cast<u32>(num / g_settings.cpu_overclock_numerator);
-  *remainder = static_cast<u32>(num % g_settings.cpu_overclock_numerator);
-  return t;
 }
 
 TickCount GetMaxSliceTicks();
@@ -180,7 +167,6 @@ void CalculateRewindMemoryUsage(u32 num_saves, u64* ram_usage, u64* vram_usage);
 void ClearMemorySaveStates();
 void UpdateMemorySaveStateSettings();
 bool LoadRewindState(u32 skip_saves = 0, bool consume_state = true);
-bool IsRewinding();
 void SetRewinding(bool enabled);
 void SetRunaheadReplayFlag();
 
