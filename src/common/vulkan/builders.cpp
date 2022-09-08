@@ -34,8 +34,6 @@ VkDescriptorSetLayout DescriptorSetLayoutBuilder::Create(VkDevice device)
 
 void DescriptorSetLayoutBuilder::AddBinding(u32 binding, VkDescriptorType dtype, u32 dcount, VkShaderStageFlags stages)
 {
-  Assert(m_ci.bindingCount < MAX_BINDINGS);
-
   VkDescriptorSetLayoutBinding& b = m_bindings[m_ci.bindingCount];
   b.binding = binding;
   b.descriptorType = dtype;
@@ -79,8 +77,6 @@ VkPipelineLayout PipelineLayoutBuilder::Create(VkDevice device)
 
 void PipelineLayoutBuilder::AddDescriptorSet(VkDescriptorSetLayout layout)
 {
-  Assert(m_ci.setLayoutCount < MAX_SETS);
-
   m_sets[m_ci.setLayoutCount] = layout;
 
   m_ci.setLayoutCount++;
@@ -89,8 +85,6 @@ void PipelineLayoutBuilder::AddDescriptorSet(VkDescriptorSetLayout layout)
 
 void PipelineLayoutBuilder::AddPushConstants(VkShaderStageFlags stages, u32 offset, u32 size)
 {
-  Assert(m_ci.pushConstantRangeCount < MAX_PUSH_CONSTANTS);
-
   VkPushConstantRange& r = m_push_constants[m_ci.pushConstantRangeCount];
   r.stageFlags = stages;
   r.offset = offset;
@@ -173,8 +167,6 @@ VkPipeline GraphicsPipelineBuilder::Create(VkDevice device, VkPipelineCache pipe
 void GraphicsPipelineBuilder::SetShaderStage(VkShaderStageFlagBits stage, VkShaderModule module,
                                              const char* entry_point)
 {
-  Assert(m_ci.stageCount < MAX_SHADER_STAGES);
-
   u32 index = 0;
   for (; index < m_ci.stageCount; index++)
   {
@@ -197,8 +189,6 @@ void GraphicsPipelineBuilder::SetShaderStage(VkShaderStageFlagBits stage, VkShad
 void GraphicsPipelineBuilder::AddVertexBuffer(u32 binding, u32 stride,
                                               VkVertexInputRate input_rate /*= VK_VERTEX_INPUT_RATE_VERTEX*/)
 {
-  Assert(m_vertex_input_state.vertexAttributeDescriptionCount < MAX_VERTEX_BUFFERS);
-
   VkVertexInputBindingDescription& b = m_vertex_buffers[m_vertex_input_state.vertexBindingDescriptionCount];
   b.binding = binding;
   b.stride = stride;
@@ -211,8 +201,6 @@ void GraphicsPipelineBuilder::AddVertexBuffer(u32 binding, u32 stride,
 
 void GraphicsPipelineBuilder::AddVertexAttribute(u32 location, u32 binding, VkFormat format, u32 offset)
 {
-  Assert(m_vertex_input_state.vertexAttributeDescriptionCount < MAX_VERTEX_BUFFERS);
-
   VkVertexInputAttributeDescription& a = m_vertex_attributes[m_vertex_input_state.vertexAttributeDescriptionCount];
   a.location = location;
   a.binding = binding;
@@ -287,8 +275,6 @@ void GraphicsPipelineBuilder::AddBlendAttachment(
   bool blend_enable, VkBlendFactor src_factor, VkBlendFactor dst_factor, VkBlendOp op,
   VkBlendFactor alpha_src_factor, VkBlendFactor alpha_dst_factor, VkBlendOp alpha_op, VkColorComponentFlags write_mask /* = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT */)
 {
-  Assert(m_blend_state.attachmentCount < MAX_ATTACHMENTS);
-
   VkPipelineColorBlendAttachmentState& bs = m_blend_attachments[m_blend_state.attachmentCount];
   bs.blendEnable = blend_enable;
   bs.srcColorBlendFactor = src_factor;
@@ -308,8 +294,6 @@ void GraphicsPipelineBuilder::SetBlendAttachment(
   u32 attachment, bool blend_enable, VkBlendFactor src_factor, VkBlendFactor dst_factor, VkBlendOp op,
   VkBlendFactor alpha_src_factor, VkBlendFactor alpha_dst_factor, VkBlendOp alpha_op, VkColorComponentFlags write_mask /*= VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT*/)
 {
-  Assert(attachment < MAX_ATTACHMENTS);
-
   VkPipelineColorBlendAttachmentState& bs = m_blend_attachments[attachment];
   bs.blendEnable = blend_enable;
   bs.srcColorBlendFactor = src_factor;
@@ -345,8 +329,6 @@ void GraphicsPipelineBuilder::SetNoBlendingState()
 
 void GraphicsPipelineBuilder::AddDynamicState(VkDynamicState state)
 {
-  Assert(m_dynamic_state.dynamicStateCount < MAX_DYNAMIC_STATE);
-
   m_dynamic_state_values[m_dynamic_state.dynamicStateCount] = state;
   m_dynamic_state.dynamicStateCount++;
   m_dynamic_state.pDynamicStates = m_dynamic_state_values.data();
@@ -475,8 +457,6 @@ void DescriptorSetUpdateBuilder::Clear()
 
 void DescriptorSetUpdateBuilder::Update(VkDevice device, bool clear /*= true*/)
 {
-  Assert(m_num_writes > 0);
-
   vkUpdateDescriptorSets(device, m_num_writes, (m_num_writes > 0) ? m_writes.data() : nullptr, 0, nullptr);
 
   if (clear)
@@ -487,8 +467,6 @@ void DescriptorSetUpdateBuilder::AddImageDescriptorWrite(
   VkDescriptorSet set, u32 binding, VkImageView view,
   VkImageLayout layout /*= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL*/)
 {
-  Assert(m_num_writes < MAX_WRITES && m_num_infos < MAX_INFOS);
-
   VkDescriptorImageInfo& ii = m_infos[m_num_infos++].image;
   ii.imageView = view;
   ii.imageLayout = layout;
@@ -505,8 +483,6 @@ void DescriptorSetUpdateBuilder::AddImageDescriptorWrite(
 
 void DescriptorSetUpdateBuilder::AddSamplerDescriptorWrite(VkDescriptorSet set, u32 binding, VkSampler sampler)
 {
-  Assert(m_num_writes < MAX_WRITES && m_num_infos < MAX_INFOS);
-
   VkDescriptorImageInfo& ii = m_infos[m_num_infos++].image;
   ii.imageView = VK_NULL_HANDLE;
   ii.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -525,8 +501,6 @@ void DescriptorSetUpdateBuilder::AddCombinedImageSamplerDescriptorWrite(
   VkDescriptorSet set, u32 binding, VkImageView view, VkSampler sampler,
   VkImageLayout layout /*= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL*/)
 {
-  Assert(m_num_writes < MAX_WRITES && m_num_infos < MAX_INFOS);
-
   VkDescriptorImageInfo& ii = m_infos[m_num_infos++].image;
   ii.imageView = view;
   ii.imageLayout = layout;
@@ -544,8 +518,6 @@ void DescriptorSetUpdateBuilder::AddCombinedImageSamplerDescriptorWrite(
 void DescriptorSetUpdateBuilder::AddBufferDescriptorWrite(VkDescriptorSet set, u32 binding, VkDescriptorType dtype,
                                                           VkBuffer buffer, u32 offset, u32 size)
 {
-  Assert(m_num_writes < MAX_WRITES && m_num_infos < MAX_INFOS);
-
   VkDescriptorBufferInfo& bi = m_infos[m_num_infos++].buffer;
   bi.buffer = buffer;
   bi.offset = offset;
@@ -563,8 +535,6 @@ void DescriptorSetUpdateBuilder::AddBufferDescriptorWrite(VkDescriptorSet set, u
 void DescriptorSetUpdateBuilder::AddBufferViewDescriptorWrite(VkDescriptorSet set, u32 binding, VkDescriptorType dtype,
                                                               VkBufferView view)
 {
-  Assert(m_num_writes < MAX_WRITES && m_num_infos < MAX_INFOS);
-
   VkBufferView& bi = m_infos[m_num_infos++].buffer_view;
   bi = view;
 
@@ -607,8 +577,6 @@ VkFramebuffer FramebufferBuilder::Create(VkDevice device, bool clear /*= true*/)
 
 void FramebufferBuilder::AddAttachment(VkImageView image)
 {
-  Assert(m_ci.attachmentCount < MAX_ATTACHMENTS);
-
   m_images[m_ci.attachmentCount] = image;
 
   m_ci.attachmentCount++;
@@ -659,8 +627,6 @@ u32 RenderPassBuilder::AddAttachment(VkFormat format, VkSampleCountFlagBits samp
                                      VkAttachmentStoreOp store_op, VkImageLayout initial_layout,
                                      VkImageLayout final_layout)
 {
-  Assert(m_ci.attachmentCount < MAX_ATTACHMENTS);
-
   const u32 index = m_ci.attachmentCount;
   VkAttachmentDescription& ad = m_attachments[index];
   ad.format = format;
@@ -680,8 +646,6 @@ u32 RenderPassBuilder::AddAttachment(VkFormat format, VkSampleCountFlagBits samp
 
 u32 RenderPassBuilder::AddSubpass()
 {
-  Assert(m_ci.subpassCount < MAX_SUBPASSES);
-
   const u32 index = m_ci.subpassCount;
   VkSubpassDescription& sp = m_subpasses[index];
   sp.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
@@ -694,8 +658,6 @@ u32 RenderPassBuilder::AddSubpass()
 
 void RenderPassBuilder::AddSubpassColorAttachment(u32 subpass, u32 attachment, VkImageLayout layout)
 {
-  Assert(subpass < m_ci.subpassCount && m_num_attachment_references < MAX_ATTACHMENT_REFERENCES);
-
   VkAttachmentReference& ar = m_attachment_references[m_num_attachment_references++];
   ar.attachment = attachment;
   ar.layout = layout;
@@ -708,8 +670,6 @@ void RenderPassBuilder::AddSubpassColorAttachment(u32 subpass, u32 attachment, V
 
 void RenderPassBuilder::AddSubpassDepthAttachment(u32 subpass, u32 attachment, VkImageLayout layout)
 {
-  Assert(subpass < m_ci.subpassCount && m_num_attachment_references < MAX_ATTACHMENT_REFERENCES);
-
   VkAttachmentReference& ar = m_attachment_references[m_num_attachment_references++];
   ar.attachment = attachment;
   ar.layout = layout;

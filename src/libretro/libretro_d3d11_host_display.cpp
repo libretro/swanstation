@@ -47,10 +47,7 @@ private:
 
 LibretroD3D11HostDisplay::LibretroD3D11HostDisplay() = default;
 
-LibretroD3D11HostDisplay::~LibretroD3D11HostDisplay()
-{
-  AssertMsg(!m_context, "Context should have been destroyed by now");
-}
+LibretroD3D11HostDisplay::~LibretroD3D11HostDisplay() { }
 
 HostDisplay::RenderAPI LibretroD3D11HostDisplay::GetRenderAPI() const
 {

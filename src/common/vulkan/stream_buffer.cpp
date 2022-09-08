@@ -166,12 +166,7 @@ bool StreamBuffer::ReserveMemory(u32 num_bytes, u32 alignment)
 
   // Check for sane allocations
   if (required_bytes > m_size)
-  {
-    Log_ErrorPrintf("Attempting to allocate %u bytes from a %u byte stream buffer", static_cast<u32>(num_bytes),
-                    static_cast<u32>(m_size));
-    Panic("Stream buffer overflow");
     return false;
-  }
 
   UpdateGPUPosition();
 
@@ -231,9 +226,6 @@ bool StreamBuffer::ReserveMemory(u32 num_bytes, u32 alignment)
 
 void StreamBuffer::CommitMemory(u32 final_num_bytes)
 {
-  Assert((m_current_offset + final_num_bytes) <= m_size);
-  Assert(final_num_bytes <= m_current_space);
-
   // For non-coherent mappings, flush the memory range
   if (!m_coherent_mapping)
   {

@@ -132,8 +132,6 @@ void PatchBIOS(u8* image, u32 image_size, u32 address, u32 value, u32 mask /*= U
 {
   const u32 phys_address = address & UINT32_C(0x1FFFFFFF);
   const u32 offset = phys_address - BIOS_BASE;
-  Assert(phys_address >= BIOS_BASE && (offset + sizeof(u32)) <= image_size);
-
   u32 existing_value;
   std::memcpy(&existing_value, &image[offset], sizeof(existing_value));
   u32 new_value = (existing_value & ~mask) | value;

@@ -124,7 +124,6 @@ bool Texture::Create(u32 width, u32 height, u32 samples, DXGI_FORMAT format, DXG
 
   if (rtv_format != DXGI_FORMAT_UNKNOWN)
   {
-    Assert(dsv_format == DXGI_FORMAT_UNKNOWN);
     if (!CreateRTVDescriptor(resource.Get(), rtv_format, samples > 1, &rtv_descriptor))
     {
       g_d3d12_context->GetDescriptorHeapManager().Free(&srv_descriptor);
@@ -170,7 +169,6 @@ bool Texture::Adopt(ComPtr<ID3D12Resource> texture, DXGI_FORMAT srv_format, DXGI
 
   if (rtv_format != DXGI_FORMAT_UNKNOWN)
   {
-    Assert(dsv_format == DXGI_FORMAT_UNKNOWN);
     if (!CreateRTVDescriptor(texture.Get(), rtv_format, desc.SampleDesc.Count > 1, &rtv_descriptor))
     {
       g_d3d12_context->GetDescriptorHeapManager().Free(&srv_descriptor);

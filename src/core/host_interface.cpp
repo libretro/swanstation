@@ -29,7 +29,6 @@ HostInterface* g_host_interface;
 
 HostInterface::HostInterface()
 {
-  Assert(!g_host_interface);
   g_host_interface = this;
 
   // we can get the program directory at construction time
@@ -39,8 +38,6 @@ HostInterface::HostInterface()
 HostInterface::~HostInterface()
 {
   // system should be shut down prior to the destructor
-  Assert(System::IsShutdown() && !m_audio_stream && !m_display);
-  Assert(g_host_interface == this);
   g_host_interface = nullptr;
 }
 
@@ -663,8 +660,6 @@ void HostInterface::UpdateSoftwareCursor()
 
 void HostInterface::RecreateSystem()
 {
-  Assert(!System::IsShutdown());
-
   std::unique_ptr<ByteStream> stream = ByteStream_CreateGrowableMemoryStream(nullptr, 8 * 1024);
   if (!System::SaveState(stream.get()) || !stream->SeekAbsolute(0))
   {

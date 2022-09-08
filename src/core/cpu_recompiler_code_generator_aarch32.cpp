@@ -9,9 +9,6 @@
 #include "timing_event.h"
 Log_SetChannel(CPU::Recompiler);
 
-// #include "vixl/aarch32/disasm-aarch32.h"
-// #include <iostream>
-
 namespace a32 = vixl::aarch32;
 
 namespace CPU::Recompiler {
@@ -34,8 +31,6 @@ static void* s_dispatcher_return_address;
 
 static s32 GetPCDisplacement(const void* current, const void* target)
 {
-  Assert(Common::IsAlignedPow2(reinterpret_cast<size_t>(current), 4));
-  Assert(Common::IsAlignedPow2(reinterpret_cast<size_t>(target), 4));
   return static_cast<s32>((reinterpret_cast<ptrdiff_t>(target) - reinterpret_cast<ptrdiff_t>(current)));
 }
 
@@ -198,8 +193,6 @@ void CodeGenerator::EmitExceptionExit()
 
 void CodeGenerator::EmitExceptionExitOnBool(const Value& value)
 {
-  Assert(!value.IsConstant() && value.IsInHostRegister());
-
   m_register_cache.PushState();
 
   // TODO: This is... not great.
@@ -269,8 +262,6 @@ void CodeGenerator::EmitSignExtend(HostReg to_reg, RegSize to_size, HostReg from
     }
     break;
   }
-
-  Panic("Unknown sign-extend combination");
 }
 
 void CodeGenerator::EmitZeroExtend(HostReg to_reg, RegSize to_size, HostReg from_reg, RegSize from_size)
@@ -302,8 +293,6 @@ void CodeGenerator::EmitZeroExtend(HostReg to_reg, RegSize to_size, HostReg from
     }
     break;
   }
-
-  Panic("Unknown sign-extend combination");
 }
 
 void CodeGenerator::EmitCopyValue(HostReg to_reg, const Value& value)
@@ -330,8 +319,6 @@ void CodeGenerator::EmitCopyValue(HostReg to_reg, const Value& value)
 
 void CodeGenerator::EmitAdd(HostReg to_reg, HostReg from_reg, const Value& value, bool set_flags)
 {
-  Assert(value.IsConstant() || value.IsInHostRegister());
-
   // if it's in a host register already, this is easy
   if (value.IsInHostRegister())
   {
@@ -365,8 +352,6 @@ void CodeGenerator::EmitAdd(HostReg to_reg, HostReg from_reg, const Value& value
 
 void CodeGenerator::EmitSub(HostReg to_reg, HostReg from_reg, const Value& value, bool set_flags)
 {
-  Assert(value.IsConstant() || value.IsInHostRegister());
-
   // if it's in a host register already, this is easy
   if (value.IsInHostRegister())
   {
@@ -400,8 +385,6 @@ void CodeGenerator::EmitSub(HostReg to_reg, HostReg from_reg, const Value& value
 
 void CodeGenerator::EmitCmp(HostReg to_reg, const Value& value)
 {
-  Assert(value.IsConstant() || value.IsInHostRegister());
-
   // if it's in a host register already, this is easy
   if (value.IsInHostRegister())
   {
@@ -452,18 +435,12 @@ void CodeGenerator::EmitMul(HostReg to_reg_hi, HostReg to_reg_lo, const Value& l
                     GetHostReg32(rhs_in_reg.host_reg));
     }
   }
-  else
-  {
-    // TODO: Use mul + smulh
-    Panic("Not implemented");
-  }
 }
 
 void CodeGenerator::EmitDiv(HostReg to_reg_quotient, HostReg to_reg_remainder, HostReg num, HostReg denom, RegSize size,
                             bool signed_divide)
 {
   // only 32-bit supported for now..
-  Assert(size == RegSize_32);
 
   Value quotient_value;
   if (to_reg_quotient == HostReg_Count)
@@ -493,44 +470,10 @@ void CodeGenerator::EmitDiv(HostReg to_reg_quotient, HostReg to_reg_remainder, H
 
 void CodeGenerator::EmitInc(HostReg to_reg, RegSize size)
 {
-  Panic("Not implemented");
-#if 0
-  switch (size)
-  {
-    case RegSize_8:
-      m_emit->inc(GetHostReg8(to_reg));
-      break;
-    case RegSize_16:
-      m_emit->inc(GetHostReg16(to_reg));
-      break;
-    case RegSize_32:
-      m_emit->inc(GetHostReg32(to_reg));
-      break;
-    default:
-      break;
-  }
-#endif
 }
 
 void CodeGenerator::EmitDec(HostReg to_reg, RegSize size)
 {
-  Panic("Not implemented");
-#if 0
-  switch (size)
-  {
-    case RegSize_8:
-      m_emit->dec(GetHostReg8(to_reg));
-      break;
-    case RegSize_16:
-      m_emit->dec(GetHostReg16(to_reg));
-      break;
-    case RegSize_32:
-      m_emit->dec(GetHostReg32(to_reg));
-      break;
-    default:
-      break;
-  }
-#endif
 }
 
 void CodeGenerator::EmitShl(HostReg to_reg, HostReg from_reg, RegSize size, const Value& amount_value,
@@ -636,8 +579,6 @@ static bool CanFitInBitwiseImmediate(const Value& value)
 
 void CodeGenerator::EmitAnd(HostReg to_reg, HostReg from_reg, const Value& value)
 {
-  Assert(value.IsConstant() || value.IsInHostRegister());
-
   // if it's in a host register already, this is easy
   if (value.IsInHostRegister())
   {
@@ -659,8 +600,6 @@ void CodeGenerator::EmitAnd(HostReg to_reg, HostReg from_reg, const Value& value
 
 void CodeGenerator::EmitOr(HostReg to_reg, HostReg from_reg, const Value& value)
 {
-  Assert(value.IsConstant() || value.IsInHostRegister());
-
   // if it's in a host register already, this is easy
   if (value.IsInHostRegister())
   {
@@ -682,8 +621,6 @@ void CodeGenerator::EmitOr(HostReg to_reg, HostReg from_reg, const Value& value)
 
 void CodeGenerator::EmitXor(HostReg to_reg, HostReg from_reg, const Value& value)
 {
-  Assert(value.IsConstant() || value.IsInHostRegister());
-
   // if it's in a host register already, this is easy
   if (value.IsInHostRegister())
   {
@@ -705,8 +642,6 @@ void CodeGenerator::EmitXor(HostReg to_reg, HostReg from_reg, const Value& value
 
 void CodeGenerator::EmitTest(HostReg to_reg, const Value& value)
 {
-  Assert(value.IsConstant() || value.IsInHostRegister());
-
   // if it's in a host register already, this is easy
   if (value.IsInHostRegister())
   {
@@ -1000,7 +935,6 @@ void CodeGenerator::EmitPopHostReg(HostReg reg, u32 position)
 void CodeGenerator::EmitPopHostRegPair(HostReg reg, HostReg reg2, u32 position)
 {
   // TODO: Use ldm?
-  Assert(position > 0);
   EmitPopHostReg(reg2, position);
   EmitPopHostReg(reg, position - 1);
 }
@@ -1065,7 +999,6 @@ void CodeGenerator::EmitAddCPUStructField(u32 offset, const Value& value)
   else
   {
     // do we need temporary storage for the constant, if it won't fit in an immediate?
-    Assert(value.IsConstant());
     const s32 constant_value = value.GetS32ConstantValue();
     if (!a32::ImmediateA32::IsImmediateA32(static_cast<u32>(constant_value)))
     {
@@ -1439,8 +1372,6 @@ void CodeGenerator::EmitStoreGuestMemorySlowmem(const CodeBlockInstruction& cbi,
 
   if (g_settings.cpu_recompiler_memory_exceptions)
   {
-    Assert(!in_far_code);
-
     Value result = m_register_cache.AllocateScratch(RegSize_32);
     switch (size)
     {
@@ -1526,7 +1457,6 @@ bool CodeGenerator::BackpatchLoadStore(const LoadStoreBackpatchInfo& lbi)
   }
 
   const s32 nops = (static_cast<s32>(lbi.host_code_size) - static_cast<s32>(emit.GetCursorOffset())) / 4;
-  Assert(nops >= 0);
   for (s32 i = 0; i < nops; i++)
     emit.nop();
 
@@ -1540,7 +1470,6 @@ void CodeGenerator::BackpatchReturn(void* pc, u32 pc_size)
   emit.bx(a32::lr);
 
   const s32 nops = (static_cast<s32>(pc_size) - static_cast<s32>(emit.GetCursorOffset())) / 4;
-  Assert(nops >= 0);
   for (s32 i = 0; i < nops; i++)
     emit.nop();
 
@@ -1566,7 +1495,6 @@ void CodeGenerator::BackpatchBranch(void* pc, u32 pc_size, void* target)
 
   // shouldn't have any nops
   const s32 nops = (static_cast<s32>(pc_size) - static_cast<s32>(emit.GetCursorOffset())) / 4;
-  Assert(nops >= 0);
   for (s32 i = 0; i < nops; i++)
     emit.nop();
 
@@ -1842,7 +1770,6 @@ void CodeGenerator::EmitConditionalBranch(Condition condition, bool invert, Host
     case Condition::AboveEqual:
     case Condition::Below:
     case Condition::BelowEqual:
-      Panic("Needs a comparison value");
       return;
 
     case Condition::Negative:
@@ -1948,12 +1875,8 @@ void CodeGenerator::EmitConditionalBranch(Condition condition, bool invert, Host
     case Condition::PositiveOrZero:
     case Condition::NotZero:
     case Condition::Zero:
-    {
-      Assert(!rhs.IsValid() || (rhs.IsConstant() && rhs.GetS64ConstantValue() == 0));
       EmitConditionalBranch(condition, invert, lhs, rhs.size, label);
       return;
-    }
-
     case Condition::Always:
       m_emit->b(label);
       return;

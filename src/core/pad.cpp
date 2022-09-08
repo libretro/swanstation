@@ -59,8 +59,6 @@ bool Pad::DoStateController(StateWrapper& sw, u32 i)
 
   if (controller_type != state_controller_type)
   {
-    Assert(sw.GetMode() == StateWrapper::Mode::Read);
-
     // UI notification portion is separated from emulation portion (intentional condition check redundancy)
     if (g_settings.load_devices_from_save_states)
     {

@@ -9,8 +9,7 @@ RETRO_API unsigned retro_api_version(void)
 
 RETRO_API void retro_init(void)
 {
-  if (!g_libretro_host_interface.Initialize())
-    Panic("Host interface initialization failed");
+  g_libretro_host_interface.Initialize();
 }
 
 RETRO_API void retro_deinit(void)

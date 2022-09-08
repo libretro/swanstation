@@ -31,14 +31,12 @@ bool StreamBuffer::Create(u32 size)
   HRESULT hr = g_d3d12_context->GetDevice()->CreateCommittedResource(&heap_properties, D3D12_HEAP_FLAG_NONE,
                                                                      &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ,
                                                                      nullptr, IID_PPV_ARGS(buffer.GetAddressOf()));
-  AssertMsg(SUCCEEDED(hr), "Allocate buffer");
   if (FAILED(hr))
     return false;
 
   static const D3D12_RANGE read_range = {};
   u8* host_pointer;
   hr = buffer->Map(0, &read_range, reinterpret_cast<void**>(&host_pointer));
-  AssertMsg(SUCCEEDED(hr), "Map buffer");
   if (FAILED(hr))
     return false;
 
@@ -60,7 +58,6 @@ bool StreamBuffer::ReserveMemory(u32 num_bytes, u32 alignment)
   {
     Log_ErrorPrintf("Attempting to allocate %u bytes from a %u byte stream buffer", static_cast<u32>(num_bytes),
                     static_cast<u32>(m_size));
-    Panic("Stream buffer overflow");
     return false;
   }
 
@@ -122,8 +119,6 @@ bool StreamBuffer::ReserveMemory(u32 num_bytes, u32 alignment)
 
 void StreamBuffer::CommitMemory(u32 final_num_bytes)
 {
-  Assert((m_current_offset + final_num_bytes) <= m_size);
-  Assert(final_num_bytes <= m_current_space);
   m_current_offset += final_num_bytes;
   m_current_space -= final_num_bytes;
 }

@@ -17,7 +17,6 @@ Value::Value(const Value& other)
   : regcache(other.regcache), constant_value(other.constant_value), host_reg(other.host_reg), size(other.size),
     flags(other.flags)
 {
-  AssertMsg(!other.IsScratch(), "Can't copy a temporary register");
 }
 
 Value::Value(Value&& other)
@@ -39,8 +38,6 @@ Value::~Value()
 
 Value& Value::operator=(const Value& other)
 {
-  AssertMsg(!other.IsScratch(), "Can't copy a temporary register");
-
   Release();
   regcache = other.regcache;
   constant_value = other.constant_value;
@@ -101,7 +98,6 @@ RegisterCache::RegisterCache(CodeGenerator& code_generator) : m_code_generator(c
 
 RegisterCache::~RegisterCache()
 {
-  Assert(m_state_stack.empty());
 }
 
 void RegisterCache::SetHostRegAllocationOrder(std::initializer_list<HostReg> regs)
@@ -179,9 +175,6 @@ u32 RegisterCache::GetFreeHostRegisters() const
 
 HostReg RegisterCache::AllocateHostReg(HostRegState state /* = HostRegState::InUse */)
 {
-  if (m_state.allocator_inhibit_count > 0)
-    Panic("Allocating when inhibited");
-
   // try for a free register in allocation order
   for (u32 i = 0; i < m_state.available_count; i++)
   {
@@ -194,8 +187,7 @@ HostReg RegisterCache::AllocateHostReg(HostRegState state /* = HostRegState::InU
   }
 
   // evict one of the cached guest registers
-  if (!EvictOneGuestRegister())
-    Panic("Failed to evict guest register for new allocation");
+  EvictOneGuestRegister();
 
   return AllocateHostReg(state);
 }
@@ -254,15 +246,9 @@ Value RegisterCache::GetCPUPtr()
 Value RegisterCache::AllocateScratch(RegSize size, HostReg reg /* = HostReg_Invalid */)
 {
   if (reg == HostReg_Invalid)
-  {
     reg = AllocateHostReg();
-  }
   else
-  {
-    Assert(!IsHostRegInUse(reg));
-    if (!AllocateHostReg(reg))
-      Panic("Failed to allocate specific host register");
-  }
+    AllocateHostReg(reg);
 
   return Value::FromScratch(this, reg, size);
 }
@@ -458,8 +444,6 @@ void RegisterCache::PushState()
 
 void RegisterCache::PopState()
 {
-  Assert(!m_state_stack.empty());
-
   // prevent destructor -> freeing of host reg
   m_state.load_delay_value.Clear();
   m_state.next_load_delay_value.Clear();
@@ -510,9 +494,7 @@ Value RegisterCache::ReadGuestRegister(Reg guest_reg, bool cache /* = true */, b
       }
       else
       {
-        Assert(!IsHostRegInUse(forced_host_reg));
-        if (!AllocateHostReg(forced_host_reg))
-          Panic("Failed to allocate specific host register");
+        AllocateHostReg(forced_host_reg);
         host_reg = forced_host_reg;
       }
 
@@ -539,9 +521,7 @@ Value RegisterCache::ReadGuestRegister(Reg guest_reg, bool cache /* = true */, b
   }
   else
   {
-    Assert(!IsHostRegInUse(forced_host_reg));
-    if (!AllocateHostReg(forced_host_reg))
-      Panic("Failed to allocate specific host register");
+    AllocateHostReg(forced_host_reg);
     host_reg = forced_host_reg;
   }
 
@@ -644,7 +624,6 @@ void RegisterCache::WriteGuestRegisterDelayed(Reg guest_reg, Value&& value)
 
   // set up the load delay at the end of this instruction
   Value& cache_value = m_state.next_load_delay_value;
-  Assert(m_state.next_load_delay_register == Reg::count);
   m_state.next_load_delay_register = guest_reg;
 
   // If it's a temporary, we can bind that to the guest register.
@@ -683,7 +662,6 @@ void RegisterCache::UpdateLoadDelay()
 void RegisterCache::WriteLoadDelayToCPU(bool clear)
 {
   // There shouldn't be a flush at the same time as there's a new load delay.
-  Assert(m_state.next_load_delay_register == Reg::count);
   if (m_state.load_delay_register != Reg::count)
   {
     m_code_generator.EmitStoreInterpreterLoadDelay(m_state.load_delay_register, m_state.load_delay_value);
@@ -697,7 +675,6 @@ void RegisterCache::WriteLoadDelayToCPU(bool clear)
 
 void RegisterCache::FlushLoadDelay(bool clear)
 {
-  Assert(m_state.next_load_delay_register == Reg::count);
 
   if (m_state.load_delay_register != Reg::count)
   {
@@ -802,8 +779,6 @@ void RegisterCache::ClearRegisterFromOrder(Reg reg)
       return;
     }
   }
-
-  Panic("Clearing register from order not in order");
 }
 
 void RegisterCache::PushRegisterToOrder(Reg reg)
@@ -821,8 +796,6 @@ void RegisterCache::PushRegisterToOrder(Reg reg)
       return;
     }
   }
-
-  Panic("Attempt to push register which is not ordered");
 }
 
 void RegisterCache::AppendRegisterToOrder(Reg reg)
@@ -840,7 +813,6 @@ void RegisterCache::InhibitAllocation()
 
 void RegisterCache::UninhibitAllocation()
 {
-  Assert(m_state.allocator_inhibit_count > 0);
   m_state.allocator_inhibit_count--;
 }
 

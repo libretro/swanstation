@@ -175,8 +175,7 @@ void GPU_HW_D3D12::MapBatchVertexPointer(u32 required_vertices)
   {
     g_d3d12_context->ExecuteCommandList(false);
     RestoreGraphicsAPIState();
-    if (!m_vertex_stream_buffer.ReserveMemory(required_space, sizeof(BatchVertex)))
-      Panic("Failed to reserve vertex stream buffer memory");
+    m_vertex_stream_buffer.ReserveMemory(required_space, sizeof(BatchVertex));
   }
 
   m_batch_start_vertex_ptr = static_cast<BatchVertex*>(m_vertex_stream_buffer.GetCurrentHostPointer());
@@ -201,8 +200,7 @@ void GPU_HW_D3D12::UploadUniformBuffer(const void* data, u32 data_size)
   {
     g_d3d12_context->ExecuteCommandList(false);
     RestoreGraphicsAPIState();
-    if (!m_uniform_stream_buffer.ReserveMemory(data_size, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT))
-      Panic("Failed to reserve uniform stream buffer memory");
+    m_uniform_stream_buffer.ReserveMemory(data_size, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
   }
 
   m_current_uniform_buffer_offset = m_uniform_stream_buffer.GetCurrentOffset();
@@ -1017,10 +1015,7 @@ void GPU_HW_D3D12::UpdateVRAM(u32 x, u32 y, u32 width, u32 height, const void* d
     g_d3d12_context->ExecuteCommandList(false);
     RestoreGraphicsAPIState();
     if (!m_texture_stream_buffer.ReserveMemory(data_size, alignment))
-    {
-      Panic("Failed to allocate space in stream buffer for VRAM write");
       return;
-    }
   }
 
   const u32 start_index = m_texture_stream_buffer.GetCurrentOffset() / sizeof(u16);

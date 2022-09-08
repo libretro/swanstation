@@ -28,11 +28,6 @@ void Reset()
   s_global_tick_counter = 0;
 }
 
-void Shutdown()
-{
-  Assert(s_active_event_count == 0);
-}
-
 std::unique_ptr<TimingEvent> CreateTimingEvent(std::string name, TickCount period, TickCount interval,
                                                TimingEventCallback callback, void* callback_param, bool activate)
 {
@@ -376,10 +371,7 @@ TickCount TimingEvent::GetTicksUntilNextExecution() const
 void TimingEvent::Delay(TickCount ticks)
 {
   if (!m_active)
-  {
-    Panic("Trying to delay an inactive event");
     return;
-  }
 
   m_downcount += ticks;
   TimingEvents::SortEvent(this);

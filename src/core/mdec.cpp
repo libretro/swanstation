@@ -248,12 +248,9 @@ void MDEC::Execute()
 
       case State::DecodingMacroblock:
       {
+        // we should be writing out now
         if (HandleDecodeMacroblockCommand())
-        {
-          // we should be writing out now
-          Assert(m_state == State::WritingMacroblock);
           goto finished;
-        }
 
         if (m_remaining_halfwords == 0 && m_current_block != NUM_BLOCKS)
         {
@@ -390,7 +387,6 @@ void MDEC::ScheduleBlockCopyOut(TickCount ticks)
 
 void MDEC::CopyOutBlock()
 {
-  Assert(m_state == State::WritingMacroblock);
   m_block_copy_out_event->Deactivate();
 
   switch (m_status.data_output_depth)

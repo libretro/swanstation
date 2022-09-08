@@ -110,7 +110,6 @@ bool Context::CreateFromExistingInstance(VkInstance instance, VkPhysicalDevice g
 
 void Context::Destroy()
 {
-  AssertMsg(g_vulkan_context, "Has context");
   g_vulkan_context.reset();
 }
 
@@ -133,7 +132,6 @@ bool Context::SelectDeviceExtensions(ExtensionList* extension_list, bool enable_
   std::vector<VkExtensionProperties> available_extension_list(extension_count);
   res =
     vkEnumerateDeviceExtensionProperties(m_physical_device, nullptr, &extension_count, available_extension_list.data());
-  Assert(res == VK_SUCCESS);
 
   for (const auto& extension_properties : available_extension_list)
     Log_InfoPrintf("Available extension: %s", extension_properties.extensionName);
@@ -508,7 +506,6 @@ void Context::WaitForFenceCounter(u64 fence_counter)
     index = (index + 1) % NUM_COMMAND_BUFFERS;
   }
 
-  Assert(index != m_current_frame);
   WaitForCommandBufferCompletion(index);
 }
 
@@ -559,7 +556,6 @@ void Context::SubmitCommandBuffer(VkSemaphore wait_semaphore /* = VK_NULL_HANDLE
   if (res != VK_SUCCESS)
   {
     LOG_VULKAN_ERROR(res, "vkEndCommandBuffer failed: ");
-    Panic("Failed to end command buffer");
   }
 
   // This command buffer now has commands, so can't be re-used without waiting.
@@ -592,7 +588,6 @@ void Context::DoSubmitCommandBuffer(u32 index, VkSemaphore wait_semaphore, VkSem
   if (res != VK_SUCCESS)
   {
     LOG_VULKAN_ERROR(res, "vkQueueSubmit failed: ");
-    Panic("Failed to submit command buffer.");
   }
 }
 
@@ -774,7 +769,6 @@ u32 Context::GetMemoryType(u32 bits, VkMemoryPropertyFlags properties)
   if (!GetMemoryType(bits, properties, &type_index))
   {
     Log_ErrorPrintf("Unable to find memory type for %x:%x", bits, properties);
-    Panic("Unable to find memory type");
   }
 
   return type_index;
@@ -795,7 +789,6 @@ u32 Context::GetUploadMemoryType(u32 bits, bool* is_coherent)
     if (!GetMemoryType(bits, flags, &type_index))
     {
       // We shouldn't have any memory types that aren't host-visible.
-      Panic("Unable to get memory type for upload.");
       type_index = 0;
     }
   }
@@ -824,12 +817,9 @@ u32 Context::GetReadbackMemoryType(u32 bits, bool* is_coherent, bool* is_cached)
 
       // Remove the cached bit as well.
       flags &= ~VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+      // We shouldn't have any memory types that aren't host-visible.
       if (!GetMemoryType(bits, flags, &type_index))
-      {
-        // We shouldn't have any memory types that aren't host-visible.
-        Panic("Unable to get memory type for upload.");
         type_index = 0;
-      }
     }
   }
 

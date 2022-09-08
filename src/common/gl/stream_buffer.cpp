@@ -257,8 +257,6 @@ public:
     }
 
     u8* mapped_ptr = static_cast<u8*>(glMapBufferRange(target, 0, size, map_flags));
-    Assert(mapped_ptr);
-
     return std::unique_ptr<StreamBuffer>(new BufferStorageStreamBuffer(target, buffer_id, size, mapped_ptr, coherent));
   }
 

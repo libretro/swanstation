@@ -36,7 +36,6 @@ bool Texture::Create(u32 width, u32 height, u32 samples, GLenum internal_format,
 
   if (samples > 1)
   {
-    Assert(!data);
     if (GLAD_GL_ARB_texture_storage || GLAD_GL_ES_VERSION_3_1)
       glTexStorage2DMultisample(target, samples, internal_format, width, height, GL_FALSE);
     else
@@ -79,8 +78,6 @@ bool Texture::Create(u32 width, u32 height, u32 samples, GLenum internal_format,
 
 void Texture::Replace(u32 width, u32 height, GLenum internal_format, GLenum format, GLenum type, const void* data)
 {
-  Assert(IsValid() && m_samples == 1);
-
   m_width = width;
   m_height = height;
 
@@ -90,8 +87,6 @@ void Texture::Replace(u32 width, u32 height, GLenum internal_format, GLenum form
 
 void Texture::SetLinearFilter(bool enabled)
 {
-  Assert(!IsMultisampled());
-
   Bind();
 
   const GLenum target = GetGLTarget();
@@ -193,8 +188,6 @@ void Texture::GetTextureSubImage(GLuint texture, GLint level, GLint xoffset, GLi
     target = GL_FRAMEBUFFER;
     target_binding = GL_FRAMEBUFFER_BINDING;
   }
-
-  Assert(depth == 1);
 
   GLuint old_read_fbo;
   glGetIntegerv(target_binding, reinterpret_cast<GLint*>(&old_read_fbo));

@@ -77,31 +77,26 @@ std::unique_ptr<CDImage> CDImage::Open(const char* filename, OpenFlags open_flag
 
 CDImage::LBA CDImage::GetTrackStartPosition(u8 track) const
 {
-  Assert(track > 0 && track <= m_tracks.size());
   return m_tracks[track - 1].start_lba;
 }
 
 CDImage::Position CDImage::GetTrackStartMSFPosition(u8 track) const
 {
-  Assert(track > 0 && track <= m_tracks.size());
   return Position::FromLBA(m_tracks[track - 1].start_lba);
 }
 
 CDImage::LBA CDImage::GetTrackLength(u8 track) const
 {
-  Assert(track > 0 && track <= m_tracks.size());
   return m_tracks[track - 1].length;
 }
 
 CDImage::Position CDImage::GetTrackMSFLength(u8 track) const
 {
-  Assert(track > 0 && track <= m_tracks.size());
   return Position::FromLBA(m_tracks[track - 1].length);
 }
 
 CDImage::TrackMode CDImage::GetTrackMode(u8 track) const
 {
-  Assert(track > 0 && track <= m_tracks.size());
   return m_tracks[track - 1].mode;
 }
 
@@ -129,7 +124,6 @@ CDImage::LBA CDImage::GetTrackIndexLength(u8 track, u8 index) const
 
 const CDImage::CDImage::Track& CDImage::GetTrack(u32 track) const
 {
-  Assert(track > 0 && track <= m_tracks.size());
   return m_tracks[track - 1];
 }
 
@@ -431,7 +425,6 @@ void CDImage::GenerateSubChannelQ(SubChannelQ* subq, const Index& index, u32 ind
 
 void CDImage::AddLeadOutIndex()
 {
-  Assert(!m_indices.empty());
   const Index& last_index = m_indices.back();
 
   Index index = {};

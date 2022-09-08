@@ -562,7 +562,6 @@ u16 SPU::ReadVoiceRegister(u32 offset)
 {
   const u32 reg_index = (offset % 0x10) / 2; //(offset & 0x0F) / 2;
   const u32 voice_index = (offset / 0x10);   //((offset >> 4) & 0x1F);
-  Assert(voice_index < 24);
 
   // ADSR volume needs to be updated when reading. A voice might be off as well, but key on is pending.
   const Voice& voice = m_voices[voice_index];
@@ -717,7 +716,6 @@ void ALWAYS_INLINE SPU::ExecuteFIFOWriteToRAM(TickCount& ticks)
 void SPU::ExecuteTransfer(TickCount ticks)
 {
   const RAMTransferMode mode = m_SPUCNT.ram_transfer_mode;
-  Assert(mode != RAMTransferMode::Stopped);
 
   if (mode == RAMTransferMode::DMARead)
   {

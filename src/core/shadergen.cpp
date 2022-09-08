@@ -48,7 +48,6 @@ void ShaderGen::SetGLSLVersionString()
 {
   const char* glsl_version = reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
   const bool glsl_es = (m_render_api == HostDisplay::RenderAPI::OpenGLES);
-  Assert(glsl_version != nullptr);
 
   // Skip any strings in front of the version code.
   const char* glsl_version_start = glsl_version;
@@ -500,7 +499,6 @@ void ShaderGen::DeclareFragmentEntryPoint(
       }
       else
       {
-        Assert(num_color_outputs <= 1);
         for (u32 i = 0; i < num_color_outputs; i++)
           ss << "layout(location = " << i << ") out float4 o_col" << i << ";\n";
       }

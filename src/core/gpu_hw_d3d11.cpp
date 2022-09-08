@@ -692,8 +692,6 @@ void GPU_HW_D3D11::DestroyShaders()
 
 void GPU_HW_D3D11::UploadUniformBuffer(const void* data, u32 data_size)
 {
-  Assert(data_size <= MAX_UNIFORM_BUFFER_SIZE);
-
   const auto res = m_uniform_stream_buffer.Map(m_context.Get(), MAX_UNIFORM_BUFFER_SIZE, data_size);
   std::memcpy(res.pointer, data, data_size);
   m_uniform_stream_buffer.Unmap(m_context.Get(), data_size);
@@ -883,9 +881,6 @@ void GPU_HW_D3D11::UpdateDisplay()
                                reinterpret_crop_left, reinterpret_field_offset};
       ID3D11PixelShader* display_pixel_shader =
         m_display_pixel_shaders[BoolToUInt8(m_GPUSTAT.display_area_color_depth_24)][static_cast<u8>(interlaced)].Get();
-
-      Assert(scaled_display_width <= m_display_texture.GetWidth() &&
-             scaled_display_height <= m_display_texture.GetHeight());
 
       SetViewportAndScissor(0, 0, scaled_display_width, scaled_display_height);
       DrawUtilityShader(display_pixel_shader, uniforms, sizeof(uniforms));

@@ -105,7 +105,6 @@ bool CDImageMemory::CopyImage(CDImage* image, ProgressCallback* progress)
     m_indices.push_back(new_index);
   }
 
-  Assert(current_offset == m_memory_sectors);
   m_filename = image->GetFileName();
   m_lba_count = image->GetLBACount();
 

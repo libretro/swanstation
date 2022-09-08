@@ -20,14 +20,12 @@ JitCodeBuffer::JitCodeBuffer() = default;
 
 JitCodeBuffer::JitCodeBuffer(u32 size, u32 far_code_size)
 {
-  if (!Allocate(size, far_code_size))
-    Panic("Failed to allocate code space");
+  Allocate(size, far_code_size);
 }
 
 JitCodeBuffer::JitCodeBuffer(void* buffer, u32 size, u32 far_code_size, u32 guard_pages)
 {
-  if (!Initialize(buffer, size, far_code_size))
-    Panic("Failed to initialize code space");
+  Initialize(buffer, size, far_code_size);
 }
 
 JitCodeBuffer::~JitCodeBuffer()
@@ -183,9 +181,6 @@ void JitCodeBuffer::Destroy()
 
 void JitCodeBuffer::ReserveCode(u32 size)
 {
-  Assert(m_code_used == 0);
-  Assert(size < m_code_size);
-
   m_code_reserve_size += size;
   m_free_code_ptr += size;
   m_code_size -= size;
@@ -201,7 +196,6 @@ void JitCodeBuffer::CommitCode(u32 length)
   FlushInstructionCache(m_free_code_ptr, length);
 #endif
 
-  Assert(length <= (m_code_size - m_code_used));
   m_free_code_ptr += length;
   m_code_used += length;
 }
@@ -216,7 +210,6 @@ void JitCodeBuffer::CommitFarCode(u32 length)
   FlushInstructionCache(m_free_far_code_ptr, length);
 #endif
 
-  Assert(length <= (m_far_code_size - m_far_code_used));
   m_free_far_code_ptr += length;
   m_far_code_used += length;
 }

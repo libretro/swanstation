@@ -258,7 +258,6 @@ public:
 
   bool Commit() override
   {
-    Assert(!m_discarded);
     if (m_committed)
       return Flush();
 
@@ -289,7 +288,6 @@ public:
 
   bool Discard() override
   {
-    Assert(!m_committed);
     m_discarded = true;
     return true;
   }

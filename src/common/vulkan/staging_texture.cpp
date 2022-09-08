@@ -95,11 +95,6 @@ void StagingTexture::Destroy(bool defer /* = true */)
 void StagingTexture::CopyFromTexture(VkCommandBuffer command_buffer, Texture& src_texture, u32 src_x, u32 src_y,
                                      u32 src_layer, u32 src_level, u32 dst_x, u32 dst_y, u32 width, u32 height)
 {
-  Assert(m_staging_buffer.GetType() == StagingBuffer::Type::Readback ||
-         m_staging_buffer.GetType() == StagingBuffer::Type::Mutable);
-  Assert((src_x + width) <= src_texture.GetWidth() && (src_y + height) <= src_texture.GetHeight());
-  Assert((dst_x + width) <= m_width && (dst_y + height) <= m_height);
-
   VkImageLayout old_layout = src_texture.GetLayout();
   src_texture.TransitionToLayout(command_buffer, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
@@ -133,11 +128,6 @@ void StagingTexture::CopyFromTexture(Texture& src_texture, u32 src_x, u32 src_y,
 void StagingTexture::CopyToTexture(VkCommandBuffer command_buffer, u32 src_x, u32 src_y, Texture& dst_texture,
                                    u32 dst_x, u32 dst_y, u32 dst_layer, u32 dst_level, u32 width, u32 height)
 {
-  Assert(m_staging_buffer.GetType() == StagingBuffer::Type::Upload ||
-         m_staging_buffer.GetType() == StagingBuffer::Type::Mutable);
-  Assert((dst_x + width) <= dst_texture.GetWidth() && (dst_y + height) <= dst_texture.GetHeight());
-  Assert((src_x + width) <= m_width && (src_y + height) <= m_height);
-
   // Flush caches before copying.
   m_staging_buffer.FlushCPUCache();
 
@@ -198,8 +188,6 @@ void StagingTexture::Flush()
 
 void StagingTexture::ReadTexels(u32 src_x, u32 src_y, u32 width, u32 height, void* out_ptr, u32 out_stride)
 {
-  Assert(m_staging_buffer.GetType() != StagingBuffer::Type::Upload);
-  Assert((src_x + width) <= m_width && (src_y + height) <= m_height);
   PrepareForAccess();
 
   // Offset pointer to point to start of region being copied out.
@@ -226,8 +214,6 @@ void StagingTexture::ReadTexels(u32 src_x, u32 src_y, u32 width, u32 height, voi
 
 void StagingTexture::ReadTexel(u32 x, u32 y, void* out_ptr)
 {
-  Assert(m_staging_buffer.GetType() != StagingBuffer::Type::Upload);
-  Assert(x < m_width && y < m_height);
   PrepareForAccess();
 
   const char* src_ptr = GetMappedPointer() + y * GetMappedStride() + x * m_texel_size;
@@ -236,8 +222,6 @@ void StagingTexture::ReadTexel(u32 x, u32 y, void* out_ptr)
 
 void StagingTexture::WriteTexels(u32 dst_x, u32 dst_y, u32 width, u32 height, const void* in_ptr, u32 in_stride)
 {
-  Assert(m_staging_buffer.GetType() != StagingBuffer::Type::Readback);
-  Assert((dst_x + width) <= m_width && (dst_y + height) <= m_height);
   PrepareForAccess();
 
   // Offset pointer to point to start of region being copied to.
@@ -264,7 +248,6 @@ void StagingTexture::WriteTexels(u32 dst_x, u32 dst_y, u32 width, u32 height, co
 
 void StagingTexture::WriteTexel(u32 x, u32 y, const void* in_ptr)
 {
-  Assert(x < m_width && y < m_height);
   PrepareForAccess();
 
   char* dest_ptr = GetMappedPointer() + y * m_map_stride + x * m_texel_size;
@@ -273,7 +256,6 @@ void StagingTexture::WriteTexel(u32 x, u32 y, const void* in_ptr)
 
 void StagingTexture::PrepareForAccess()
 {
-  Assert(IsMapped());
   if (m_needs_flush)
     Flush();
 }

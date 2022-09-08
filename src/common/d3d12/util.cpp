@@ -27,9 +27,9 @@ u32 GetTexelSize(DXGI_FORMAT format)
       return 2;
 
     default:
-      Panic("Unknown format");
-      return 1;
+      break;
   }
+  return 1;
 }
 
 void SetDefaultSampler(D3D12_SAMPLER_DESC* desc)

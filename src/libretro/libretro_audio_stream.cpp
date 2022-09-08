@@ -18,8 +18,6 @@ void LibretroAudioStream::UploadToFrontend()
   u32 total_samples = 0;
   while (const auto num_samples = m_buffer.GetContiguousSize()) {
     const auto write_pos = output_buffer.begin() + total_samples;
-    Assert(write_pos + num_samples <= output_buffer.end());
-
     std::copy_n(m_buffer.GetReadPointer(), num_samples, write_pos);
     m_buffer.Remove(num_samples);
     total_samples += num_samples;

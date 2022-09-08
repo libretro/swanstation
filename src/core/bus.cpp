@@ -314,9 +314,7 @@ u8* GetFastmemBase()
 
 void UpdateFastmemViews(CPUFastmemMode mode)
 {
-#ifndef WITH_MMAP_FASTMEM
-  Assert(mode != CPUFastmemMode::MMap);
-#else
+#ifdef WITH_MMAP_FASTMEM
   m_fastmem_ram_views.clear();
   m_fastmem_reserved_views.clear();
 #endif
@@ -368,7 +366,6 @@ void UpdateFastmemViews(CPUFastmemMode mode)
     auto ReserveRegion = [](u32 start_address, u32 end_address_inclusive) {
     // We don't reserve memory regions on Android because the app could be subject to address space size limitations.
 #ifndef __ANDROID__
-      Assert(end_address_inclusive >= start_address);
       u8* map_address = m_fastmem_base + start_address;
       auto view = m_memory_arena.CreateReservedView(end_address_inclusive - start_address + 1, map_address);
       if (!view)
@@ -399,10 +396,7 @@ void UpdateFastmemViews(CPUFastmemMode mode)
 #endif
 
   if (!m_fastmem_lut)
-  {
     m_fastmem_lut = static_cast<u8**>(std::calloc(FASTMEM_LUT_NUM_SLOTS, sizeof(u8*)));
-    Assert(m_fastmem_lut);
-  }
 
   auto MapRAM = [](u32 base_address) {
     for (u32 address = 0; address < g_ram_size; address += HOST_PAGE_SIZE)

@@ -222,8 +222,6 @@ void CodeGenerator::EmitExceptionExit()
 
 void CodeGenerator::EmitExceptionExitOnBool(const Value& value)
 {
-  Assert(!value.IsConstant() && value.IsInHostRegister());
-
   m_emit->test(GetHostReg8(value), GetHostReg8(value));
   m_emit->jnz(GetCurrentFarCodePointer());
 
@@ -281,8 +279,6 @@ void CodeGenerator::EmitSignExtend(HostReg to_reg, RegSize to_size, HostReg from
     }
     break;
   }
-
-  Panic("Unknown sign-extend combination");
 }
 
 void CodeGenerator::EmitZeroExtend(HostReg to_reg, RegSize to_size, HostReg from_reg, RegSize from_size)
@@ -314,8 +310,6 @@ void CodeGenerator::EmitZeroExtend(HostReg to_reg, RegSize to_size, HostReg from
     }
     break;
   }
-
-  Panic("Unknown sign-extend combination");
 }
 
 void CodeGenerator::EmitCopyValue(HostReg to_reg, const Value& value)
@@ -688,7 +682,6 @@ void CodeGenerator::EmitDiv(HostReg to_reg_quotient, HostReg to_reg_remainder, H
     m_emit->push(m_emit->rdx);
 
   // unsupported cases.. for now
-  Assert(num != Xbyak::Operand::RDX && num != Xbyak::Operand::RAX);
   if (num != Xbyak::Operand::RAX)
     EmitCopyValue(Xbyak::Operand::RAX, Value::FromHostReg(&m_register_cache, num, size));
 
@@ -2195,8 +2188,6 @@ void CodeGenerator::EmitStoreGuestMemorySlowmem(const CodeBlockInstruction& cbi,
 {
   if (g_settings.cpu_recompiler_memory_exceptions)
   {
-    Assert(!in_far_code);
-
     Value result = m_register_cache.AllocateScratch(RegSize_32);
     switch (size)
     {
@@ -2273,7 +2264,6 @@ bool CodeGenerator::BackpatchLoadStore(const LoadStoreBackpatchInfo& lbi)
 
   const s32 nops = static_cast<s32>(lbi.host_code_size) -
                    static_cast<s32>(static_cast<ptrdiff_t>(cg.getCurr() - static_cast<u8*>(lbi.host_pc)));
-  Assert(nops >= 0);
   for (s32 i = 0; i < nops; i++)
     cg.nop();
 
@@ -2288,7 +2278,6 @@ void CodeGenerator::BackpatchReturn(void* pc, u32 pc_size)
 
   const s32 nops =
     static_cast<s32>(pc_size) - static_cast<s32>(static_cast<ptrdiff_t>(cg.getCurr() - static_cast<u8*>(pc)));
-  Assert(nops >= 0);
   for (s32 i = 0; i < nops; i++)
     cg.nop();
 
@@ -2303,7 +2292,6 @@ void CodeGenerator::BackpatchBranch(void* pc, u32 pc_size, void* target)
   // shouldn't have any nops
   const s32 nops =
     static_cast<s32>(pc_size) - static_cast<s32>(static_cast<ptrdiff_t>(cg.getCurr() - static_cast<u8*>(pc)));
-  Assert(nops >= 0);
   for (s32 i = 0; i < nops; i++)
     cg.nop();
 
@@ -2610,8 +2598,6 @@ void CodeGenerator::EmitBranch(const void* address, bool allow_scratch)
     return;
   }
 
-  Assert(allow_scratch);
-
   Value temp = m_register_cache.AllocateScratch(RegSize_64);
   m_emit->mov(GetHostReg64(temp), reinterpret_cast<uintptr_t>(address));
   m_emit->jmp(GetHostReg64(temp));
@@ -2638,7 +2624,6 @@ void CodeGenerator::EmitConditionalBranch(Condition condition, bool invert, Host
     case Condition::AboveEqual:
     case Condition::Below:
     case Condition::BelowEqual:
-      Panic("Needs a comparison value");
       return;
 
     case Condition::Negative:
@@ -2704,7 +2689,6 @@ void CodeGenerator::EmitConditionalBranch(Condition condition, bool invert, Host
     case Condition::NotZero:
     case Condition::Zero:
     {
-      Assert(!rhs.IsValid() || (rhs.IsConstant() && rhs.GetS64ConstantValue() == 0));
       EmitConditionalBranch(condition, invert, lhs, rhs.size, label);
       return;
     }

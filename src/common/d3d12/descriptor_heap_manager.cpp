@@ -20,7 +20,6 @@ bool DescriptorHeapManager::Create(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_T
                                                       D3D12_DESCRIPTOR_HEAP_FLAG_NONE};
 
   HRESULT hr = device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_descriptor_heap));
-  AssertMsg(SUCCEEDED(hr), "Create descriptor heap");
   if (FAILED(hr))
     return false;
 
@@ -40,9 +39,6 @@ bool DescriptorHeapManager::Create(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_T
 
 void DescriptorHeapManager::Destroy()
 {
-  for (BitSetType& bs : m_free_slots)
-    Assert(bs.all());
-
   m_num_descriptors = 0;
   m_descriptor_increment_size = 0;
   m_heap_base_cpu = {};
@@ -75,15 +71,11 @@ bool DescriptorHeapManager::Allocate(DescriptorHandle* handle)
     handle->gpu_handle.ptr = m_heap_base_gpu.ptr + index * m_descriptor_increment_size;
     return true;
   }
-
-  Panic("Out of fixed descriptors");
   return false;
 }
 
 void DescriptorHeapManager::Free(u32 index)
 {
-  Assert(index < m_num_descriptors);
-
   u32 group = index / BITSET_SIZE;
   u32 bit = index % BITSET_SIZE;
   m_free_slots[group][bit] = true;

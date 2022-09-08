@@ -1261,7 +1261,6 @@ void ExecuteInstruction(u32 inst_bits)
       break;
 
     default:
-      Panic("Missing handler");
       break;
   }
 }
@@ -1365,9 +1364,9 @@ InstructionImpl GetInstructionImpl(u32 inst_bits, TickCount* ticks)
       return &Execute_NCCT;
 
     default:
-      Panic("Missing handler");
-      return nullptr;
+      break;
   }
+  return nullptr;
 }
 
 } // namespace GTE

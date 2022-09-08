@@ -898,12 +898,9 @@ bool CDImagePBP::SwitchSubImage(u32 index, Common::Error* error)
     return false;
 
   const u32 old_disc = m_current_disc;
+  // return to old disc, this should never fail... in theory.
   if (!OpenDisc(index, error))
-  {
-    // return to old disc, this should never fail... in theory.
-    if (!OpenDisc(old_disc, nullptr))
-      Panic("Failed to reopen old disc after switch.");
-  }
+    OpenDisc(old_disc, nullptr);
 
   return true;
 }

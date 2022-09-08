@@ -97,9 +97,9 @@ u32 GetTexelSize(VkFormat format)
       return 16;
 
     default:
-      Panic("Unhandled pixel format");
-      return 1;
+      break;
   }
+  return 1;
 }
 
 u32 GetBlockSize(VkFormat format)

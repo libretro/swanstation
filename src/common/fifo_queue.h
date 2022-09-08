@@ -191,12 +191,7 @@ public:
 #endif
     }
     else
-    {
       this->m_ptr = static_cast<T*>(std::malloc(sizeof(T) * CAPACITY));
-    }
-
-    if (!this->m_ptr)
-      Panic("Heap allocation failed");
 
     std::memset(this->m_ptr, 0, sizeof(T) * CAPACITY);
   }

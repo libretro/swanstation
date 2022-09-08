@@ -93,7 +93,6 @@ StreamBuffer::MappingResult StreamBuffer::Map(ID3D11DeviceContext* context, u32 
   {
     Log_ErrorPrintf("Map failed: 0x%08X (alignment %u, minsize %u, size %u, position %u, map type %u)", hr, alignment,
                     min_size, m_size, m_position, static_cast<u32>(map_type));
-    Panic("Map failed");
     return {};
   }
 

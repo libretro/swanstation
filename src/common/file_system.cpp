@@ -95,8 +95,6 @@ static bool UriHelpersAreAvailable()
 
 void SetAndroidFileHelper(void* jvm, void* env, void* object)
 {
-  Assert(!jvm || !s_android_jvm || s_android_jvm == jvm);
-
   if (s_android_FileHelper_object)
   {
     JNIEnv* jenv = GetJNIEnv();
@@ -131,11 +129,8 @@ void SetAndroidFileHelper(void* jvm, void* env, void* object)
   JNIEnv* jenv = static_cast<JNIEnv*>(env);
   s_android_jvm = static_cast<JavaVM*>(jvm);
   s_android_FileHelper_object = jenv->NewGlobalRef(static_cast<jobject>(object));
-  Assert(s_android_FileHelper_object);
-
   jclass fh_class = jenv->GetObjectClass(static_cast<jobject>(object));
   s_android_FileHelper_class = static_cast<jclass>(jenv->NewGlobalRef(fh_class));
-  Assert(s_android_FileHelper_class);
   jenv->DeleteLocalRef(fh_class);
 
   s_android_FileHelper_openURIAsFileDescriptor =
@@ -151,13 +146,8 @@ void SetAndroidFileHelper(void* jvm, void* env, void* object)
   s_android_FileHelper_getRelativePathForURIPath =
     jenv->GetMethodID(s_android_FileHelper_class, "getRelativePathForURIPath",
                       "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
-  Assert(s_android_FileHelper_openURIAsFileDescriptor && s_android_FileHelper_FindFiles &&
-         s_android_FileHelper_getDisplayName && s_android_FileHelper_getRelativePathForURIPath);
-
   jclass fr_class = jenv->FindClass("com/github/stenzek/duckstation/FileHelper$FindResult");
-  Assert(fr_class);
   s_android_FileHelper_FindResult_class = static_cast<jclass>(jenv->NewGlobalRef(fr_class));
-  Assert(s_android_FileHelper_FindResult_class);
   jenv->DeleteLocalRef(fr_class);
 
   s_android_FileHelper_FindResult_relativeName =
@@ -168,22 +158,15 @@ void SetAndroidFileHelper(void* jvm, void* env, void* object)
   s_android_FileHelper_FindResult_modifiedTime =
     jenv->GetFieldID(s_android_FileHelper_FindResult_class, "modifiedTime", "J");
   s_android_FileHelper_FindResult_flags = jenv->GetFieldID(s_android_FileHelper_FindResult_class, "flags", "I");
-  Assert(s_android_FileHelper_FindResult_relativeName && s_android_FileHelper_FindResult_name &&
-         s_android_FileHelper_FindResult_size && s_android_FileHelper_FindResult_modifiedTime &&
-         s_android_FileHelper_FindResult_flags);
 
   jclass st_class = jenv->FindClass("com/github/stenzek/duckstation/FileHelper$StatResult");
-  Assert(st_class);
   s_android_FileHelper_StatResult_class = static_cast<jclass>(jenv->NewGlobalRef(st_class));
-  Assert(s_android_FileHelper_StatResult_class);
   jenv->DeleteLocalRef(st_class);
 
   s_android_FileHelper_StatResult_size = jenv->GetFieldID(s_android_FileHelper_StatResult_class, "size", "J");
   s_android_FileHelper_StatResult_modifiedTime =
     jenv->GetFieldID(s_android_FileHelper_StatResult_class, "modifiedTime", "J");
   s_android_FileHelper_StatResult_flags = jenv->GetFieldID(s_android_FileHelper_StatResult_class, "flags", "I");
-  Assert(s_android_FileHelper_StatResult_size && s_android_FileHelper_StatResult_modifiedTime &&
-         s_android_FileHelper_StatResult_flags);
 }
 
 static std::FILE* OpenUriFile(const char* path, const char* mode)

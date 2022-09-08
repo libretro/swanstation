@@ -313,8 +313,6 @@ void* CodeGenerator::GetCurrentCodePointer() const
     return GetCurrentNearCodePointer();
   else if (m_emit == &m_far_emitter)
     return GetCurrentFarCodePointer();
-
-  Panic("unknown emitter");
   return nullptr;
 }
 
@@ -466,7 +464,6 @@ std::pair<Value, Value> CodeGenerator::MulValues(const Value& lhs, const Value& 
           res = lhs.constant_value * rhs.constant_value;
 
         // TODO: 128-bit multiply...
-        Panic("128-bit multiply");
         return std::make_pair(Value::FromConstantU64(0), Value::FromConstantU64(res));
       }
 
@@ -1100,9 +1097,6 @@ void CodeGenerator::StallUntilGTEComplete()
 
 Value CodeGenerator::CalculatePC(u32 offset /* = 0 */)
 {
-  if (!m_pc_valid)
-    Panic("Attempt to get an indeterminate PC");
-
   return Value::FromConstantU32(m_pc + offset);
 }
 
@@ -1796,7 +1790,6 @@ bool CodeGenerator::Compile_Add(const CodeBlockInstruction& cbi)
 
     case InstructionOp::funct:
     {
-      Assert(cbi.instruction.r.funct == InstructionFunct::add || cbi.instruction.r.funct == InstructionFunct::addu);
       dest = cbi.instruction.r.rd;
       lhs_src = cbi.instruction.r.rs;
       lhs = m_register_cache.ReadGuestRegister(cbi.instruction.r.rs);
@@ -1843,7 +1836,6 @@ bool CodeGenerator::Compile_Subtract(const CodeBlockInstruction& cbi)
 {
   InstructionPrologue(cbi, 1);
 
-  Assert(cbi.instruction.op == InstructionOp::funct);
   const bool check_overflow = (cbi.instruction.r.funct == InstructionFunct::sub);
 
   Value lhs = m_register_cache.ReadGuestRegister(cbi.instruction.r.rs);
@@ -2213,7 +2205,6 @@ bool CodeGenerator::Compile_Branch(const CodeBlockInstruction& cbi)
           case Condition::NotZero:
           case Condition::Zero:
           {
-            Assert(!rhs.IsValid() || (rhs.IsConstant() && rhs.GetS64ConstantValue() == 0));
             EmitTest(lhs.GetHostRegister(), lhs);
             EmitSetConditionResult(take_branch.GetHostRegister(), take_branch.size, condition);
           }
@@ -2277,7 +2268,6 @@ bool CodeGenerator::Compile_Branch(const CodeBlockInstruction& cbi)
     {
       // if it's an in-block branch, compile the delay slot now
       // TODO: Make this more optimal by moving the condition down if it's a nop
-      Assert((m_current_instruction + 1) != m_block_end);
       InstructionEpilogue(cbi);
       m_current_instruction++;
       if (!CompileInstruction(*m_current_instruction))
@@ -2911,8 +2901,6 @@ bool CodeGenerator::Compile_cop2(const CodeBlockInstruction& cbi)
     InstructionEpilogue(cbi);
     return true;
   }
-
-  Assert(cbi.instruction.op == InstructionOp::cop2);
 
   if (cbi.instruction.cop.IsCommonInstruction())
   {

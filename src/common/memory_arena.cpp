@@ -310,7 +310,6 @@ bool MemoryArena::ReleaseViewPtr(void* address, size_t size)
   }
 
   const size_t prev_count = m_num_views.fetch_sub(1);
-  Assert(prev_count > 0);
   return true;
 }
 
@@ -351,7 +350,6 @@ bool MemoryArena::ReleaseReservedPtr(void* address, size_t size)
   }
 
   const size_t prev_count = m_num_views.fetch_sub(1);
-  Assert(prev_count > 0);
   return true;
 }
 
@@ -396,15 +394,13 @@ MemoryArena::View::~View()
   {
     if (m_arena_offset != RESERVED_REGION_OFFSET)
     {
-      if (m_writable && !m_parent->FlushViewPtr(m_base_pointer, m_mapping_size))
-        Panic("Failed to flush previously-created view");
-      if (!m_parent->ReleaseViewPtr(m_base_pointer, m_mapping_size))
-        Panic("Failed to unmap previously-created view");
+      if (m_writable)
+        m_parent->FlushViewPtr(m_base_pointer, m_mapping_size);
+      m_parent->ReleaseViewPtr(m_base_pointer, m_mapping_size);
     }
     else
     {
-      if (!m_parent->ReleaseReservedPtr(m_base_pointer, m_mapping_size))
-        Panic("Failed to release previously-created view");
+      m_parent->ReleaseReservedPtr(m_base_pointer, m_mapping_size);
     }
   }
 }

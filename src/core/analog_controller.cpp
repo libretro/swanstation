@@ -341,21 +341,18 @@ bool AnalogController::Transfer(const u8 data_in, u8* data_out)
     {
       if (data_in == 0x42)
       {
-        Assert(m_command_step == 0);
         m_response_length = (GetResponseNumHalfwords() + 1) * 2;
         m_command = Command::ReadPad;
         m_tx_buffer = {GetIDByte(), m_status_byte, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
       }
       else if (data_in == 0x43)
       {
-        Assert(m_command_step == 0);
         m_response_length = (GetResponseNumHalfwords() + 1) * 2;
         m_command = Command::ConfigModeSetMode;
         m_tx_buffer = {GetIDByte(), m_status_byte, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
       }
       else if (m_configuration_mode && data_in == 0x44)
       {
-        Assert(m_command_step == 0);
         m_response_length = (GetResponseNumHalfwords() + 1) * 2;
         m_command = Command::SetAnalogMode;
         m_tx_buffer = {GetIDByte(), m_status_byte, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -364,35 +361,30 @@ bool AnalogController::Transfer(const u8 data_in, u8* data_out)
       }
       else if (m_configuration_mode && data_in == 0x45)
       {
-        Assert(m_command_step == 0);
         m_response_length = (GetResponseNumHalfwords() + 1) * 2;
         m_command = Command::GetAnalogMode;
         m_tx_buffer = {GetIDByte(), m_status_byte, 0x01, 0x02, BoolToUInt8(m_analog_mode), 0x02, 0x01, 0x00};
       }
       else if (m_configuration_mode && data_in == 0x46)
       {
-        Assert(m_command_step == 0);
         m_response_length = (GetResponseNumHalfwords() + 1) * 2;
         m_command = Command::Command46;
         m_tx_buffer = {GetIDByte(), m_status_byte, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
       }
       else if (m_configuration_mode && data_in == 0x47)
       {
-        Assert(m_command_step == 0);
         m_response_length = (GetResponseNumHalfwords() + 1) * 2;
         m_command = Command::Command47;
         m_tx_buffer = {GetIDByte(), m_status_byte, 0x00, 0x00, 0x02, 0x00, 0x01, 0x00};
       }
       else if (m_configuration_mode && data_in == 0x4C)
       {
-        Assert(m_command_step == 0);
         m_response_length = (GetResponseNumHalfwords() + 1) * 2;
         m_command = Command::Command4C;
         m_tx_buffer = {GetIDByte(), m_status_byte, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
       }
       else if (m_configuration_mode && data_in == 0x4D)
       {
-        Assert(m_command_step == 0);
         m_response_length = (GetResponseNumHalfwords() + 1) * 2;
         m_command = Command::GetSetRumble;
         m_tx_buffer = {GetIDByte(), m_status_byte, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};

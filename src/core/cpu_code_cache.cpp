@@ -56,8 +56,7 @@ static FastMapTable DecodeFastMapPointer(u32 slot, FastMapTable ptr)
 {
   if constexpr (sizeof(void*) == 8)
     return reinterpret_cast<FastMapTable>(reinterpret_cast<u8*>(ptr) + (static_cast<u64>(slot) << 17));
-  else
-    return reinterpret_cast<FastMapTable>(reinterpret_cast<u8*>(ptr) + (slot << 16));
+  return reinterpret_cast<FastMapTable>(reinterpret_cast<u8*>(ptr) + (slot << 16));
 }
 
 static FastMapTable EncodeFastMapPointer(u32 slot, FastMapTable ptr)
@@ -124,7 +123,6 @@ static void AllocateFastMap()
     s_fast_map_pointers = std::make_unique<CodeBlock::HostCodePointer[]>(num_slots);
 
   FastMapTable table_ptr = s_fast_map_pointers.get();
-  FastMapTable table_ptr_end = table_ptr + num_slots;
 
   // Fill the first table with invalid/unreachable.
   for (u32 i = 0; i < FAST_MAP_TABLE_SIZE; i++)
@@ -142,8 +140,6 @@ static void AllocateFastMap()
   // Allocate ranges.
   for (u32 i = 0; i < countof(ranges); i++)
     AllocateFastMapTables(ranges[i][0], ranges[i][1], table_ptr);
-
-  Assert(table_ptr == table_ptr_end);
 }
 
 static void ResetFastMap()
@@ -175,9 +171,6 @@ static void SetFastMap(u32 pc, CodeBlock::HostCodePointer function)
 
   const u32 slot = pc >> FAST_MAP_TABLE_SHIFT;
   FastMapTable encoded_ptr = s_fast_map[slot];
-
-  const FastMapTable table_ptr = DecodeFastMapPointer(slot, encoded_ptr);
-  Assert(table_ptr != nullptr && table_ptr != s_fast_map_pointers.get());
 
   CodeBlock::HostCodePointer* ptr = OffsetFastMapPointer(encoded_ptr, pc);
   *ptr = function;
@@ -232,8 +225,6 @@ static Common::PageFaultHandler::HandlerResult MMapPageFaultHandler(void* except
 
 void Initialize()
 {
-  Assert(s_blocks.empty());
-
 #ifdef WITH_RECOMPILER
   if (g_settings.IsUsingRecompiler())
   {
@@ -243,15 +234,11 @@ void Initialize()
 #else
     const bool has_buffer = false;
 #endif
-    if (!has_buffer && !s_code_buffer.Allocate(RECOMPILER_CODE_CACHE_SIZE, RECOMPILER_FAR_CODE_CACHE_SIZE))
-    {
-      Panic("Failed to initialize code space");
-    }
+    if (!has_buffer && !s_code_buffer.Allocate(RECOMPILER_CODE_CACHE_SIZE, RECOMPILER_FAR_CODE_CACHE_SIZE)) { }
 
     AllocateFastMap();
 
-    if (g_settings.IsUsingFastmem() && !InitializeFastmem())
-      Panic("Failed to initialize fastmem");
+    if (g_settings.IsUsingFastmem() && !InitializeFastmem()) { }
 
     CompileDispatcher();
     ResetFastMap();
@@ -316,8 +303,6 @@ static void ExecuteImpl()
       }
 
     reexecute_block:
-      Assert(!(HasPendingInterrupt()));
-
       if (g_settings.cpu_recompiler_icache)
         CheckAndUpdateICacheTags(block->icache_line_count, block->uncached_fetch_ticks);
 
@@ -461,17 +446,12 @@ void Reinitialize()
   {
 
 #ifdef USE_STATIC_CODE_BUFFER
-    if (!s_code_buffer.Initialize(s_code_storage, sizeof(s_code_storage), RECOMPILER_FAR_CODE_CACHE_SIZE,
-                                  RECOMPILER_GUARD_SIZE))
+    s_code_buffer.Initialize(s_code_storage, sizeof(s_code_storage), RECOMPILER_FAR_CODE_CACHE_SIZE,RECOMPILER_GUARD_SIZE);
 #else
-    if (!s_code_buffer.Allocate(RECOMPILER_CODE_CACHE_SIZE, RECOMPILER_FAR_CODE_CACHE_SIZE))
+    s_code_buffer.Allocate(RECOMPILER_CODE_CACHE_SIZE, RECOMPILER_FAR_CODE_CACHE_SIZE);
 #endif
-    {
-      Panic("Failed to initialize code space");
-    }
 
-    if (g_settings.IsUsingFastmem() && !InitializeFastmem())
-      Panic("Failed to initialize fastmem");
+    if (g_settings.IsUsingFastmem() && !InitializeFastmem()) { }
 
     AllocateFastMap();
     CompileDispatcher();
@@ -843,7 +823,6 @@ void InvalidateAll()
 void RemoveReferencesToBlock(CodeBlock* block)
 {
   BlockMap::iterator iter = s_blocks.find(block->key.GetPC());
-  Assert(iter != s_blocks.end() && iter->second == block);
 
 #ifdef WITH_RECOMPILER
   SetFastMap(block->GetPC(), FastCompileBlockFunction);
@@ -887,7 +866,6 @@ void RemoveBlockFromPageMap(CodeBlock* block)
   {
     auto& page_blocks = m_ram_block_map[page];
     auto page_block_iter = std::find(page_blocks.begin(), page_blocks.end(), block);
-    Assert(page_block_iter != page_blocks.end());
     page_blocks.erase(page_block_iter);
   }
 }
@@ -929,7 +907,6 @@ void UnlinkBlock(CodeBlock* block)
   {
     auto iter = std::find_if(li.block->link_successors.begin(), li.block->link_successors.end(),
                              [block](const CodeBlock::LinkInfo& li) { return li.block == block; });
-    Assert(iter != li.block->link_successors.end());
 
 #ifdef WITH_RECOMPILER
     // Restore blocks linked to this block back to the resolver
@@ -945,7 +922,6 @@ void UnlinkBlock(CodeBlock* block)
   {
     auto iter = std::find_if(li.block->link_predecessors.begin(), li.block->link_predecessors.end(),
                              [block](const CodeBlock::LinkInfo& li) { return li.block == block; });
-    Assert(iter != li.block->link_predecessors.end());
 
 #ifdef WITH_RECOMPILER
     // Restore blocks we're linking to back to the resolver, since the successor won't be linked to us to backpatch if
@@ -973,7 +949,6 @@ void AddBlockToHostCodeMap(CodeBlock* block)
     return;
 
   auto ir = s_host_code_map.emplace(block->host_code, block);
-  Assert(ir.second);
 }
 
 void RemoveBlockFromHostCodeMap(CodeBlock* block)
@@ -982,20 +957,17 @@ void RemoveBlockFromHostCodeMap(CodeBlock* block)
     return;
 
   HostCodeMap::iterator hc_iter = s_host_code_map.find(block->host_code);
-  Assert(hc_iter != s_host_code_map.end());
   s_host_code_map.erase(hc_iter);
 }
 
 bool InitializeFastmem()
 {
   const CPUFastmemMode mode = g_settings.cpu_fastmem_mode;
-  Assert(mode != CPUFastmemMode::Disabled);
 
 #ifdef WITH_MMAP_FASTMEM
   const auto handler = (mode == CPUFastmemMode::MMap) ? MMapPageFaultHandler : LUTPageFaultHandler;
 #else
   const auto handler = LUTPageFaultHandler;
-  Assert(mode != CPUFastmemMode::MMap);
 #endif
 
   s_code_buffer.ReserveCode(Common::PageFaultHandler::GetHandlerCodeSize());

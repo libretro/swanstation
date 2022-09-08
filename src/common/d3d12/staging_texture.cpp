@@ -77,7 +77,6 @@ bool StagingTexture::Map(bool writing)
 {
   D3D12_RANGE range{0u, m_buffer_size};
 
-  Assert(!IsMapped());
   const HRESULT hr = m_resource->Map(0, writing ? nullptr : &range, &m_mapped_pointer);
   if (FAILED(hr))
   {
@@ -91,8 +90,6 @@ bool StagingTexture::Map(bool writing)
 
 void StagingTexture::Unmap()
 {
-  Assert(IsMapped());
-
   D3D12_RANGE range{0u, m_buffer_size};
   m_resource->Unmap(0, m_mapped_for_write ? &range : nullptr);
   m_mapped_pointer = nullptr;

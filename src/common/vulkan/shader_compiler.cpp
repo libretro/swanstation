@@ -124,10 +124,7 @@ bool InitializeGlslang()
     return true;
 
   if (!glslang::InitializeProcess())
-  {
-    Panic("Failed to initialize glslang shader compiler");
     return false;
-  }
 
   glslang_initialized = true;
   return true;

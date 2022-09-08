@@ -539,8 +539,6 @@ void LibretroHostInterface::retro_set_controller_port_device(u32 port, u32 devic
 
 void LibretroHostInterface::retro_run_frame()
 {
-  Assert(!System::IsShutdown());
-
   if (HasCoreVariablesChanged() || controller_dirty)
   {
     controller_dirty = false;

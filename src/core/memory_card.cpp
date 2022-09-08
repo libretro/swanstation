@@ -223,9 +223,6 @@ bool MemoryCard::Transfer(const u8 data_in, u8* data_out)
         break;
 
         case 0x53: // get id
-        {
-          Panic("implement me");
-        }
         break;
 
         default:

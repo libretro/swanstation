@@ -285,7 +285,6 @@ int Program::RegisterUniform(const char* name)
 
 void Program::Uniform1ui(int index, u32 x) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform1ui(location, x);
@@ -293,7 +292,6 @@ void Program::Uniform1ui(int index, u32 x) const
 
 void Program::Uniform2ui(int index, u32 x, u32 y) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform2ui(location, x, y);
@@ -301,7 +299,6 @@ void Program::Uniform2ui(int index, u32 x, u32 y) const
 
 void Program::Uniform3ui(int index, u32 x, u32 y, u32 z) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform3ui(location, x, y, z);
@@ -309,7 +306,6 @@ void Program::Uniform3ui(int index, u32 x, u32 y, u32 z) const
 
 void Program::Uniform4ui(int index, u32 x, u32 y, u32 z, u32 w) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform4ui(location, x, y, z, w);
@@ -317,7 +313,6 @@ void Program::Uniform4ui(int index, u32 x, u32 y, u32 z, u32 w) const
 
 void Program::Uniform1i(int index, s32 x) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform1i(location, x);
@@ -325,7 +320,6 @@ void Program::Uniform1i(int index, s32 x) const
 
 void Program::Uniform2i(int index, s32 x, s32 y) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform2i(location, x, y);
@@ -333,7 +327,6 @@ void Program::Uniform2i(int index, s32 x, s32 y) const
 
 void Program::Uniform3i(int index, s32 x, s32 y, s32 z) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform3i(location, x, y, z);
@@ -341,7 +334,6 @@ void Program::Uniform3i(int index, s32 x, s32 y, s32 z) const
 
 void Program::Uniform4i(int index, s32 x, s32 y, s32 z, s32 w) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform4i(location, x, y, z, w);
@@ -349,7 +341,6 @@ void Program::Uniform4i(int index, s32 x, s32 y, s32 z, s32 w) const
 
 void Program::Uniform1f(int index, float x) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform1f(location, x);
@@ -357,7 +348,6 @@ void Program::Uniform1f(int index, float x) const
 
 void Program::Uniform2f(int index, float x, float y) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform2f(location, x, y);
@@ -365,7 +355,6 @@ void Program::Uniform2f(int index, float x, float y) const
 
 void Program::Uniform3f(int index, float x, float y, float z) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform3f(location, x, y, z);
@@ -373,7 +362,6 @@ void Program::Uniform3f(int index, float x, float y, float z) const
 
 void Program::Uniform4f(int index, float x, float y, float z, float w) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform4f(location, x, y, z, w);
@@ -381,7 +369,6 @@ void Program::Uniform4f(int index, float x, float y, float z, float w) const
 
 void Program::Uniform2uiv(int index, const u32* v) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform2uiv(location, 1, v);
@@ -389,7 +376,6 @@ void Program::Uniform2uiv(int index, const u32* v) const
 
 void Program::Uniform3uiv(int index, const u32* v) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform3uiv(location, 1, v);
@@ -397,7 +383,6 @@ void Program::Uniform3uiv(int index, const u32* v) const
 
 void Program::Uniform4uiv(int index, const u32* v) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform4uiv(location, 1, v);
@@ -405,7 +390,6 @@ void Program::Uniform4uiv(int index, const u32* v) const
 
 void Program::Uniform2iv(int index, const s32* v) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform2iv(location, 1, v);
@@ -413,7 +397,6 @@ void Program::Uniform2iv(int index, const s32* v) const
 
 void Program::Uniform3iv(int index, const s32* v) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform3iv(location, 1, v);
@@ -421,7 +404,6 @@ void Program::Uniform3iv(int index, const s32* v) const
 
 void Program::Uniform4iv(int index, const s32* v) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform4iv(location, 1, v);
@@ -429,7 +411,6 @@ void Program::Uniform4iv(int index, const s32* v) const
 
 void Program::Uniform2fv(int index, const float* v) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform2fv(location, 1, v);
@@ -437,7 +418,6 @@ void Program::Uniform2fv(int index, const float* v) const
 
 void Program::Uniform3fv(int index, const float* v) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform3fv(location, 1, v);
@@ -445,7 +425,6 @@ void Program::Uniform3fv(int index, const float* v) const
 
 void Program::Uniform4fv(int index, const float* v) const
 {
-  Assert(static_cast<size_t>(index) < m_uniform_locations.size());
   const GLint location = m_uniform_locations[index];
   if (location >= 0)
     glUniform4fv(location, 1, v);

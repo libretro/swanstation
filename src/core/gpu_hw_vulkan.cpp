@@ -40,7 +40,6 @@ bool GPU_HW_Vulkan::Initialize(HostDisplay* host_display)
     return false;
   }
 
-  Assert(g_vulkan_shader_cache);
   SetCapabilities();
 
   if (!GPU_HW::Initialize(host_display))
@@ -246,8 +245,7 @@ void GPU_HW_Vulkan::MapBatchVertexPointer(u32 required_vertices)
   if (!m_vertex_stream_buffer.ReserveMemory(required_space, sizeof(BatchVertex)))
   {
     ExecuteCommandBuffer(false, true);
-    if (!m_vertex_stream_buffer.ReserveMemory(required_space, sizeof(BatchVertex)))
-      Panic("Failed to reserve vertex stream buffer memory");
+    m_vertex_stream_buffer.ReserveMemory(required_space, sizeof(BatchVertex));
   }
 
   m_batch_start_vertex_ptr = static_cast<BatchVertex*>(m_vertex_stream_buffer.GetCurrentHostPointer());
@@ -272,8 +270,7 @@ void GPU_HW_Vulkan::UploadUniformBuffer(const void* data, u32 data_size)
   if (!m_uniform_stream_buffer.ReserveMemory(data_size, alignment))
   {
     ExecuteCommandBuffer(false, true);
-    if (!m_uniform_stream_buffer.ReserveMemory(data_size, alignment))
-      Panic("Failed to reserve uniform stream buffer memory");
+    m_uniform_stream_buffer.ReserveMemory(data_size, alignment);
   }
 
   m_current_uniform_buffer_offset = m_uniform_stream_buffer.GetCurrentOffset();
@@ -1356,9 +1353,6 @@ void GPU_HW_Vulkan::UpdateDisplay()
       m_display_texture.TransitionToLayout(cmdbuf, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
       m_vram_texture.TransitionToLayout(cmdbuf, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-      Assert(scaled_display_width <= m_display_texture.GetWidth() &&
-             scaled_display_height <= m_display_texture.GetHeight());
-
       BeginRenderPass((interlaced != InterlacedRenderMode::None) ? m_display_load_render_pass :
                                                                    m_display_discard_render_pass,
                       m_display_framebuffer, 0, 0, scaled_display_width, scaled_display_height);
@@ -1497,10 +1491,7 @@ void GPU_HW_Vulkan::UpdateVRAM(u32 x, u32 y, u32 width, u32 height, const void* 
   {
     ExecuteCommandBuffer(false, true);
     if (!m_texture_stream_buffer.ReserveMemory(data_size, alignment))
-    {
-      Panic("Failed to allocate space in stream buffer for VRAM write");
       return;
-    }
   }
 
   const u32 start_index = m_texture_stream_buffer.GetCurrentOffset() / sizeof(u16);
@@ -1744,7 +1735,6 @@ void GPU_HW_Vulkan::DownsampleFramebufferBoxFilter(Vulkan::Texture& source, u32 
   source.TransitionToLayout(cmdbuf, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
   m_downsample_texture.TransitionToLayout(cmdbuf, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
-  Assert(&source == &m_vram_texture || &source == &m_display_texture);
   VkDescriptorSet ds = (&source == &m_vram_texture) ? m_vram_read_descriptor_set : m_display_descriptor_set;
 
   const u32 ds_left = left / m_resolution_scale;

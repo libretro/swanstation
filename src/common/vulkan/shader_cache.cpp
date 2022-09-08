@@ -107,7 +107,6 @@ bool ShaderCache::CacheIndexKey::operator!=(const CacheIndexKey& key) const
 
 void ShaderCache::Create(std::string_view base_path, u32 version, bool debug)
 {
-  Assert(!g_vulkan_shader_cache);
   g_vulkan_shader_cache.reset(new ShaderCache());
   g_vulkan_shader_cache->Open(base_path, version, debug);
 }

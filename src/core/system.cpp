@@ -588,7 +588,6 @@ bool ShouldCheckForImagePatches()
 
 bool Boot(const SystemBootParameters& params)
 {
-  Assert(s_state == State::Shutdown);
   s_state = State::Starting;
   s_startup_cancelled.store(false);
   s_region = g_settings.region;
@@ -850,7 +849,6 @@ void Shutdown()
   CPU::CodeCache::Shutdown();
   Bus::Shutdown();
   CPU::Shutdown();
-  TimingEvents::Shutdown();
   s_running_game_code.clear();
   s_running_game_path.clear();
   s_running_game_title.clear();
@@ -1813,7 +1811,6 @@ bool SwitchMediaSubImage(u32 index)
     return false;
 
   std::unique_ptr<CDImage> image = g_cdrom.RemoveMedia();
-  Assert(image);
 
   Common::Error error;
   if (!image->SwitchSubImage(index, &error))
@@ -1841,7 +1838,6 @@ CheatList* GetCheatList()
 
 void SetCheatList(std::unique_ptr<CheatList> cheats)
 {
-  Assert(!IsShutdown());
   s_cheat_list = std::move(cheats);
 }
 

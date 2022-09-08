@@ -16,7 +16,6 @@ namespace Common {
 Event::Event(bool auto_reset /* = false */)
 {
   m_event_handle = reinterpret_cast<void*>(CreateEvent(nullptr, auto_reset ? FALSE : TRUE, FALSE, nullptr));
-  Assert(m_event_handle != nullptr);
 }
 
 Event::~Event()

@@ -80,7 +80,6 @@ u32 GetGlobalTickCounter();
 
 void Initialize();
 void Reset();
-void Shutdown();
 
 /// Creates a new event.
 std::unique_ptr<TimingEvent> CreateTimingEvent(std::string name, TickCount period, TickCount interval,

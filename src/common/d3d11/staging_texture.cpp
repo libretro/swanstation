@@ -34,13 +34,11 @@ bool StagingTexture::Create(ID3D11Device* device, u32 width, u32 height, DXGI_FO
 
 void StagingTexture::Destroy()
 {
-  Assert(!IsMapped());
   m_texture.Reset();
 }
 
 bool StagingTexture::Map(ID3D11DeviceContext* context, bool writing)
 {
-  Assert(!IsMapped());
   const HRESULT hr = context->Map(m_texture.Get(), 0, writing ? D3D11_MAP_WRITE : D3D11_MAP_READ, 0, &m_map);
   if (FAILED(hr))
   {
@@ -53,7 +51,6 @@ bool StagingTexture::Map(ID3D11DeviceContext* context, bool writing)
 
 void StagingTexture::Unmap(ID3D11DeviceContext* context)
 {
-  Assert(IsMapped());
   context->Unmap(m_texture.Get(), 0);
   m_map = {};
 }

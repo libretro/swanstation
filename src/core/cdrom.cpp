@@ -16,11 +16,6 @@ Log_SetChannel(CDROM);
 #include <emmintrin.h>
 #endif
 
-static constexpr std::array<const char*, 15> s_drive_state_names = {
-  {"Idle", "Opening Shell", "Resetting", "Seeking (Physical)", "Seeking (Logical)", "Reading ID", "Reading TOC",
-   "Reading", "Playing", "Pausing", "Stopping", "Changing Session", "Spinning Up", "Seeking (Implicit)",
-   "Changing Speed/Implicit TOC Read"}};
-
 struct CommandInfo
 {
   const char* name;
@@ -442,7 +437,6 @@ u8 CDROM::ReadRegister(u32 offset)
 
   Log_ErrorPrintf("Unknown CDROM register read: offset=0x%02X, index=%d", offset,
                   ZeroExtend32(m_status.index.GetValue()));
-  Panic("Unknown CDROM register");
   return 0;
 }
 
@@ -614,7 +608,6 @@ void CDROM::SetAsyncInterrupt(Interrupt interrupt)
     return;
   }
 
-  Assert(m_pending_async_interrupt == 0);
   m_pending_async_interrupt = static_cast<u8>(interrupt);
   if (!HasPendingInterrupt())
     DeliverAsyncInterrupt();
@@ -628,7 +621,6 @@ void CDROM::ClearAsyncInterrupt()
 
 void CDROM::DeliverAsyncInterrupt()
 {
-  Assert(m_pending_async_interrupt != 0 && !HasPendingInterrupt());
 
   if (m_pending_async_interrupt == static_cast<u8>(Interrupt::DataReady))
     m_current_read_sector_buffer = m_current_write_sector_buffer;
@@ -1361,7 +1353,6 @@ void CDROM::ExecuteCommand(TickCount ticks_late)
 
     case Command::GetTD:
     {
-      Assert(m_param_fifo.GetSize() >= 1);
       const u8 track = PackedBCDToBinary(m_param_fifo.Peek());
 
       if (!CanReadMedia())
@@ -2100,8 +2091,7 @@ void CDROM::DoSectorRead()
 {
   // TODO: Queue the next read here and swap the buffer.
   // TODO: Error handling
-  if (!m_reader.WaitForReadToComplete())
-    Panic("Sector read failed");
+  if (!m_reader.WaitForReadToComplete()) { }
 
   m_current_lba = m_reader.GetLastReadSector();
   m_physical_lba = m_current_lba;
@@ -2158,15 +2148,6 @@ void CDROM::DoSectorRead()
 
     if (m_fast_forward_rate != 0)
       next_sector = m_current_lba + SignExtend32(m_fast_forward_rate);
-  }
-  else if (m_drive_state != DriveState::Reading && m_drive_state != DriveState::Playing)
-  {
-    Panic("Not reading or playing");
-  }
-  else
-  {
-    Log_WarningPrintf("Skipping sector %u as it is a %s sector and we're not %s", m_current_lba,
-                      is_data_sector ? "data" : "audio", is_data_sector ? "reading" : "playing");
   }
 
   m_requested_lba = next_sector;

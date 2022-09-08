@@ -129,8 +129,6 @@ bool Context::SupportsTextureFormat(DXGI_FORMAT format)
 
 bool Context::Create(IDXGIFactory* dxgi_factory, u32 adapter_index, bool enable_debug_layer)
 {
-  Assert(!g_d3d12_context);
-
   if (!LoadD3D12Library())
     return false;
 
@@ -198,7 +196,6 @@ bool Context::CreateDevice(IDXGIFactory* dxgi_factory, u32 adapter_index, bool e
 
   // Create the actual device.
   hr = s_d3d12_create_device(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device));
-  AssertMsg(SUCCEEDED(hr), "Create D3D12 device");
   if (FAILED(hr))
     return false;
 
@@ -232,19 +229,16 @@ bool Context::CreateCommandQueue()
   const D3D12_COMMAND_QUEUE_DESC queue_desc = {D3D12_COMMAND_LIST_TYPE_DIRECT, D3D12_COMMAND_QUEUE_PRIORITY_NORMAL,
                                                D3D12_COMMAND_QUEUE_FLAG_NONE};
   HRESULT hr = m_device->CreateCommandQueue(&queue_desc, IID_PPV_ARGS(&m_command_queue));
-  AssertMsg(SUCCEEDED(hr), "Create command queue");
   return SUCCEEDED(hr);
 }
 
 bool Context::CreateFence()
 {
   HRESULT hr = m_device->CreateFence(m_completed_fence_value, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence));
-  AssertMsg(SUCCEEDED(hr), "Create fence");
   if (FAILED(hr))
     return false;
 
   m_fence_event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-  AssertMsg(m_fence_event != NULL, "Create fence event");
   if (!m_fence_event)
     return false;
 
@@ -274,10 +268,7 @@ bool Context::CreateDescriptorHeaps()
                                                              D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING};
 
   if (!m_descriptor_heap_manager.Allocate(&m_null_srv_descriptor))
-  {
-    Panic("Failed to allocate null descriptor");
     return false;
-  }
 
   m_device->CreateShaderResourceView(nullptr, &null_srv_desc, m_null_srv_descriptor.cpu_handle);
   return true;
@@ -290,7 +281,6 @@ bool Context::CreateCommandLists()
     CommandListResources& res = m_command_lists[i];
     HRESULT hr = m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
                                                   IID_PPV_ARGS(res.command_allocator.GetAddressOf()));
-    AssertMsg(SUCCEEDED(hr), "Create command allocator");
     if (FAILED(hr))
       return false;
 
@@ -304,7 +294,6 @@ bool Context::CreateCommandLists()
 
     // Close the command list, since the first thing we do is reset them.
     hr = res.command_list->Close();
-    AssertMsg(SUCCEEDED(hr), "Closing new command list failed");
     if (FAILED(hr))
       return false;
   }
@@ -340,13 +329,11 @@ void Context::ExecuteCommandList(bool wait_for_completion)
 
   // Close and queue command list.
   HRESULT hr = res.command_list->Close();
-  AssertMsg(SUCCEEDED(hr), "Close command list");
   const std::array<ID3D12CommandList*, 1> execute_lists{res.command_list.Get()};
   m_command_queue->ExecuteCommandLists(static_cast<UINT>(execute_lists.size()), execute_lists.data());
 
   // Update fence when GPU has completed.
   hr = m_command_queue->Signal(m_fence.Get(), m_current_fence_value);
-  AssertMsg(SUCCEEDED(hr), "Signal fence");
 
   MoveToNextCommandList();
   if (wait_for_completion)
@@ -423,7 +410,6 @@ void Context::WaitForFence(u64 fence)
   {
     // Fall back to event.
     HRESULT hr = m_fence->SetEventOnCompletion(fence, m_fence_event);
-    AssertMsg(SUCCEEDED(hr), "Set fence event on completion");
     WaitForSingleObject(m_fence_event, INFINITE);
     m_completed_fence_value = m_fence->GetCompletedValue();
   }

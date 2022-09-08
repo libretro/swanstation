@@ -73,8 +73,6 @@ std::unique_ptr<HostDisplayTexture> LibretroOpenGLHostDisplay::CreateTexture(u32
   const auto [gl_internal_format, gl_format, gl_type] = s_display_pixel_format_mapping[static_cast<u32>(format)];
 
   // TODO: Set pack width
-  Assert(!data || data_stride == (width * sizeof(u32)));
-
   GL::Texture tex;
   if (!tex.Create(width, height, samples, gl_internal_format, gl_format, gl_type, data, data_stride))
     return {};

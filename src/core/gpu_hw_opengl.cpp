@@ -418,7 +418,6 @@ bool GPU_HW_OpenGL::CreateFramebuffer()
                          m_vram_texture.GetGLId(), 0);
   glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_vram_depth_texture.GetGLTarget(),
                          m_vram_depth_texture.GetGLId(), 0);
-  Assert(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 
   if (m_downsample_mode == GPUDownsampleMode::Box)
   {
@@ -918,9 +917,6 @@ void GPU_HW_OpenGL::UpdateDisplay()
                                reinterpret_field_offset};
       UploadUniformBuffer(uniforms, sizeof(uniforms));
       m_batch_ubo_dirty = true;
-
-      Assert(scaled_display_width <= m_display_texture.GetWidth() &&
-             scaled_display_height <= m_display_texture.GetHeight());
 
       glViewport(0, 0, scaled_display_width, scaled_display_height);
       glBindVertexArray(m_attributeless_vao_id);

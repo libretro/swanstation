@@ -87,7 +87,6 @@ CDImageCHD::~CDImageCHD()
 
 bool CDImageCHD::Open(const char* filename, Common::Error* error)
 {
-  Assert(!m_fp);
   m_fp = FileSystem::OpenCFile(filename, "rb");
   if (!m_fp)
   {
