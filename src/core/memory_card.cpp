@@ -127,14 +127,9 @@ bool MemoryCard::Transfer(const u8 data_in, u8* data_out)
     {
       const u8 bits = m_data[ZeroExtend32(m_address) * MemoryCardImage::FRAME_SIZE + m_sector_offset];
       if (m_sector_offset == 0)
-      {
-        Log_DevPrintf("Reading memory card sector %u", ZeroExtend32(m_address));
         m_checksum = Truncate8(m_address >> 8) ^ Truncate8(m_address) ^ bits;
-      }
       else
-      {
         m_checksum ^= bits;
-      }
 
       *data_out = bits;
       ack = true;

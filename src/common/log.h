@@ -49,33 +49,3 @@ void Writev(const char* channelName, const char* functionName, LOGLEVEL level, c
 #define Log_WarningPrintf(...) Log::Writef(___LogChannel___, __func__, LOGLEVEL_WARNING, __VA_ARGS__)
 #define Log_InfoPrint(msg) Log::Write(___LogChannel___, __func__, LOGLEVEL_INFO, msg)
 #define Log_InfoPrintf(...) Log::Writef(___LogChannel___, __func__, LOGLEVEL_INFO, __VA_ARGS__)
-#define Log_VerbosePrint(msg) Log::Write(___LogChannel___, __func__, LOGLEVEL_VERBOSE, msg)
-#define Log_VerbosePrintf(...) Log::Writef(___LogChannel___, __func__, LOGLEVEL_VERBOSE, __VA_ARGS__)
-#define Log_DevPrint(msg) Log::Write(___LogChannel___, __func__, LOGLEVEL_DEV, msg)
-#define Log_DevPrintf(...) Log::Writef(___LogChannel___, __func__, LOGLEVEL_DEV, __VA_ARGS__)
-#define Log_ProfilePrint(msg) Log::Write(___LogChannel___, __func__, LOGLEVEL_PROFILE, msg)
-#define Log_ProfilePrintf(...) Log::Writef(___LogChannel___, __func__, LOGLEVEL_PROFILE, __VA_ARGS__)
-
-#ifdef _DEBUG
-#define Log_DebugPrint(msg) Log::Write(___LogChannel___, __func__, LOGLEVEL_DEBUG, msg)
-#define Log_DebugPrintf(...) Log::Writef(___LogChannel___, __func__, LOGLEVEL_DEBUG, __VA_ARGS__)
-#define Log_TracePrint(msg) Log::Write(___LogChannel___, __func__, LOGLEVEL_TRACE, msg)
-#define Log_TracePrintf(...) Log::Writef(___LogChannel___, __func__, LOGLEVEL_TRACE, __VA_ARGS__)
-#else
-#define Log_DebugPrint(msg)                                                                                            \
-  do                                                                                                                   \
-  {                                                                                                                    \
-  } while (0)
-#define Log_DebugPrintf(...)                                                                                           \
-  do                                                                                                                   \
-  {                                                                                                                    \
-  } while (0)
-#define Log_TracePrint(msg)                                                                                            \
-  do                                                                                                                   \
-  {                                                                                                                    \
-  } while (0)
-#define Log_TracePrintf(...)                                                                                           \
-  do                                                                                                                   \
-  {                                                                                                                    \
-  } while (0)
-#endif

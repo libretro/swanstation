@@ -225,7 +225,6 @@ bool File::HandleFileCommand(const char* line, u32 line_number, Common::Error* e
   }
 
   m_current_file = filename;
-  Log_DebugPrintf("File '%s'", m_current_file->c_str());
   return true;
 }
 

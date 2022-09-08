@@ -1520,8 +1520,6 @@ void CodeGenerator::EmitStoreGuestMemorySlowmem(const CodeBlockInstruction& cbi,
 
 bool CodeGenerator::BackpatchLoadStore(const LoadStoreBackpatchInfo& lbi)
 {
-  Log_DevPrintf("Backpatching %p (guest PC 0x%08X) to slowmem at %p", lbi.host_pc, lbi.guest_pc, lbi.host_slowmem_pc);
-
   // turn it into a jump to the slowmem handler
   vixl::aarch32::MacroAssembler emit(static_cast<vixl::byte*>(lbi.host_pc), lbi.host_code_size, a32::A32);
 
@@ -1549,8 +1547,6 @@ bool CodeGenerator::BackpatchLoadStore(const LoadStoreBackpatchInfo& lbi)
 
 void CodeGenerator::BackpatchReturn(void* pc, u32 pc_size)
 {
-  Log_ProfilePrintf("Backpatching %p to return", pc);
-
   vixl::aarch32::MacroAssembler emit(static_cast<vixl::byte*>(pc), pc_size, a32::A32);
   emit.bx(a32::lr);
 
@@ -1564,8 +1560,6 @@ void CodeGenerator::BackpatchReturn(void* pc, u32 pc_size)
 
 void CodeGenerator::BackpatchBranch(void* pc, u32 pc_size, void* target)
 {
-  Log_ProfilePrintf("Backpatching %p to %p [branch]", pc, target);
-
   vixl::aarch32::MacroAssembler emit(static_cast<vixl::byte*>(pc), pc_size, a32::A32);
 
   // check jump distance
@@ -2114,7 +2108,6 @@ CodeCache::DispatcherFunction CodeGenerator::CompileDispatcher()
   CodeBlock::HostCodePointer ptr;
   u32 code_size;
   FinalizeBlock(&ptr, &code_size);
-  Log_DevPrintf("Dispatcher is %u bytes at %p", code_size, ptr);
   return reinterpret_cast<CodeCache::DispatcherFunction>(ptr);
 }
 
@@ -2136,7 +2129,6 @@ CodeCache::SingleBlockDispatcherFunction CodeGenerator::CompileSingleBlockDispat
   CodeBlock::HostCodePointer ptr;
   u32 code_size;
   FinalizeBlock(&ptr, &code_size);
-  Log_DevPrintf("Single block dispatcher is %u bytes at %p", code_size, ptr);
   return reinterpret_cast<CodeCache::SingleBlockDispatcherFunction>(ptr);
 }
 

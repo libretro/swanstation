@@ -331,12 +331,10 @@ bool AnalogController::Transfer(const u8 data_in, u8* data_out)
 
       if (data_in == 0x01)
       {
-        Log_DevPrintf("ACK controller access");
         m_command = Command::Ready;
         return true;
       }
 
-      Log_DevPrintf("Unknown data_in = 0x%02X", data_in);
       return false;
     }
     break;
@@ -556,8 +554,6 @@ bool AnalogController::Transfer(const u8 data_in, u8* data_out)
           m_dualshock_enabled = true;
           m_status_byte = 0x5A;
         }
-
-        Log_DevPrintf("0x%02x(%s) config mode", m_rx_buffer[2], m_configuration_mode ? "enter" : "leave");
       }
     }
     break;
@@ -566,15 +562,11 @@ bool AnalogController::Transfer(const u8 data_in, u8* data_out)
     {
       if (m_command_step == 2)
       {
-        Log_DevPrintf("analog mode val 0x%02x", data_in);
-
         if (data_in == 0x00 || data_in == 0x01)
           SetAnalogMode((data_in == 0x01));
       }
       else if (m_command_step == 3)
       {
-        Log_DevPrintf("analog mode lock 0x%02x", data_in);
-
         if (data_in == 0x02 || data_in == 0x03)
           m_analog_locked = (data_in == 0x03);
       }
@@ -669,11 +661,6 @@ bool AnalogController::Transfer(const u8 data_in, u8* data_out)
   if (m_command_step == 0)
   {
     m_command = Command::Idle;
-
-    Log_DevPrintf("Rx: %02x %02x %02x %02x %02x %02x %02x %02x", m_rx_buffer[0], m_rx_buffer[1], m_rx_buffer[2],
-                  m_rx_buffer[3], m_rx_buffer[4], m_rx_buffer[5], m_rx_buffer[6], m_rx_buffer[7]);
-    Log_DevPrintf("Tx: %02x %02x %02x %02x %02x %02x %02x %02x", m_tx_buffer[0], m_tx_buffer[1], m_tx_buffer[2],
-                  m_tx_buffer[3], m_tx_buffer[4], m_tx_buffer[5], m_tx_buffer[6], m_tx_buffer[7]);
 
     m_rx_buffer.fill(0x00);
     m_tx_buffer.fill(0x00);

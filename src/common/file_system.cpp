@@ -371,14 +371,9 @@ static bool GetDisplayNameForUriPath(const char* path, std::string* result)
 
   const char* result_name = env->GetStringUTFChars(result_jstr, nullptr);
   if (result_name)
-  {
-    Log_DevPrintf("GetDisplayNameForUriPath(\"%s\") -> \"%s\"", path, result_name);
     result->assign(result_name);
-  }
   else
-  {
     result->clear();
-  }
 
   env->ReleaseStringUTFChars(result_jstr, result_name);
   env->DeleteLocalRef(result_jstr);
@@ -403,14 +398,9 @@ static bool GetRelativePathForUriPath(const char* path, const char* filename, st
 
   const char* result_name = env->GetStringUTFChars(result_jstr, nullptr);
   if (result_name)
-  {
-    Log_DevPrintf("GetRelativePathForUriPath(\"%s\", \"%s\") -> \"%s\"", path, filename, result_name);
     result->assign(result_name);
-  }
   else
-  {
     result->clear();
-  }
 
   env->ReleaseStringUTFChars(result_jstr, result_name);
   env->DeleteLocalRef(result_jstr);

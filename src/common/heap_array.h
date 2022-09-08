@@ -63,8 +63,6 @@ public:
 
   void fill(const_reference value) { std::fill(begin(), end(), value); }
 
-  void swap(this_type& move) { std::swap(m_data, move.m_data); }
-
   this_type& operator=(const this_type& rhs)
   {
     std::copy(begin(), end(), rhs.cbegin());

@@ -828,8 +828,6 @@ void GPU_HW_OpenGL::SetScissorFromDrawingArea()
   const int height = bottom - top;
   const int x = left;
   const int y = m_vram_texture.GetHeight() - bottom;
-
-  Log_DebugPrintf("SetScissor: (%d-%d, %d-%d)", x, x + width, y, y + height);
   glScissor(x, y, width, height);
 }
 

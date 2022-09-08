@@ -52,8 +52,6 @@ bool CodeGenerator::CompileBlock(CodeBlock* block, CodeBlock::HostCodePointer* o
   }
 
   FinalizeBlock(out_host_code, out_host_code_size);
-  Log_ProfilePrintf("JIT block 0x%08X: %zu instructions (%u bytes), %u host bytes", block->GetPC(),
-                    block->instructions.size(), block->GetSizeInBytes(), *out_host_code_size);
 
   DebugAssert(m_register_cache.GetUsedHostRegisters() == 0);
 
@@ -1042,7 +1040,6 @@ void CodeGenerator::InstructionEpilogue(const CodeBlockInstruction& cbi)
   if (m_load_delay_dirty)
   {
     // we have to invalidate the register cache, since the load delayed register might've been cached
-    Log_DebugPrint("Emitting delay slot flush");
     EmitFlushInterpreterLoadDelay();
     m_register_cache.InvalidateAllNonDirtyGuestRegisters();
     m_load_delay_dirty = false;
@@ -1051,7 +1048,6 @@ void CodeGenerator::InstructionEpilogue(const CodeBlockInstruction& cbi)
   // copy if the previous instruction was a load, reset the current value on the next instruction
   if (m_next_load_delay_dirty)
   {
-    Log_DebugPrint("Emitting delay slot flush (with move next)");
     EmitMoveNextInterpreterLoadDelay();
     m_next_load_delay_dirty = false;
     m_load_delay_dirty = true;
@@ -1060,7 +1056,6 @@ void CodeGenerator::InstructionEpilogue(const CodeBlockInstruction& cbi)
 
 void CodeGenerator::TruncateBlockAtCurrentInstruction()
 {
-  Log_DevPrintf("Truncating block %08X at %08X", m_block->GetPC(), m_current_instruction->pc);
   m_block_end = m_current_instruction + 1;
   WriteNewPC(CalculatePC(), true);
 }
@@ -1103,7 +1098,6 @@ void CodeGenerator::AddPendingCycles(bool commit)
 void CodeGenerator::AddGTETicks(TickCount ticks)
 {
   m_gte_done_cycle = m_delayed_cycles_add + ticks;
-  Log_DebugPrintf("Adding %d GTE ticks", ticks);
 }
 
 void CodeGenerator::StallUntilGTEComplete()
@@ -1112,10 +1106,7 @@ void CodeGenerator::StallUntilGTEComplete()
   {
     // simple case - in block scheduling
     if (m_gte_done_cycle > m_delayed_cycles_add)
-    {
-      Log_DebugPrintf("Stalling for %d ticks from GTE", m_gte_done_cycle - m_delayed_cycles_add);
       m_delayed_cycles_add += (m_gte_done_cycle - m_delayed_cycles_add);
-    }
 
     return;
   }
@@ -1634,7 +1625,6 @@ bool CodeGenerator::Compile_LoadLeftRight(const CodeBlockInstruction& cbi)
     // we don't actually care if it's our target reg or not, if it's not, it won't affect anything
     if (m_load_delay_dirty)
     {
-      Log_DevPrintf("Flushing interpreter load delay for lwl/lwr instruction at 0x%08X", cbi.pc);
       EmitFlushInterpreterLoadDelay();
       m_register_cache.InvalidateGuestRegister(cbi.instruction.r.rt);
       m_load_delay_dirty = false;

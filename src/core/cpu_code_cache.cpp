@@ -553,11 +553,7 @@ bool RevalidateBlock(CodeBlock* block)
     u32 new_code = 0;
     SafeReadInstruction(cbi.pc, &new_code);
     if (cbi.instruction.bits != new_code)
-    {
-      Log_DebugPrintf("Block 0x%08X changed at PC 0x%08X - %08X to %08X - recompiling.", block->GetPC(), cbi.pc,
-                      cbi.instruction.bits, new_code);
       goto recompile;
-    }
   }
 
   // re-add it to the page map since it's still up-to-date
@@ -689,7 +685,6 @@ bool CompileBlock(CodeBlock* block)
 
       // change the pc for the second branch's delay slot, it comes from the first branch
       pc = GetDirectBranchTarget(prev_cbi.instruction, prev_cbi.pc);
-      Log_DevPrintf("Double branch at %08X, using delay slot from %08X -> %08X", cbi.pc, prev_cbi.pc, pc);
     }
 
     // instruction is decoded now
@@ -790,7 +785,6 @@ void InvalidCodeFunction()
 static void InvalidateBlock(CodeBlock* block, bool allow_frame_invalidation)
 {
   // Invalidate forces the block to be checked again.
-  Log_DebugPrintf("Invalidating block at 0x%08X", block->GetPC());
   block->invalidated = true;
 
   if (block->can_link)
@@ -800,10 +794,7 @@ static void InvalidateBlock(CodeBlock* block, bool allow_frame_invalidation)
     {
       const u32 frame_diff = frame_number - block->invalidate_frame_number;
       if (frame_diff <= INVALIDATE_THRESHOLD_TO_DISABLE_LINKING)
-      {
-        Log_DevPrintf("Block 0x%08X has been invalidated in %u frames, disabling linking", block->GetPC(), frame_diff);
         block->can_link = false;
-      }
       else
       {
         // It's been a while since this block was modified, so it's all good.
@@ -904,8 +895,6 @@ void RemoveBlockFromPageMap(CodeBlock* block)
 
 void LinkBlock(CodeBlock* from, CodeBlock* to, void* host_pc, void* host_resolve_pc, u32 host_pc_size)
 {
-  Log_DebugPrintf("Linking block %p(%08x) to %p(%08x)", from, from->GetPC(), to, to->GetPC());
-
   CodeBlock::LinkInfo li;
   li.block = to;
   li.host_pc = host_pc;
@@ -920,7 +909,6 @@ void LinkBlock(CodeBlock* from, CodeBlock* to, void* host_pc, void* host_resolve
   // apply in code
   if (host_pc)
   {
-    Log_ProfilePrintf("Backpatching %p(%08x) to jump to block %p (%08x)", host_pc, from->GetPC(), to, to->GetPC());
     s_code_buffer.WriteProtect(false);
     Recompiler::CodeGenerator::BackpatchBranch(host_pc, host_pc_size, reinterpret_cast<void*>(to->host_code));
     s_code_buffer.WriteProtect(true);
@@ -947,10 +935,7 @@ void UnlinkBlock(CodeBlock* block)
 #ifdef WITH_RECOMPILER
     // Restore blocks linked to this block back to the resolver
     if (li.host_pc)
-    {
-      Log_ProfilePrintf("Backpatching %p(%08x) [predecessor] to jump to resolver", li.host_pc, li.block->GetPC());
       Recompiler::CodeGenerator::BackpatchBranch(li.host_pc, li.host_pc_size, li.host_resolve_pc);
-    }
 #endif
 
     li.block->link_successors.erase(iter);
@@ -967,10 +952,7 @@ void UnlinkBlock(CodeBlock* block)
     // Restore blocks we're linking to back to the resolver, since the successor won't be linked to us to backpatch if
     // it changes.
     if (li.host_pc)
-    {
-      Log_ProfilePrintf("Backpatching %p(%08x) [successor] to jump to resolver", li.host_pc, li.block->GetPC());
       Recompiler::CodeGenerator::BackpatchBranch(li.host_pc, li.host_pc_size, li.host_resolve_pc);
-    }
 #endif
 
     // Don't have to do anything special for successors - just let the successor know it's no longer linked.
@@ -1051,9 +1033,6 @@ Common::PageFaultHandler::HandlerResult MMapPageFaultHandler(void* exception_pc,
   const PhysicalMemoryAddress fastmem_address =
     static_cast<PhysicalMemoryAddress>(static_cast<ptrdiff_t>(static_cast<u8*>(fault_address) - g_state.fastmem_base));
 
-  Log_DevPrintf("Page fault handler invoked at PC=%p Address=%p %s, fastmem offset 0x%08X", exception_pc, fault_address,
-                is_write ? "(write)" : "(read)", fastmem_address);
-
   // use upper_bound to find the next block after the pc
   HostCodeMap::iterator upper_iter =
     s_host_code_map.upper_bound(reinterpret_cast<CodeBlock::HostCodePointer>(exception_pc));
@@ -1081,11 +1060,6 @@ Common::PageFaultHandler::HandlerResult MMapPageFaultHandler(void* exception_pc,
           {
             InvalidateBlocksWithPageIndex(code_page_index);
             return Common::PageFaultHandler::HandlerResult::ContinueExecution;
-          }
-          else
-          {
-            Log_DevPrintf("Backpatching code write at %p (%08X) address %p (%08X) to slowmem after threshold",
-                          exception_pc, lbi.guest_pc, fault_address, fastmem_address);
           }
         }
       }

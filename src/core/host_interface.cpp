@@ -218,7 +218,6 @@ std::optional<std::vector<u8>> HostInterface::FindBIOSImageInDirectory(ConsoleRe
       continue;
 
     BIOS::Hash found_hash = BIOS::GetHash(*found_image);
-    Log_DevPrintf("Hash for BIOS '%s': %s", fd.FileName.c_str(), found_hash.ToString().c_str());
 
     const BIOS::ImageInfo* ii = BIOS::GetImageInfoForHash(found_hash);
 

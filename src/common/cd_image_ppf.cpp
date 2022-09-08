@@ -350,8 +350,6 @@ bool CDImagePPF::ReadV3Patch(std::FILE* fp)
 
 bool CDImagePPF::AddPatch(u64 offset, const u8* patch, u32 patch_size)
 {
-  Log_DebugPrintf("Starting applying patch of %u bytes at at offset %" PRIu64, patch_size, offset);
-
   while (patch_size > 0)
   {
     const u32 sector_index = Truncate32(offset / RAW_SECTOR_SIZE) + m_replacement_offset;
@@ -380,7 +378,6 @@ bool CDImagePPF::AddPatch(u64 offset, const u8* patch, u32 patch_size)
     }
 
     // patch it!
-    Log_DebugPrintf("  Patching %u bytes at sector %u offset %u", bytes_to_patch, sector_index, sector_offset);
     std::memcpy(&m_replacement_data[iter->second + sector_offset], patch, bytes_to_patch);
     offset += bytes_to_patch;
     patch += bytes_to_patch;

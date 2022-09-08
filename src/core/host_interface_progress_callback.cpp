@@ -67,7 +67,7 @@ void HostInterfaceProgressCallback::DisplayWarning(const char* message) { Log_Wa
 
 void HostInterfaceProgressCallback::DisplayInformation(const char* message) { Log_InfoPrint(message); }
 
-void HostInterfaceProgressCallback::DisplayDebugMessage(const char* message) { Log_DevPrint(message); }
+void HostInterfaceProgressCallback::DisplayDebugMessage(const char* message) { }
 
 void HostInterfaceProgressCallback::ModalError(const char* message)
 {

@@ -133,7 +133,7 @@ public:
   void DisplayError(const char* message) override { Log_ErrorPrint(message); }
   void DisplayWarning(const char* message) override { Log_WarningPrint(message); }
   void DisplayInformation(const char* message) override { Log_InfoPrint(message); }
-  void DisplayDebugMessage(const char* message) override { Log_DevPrint(message); }
+  void DisplayDebugMessage(const char* message) override { }
 
   void ModalError(const char* message) override { Log_ErrorPrint(message); }
   bool ModalConfirmation(const char* message) override
@@ -383,7 +383,6 @@ void ConsoleProgressCallback::DisplayInformation(const char* message)
 void ConsoleProgressCallback::DisplayDebugMessage(const char* message)
 {
   Clear();
-  Log_DevPrint(message);
   Redraw(false);
 }
 

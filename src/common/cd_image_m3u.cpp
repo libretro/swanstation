@@ -94,7 +94,6 @@ bool CDImageM3u::Open(const char* path, Common::Error* error)
     else
       entry.filename = std::move(entry_filename);
 
-    Log_DevPrintf("Read path from m3u: '%s'", entry.filename.c_str());
     m_entries.push_back(std::move(entry));
   }
 

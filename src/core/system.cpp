@@ -378,7 +378,6 @@ bool ReadExecutableFromImage(ISOReader& iso, std::string* out_executable_name, s
   bool result = false;
 
   std::string executable_path(GetExecutableNameForImage(iso, false));
-  Log_DevPrintf("Executable path: '%s'", executable_path.c_str());
   if (!executable_path.empty())
   {
     result = iso.ReadFile(executable_path.c_str(), out_executable_data);

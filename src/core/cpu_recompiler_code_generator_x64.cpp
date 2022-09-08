@@ -2296,8 +2296,6 @@ void CodeGenerator::EmitUpdateFastmemBase()
 
 bool CodeGenerator::BackpatchLoadStore(const LoadStoreBackpatchInfo& lbi)
 {
-  Log_ProfilePrintf("Backpatching %p (guest PC 0x%08X) to slowmem", lbi.host_pc, lbi.guest_pc);
-
   // turn it into a jump to the slowmem handler
   Xbyak::CodeGenerator cg(lbi.host_code_size, lbi.host_pc);
   cg.jmp(lbi.host_slowmem_pc);
@@ -2314,8 +2312,6 @@ bool CodeGenerator::BackpatchLoadStore(const LoadStoreBackpatchInfo& lbi)
 
 void CodeGenerator::BackpatchReturn(void* pc, u32 pc_size)
 {
-  Log_ProfilePrintf("Backpatching %p to return", pc);
-
   Xbyak::CodeGenerator cg(pc_size, pc);
   cg.ret();
 
@@ -2330,8 +2326,6 @@ void CodeGenerator::BackpatchReturn(void* pc, u32 pc_size)
 
 void CodeGenerator::BackpatchBranch(void* pc, u32 pc_size, void* target)
 {
-  Log_ProfilePrintf("Backpatching %p to %p [branch]", pc, target);
-
   Xbyak::CodeGenerator cg(pc_size, pc);
   cg.jmp(target);
 
@@ -3038,7 +3032,6 @@ CodeCache::DispatcherFunction CodeGenerator::CompileDispatcher()
   CodeBlock::HostCodePointer ptr;
   u32 code_size;
   FinalizeBlock(&ptr, &code_size);
-  Log_DevPrintf("Dispatcher is %u bytes at %p", code_size, ptr);
   return ptr;
 }
 
@@ -3058,7 +3051,6 @@ CodeCache::SingleBlockDispatcherFunction CodeGenerator::CompileSingleBlockDispat
   CodeBlock::HostCodePointer ptr;
   u32 code_size;
   FinalizeBlock(&ptr, &code_size);
-  Log_DevPrintf("Single block dispatcher is %u bytes at %p", code_size, ptr);
   return reinterpret_cast<CodeCache::SingleBlockDispatcherFunction>(ptr);
 }
 

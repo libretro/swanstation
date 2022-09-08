@@ -15,10 +15,7 @@ bool LoadImageFromFile(Common::RGBA8Image* image, const char* filename)
   int width, height, file_channels;
   u8* pixel_data = stbi_load_from_file(fp.get(), &width, &height, &file_channels, 4);
   if (!pixel_data)
-  {
-    const char* error_reason = stbi_failure_reason();
     return false;
-  }
 
   image->SetPixels(static_cast<u32>(width), static_cast<u32>(height), reinterpret_cast<const u32*>(pixel_data));
   stbi_image_free(pixel_data);

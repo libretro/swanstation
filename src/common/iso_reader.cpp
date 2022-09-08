@@ -50,7 +50,6 @@ bool ISOReader::ReadPVD()
       break;
 
     std::memcpy(&m_pvd, buffer, sizeof(ISOPrimaryVolumeDescriptor));
-    Log_DebugPrintf("PVD found at index %u", i);
     return true;
   }
 

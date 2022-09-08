@@ -603,7 +603,6 @@ Value RegisterCache::WriteGuestRegister(Reg guest_reg, Value&& value)
   // cancel any load delay delay
   if (m_state.load_delay_register == guest_reg)
   {
-    Log_DebugPrintf("Cancelling load delay of register %s because of non-delayed write", GetRegName(guest_reg));
     m_state.load_delay_register = Reg::count;
     m_state.load_delay_value.ReleaseAndClear();
   }
@@ -658,7 +657,6 @@ void RegisterCache::WriteGuestRegisterDelayed(Reg guest_reg, Value&& value)
   // two load delays in a row? cancel the first one.
   if (guest_reg == m_state.load_delay_register)
   {
-    Log_DebugPrintf("Cancelling load delay of register %s due to new load delay", GetRegName(guest_reg));
     m_state.load_delay_register = Reg::count;
     m_state.load_delay_value.ReleaseAndClear();
   }
@@ -710,7 +708,6 @@ void RegisterCache::WriteLoadDelayToCPU(bool clear)
   Assert(m_state.next_load_delay_register == Reg::count);
   if (m_state.load_delay_register != Reg::count)
   {
-    Log_DebugPrintf("Flushing pending load delay of %s", GetRegName(m_state.load_delay_register));
     m_code_generator.EmitStoreInterpreterLoadDelay(m_state.load_delay_register, m_state.load_delay_value);
     if (clear)
     {
@@ -764,7 +761,6 @@ void RegisterCache::InvalidateGuestRegister(Reg guest_reg)
     ClearRegisterFromOrder(guest_reg);
   }
 
-  Log_DebugPrintf("Invalidating guest register %s", GetRegName(guest_reg));
   cache_value.Clear();
 }
 
@@ -806,7 +802,6 @@ bool RegisterCache::EvictOneGuestRegister()
 
   // evict the register used the longest time ago
   Reg evict_reg = m_state.guest_reg_order[m_state.guest_reg_order_count - 1];
-  Log_ProfilePrintf("Evicting guest register %s", GetRegName(evict_reg));
   FlushGuestRegister(evict_reg, true, true);
 
   return HasFreeHostRegister();
