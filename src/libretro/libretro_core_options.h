@@ -3566,20 +3566,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "false"
    },
    {
-      "duckstation_Debug.ShowVRAM",
-      "Show VRAM",
-      NULL,
-      "Shows the entirety of the console's VRAM instead of the display area (debugging feature).",
-      NULL,
-      "advanced",
-      {
-         { "true",  "Enabled" },
-         { "false", "Disabled" },
-         { NULL, NULL },
-      },
-      "false"
-   },
-   {
       "duckstation_TextureReplacements.EnableVRAMWriteReplacements",
       "Enable VRAM Write Texture Replacement",
       NULL,
