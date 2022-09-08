@@ -28,8 +28,8 @@ public:
 
   u32 GetBufferSize() const { return m_buffer_size; }
 
-  bool Reconfigure(u32 input_sample_rate = DefaultInputSampleRate, u32 output_sample_rate = DefaultOutputSampleRate,
-                   u32 channels = 1, u32 buffer_size = DefaultBufferSize);
+  bool Reconfigure(u32 input_sample_rate, u32 output_sample_rate,
+                   u32 channels, u32 buffer_size);
   void EmptyBuffers();
 
   void Shutdown();
@@ -49,8 +49,6 @@ protected:
 
   bool SetBufferSize(u32 buffer_size);
 
-  u32 m_output_sample_rate = 0;
-  u32 m_channels = 0;
   u32 m_buffer_size = 0;
 
   HeapFIFOQueue<SampleType, MaxSamples> m_buffer;

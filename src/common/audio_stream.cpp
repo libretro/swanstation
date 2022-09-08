@@ -3,20 +3,23 @@
 #include <algorithm>
 #include <cstring>
 
+#ifndef AUDIO_CHANNELS
+#define AUDIO_CHANNELS 2
+#endif
+
 AudioStream::AudioStream() = default;
 
 AudioStream::~AudioStream()
 {
 }
 
-bool AudioStream::Reconfigure(u32 input_sample_rate /* = DefaultInputSampleRate */,
-                              u32 output_sample_rate /* = DefaultOutputSampleRate */, u32 channels /* = 1 */,
-                              u32 buffer_size /* = DefaultBufferSize */)
+bool AudioStream::Reconfigure(u32 input_sample_rate ,
+                              u32 output_sample_rate ,
+			      u32 channels,
+                              u32 buffer_size)
 {
   std::unique_lock<std::mutex> buffer_lock(m_buffer_mutex);
 
-  m_output_sample_rate = output_sample_rate;
-  m_channels = channels;
   m_buffer_size = buffer_size;
   m_buffer_filling.store(false);
 
@@ -25,13 +28,8 @@ bool AudioStream::Reconfigure(u32 input_sample_rate /* = DefaultInputSampleRate 
 
 void AudioStream::Shutdown()
 {
-  if (m_output_sample_rate == 0)
-    return;
-
   EmptyBuffers();
   m_buffer_size = 0;
-  m_output_sample_rate = 0;
-  m_channels = 0;
 }
 
 void AudioStream::BeginWrite(SampleType** buffer_ptr, u32* num_frames)
@@ -39,7 +37,7 @@ void AudioStream::BeginWrite(SampleType** buffer_ptr, u32* num_frames)
   m_buffer_mutex.lock();
 
   const u32 requested_frames = std::min(*num_frames, m_buffer_size);
-  u32 size                   = requested_frames * m_channels;
+  u32 size                   = requested_frames * AUDIO_CHANNELS;
   u32 buffer_space           = m_max_samples - m_buffer.GetSize();
   if (buffer_space < size)
   {
@@ -54,15 +52,15 @@ void AudioStream::BeginWrite(SampleType** buffer_ptr, u32* num_frames)
   }
 
   *buffer_ptr = m_buffer.GetWritePointer();
-  *num_frames = std::min(m_buffer_size, m_buffer.GetContiguousSpace() / m_channels);
+  *num_frames = std::min(m_buffer_size, m_buffer.GetContiguousSpace() / AUDIO_CHANNELS);
 }
 
 void AudioStream::EndWrite(u32 num_frames)
 {
-  m_buffer.AdvanceTail(num_frames * m_channels);
+  m_buffer.AdvanceTail(num_frames * AUDIO_CHANNELS);
   if (m_buffer_filling.load())
   {
-    if ((m_buffer.GetSize() / m_channels) >= m_buffer_size)
+    if ((m_buffer.GetSize() / AUDIO_CHANNELS) >= m_buffer_size)
       m_buffer_filling.store(false);
   }
   m_buffer_mutex.unlock();
@@ -71,7 +69,7 @@ void AudioStream::EndWrite(u32 num_frames)
 
 bool AudioStream::SetBufferSize(u32 buffer_size)
 {
-  const u32 buffer_size_in_samples = buffer_size * m_channels;
+  const u32 buffer_size_in_samples = buffer_size * AUDIO_CHANNELS;
   const u32 max_samples = buffer_size_in_samples * 2u;
   if (max_samples > m_buffer.GetCapacity())
     return false;

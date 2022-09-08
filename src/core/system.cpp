@@ -1895,8 +1895,11 @@ void UpdateMemorySaveStateSettings()
     {
       // doesn't matter if it's not resampled here since it eats everything anyway, nom nom nom.
       s_runahead_audio_stream = AudioStream::CreateNullAudioStream();
-      s_runahead_audio_stream->Reconfigure(HostInterface::AUDIO_SAMPLE_RATE, HostInterface::AUDIO_SAMPLE_RATE,
-                                           HostInterface::AUDIO_CHANNELS);
+      s_runahead_audio_stream->Reconfigure(
+		      HostInterface::AUDIO_SAMPLE_RATE,
+		      HostInterface::AUDIO_SAMPLE_RATE,
+		      HostInterface::AUDIO_CHANNELS,
+		      AudioStream::DefaultBufferSize);
     }
   }
   else
