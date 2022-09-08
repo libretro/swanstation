@@ -451,7 +451,7 @@ float GPU::ComputeHorizontalFrequency() const
   const CRTCState& cs = m_crtc_state;
   TickCount fractional_ticks = 0;
   return static_cast<float>(
-    static_cast<double>(SystemTicksToCRTCTicks(System::GetTicksPerSecond(), &fractional_ticks)) /
+    static_cast<double>(SystemTicksToCRTCTicks(System::g_ticks_per_second, &fractional_ticks)) /
     static_cast<double>(cs.horizontal_total));
 }
 
@@ -461,7 +461,7 @@ float GPU::ComputeVerticalFrequency() const
   const TickCount ticks_per_frame = cs.horizontal_total * cs.vertical_total;
   TickCount fractional_ticks = 0;
   return static_cast<float>(
-    static_cast<double>(SystemTicksToCRTCTicks(System::GetTicksPerSecond(), &fractional_ticks)) /
+    static_cast<double>(SystemTicksToCRTCTicks(System::g_ticks_per_second, &fractional_ticks)) /
     static_cast<double>(ticks_per_frame));
 }
 

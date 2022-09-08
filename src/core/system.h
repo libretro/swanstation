@@ -77,11 +77,6 @@ bool IsStartupCancelled();
 ConsoleRegion GetRegion();
 bool IsPALRegion();
 
-ALWAYS_INLINE TickCount GetTicksPerSecond()
-{
-  return g_ticks_per_second;
-}
-
 ALWAYS_INLINE_RELEASE TickCount ScaleTicksToOverclock(TickCount ticks)
 {
   if (!g_settings.cpu_overclock_active)

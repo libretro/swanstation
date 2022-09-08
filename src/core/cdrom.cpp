@@ -749,7 +749,7 @@ TickCount CDROM::GetAckDelayForCommand(Command command)
 TickCount CDROM::GetTicksForSpinUp()
 {
   // 1 second
-  return System::GetTicksPerSecond();
+  return System::g_ticks_per_second;
 }
 
 TickCount CDROM::GetTicksForIDRead()
@@ -763,7 +763,7 @@ TickCount CDROM::GetTicksForIDRead()
 
 TickCount CDROM::GetTicksForRead()
 {
-  const TickCount tps = System::GetTicksPerSecond();
+  const TickCount tps = System::g_ticks_per_second;
 
   if (g_settings.cdrom_read_speedup > 1 && !m_mode.cdda && !m_mode.xa_enable && m_mode.double_speed)
     return tps / (150 * g_settings.cdrom_read_speedup);
@@ -868,7 +868,7 @@ TickCount CDROM::GetTicksForTOCRead()
   if (!HasMedia())
     return 0;
 
-  return System::GetTicksPerSecond() / 2u;
+  return System::g_ticks_per_second / 2u;
 }
 
 CDImage::LBA CDROM::GetNextSectorToBeRead()

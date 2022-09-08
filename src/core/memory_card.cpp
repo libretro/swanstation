@@ -40,7 +40,7 @@ std::string MemoryCard::SanitizeGameTitleForFileName(const std::string_view& nam
 
 TickCount MemoryCard::GetSaveDelayInTicks()
 {
-  return System::GetTicksPerSecond() * SAVE_DELAY_IN_SECONDS;
+  return System::g_ticks_per_second * SAVE_DELAY_IN_SECONDS;
 }
 
 void MemoryCard::Reset()
