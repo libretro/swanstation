@@ -114,11 +114,6 @@ void HostInterface::ReportMessage(const char* message)
   Log_InfoPrint(message);
 }
 
-void HostInterface::ReportDebuggerMessage(const char* message)
-{
-  Log_InfoPrintf("(Debugger) %s", message);
-}
-
 bool HostInterface::ConfirmMessage(const char* message)
 {
   Log_WarningPrintf("ConfirmMessage(\"%s\") -> Yes", message);
@@ -143,26 +138,6 @@ void HostInterface::ReportFormattedMessage(const char* format, ...)
   va_end(ap);
 
   ReportMessage(message.c_str());
-}
-
-void HostInterface::ReportFormattedDebuggerMessage(const char* format, ...)
-{
-  std::va_list ap;
-  va_start(ap, format);
-  std::string message = StringUtil::StdStringFromFormatV(format, ap);
-  va_end(ap);
-
-  ReportDebuggerMessage(message.c_str());
-}
-
-bool HostInterface::ConfirmFormattedMessage(const char* format, ...)
-{
-  std::va_list ap;
-  va_start(ap, format);
-  std::string message = StringUtil::StdStringFromFormatV(format, ap);
-  va_end(ap);
-
-  return ConfirmMessage(message.c_str());
 }
 
 void HostInterface::AddFormattedOSDMessage(float duration, const char* format, ...)
@@ -534,15 +509,6 @@ void HostInterface::CheckForSettingsChanges(const Settings& old_settings)
   }
 }
 
-void HostInterface::OnHostDisplayResized()
-{
-  if (System::IsValid())
-  {
-    if (g_settings.gpu_widescreen_hack && g_settings.display_aspect_ratio == DisplayAspectRatio::MatchWindow)
-      GTE::UpdateAspectRatio();
-  }
-}
-
 std::string HostInterface::GetUserDirectoryRelativePath(const char* format, ...) const
 {
   std::va_list ap;
@@ -567,13 +533,6 @@ std::string HostInterface::GetProgramDirectoryRelativePath(const char* format, .
     return formatted_path;
   return StringUtil::StdStringFromFormat("%s" FS_OSPATH_SEPARATOR_STR "%s", m_program_directory.c_str(),
 		  formatted_path.c_str());
-}
-
-std::string HostInterface::GetMemoryCardDirectory() const
-{
-  if (g_settings.memory_card_directory.empty())
-    return GetUserDirectoryRelativePath("memcards");
-  return g_settings.memory_card_directory;
 }
 
 std::string HostInterface::GetSharedMemoryCardPath(u32 slot) const

@@ -57,20 +57,14 @@ public:
 
   virtual void ReportError(const char* message);
   virtual void ReportMessage(const char* message);
-  virtual void ReportDebuggerMessage(const char* message);
   virtual bool ConfirmMessage(const char* message);
 
   void ReportFormattedError(const char* format, ...) printflike(2, 3);
   void ReportFormattedMessage(const char* format, ...) printflike(2, 3);
-  void ReportFormattedDebuggerMessage(const char* format, ...) printflike(2, 3);
-  bool ConfirmFormattedMessage(const char* format, ...) printflike(2, 3);
 
   /// Adds OSD messages, duration is in seconds.
   virtual void AddOSDMessage(std::string message, float duration = 2.0f) = 0;
   void AddFormattedOSDMessage(float duration, const char* format, ...) printflike(3, 4);
-
-  /// Returns the base user directory path.
-  ALWAYS_INLINE const std::string& GetUserDirectory() const { return m_user_directory; }
 
   /// Returns a path relative to the user directory.
   std::string GetUserDirectoryRelativePath(const char* format, ...) const printflike(2, 3);
@@ -85,9 +79,6 @@ public:
 
   /// Retrieves information about specified game from game list.
   virtual void GetGameInfo(const char* path, CDImage* image, std::string* code, std::string* title) = 0;
-
-  /// Returns the directory where per-game memory cards will be saved.
-  virtual std::string GetMemoryCardDirectory() const;
 
   /// Returns the default path to a memory card.
   virtual std::string GetSharedMemoryCardPath(u32 slot) const;
@@ -149,9 +140,6 @@ protected:
 
   /// Enables "relative" mouse mode, locking the cursor position and returning relative coordinates.
   virtual void SetMouseMode(bool relative, bool hide_cursor) = 0;
-
-  /// Call when host display size changes, use with "match display" aspect ratio setting.
-  virtual void OnHostDisplayResized();
 
   /// Quick switch between software and hardware rendering.
   void ToggleSoftwareRendering();
