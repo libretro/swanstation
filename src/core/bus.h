@@ -105,7 +105,6 @@ void Shutdown();
 void Reset();
 bool DoState(StateWrapper& sw);
 
-CPUFastmemMode GetFastmemMode();
 u8* GetFastmemBase();
 void UpdateFastmemViews(CPUFastmemMode mode);
 bool CanUseFastmemForAddress(VirtualMemoryAddress address);
@@ -142,12 +141,6 @@ void ClearRAMCodePage(u32 index);
 
 /// Clears all code bits for RAM regions.
 void ClearRAMCodePageFlags();
-
-/// Returns true if the specified address is in a code page.
-bool IsCodePageAddress(PhysicalMemoryAddress address);
-
-/// Returns true if the range specified overlaps with a code page.
-bool HasCodePagesInRange(PhysicalMemoryAddress start_address, u32 size);
 
 /// Returns the number of cycles stolen by DMA RAM access.
 ALWAYS_INLINE TickCount GetDMARAMTickCount(u32 word_count)

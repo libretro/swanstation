@@ -295,11 +295,6 @@ static ALWAYS_INLINE_RELEASE void SetLUTFastmemPage(u32 address, u8* ptr, bool w
   m_fastmem_lut[FASTMEM_LUT_NUM_PAGES + FastmemAddressToLUTPageIndex(address)] = writable ? ptr : nullptr;
 }
 
-CPUFastmemMode GetFastmemMode()
-{
-  return m_fastmem_mode;
-}
-
 u8* GetFastmemBase()
 {
 #ifdef WITH_MMAP_FASTMEM
@@ -521,31 +516,6 @@ void ClearRAMCodePageFlags()
         SetLUTFastmemPage(mirror_start + addr, &g_ram[addr], true);
     }
   }
-}
-
-bool IsCodePageAddress(PhysicalMemoryAddress address)
-{
-  return IsRAMAddress(address) ? m_ram_code_bits[(address & g_ram_mask) / HOST_PAGE_SIZE] : false;
-}
-
-bool HasCodePagesInRange(PhysicalMemoryAddress start_address, u32 size)
-{
-  if (!IsRAMAddress(start_address))
-    return false;
-
-  start_address = (start_address & g_ram_mask);
-
-  const u32 end_address = start_address + size;
-  while (start_address < end_address)
-  {
-    const u32 code_page_index = start_address / HOST_PAGE_SIZE;
-    if (m_ram_code_bits[code_page_index])
-      return true;
-
-    start_address += HOST_PAGE_SIZE;
-  }
-
-  return false;
 }
 
 std::optional<MemoryRegion> GetMemoryRegionForAddress(PhysicalMemoryAddress address)
