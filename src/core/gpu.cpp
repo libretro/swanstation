@@ -937,8 +937,7 @@ bool GPU::ConvertScreenCoordinatesToBeamTicksAndLines(s32 window_x, s32 window_y
                                                       u32* out_line) const
 {
   auto [display_x, display_y] = m_host_display->ConvertWindowCoordinatesToDisplayCoordinates(
-    window_x, window_y, m_host_display->GetWindowWidth(), m_host_display->GetWindowHeight(),
-    m_host_display->GetDisplayTopMargin());
+    window_x, window_y, m_host_display->GetWindowWidth(), m_host_display->GetWindowHeight(), 0 /* display top margin */);
 
   if (x_scale != 1.0f)
   {

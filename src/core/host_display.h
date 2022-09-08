@@ -49,13 +49,6 @@ public:
     OpenGLES
   };
 
-  enum class Alignment
-  {
-    LeftOrTop,
-    Center,
-    RightOrBottom
-  };
-
   virtual ~HostDisplay();
 
   ALWAYS_INLINE s32 GetWindowWidth() const { return static_cast<s32>(m_window_info.surface_width); }
@@ -96,7 +89,6 @@ public:
   virtual bool Render() = 0;
 
   const void* GetDisplayTextureHandle() const { return m_display_texture_handle; }
-  const s32 GetDisplayTopMargin() const { return m_display_top_margin; }
   const s32 GetDisplayWidth() const { return m_display_width; }
   const s32 GetDisplayHeight() const { return m_display_height; }
   const float GetDisplayAspectRatio() const { return m_display_aspect_ratio; }
@@ -127,15 +119,6 @@ public:
     m_display_changed = true;
   }
 
-  void SetDisplayTextureRect(s32 view_x, s32 view_y, s32 view_width, s32 view_height)
-  {
-    m_display_texture_view_x = view_x;
-    m_display_texture_view_y = view_y;
-    m_display_texture_view_width = view_width;
-    m_display_texture_view_height = view_height;
-    m_display_changed = true;
-  }
-
   void SetDisplayParameters(s32 display_width, s32 display_height, s32 active_left, s32 active_top, s32 active_width,
                             s32 active_height, float display_aspect_ratio)
   {
@@ -159,9 +142,7 @@ public:
   virtual bool SetDisplayPixels(HostDisplayPixelFormat format, u32 width, u32 height, const void* buffer, u32 pitch);
 
   void SetDisplayLinearFiltering(bool enabled) { m_display_linear_filtering = enabled; }
-  void SetDisplayTopMargin(s32 height) { m_display_top_margin = height; }
   void SetDisplayIntegerScaling(bool enabled) { m_display_integer_scaling = enabled; }
-  void SetDisplayAlignment(Alignment alignment) { m_display_alignment = alignment; }
   void SetDisplayStretch(bool stretch) { m_display_stretch = stretch; }
 
   /// Sets the software cursor to the specified texture. Ownership of the texture is transferred.
@@ -213,9 +194,6 @@ protected:
   s32 m_display_texture_view_y = 0;
   s32 m_display_texture_view_width = 0;
   s32 m_display_texture_view_height = 0;
-
-  s32 m_display_top_margin = 0;
-  Alignment m_display_alignment = Alignment::Center;
 
   std::unique_ptr<HostDisplayTexture> m_cursor_texture;
   float m_cursor_texture_scale = 1.0f;

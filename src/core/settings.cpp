@@ -586,7 +586,7 @@ float Settings::GetDisplayAspectRatioValue() const
         return s_display_aspect_ratio_values[static_cast<int>(DEFAULT_DISPLAY_ASPECT_RATIO)];
 
       const u32 width = display->GetWindowWidth();
-      const u32 height = display->GetWindowHeight() - display->GetDisplayTopMargin();
+      const u32 height = display->GetWindowHeight();
       return static_cast<float>(width) / static_cast<float>(height);
     }
 
