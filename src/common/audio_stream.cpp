@@ -21,14 +21,14 @@ bool AudioStream::Reconfigure(u32 input_sample_rate ,
   std::unique_lock<std::mutex> buffer_lock(m_buffer_mutex);
 
   m_buffer_size = buffer_size;
-  m_buffer_filling.store(false);
 
   return SetBufferSize(buffer_size);
 }
 
 void AudioStream::Shutdown()
 {
-  EmptyBuffers();
+  std::unique_lock<std::mutex> lock(m_buffer_mutex);
+  m_buffer.Clear();
   m_buffer_size = 0;
 }
 
@@ -58,11 +58,6 @@ void AudioStream::BeginWrite(SampleType** buffer_ptr, u32* num_frames)
 void AudioStream::EndWrite(u32 num_frames)
 {
   m_buffer.AdvanceTail(num_frames * AUDIO_CHANNELS);
-  if (m_buffer_filling.load())
-  {
-    if ((m_buffer.GetSize() / AUDIO_CHANNELS) >= m_buffer_size)
-      m_buffer_filling.store(false);
-  }
   m_buffer_mutex.unlock();
   FramesAvailable();
 }
@@ -77,11 +72,4 @@ bool AudioStream::SetBufferSize(u32 buffer_size)
   m_buffer_size = buffer_size;
   m_max_samples = max_samples;
   return true;
-}
-
-void AudioStream::EmptyBuffers()
-{
-  std::unique_lock<std::mutex> lock(m_buffer_mutex);
-  m_buffer.Clear();
-  m_buffer_filling.store(false);
 }

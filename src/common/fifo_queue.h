@@ -29,8 +29,7 @@ public:
       return 0;
     else if (m_tail >= m_head)
       return (CAPACITY - m_tail);
-    else
-      return (m_head - m_tail);
+    return (m_head - m_tail);
   }
   u32 GetContiguousSize() const { return std::min<u32>(CAPACITY - m_head, m_size); }
   bool IsEmpty() const { return m_size == 0; }
@@ -41,14 +40,6 @@ public:
     m_head = 0;
     m_tail = 0;
     m_size = 0;
-  }
-
-  template<class... Args>
-  T& Emplace(Args&&... args)
-  {
-    T& ref = PushAndGetReference();
-    new (&ref) T(std::forward<Args...>(args...));
-    return ref;
   }
 
   template<class Y = T, std::enable_if_t<std::is_pod_v<Y>, int> = 0>
@@ -71,7 +62,6 @@ public:
   template<class Y = T, std::enable_if_t<std::is_pod_v<Y>, int> = 0>
   void PushRange(const T* data, u32 size)
   {
-    DebugAssert((m_size + size) <= CAPACITY);
     const u32 space_before_end = CAPACITY - m_tail;
     const u32 size_before_end = (size > space_before_end) ? space_before_end : size;
     const u32 size_after_end = size - size_before_end;
@@ -91,7 +81,6 @@ public:
   template<class Y = T, std::enable_if_t<!std::is_pod_v<Y>, int> = 0>
   void PushRange(const T* data, u32 size)
   {
-    DebugAssert((m_size + size) <= CAPACITY);
     while (size > 0)
     {
       T& ref = PushAndGetReference();
@@ -106,7 +95,6 @@ public:
 
   void Remove(u32 count)
   {
-    DebugAssert(m_size >= count);
     for (u32 i = 0; i < count; i++)
     {
       m_ptr[m_head].~T();
@@ -117,7 +105,6 @@ public:
 
   void RemoveOne()
   {
-    DebugAssert(m_size > 0);
     m_ptr[m_head].~T();
     m_head = (m_head + 1) % CAPACITY;
     m_size--;
@@ -126,7 +113,6 @@ public:
   // removes and returns moved value
   T Pop()
   {
-    DebugAssert(m_size > 0);
     T val = std::move(m_ptr[m_head]);
     m_ptr[m_head].~T();
     m_head = (m_head + 1) % CAPACITY;
@@ -136,7 +122,6 @@ public:
 
   void PopRange(T* out_data, u32 count)
   {
-    DebugAssert(m_size >= count);
 
     for (u32 i = 0; i < count; i++)
     {
@@ -159,8 +144,6 @@ public:
 
   void AdvanceTail(u32 count)
   {
-    DebugAssert((m_size + count) <= CAPACITY);
-    DebugAssert((m_tail + count) <= CAPACITY);
     m_tail = (m_tail + count) % CAPACITY;
     m_size += count;
   }
@@ -170,7 +153,6 @@ protected:
 
   T& PushAndGetReference()
   {
-    DebugAssert(m_size < CAPACITY);
     T& ref = m_ptr[m_tail];
     m_tail = (m_tail + 1) % CAPACITY;
     m_size++;

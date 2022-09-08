@@ -30,7 +30,6 @@ public:
 
   bool Reconfigure(u32 input_sample_rate, u32 output_sample_rate,
                    u32 channels, u32 buffer_size);
-  void EmptyBuffers();
 
   void Shutdown();
 
@@ -55,6 +54,5 @@ protected:
   mutable std::mutex m_buffer_mutex;
   std::condition_variable m_buffer_draining_cv;
 
-  std::atomic_bool m_buffer_filling{false};
   u32 m_max_samples = 0;
 };
