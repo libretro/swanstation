@@ -61,7 +61,6 @@ bool HostInterface::BootSystem(std::shared_ptr<SystemBootParameters> parameters)
 
   // set host display settings
   m_display->SetDisplayLinearFiltering(g_settings.display_linear_filtering);
-  m_display->SetDisplayIntegerScaling(g_settings.display_integer_scaling);
   m_display->SetDisplayStretch(g_settings.display_stretch);
 
   // create the audio stream. this will never fail, since we'll just fall back to null
@@ -292,18 +291,6 @@ void HostInterface::FixIncompatibleSettings(bool display_osd_messages)
     g_settings.bios_patch_tty_enable = false;
   }
 
-  if (g_settings.display_integer_scaling && g_settings.display_linear_filtering)
-  {
-    Log_WarningPrintf("Disabling linear filter due to integer upscaling.");
-    g_settings.display_linear_filtering = false;
-  }
-
-  if (g_settings.display_integer_scaling && g_settings.display_stretch)
-  {
-    Log_WarningPrintf("Disabling stretch due to integer upscaling.");
-    g_settings.display_stretch = false;
-  }
-
   if (g_settings.gpu_pgxp_enable)
   {
     if (g_settings.gpu_renderer == GPURenderer::Software)
@@ -500,11 +487,9 @@ void HostInterface::CheckForSettingsChanges(const Settings& old_settings)
     System::UpdateMultitaps();
 
   if (m_display && (g_settings.display_linear_filtering != old_settings.display_linear_filtering ||
-                    g_settings.display_integer_scaling != old_settings.display_integer_scaling ||
                     g_settings.display_stretch != old_settings.display_stretch))
   {
     m_display->SetDisplayLinearFiltering(g_settings.display_linear_filtering);
-    m_display->SetDisplayIntegerScaling(g_settings.display_integer_scaling);
     m_display->SetDisplayStretch(g_settings.display_stretch);
   }
 }

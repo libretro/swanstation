@@ -114,42 +114,24 @@ void HostDisplay::CalculateDrawRect(s32 window_width, s32 window_height, float* 
   {
     // align in middle vertically
     scale = static_cast<float>(window_width) / display_width;
-    if (m_display_integer_scaling)
-      scale = std::max(std::floor(scale), 1.0f);
 
     if (out_left_padding)
-    {
-      if (m_display_integer_scaling)
-        *out_left_padding = std::max<float>((static_cast<float>(window_width) - display_width * scale) / 2.0f, 0.0f);
-      else
-        *out_left_padding = 0.0f;
-    }
+      *out_left_padding = 0.0f;
     if (out_top_padding)
-    {
       *out_top_padding =
             std::max<float>((static_cast<float>(window_height) - (display_height * scale)) / 2.0f, 0.0f);
-    }
   }
   else
   {
     // align in middle horizontally
     scale = static_cast<float>(window_height) / display_height;
-    if (m_display_integer_scaling)
-      scale = std::max(std::floor(scale), 1.0f);
 
     if (out_left_padding)
-    {
       *out_left_padding =
             std::max<float>((static_cast<float>(window_width) - (display_width * scale)) / 2.0f, 0.0f);
-    }
 
     if (out_top_padding)
-    {
-      if (m_display_integer_scaling)
-        *out_top_padding = std::max<float>((static_cast<float>(window_height) - (display_height * scale)) / 2.0f, 0.0f);
-      else
-        *out_top_padding = 0.0f;
-    }
+      *out_top_padding = 0.0f;
   }
 
   *out_width = active_width * scale;

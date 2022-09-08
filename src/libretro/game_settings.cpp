@@ -69,8 +69,6 @@ void Entry::ApplySettings(bool display_osd_messages) const
     g_settings.gpu_downsample_mode = gpu_downsample_mode.value();
   if (display_linear_upscaling.has_value())
     g_settings.display_linear_filtering = display_linear_upscaling.value();
-  if (display_integer_upscaling.has_value())
-    g_settings.display_integer_scaling = display_integer_upscaling.value();
   if (display_force_4_3_for_24bit.has_value())
     g_settings.display_force_4_3_for_24bit = display_force_4_3_for_24bit.value();
 
