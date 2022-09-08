@@ -95,35 +95,6 @@ CodeGenerator::CodeGenerator(JitCodeBuffer* code_buffer)
 
 CodeGenerator::~CodeGenerator() = default;
 
-const char* CodeGenerator::GetHostRegName(HostReg reg, RegSize size /*= HostPointerSize*/)
-{
-  static constexpr std::array<const char*, HostReg_Count> reg8_names = {
-    {"al", "cl", "dl", "bl", "spl", "bpl", "sil", "dil", "r8b", "r9b", "r10b", "r11b", "r12b", "r13b", "r14b", "r15b"}};
-  static constexpr std::array<const char*, HostReg_Count> reg16_names = {
-    {"ax", "cx", "dx", "bx", "sp", "bp", "si", "di", "r8w", "r9w", "r10w", "r11w", "r12w", "r13w", "r14w", "r15w"}};
-  static constexpr std::array<const char*, HostReg_Count> reg32_names = {{"eax", "ecx", "edx", "ebx", "esp", "ebp",
-                                                                          "esi", "edi", "r8d", "r9d", "r10d", "r11d",
-                                                                          "r12d", "r13d", "r14d", "r15d"}};
-  static constexpr std::array<const char*, HostReg_Count> reg64_names = {
-    {"rax", "rcx", "rdx", "rbx", "rsp", "rbp", "rsi", "rdi", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"}};
-  if (reg >= static_cast<HostReg>(HostReg_Count))
-    return "";
-
-  switch (size)
-  {
-    case RegSize_8:
-      return reg8_names[reg];
-    case RegSize_16:
-      return reg16_names[reg];
-    case RegSize_32:
-      return reg32_names[reg];
-    case RegSize_64:
-      return reg64_names[reg];
-    default:
-      return "";
-  }
-}
-
 void CodeGenerator::AlignCodeBuffer(JitCodeBuffer* code_buffer)
 {
   code_buffer->Align(16, 0x90);

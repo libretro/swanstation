@@ -95,22 +95,6 @@ CodeGenerator::CodeGenerator(JitCodeBuffer* code_buffer)
 
 CodeGenerator::~CodeGenerator() = default;
 
-const char* CodeGenerator::GetHostRegName(HostReg reg, RegSize size /*= HostPointerSize*/)
-{
-  static constexpr std::array<const char*, HostReg_Count> reg_names = {
-    {"r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"}};
-  if (reg >= static_cast<HostReg>(HostReg_Count))
-    return "";
-
-  switch (size)
-  {
-    case RegSize_32:
-      return reg_names[reg];
-    default:
-      return "";
-  }
-}
-
 void CodeGenerator::AlignCodeBuffer(JitCodeBuffer* code_buffer)
 {
   code_buffer->Align(16, 0x90);

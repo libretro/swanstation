@@ -228,21 +228,18 @@ bool RegisterCache::AllocateHostReg(HostReg reg, HostRegState state /*= HostRegS
 void RegisterCache::DiscardHostReg(HostReg reg)
 {
   DebugAssert(IsHostRegInUse(reg));
-  Log_DebugPrintf("Discarding host register %s", m_code_generator.GetHostRegName(reg));
   m_state.host_reg_state[reg] |= HostRegState::Discarded;
 }
 
 void RegisterCache::UndiscardHostReg(HostReg reg)
 {
   DebugAssert(IsHostRegInUse(reg));
-  Log_DebugPrintf("Undiscarding host register %s", m_code_generator.GetHostRegName(reg));
   m_state.host_reg_state[reg] &= ~HostRegState::Discarded;
 }
 
 void RegisterCache::FreeHostReg(HostReg reg)
 {
   DebugAssert(IsHostRegInUse(reg));
-  Log_DebugPrintf("Freeing host register %s", m_code_generator.GetHostRegName(reg));
   m_state.host_reg_state[reg] &= ~HostRegState::InUse;
 }
 
@@ -276,7 +273,6 @@ Value RegisterCache::AllocateScratch(RegSize size, HostReg reg /* = HostReg_Inva
       Panic("Failed to allocate specific host register");
   }
 
-  Log_DebugPrintf("Allocating host register %s as scratch", m_code_generator.GetHostRegName(reg));
   return Value::FromScratch(this, reg, size);
 }
 
@@ -539,9 +535,6 @@ Value RegisterCache::ReadGuestRegister(Reg guest_reg, bool cache /* = true */, b
         host_reg = forced_host_reg;
       }
 
-      Log_DebugPrintf("Allocated host register %s for constant guest register %s (0x%" PRIX64 ")",
-                      m_code_generator.GetHostRegName(host_reg), GetRegName(guest_reg), cache_value.constant_value);
-
       m_code_generator.EmitCopyValue(host_reg, cache_value);
       cache_value.AddHostReg(this, host_reg);
       AppendRegisterToOrder(guest_reg);
@@ -573,9 +566,6 @@ Value RegisterCache::ReadGuestRegister(Reg guest_reg, bool cache /* = true */, b
 
   m_code_generator.EmitLoadGuestRegister(host_reg, guest_reg);
 
-  Log_DebugPrintf("Loading guest register %s to host register %s%s", GetRegName(guest_reg),
-                  m_code_generator.GetHostRegName(host_reg, RegSize_32), cache ? " (cached)" : "");
-
   if (cache)
   {
     // Now in cache.
@@ -596,29 +586,9 @@ Value RegisterCache::ReadGuestRegisterToScratch(Reg guest_reg)
 
   Value& cache_value = m_state.guest_reg_state[static_cast<u8>(guest_reg)];
   if (cache_value.IsValid())
-  {
     m_code_generator.EmitCopyValue(host_reg, cache_value);
-
-    if (cache_value.IsConstant())
-    {
-      Log_DebugPrintf("Copying guest register %s from constant 0x%08X to scratch host register %s",
-                      GetRegName(guest_reg), static_cast<u32>(cache_value.constant_value),
-                      m_code_generator.GetHostRegName(host_reg, RegSize_32));
-    }
-    else
-    {
-      Log_DebugPrintf("Copying guest register %s from %s to scratch host register %s", GetRegName(guest_reg),
-                      m_code_generator.GetHostRegName(cache_value.host_reg, RegSize_32),
-                      m_code_generator.GetHostRegName(host_reg, RegSize_32));
-    }
-  }
   else
-  {
     m_code_generator.EmitLoadGuestRegister(host_reg, guest_reg);
-
-    Log_DebugPrintf("Loading guest register %s to scratch host register %s", GetRegName(guest_reg),
-                    m_code_generator.GetHostRegName(host_reg, RegSize_32));
-  }
 
   return Value::FromScratch(this, host_reg, RegSize_32);
 }
@@ -642,8 +612,6 @@ Value RegisterCache::WriteGuestRegister(Reg guest_reg, Value&& value)
   if (cache_value.IsInHostRegister() && value.IsInHostRegister() && cache_value.host_reg == value.host_reg)
   {
     // updating the register value.
-    Log_DebugPrintf("Updating guest register %s (in host register %s)", GetRegName(guest_reg),
-                    m_code_generator.GetHostRegName(value.host_reg, RegSize_32));
     cache_value = std::move(value);
     cache_value.SetDirty();
     return cache_value;
@@ -665,9 +633,6 @@ Value RegisterCache::WriteGuestRegister(Reg guest_reg, Value&& value)
   // If it's a temporary, we can bind that to the guest register.
   if (value.IsScratch())
   {
-    Log_DebugPrintf("Binding scratch register %s to guest register %s",
-                    m_code_generator.GetHostRegName(value.host_reg, RegSize_32), GetRegName(guest_reg));
-
     cache_value = std::move(value);
     cache_value.flags &= ~ValueFlags::Scratch;
     cache_value.SetDirty();
@@ -679,10 +644,6 @@ Value RegisterCache::WriteGuestRegister(Reg guest_reg, Value&& value)
   m_code_generator.EmitCopyValue(host_reg, value);
   cache_value.SetHostReg(this, host_reg, RegSize_32);
   cache_value.SetDirty();
-
-  Log_DebugPrintf("Copying non-scratch register %s to %s to guest register %s",
-                  m_code_generator.GetHostRegName(value.host_reg, RegSize_32),
-                  m_code_generator.GetHostRegName(host_reg, RegSize_32), GetRegName(guest_reg));
 
   return Value::FromHostReg(this, cache_value.host_reg, RegSize_32);
 }
@@ -713,9 +674,6 @@ void RegisterCache::WriteGuestRegisterDelayed(Reg guest_reg, Value&& value)
   // If it's a temporary, we can bind that to the guest register.
   if (value.IsScratch())
   {
-    Log_DebugPrintf("Binding scratch register %s to load-delayed guest register %s",
-                    m_code_generator.GetHostRegName(value.host_reg, RegSize_32), GetRegName(guest_reg));
-
     cache_value = std::move(value);
     return;
   }
@@ -723,10 +681,6 @@ void RegisterCache::WriteGuestRegisterDelayed(Reg guest_reg, Value&& value)
   // Allocate host register, and copy value to it.
   cache_value = AllocateScratch(RegSize_32);
   m_code_generator.EmitCopyValue(cache_value.host_reg, value);
-
-  Log_DebugPrintf("Copying non-scratch register %s to %s to load-delayed guest register %s",
-                  m_code_generator.GetHostRegName(value.host_reg, RegSize_32),
-                  m_code_generator.GetHostRegName(cache_value.host_reg, RegSize_32), GetRegName(guest_reg));
 }
 
 void RegisterCache::UpdateLoadDelay()
@@ -789,16 +743,6 @@ void RegisterCache::FlushGuestRegister(Reg guest_reg, bool invalidate, bool clea
   Value& cache_value = m_state.guest_reg_state[static_cast<u8>(guest_reg)];
   if (cache_value.IsDirty())
   {
-    if (cache_value.IsInHostRegister())
-    {
-      Log_DebugPrintf("Flushing guest register %s from host register %s", GetRegName(guest_reg),
-                      m_code_generator.GetHostRegName(cache_value.host_reg, RegSize_32));
-    }
-    else if (cache_value.IsConstant())
-    {
-      Log_DebugPrintf("Flushing guest register %s from constant 0x%" PRIX64, GetRegName(guest_reg),
-                      cache_value.constant_value);
-    }
     m_code_generator.EmitStoreGuestRegister(guest_reg, cache_value);
     if (clear_dirty)
       cache_value.ClearDirty();
