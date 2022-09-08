@@ -1,7 +1,6 @@
 #include "memory_card_image.h"
 #include "common/byte_stream.h"
 #include "common/file_system.h"
-#include "common/shiftjis.h"
 #include "common/state_wrapper.h"
 #include "common/string_util.h"
 #include "host_interface.h"

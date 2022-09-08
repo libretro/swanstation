@@ -68,8 +68,6 @@ add_library(common
   progress_callback.h
   rectangle.h
   scope_guard.h
-  shiftjis.cpp
-  shiftjis.h
   state_wrapper.cpp
   state_wrapper.h
   string.cpp
