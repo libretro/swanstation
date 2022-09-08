@@ -141,7 +141,6 @@ void Settings::Load(SettingsInterface& si)
       .value_or(DEFAULT_CONSOLE_REGION);
   enable_8mb_ram = si.GetBoolValue("Console", "Enable8MBRAM", false);
 
-  start_paused = si.GetBoolValue("Main", "StartPaused", false);
   start_fullscreen = si.GetBoolValue("Main", "StartFullscreen", false);
   load_devices_from_save_states = si.GetBoolValue("Main", "LoadDevicesFromSaveStates", false);
   apply_game_settings = si.GetBoolValue("Main", "ApplyGameSettings", true);

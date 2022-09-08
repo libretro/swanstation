@@ -18,22 +18,9 @@ bool AudioStream::Reconfigure(u32 input_sample_rate /* = DefaultInputSampleRate 
   m_output_sample_rate = output_sample_rate;
   m_channels = channels;
   m_buffer_size = buffer_size;
-  m_buffer_filling.store(m_wait_for_buffer_fill);
-  m_output_paused = true;
+  m_buffer_filling.store(false);
 
   return SetBufferSize(buffer_size);
-}
-
-void AudioStream::PauseOutput(bool paused)
-{
-  if (m_output_paused == paused)
-    return;
-
-  m_output_paused = paused;
-
-  // Empty buffers on pause.
-  if (paused)
-    EmptyBuffers();
 }
 
 void AudioStream::Shutdown()
@@ -45,7 +32,6 @@ void AudioStream::Shutdown()
   m_buffer_size = 0;
   m_output_sample_rate = 0;
   m_channels = 0;
-  m_output_paused = true;
 }
 
 void AudioStream::BeginWrite(SampleType** buffer_ptr, u32* num_frames)
@@ -99,5 +85,5 @@ void AudioStream::EmptyBuffers()
 {
   std::unique_lock<std::mutex> lock(m_buffer_mutex);
   m_buffer.Clear();
-  m_buffer_filling.store(m_wait_for_buffer_fill);
+  m_buffer_filling.store(false);
 }

@@ -1452,7 +1452,7 @@ ALWAYS_INLINE_RELEASE static bool BreakpointCheck()
   if (pc == s_last_breakpoint_check_pc)
     return false;
   s_last_breakpoint_check_pc = pc;
-  return System::IsPaused();
+  return false;
 }
 
 template<PGXPMode pgxp_mode, bool debug>

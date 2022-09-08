@@ -128,20 +128,8 @@ State GetState()
 
 void SetState(State new_state)
 {
-  if (s_state == new_state)
-    return;
-
-  Assert(s_state == State::Paused || s_state == State::Running);
-  Assert(new_state == State::Paused || new_state == State::Running);
-  s_state = new_state;
-
-  if (new_state == State::Paused)
-    CPU::ForceDispatcherExit();
-}
-
-bool IsPaused()
-{
-  return s_state == State::Paused;
+  if (s_state != new_state)
+    s_state = new_state;
 }
 
 bool IsShutdown()
@@ -620,12 +608,6 @@ bool Boot(const SystemBootParameters& params)
       return false;
     }
 
-    if (g_settings.start_paused || params.override_start_paused.value_or(false))
-    {
-      DebugAssert(s_state == State::Running);
-      s_state = State::Paused;
-    }
-
     return true;
   }
 
@@ -759,7 +741,7 @@ bool Boot(const SystemBootParameters& params)
   }
 
   // Good to go.
-  s_state = (g_settings.start_paused || params.override_start_paused.value_or(false)) ? State::Paused : State::Running;
+  s_state = State::Running;
   return true;
 }
 

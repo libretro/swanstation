@@ -26,7 +26,6 @@ struct SystemBootParameters
 
   std::string filename;
   std::optional<bool> override_fast_boot;
-  std::optional<bool> override_start_paused;
   std::unique_ptr<ByteStream> state_stream;
   u32 media_playlist_index = 0;
   bool load_image_to_ram = false;
@@ -50,8 +49,7 @@ enum class State
 {
   Shutdown,
   Starting,
-  Running,
-  Paused
+  Running
 };
 
 extern TickCount g_ticks_per_second;
@@ -72,7 +70,6 @@ DiscRegion GetRegionForPsf(const char* path);
 
 State GetState();
 void SetState(State new_state);
-bool IsPaused();
 bool IsShutdown();
 bool IsValid();
 

@@ -85,25 +85,12 @@ bool HostInterface::BootSystem(std::shared_ptr<SystemBootParameters> parameters)
   }
 
   UpdateSoftwareCursor();
-
-  m_audio_stream->PauseOutput(false);
   return true;
 }
 
 void HostInterface::ResetSystem()
 {
   System::Reset();
-}
-
-void HostInterface::PauseSystem(bool paused)
-{
-  if (paused == System::IsPaused() || System::IsShutdown())
-    return;
-
-  System::SetState(paused ? System::State::Paused : System::State::Running);
-  if (!paused)
-    m_audio_stream->EmptyBuffers();
-  m_audio_stream->PauseOutput(paused);
 }
 
 void HostInterface::DestroySystem()

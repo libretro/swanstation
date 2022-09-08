@@ -30,8 +30,6 @@ public:
 
   bool Reconfigure(u32 input_sample_rate = DefaultInputSampleRate, u32 output_sample_rate = DefaultOutputSampleRate,
                    u32 channels = 1, u32 buffer_size = DefaultBufferSize);
-
-  void PauseOutput(bool paused);
   void EmptyBuffers();
 
   void Shutdown();
@@ -61,7 +59,4 @@ protected:
 
   std::atomic_bool m_buffer_filling{false};
   u32 m_max_samples = 0;
-
-  bool m_output_paused = true;
-  bool m_wait_for_buffer_fill = false;
 };
