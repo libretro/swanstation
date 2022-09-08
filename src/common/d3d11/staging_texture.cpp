@@ -61,8 +61,6 @@ void StagingTexture::Unmap(ID3D11DeviceContext* context)
 void StagingTexture::CopyFromTexture(ID3D11DeviceContext* context, ID3D11Resource* src_texture, u32 src_subresource,
                                      u32 src_x, u32 src_y, u32 dst_x, u32 dst_y, u32 width, u32 height)
 {
-  DebugAssert((dst_x + width) <= m_width && (dst_y + height) <= m_height);
-
   const CD3D11_BOX box(static_cast<LONG>(src_x), static_cast<LONG>(src_y), 0, static_cast<LONG>(src_x + width),
                        static_cast<LONG>(src_y + height), 1);
   context->CopySubresourceRegion(m_texture.Get(), 0, dst_x, dst_y, 0, src_texture, src_subresource, &box);

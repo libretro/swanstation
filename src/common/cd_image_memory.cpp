@@ -129,8 +129,6 @@ bool CDImageMemory::HasNonStandardSubchannel() const
 
 bool CDImageMemory::ReadSectorFromIndex(void* buffer, const Index& index, LBA lba_in_index)
 {
-  DebugAssert(index.file_index == 0);
-
   const u64 sector_number = index.file_offset + lba_in_index;
   if (sector_number >= m_memory_sectors)
     return false;

@@ -118,8 +118,6 @@ void StagingTexture::Flush()
 void StagingTexture::CopyToTexture(u32 src_x, u32 src_y, ID3D12Resource* dst_texture, u32 dst_subresource, u32 dst_x,
                                    u32 dst_y, u32 width, u32 height)
 {
-  DebugAssert((src_x + width) <= m_width && (src_y + height) <= m_height);
-
   D3D12_TEXTURE_COPY_LOCATION dst;
   dst.pResource = dst_texture;
   dst.SubresourceIndex = 0;
@@ -143,8 +141,6 @@ void StagingTexture::CopyToTexture(u32 src_x, u32 src_y, ID3D12Resource* dst_tex
 void StagingTexture::CopyFromTexture(ID3D12Resource* src_texture, u32 src_subresource, u32 src_x, u32 src_y, u32 dst_x,
                                      u32 dst_y, u32 width, u32 height)
 {
-  DebugAssert((dst_x + width) <= m_width && (dst_y + height) <= m_height);
-
   D3D12_TEXTURE_COPY_LOCATION src;
   src.pResource = src_texture;
   src.SubresourceIndex = 0;

@@ -224,8 +224,6 @@ void UpdateAspectRatio()
 
 u32 ReadRegister(u32 index)
 {
-  DebugAssert(index < countof(REGS.r32));
-
   switch (index)
   {
     case 15: // SXY3

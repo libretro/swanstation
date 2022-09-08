@@ -148,7 +148,6 @@ void Texture::Bind()
 
 void Texture::BindFramebuffer(GLenum target /*= GL_DRAW_FRAMEBUFFER*/)
 {
-  DebugAssert(m_fbo_id != 0);
   glBindFramebuffer(target, m_fbo_id);
 }
 
@@ -208,7 +207,6 @@ void Texture::GetTextureSubImage(GLuint texture, GLint level, GLint xoffset, GLi
   else
     glFramebufferTexture2D(target, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, level);
 
-  DebugAssert(glCheckFramebufferStatus(target) == GL_FRAMEBUFFER_COMPLETE);
   glReadPixels(xoffset, yoffset, width, height, format, type, pixels);
 
   glBindFramebuffer(target, old_read_fbo);

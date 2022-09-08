@@ -103,10 +103,7 @@ bool DoState(StateWrapper& sw)
     return false;
 
   if (sw.GetVersion() < 48)
-  {
-    DebugAssert(sw.IsReading());
     ClearICache();
-  }
   else
   {
     sw.Do(&g_state.icache_tags);
@@ -132,7 +129,6 @@ void UpdateFastmemBase()
 
 ALWAYS_INLINE_RELEASE void SetPC(u32 new_pc)
 {
-  DebugAssert(Common::IsAlignedPow2(new_pc, 4));
   g_state.regs.npc = new_pc;
   FlushPipeline();
 }
@@ -276,7 +272,6 @@ ALWAYS_INLINE static void WriteReg(Reg rd, u32 value)
 
 ALWAYS_INLINE_RELEASE static void WriteRegDelayed(Reg rd, u32 value)
 {
-  DebugAssert(g_state.next_load_delay_reg == Reg::count);
   if (rd == Reg::zero)
     return;
 
@@ -1541,7 +1536,6 @@ template<PGXPMode pgxp_mode>
 void InterpretCachedBlock(const CodeBlock& block)
 {
   // set up the state so we've already fetched the instruction
-  DebugAssert(g_state.regs.pc == block.GetPC());
   g_state.regs.npc = block.GetPC() + 4;
 
   for (const CodeBlockInstruction& cbi : block.instructions)

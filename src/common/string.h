@@ -232,9 +232,6 @@ public:
   static String FromFormat(const char* FormatString, ...) printflike(1, 2);
 
   // accessor operators
-  // const char &operator[](u32 i) const { DebugAssert(i < m_pStringData->StringLength); return
-  // m_pStringData->pBuffer[i]; }  char &operator[](u32 i) { DebugAssert(i < m_pStringData->StringLength); return
-  // m_pStringData->pBuffer[i]; }
   operator const char*() const { return GetCharArray(); }
   operator char*() { return GetWriteableCharArray(); }
   operator std::string_view() const

@@ -190,7 +190,6 @@ u32 AnalogController::GetVibrationMotorCount() const
 
 float AnalogController::GetVibrationMotorStrength(u32 motor)
 {
-  DebugAssert(motor < NUM_MOTORS);
   if (m_motor_state[motor] == 0)
     return 0.0f;
 
@@ -252,7 +251,6 @@ void AnalogController::ProcessAnalogModeToggle()
 
 void AnalogController::SetMotorState(u8 motor, u8 value)
 {
-  DebugAssert(motor < NUM_MOTORS);
   m_motor_state[motor] = value;
 }
 

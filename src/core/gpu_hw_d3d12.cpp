@@ -170,8 +170,6 @@ void GPU_HW_D3D12::UpdateSettings()
 
 void GPU_HW_D3D12::MapBatchVertexPointer(u32 required_vertices)
 {
-  DebugAssert(!m_batch_start_vertex_ptr);
-
   const u32 required_space = required_vertices * sizeof(BatchVertex);
   if (!m_vertex_stream_buffer.ReserveMemory(required_space, sizeof(BatchVertex)))
   {
@@ -189,7 +187,6 @@ void GPU_HW_D3D12::MapBatchVertexPointer(u32 required_vertices)
 
 void GPU_HW_D3D12::UnmapBatchVertexPointer(u32 used_vertices)
 {
-  DebugAssert(m_batch_start_vertex_ptr);
   if (used_vertices > 0)
     m_vertex_stream_buffer.CommitMemory(used_vertices * sizeof(BatchVertex));
 

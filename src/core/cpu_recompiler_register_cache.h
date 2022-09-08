@@ -60,7 +60,6 @@ struct Value
   /// Returns the host register this value is bound to.
   HostReg GetHostRegister() const
   {
-    DebugAssert(IsInHostRegister());
     return host_reg;
   }
 
@@ -82,7 +81,6 @@ struct Value
 
   void AddHostReg(RegisterCache* regcache_, HostReg hr)
   {
-    DebugAssert(IsValid());
     regcache = regcache_;
     host_reg = hr;
     flags |= ValueFlags::InHostRegister;
@@ -100,7 +98,6 @@ struct Value
   void ClearConstant()
   {
     // By clearing the constant bit, we should already be in a host register.
-    DebugAssert(IsInHostRegister());
     flags &= ~ValueFlags::Constant;
   }
 

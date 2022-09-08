@@ -38,7 +38,6 @@ static const Xbyak::Reg8 GetHostReg8(HostReg reg)
 
 static const Xbyak::Reg8 GetHostReg8(const Value& value)
 {
-  DebugAssert(value.size == RegSize_8 && value.IsInHostRegister());
   return Xbyak::Reg8(value.host_reg, value.host_reg >= Xbyak::Operand::SPL);
 }
 
@@ -49,7 +48,6 @@ static const Xbyak::Reg16 GetHostReg16(HostReg reg)
 
 static const Xbyak::Reg16 GetHostReg16(const Value& value)
 {
-  DebugAssert(value.size == RegSize_16 && value.IsInHostRegister());
   return Xbyak::Reg16(value.host_reg);
 }
 
@@ -60,7 +58,6 @@ static const Xbyak::Reg32 GetHostReg32(HostReg reg)
 
 static const Xbyak::Reg32 GetHostReg32(const Value& value)
 {
-  DebugAssert(value.size == RegSize_32 && value.IsInHostRegister());
   return Xbyak::Reg32(value.host_reg);
 }
 
@@ -71,7 +68,6 @@ static const Xbyak::Reg64 GetHostReg64(HostReg reg)
 
 static const Xbyak::Reg64 GetHostReg64(const Value& value)
 {
-  DebugAssert(value.size == RegSize_64 && value.IsInHostRegister());
   return Xbyak::Reg64(value.host_reg);
 }
 
@@ -182,17 +178,13 @@ void CodeGenerator::EmitBeginBlock(bool allocate_registers /* = true */)
     m_register_cache.AssumeCalleeSavedRegistersAreSaved();
 
     // Store the CPU struct pointer.
-    const bool cpu_reg_allocated = m_register_cache.AllocateHostReg(RCPUPTR);
-    DebugAssert(cpu_reg_allocated);
-    UNREFERENCED_VARIABLE(cpu_reg_allocated);
+    m_register_cache.AllocateHostReg(RCPUPTR);
     // m_emit->mov(GetCPUPtrReg(), reinterpret_cast<size_t>(&g_state));
 
     // If there's loadstore instructions, preload the fastmem base.
     if (m_block->contains_loadstore_instructions)
     {
-      const bool fastmem_reg_allocated = m_register_cache.AllocateHostReg(RMEMBASEPTR);
-      DebugAssert(fastmem_reg_allocated);
-      UNREFERENCED_VARIABLE(fastmem_reg_allocated);
+      m_register_cache.AllocateHostReg(RMEMBASEPTR);
       m_emit->mov(GetFastmemBasePtrReg(), m_emit->qword[GetCPUPtrReg() + offsetof(CPU::State, fastmem_base)]);
     }
   }
@@ -329,7 +321,6 @@ void CodeGenerator::EmitZeroExtend(HostReg to_reg, RegSize to_size, HostReg from
 void CodeGenerator::EmitCopyValue(HostReg to_reg, const Value& value)
 {
   // TODO: mov x, 0 -> xor x, x
-  DebugAssert(value.IsConstant() || value.IsInHostRegister());
 
   switch (value.size)
   {
@@ -381,8 +372,6 @@ void CodeGenerator::EmitCopyValue(HostReg to_reg, const Value& value)
 
 void CodeGenerator::EmitAdd(HostReg to_reg, HostReg from_reg, const Value& value, bool set_flags)
 {
-  DebugAssert(value.IsConstant() || value.IsInHostRegister());
-
   switch (value.size)
   {
     case RegSize_8:
@@ -450,8 +439,6 @@ void CodeGenerator::EmitAdd(HostReg to_reg, HostReg from_reg, const Value& value
 
 void CodeGenerator::EmitSub(HostReg to_reg, HostReg from_reg, const Value& value, bool set_flags)
 {
-  DebugAssert(value.IsConstant() || value.IsInHostRegister());
-
   switch (value.size)
   {
     case RegSize_8:
@@ -519,8 +506,6 @@ void CodeGenerator::EmitSub(HostReg to_reg, HostReg from_reg, const Value& value
 
 void CodeGenerator::EmitCmp(HostReg to_reg, const Value& value)
 {
-  DebugAssert(value.IsConstant() || value.IsInHostRegister());
-
   switch (value.size)
   {
     case RegSize_8:
@@ -834,8 +819,6 @@ void CodeGenerator::EmitDec(HostReg to_reg, RegSize size)
 void CodeGenerator::EmitShl(HostReg to_reg, HostReg from_reg, RegSize size, const Value& amount_value,
                             bool assume_amount_masked /* = true */)
 {
-  DebugAssert(amount_value.IsConstant() || amount_value.IsInHostRegister());
-
   // We have to use CL for the shift amount :(
   const bool save_cl = (!amount_value.IsConstant() && m_register_cache.IsHostRegInUse(Xbyak::Operand::RCX) &&
                         (!amount_value.IsInHostRegister() || amount_value.host_reg != Xbyak::Operand::RCX));
@@ -903,8 +886,6 @@ void CodeGenerator::EmitShl(HostReg to_reg, HostReg from_reg, RegSize size, cons
 void CodeGenerator::EmitShr(HostReg to_reg, HostReg from_reg, RegSize size, const Value& amount_value,
                             bool assume_amount_masked /* = true */)
 {
-  DebugAssert(amount_value.IsConstant() || amount_value.IsInHostRegister());
-
   // We have to use CL for the shift amount :(
   const bool save_cl = (!amount_value.IsConstant() && m_register_cache.IsHostRegInUse(Xbyak::Operand::RCX) &&
                         (!amount_value.IsInHostRegister() || amount_value.host_reg != Xbyak::Operand::RCX));
@@ -972,8 +953,6 @@ void CodeGenerator::EmitShr(HostReg to_reg, HostReg from_reg, RegSize size, cons
 void CodeGenerator::EmitSar(HostReg to_reg, HostReg from_reg, RegSize size, const Value& amount_value,
                             bool assume_amount_masked /* = true */)
 {
-  DebugAssert(amount_value.IsConstant() || amount_value.IsInHostRegister());
-
   // We have to use CL for the shift amount :(
   const bool save_cl = (!amount_value.IsConstant() && m_register_cache.IsHostRegInUse(Xbyak::Operand::RCX) &&
                         (!amount_value.IsInHostRegister() || amount_value.host_reg != Xbyak::Operand::RCX));
@@ -1040,7 +1019,6 @@ void CodeGenerator::EmitSar(HostReg to_reg, HostReg from_reg, RegSize size, cons
 
 void CodeGenerator::EmitAnd(HostReg to_reg, HostReg from_reg, const Value& value)
 {
-  DebugAssert(value.IsConstant() || value.IsInHostRegister());
   switch (value.size)
   {
     case RegSize_8:
@@ -1108,7 +1086,6 @@ void CodeGenerator::EmitAnd(HostReg to_reg, HostReg from_reg, const Value& value
 
 void CodeGenerator::EmitOr(HostReg to_reg, HostReg from_reg, const Value& value)
 {
-  DebugAssert(value.IsConstant() || value.IsInHostRegister());
   switch (value.size)
   {
     case RegSize_8:
@@ -1176,7 +1153,6 @@ void CodeGenerator::EmitOr(HostReg to_reg, HostReg from_reg, const Value& value)
 
 void CodeGenerator::EmitXor(HostReg to_reg, HostReg from_reg, const Value& value)
 {
-  DebugAssert(value.IsConstant() || value.IsInHostRegister());
   switch (value.size)
   {
     case RegSize_8:
@@ -1244,7 +1220,6 @@ void CodeGenerator::EmitXor(HostReg to_reg, HostReg from_reg, const Value& value
 
 void CodeGenerator::EmitTest(HostReg to_reg, const Value& value)
 {
-  DebugAssert(value.IsConstant() || value.IsInHostRegister());
   switch (value.size)
   {
     case RegSize_8:
@@ -1605,7 +1580,6 @@ void CodeGenerator::EmitLoadCPUStructField(HostReg host_reg, RegSize guest_size,
 
 void CodeGenerator::EmitStoreCPUStructField(u32 offset, const Value& value)
 {
-  DebugAssert(value.IsInHostRegister() || value.IsConstant());
   switch (value.size)
   {
     case RegSize_8:
@@ -1665,7 +1639,6 @@ void CodeGenerator::EmitStoreCPUStructField(u32 offset, const Value& value)
 
 void CodeGenerator::EmitAddCPUStructField(u32 offset, const Value& value)
 {
-  DebugAssert(value.IsInHostRegister() || value.IsConstant());
   switch (value.size)
   {
     case RegSize_8:
@@ -1935,7 +1908,6 @@ void CodeGenerator::EmitLoadGuestMemoryFastmem(const CodeBlockInstruction& cbi, 
   SwitchToFarCode();
 
   // we add the ticks *after* the add here, since we counted incorrectly, then correct for it below
-  DebugAssert(m_delayed_cycles_add > 0);
   EmitAddCPUStructField(offsetof(State, pending_ticks), Value::FromConstantU32(static_cast<u32>(m_delayed_cycles_add)));
   m_delayed_cycles_add += Bus::RAM_READ_TICKS;
 
@@ -2202,7 +2174,6 @@ void CodeGenerator::EmitStoreGuestMemoryFastmem(const CodeBlockInstruction& cbi,
   bpi.host_slowmem_pc = GetCurrentFarCodePointer();
   SwitchToFarCode();
 
-  DebugAssert(m_delayed_cycles_add > 0);
   EmitAddCPUStructField(offsetof(State, pending_ticks), Value::FromConstantU32(static_cast<u32>(m_delayed_cycles_add)));
 
   EmitStoreGuestMemorySlowmem(cbi, address, size, value, true);
@@ -2397,8 +2368,6 @@ void CodeGenerator::EmitLoadGlobal(HostReg host_reg, RegSize size, const void* p
 
 void CodeGenerator::EmitStoreGlobal(void* ptr, const Value& value)
 {
-  DebugAssert(value.IsInHostRegister() || value.IsConstant());
-
   const s64 displacement =
     static_cast<s64>(reinterpret_cast<size_t>(ptr) - reinterpret_cast<size_t>(m_emit->getCurr()));
   if (Xbyak::inner::IsInInt32(static_cast<u64>(displacement)))

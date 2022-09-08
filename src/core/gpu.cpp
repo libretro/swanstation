@@ -838,7 +838,6 @@ void GPU::CRTCTickEvent(TickCount ticks)
       std::min(lines_to_draw, m_crtc_state.vertical_total - m_crtc_state.current_scanline);
     const u32 prev_scanline = m_crtc_state.current_scanline;
     m_crtc_state.current_scanline += lines_to_draw_this_loop;
-    DebugAssert(m_crtc_state.current_scanline <= m_crtc_state.vertical_total);
     lines_to_draw -= lines_to_draw_this_loop;
 
     // clear the vblank flag if the beam would pass through the display area

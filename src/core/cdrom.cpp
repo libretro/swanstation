@@ -1741,8 +1741,6 @@ void CDROM::BeginSeeking(bool logical, bool read_after_seek, bool play_after_see
 
 void CDROM::UpdatePositionWhileSeeking()
 {
-  DebugAssert(IsSeeking());
-
   const float completed_frac = 1.0f - (static_cast<float>(m_drive_event->GetTicksUntilNextExecution()) /
                                        static_cast<float>(m_drive_event->GetInterval()));
 

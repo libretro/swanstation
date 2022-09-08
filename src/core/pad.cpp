@@ -428,8 +428,6 @@ void Pad::TransferEvent(TickCount ticks_late)
 
 void Pad::BeginTransfer()
 {
-  DebugAssert(m_state == State::Idle && CanTransfer());
-
   m_JOY_CTRL.RXEN = true;
   m_transmit_value = m_transmit_buffer;
   m_transmit_buffer_full = false;
@@ -563,8 +561,6 @@ void Pad::DoACK()
 
 void Pad::EndTransfer()
 {
-  DebugAssert(m_state == State::Transmitting || m_state == State::WaitingForACK);
-
   m_state = State::Idle;
   m_transfer_event->Deactivate();
 }

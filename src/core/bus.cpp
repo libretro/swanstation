@@ -1083,7 +1083,6 @@ ALWAYS_INLINE static TickCount DoAccessSPU(u32 offset, u32& value)
     {
       case MemoryAccessSize::Word:
       {
-        DebugAssert(Common::IsAlignedPow2(offset, 2));
         g_spu.WriteRegister(offset, Truncate16(value));
         g_spu.WriteRegister(offset + 2, Truncate16(value >> 16));
         break;
@@ -1091,7 +1090,6 @@ ALWAYS_INLINE static TickCount DoAccessSPU(u32 offset, u32& value)
 
       case MemoryAccessSize::HalfWord:
       {
-        DebugAssert(Common::IsAlignedPow2(offset, 2));
         g_spu.WriteRegister(offset, Truncate16(value));
         break;
       }
@@ -1432,8 +1430,6 @@ static bool DoAlignmentCheck(VirtualMemoryAddress address)
 
 bool FetchInstruction()
 {
-  DebugAssert(Common::IsAlignedPow2(g_state.regs.npc, 4));
-
   const PhysicalMemoryAddress address = g_state.regs.npc;
   switch (address >> 29)
   {
@@ -1480,8 +1476,6 @@ bool FetchInstruction()
 
 bool FetchInstructionForInterpreterFallback()
 {
-  DebugAssert(Common::IsAlignedPow2(g_state.regs.npc, 4));
-
   const PhysicalMemoryAddress address = g_state.regs.npc;
   switch (address >> 29)
   {
@@ -1593,7 +1587,6 @@ bool WriteMemoryByte(VirtualMemoryAddress addr, u32 value)
     return false;
   }
 
-  DebugAssert(cycles == 0);
   return true;
 }
 
@@ -1609,7 +1602,6 @@ bool WriteMemoryHalfWord(VirtualMemoryAddress addr, u32 value)
     return false;
   }
 
-  DebugAssert(cycles == 0);
   return true;
 }
 
@@ -1625,7 +1617,6 @@ bool WriteMemoryWord(VirtualMemoryAddress addr, u32 value)
     return false;
   }
 
-  DebugAssert(cycles == 0);
   return true;
 }
 
@@ -1861,7 +1852,6 @@ u32 WriteMemoryByte(u32 address, u32 value)
   if (cycles < 0)
     return static_cast<u32>(Exception::DBE);
 
-  DebugAssert(cycles == 0);
   return 0;
 }
 
@@ -1877,7 +1867,6 @@ u32 WriteMemoryHalfWord(u32 address, u32 value)
   if (cycles < 0)
     return static_cast<u32>(Exception::DBE);
 
-  DebugAssert(cycles == 0);
   return 0;
 }
 
@@ -1893,7 +1882,6 @@ u32 WriteMemoryWord(u32 address, u32 value)
   if (cycles < 0)
     return static_cast<u32>(Exception::DBE);
 
-  DebugAssert(cycles == 0);
   return 0;
 }
 

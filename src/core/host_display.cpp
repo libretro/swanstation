@@ -49,10 +49,8 @@ bool HostDisplay::SetDisplayPixels(HostDisplayPixelFormat format, u32 width, u32
   else
   {
     const u32 copy_size = width * GetDisplayPixelFormatSize(format);
-    DebugAssert(pitch >= copy_size && map_pitch >= copy_size);
-
-    const u8* src_ptr = static_cast<const u8*>(buffer);
-    u8* dst_ptr = static_cast<u8*>(map_ptr);
+    const u8* src_ptr   = static_cast<const u8*>(buffer);
+    u8* dst_ptr         = static_cast<u8*>(map_ptr);
     for (u32 i = 0; i < height; i++)
     {
       std::memcpy(dst_ptr, src_ptr, copy_size);

@@ -817,7 +817,6 @@ static void InvalidateBlock(CodeBlock* block, bool allow_frame_invalidation)
 
 void InvalidateBlocksWithPageIndex(u32 page_index)
 {
-  DebugAssert(page_index < Bus::RAM_8MB_CODE_PAGE_COUNT);
   auto& blocks = m_ram_block_map[page_index];
   for (CodeBlock* block : blocks)
     InvalidateBlock(block, true);

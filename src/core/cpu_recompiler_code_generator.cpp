@@ -53,8 +53,6 @@ bool CodeGenerator::CompileBlock(CodeBlock* block, CodeBlock::HostCodePointer* o
 
   FinalizeBlock(out_host_code, out_host_code_size);
 
-  DebugAssert(m_register_cache.GetUsedHostRegisters() == 0);
-
   m_current_instruction = nullptr;
   m_block_end = nullptr;
   m_block_start = nullptr;
@@ -219,8 +217,6 @@ bool CodeGenerator::CompileInstruction(const CodeBlockInstruction& cbi)
 
 Value CodeGenerator::ConvertValueSize(const Value& value, RegSize size, bool sign_extend)
 {
-  DebugAssert(value.size != size);
-
   if (value.IsConstant())
   {
     // compile-time conversion, woo!
@@ -288,16 +284,12 @@ Value CodeGenerator::ConvertValueSize(const Value& value, RegSize size, bool sig
 
 void CodeGenerator::ConvertValueSizeInPlace(Value* value, RegSize size, bool sign_extend)
 {
-  DebugAssert(value->size != size);
-
   // We don't want to mess up the register cache value, so generate a new value if it's not scratch.
   if (value->IsConstant() || !value->IsScratch())
   {
     *value = ConvertValueSize(*value, size, sign_extend);
     return;
   }
-
-  DebugAssert(value->IsInHostRegister() && value->IsScratch());
 
   // If the size is smaller and the value is in a register, we can just "view" the lower part.
   if (size < value->size)
@@ -328,7 +320,6 @@ void* CodeGenerator::GetCurrentCodePointer() const
 
 Value CodeGenerator::AddValues(const Value& lhs, const Value& rhs, bool set_flags)
 {
-  DebugAssert(lhs.size == rhs.size);
   if (lhs.IsConstant() && rhs.IsConstant() && !set_flags)
   {
     // compile-time
@@ -380,7 +371,6 @@ Value CodeGenerator::AddValues(const Value& lhs, const Value& rhs, bool set_flag
 
 Value CodeGenerator::SubValues(const Value& lhs, const Value& rhs, bool set_flags)
 {
-  DebugAssert(lhs.size == rhs.size);
   if (lhs.IsConstant() && rhs.IsConstant() && !set_flags)
   {
     // compile-time
@@ -428,7 +418,6 @@ Value CodeGenerator::SubValues(const Value& lhs, const Value& rhs, bool set_flag
 
 std::pair<Value, Value> CodeGenerator::MulValues(const Value& lhs, const Value& rhs, bool signed_multiply)
 {
-  DebugAssert(lhs.size == rhs.size);
   if (lhs.IsConstant() && rhs.IsConstant())
   {
     // compile-time
@@ -495,7 +484,6 @@ std::pair<Value, Value> CodeGenerator::MulValues(const Value& lhs, const Value& 
 
 Value CodeGenerator::ShlValues(const Value& lhs, const Value& rhs, bool assume_amount_masked /* = true */)
 {
-  DebugAssert(lhs.size == rhs.size);
   if (lhs.IsConstant() && rhs.IsConstant())
   {
     // compile-time
@@ -541,7 +529,6 @@ Value CodeGenerator::ShlValues(const Value& lhs, const Value& rhs, bool assume_a
 
 Value CodeGenerator::ShrValues(const Value& lhs, const Value& rhs, bool assume_amount_masked /* = true */)
 {
-  DebugAssert(lhs.size == rhs.size);
   if (lhs.IsConstant() && rhs.IsConstant())
   {
     // compile-time
@@ -587,7 +574,6 @@ Value CodeGenerator::ShrValues(const Value& lhs, const Value& rhs, bool assume_a
 
 Value CodeGenerator::SarValues(const Value& lhs, const Value& rhs, bool assume_amount_masked /* = true */)
 {
-  DebugAssert(lhs.size == rhs.size);
   if (lhs.IsConstant() && rhs.IsConstant())
   {
     // compile-time
@@ -636,7 +622,6 @@ Value CodeGenerator::SarValues(const Value& lhs, const Value& rhs, bool assume_a
 
 Value CodeGenerator::OrValues(const Value& lhs, const Value& rhs)
 {
-  DebugAssert(lhs.size == rhs.size);
   if (lhs.IsConstant() && rhs.IsConstant())
   {
     // compile-time
@@ -686,7 +671,6 @@ Value CodeGenerator::OrValues(const Value& lhs, const Value& rhs)
 
 void CodeGenerator::OrValueInPlace(Value& lhs, const Value& rhs)
 {
-  DebugAssert(lhs.size == rhs.size);
   if (lhs.IsConstant() && rhs.IsConstant())
   {
     // compile-time
@@ -734,7 +718,6 @@ void CodeGenerator::OrValueInPlace(Value& lhs, const Value& rhs)
 
 Value CodeGenerator::AndValues(const Value& lhs, const Value& rhs)
 {
-  DebugAssert(lhs.size == rhs.size);
   if (lhs.IsConstant() && rhs.IsConstant())
   {
     // compile-time
@@ -780,7 +763,6 @@ Value CodeGenerator::AndValues(const Value& lhs, const Value& rhs)
 
 void CodeGenerator::AndValueInPlace(Value& lhs, const Value& rhs)
 {
-  DebugAssert(lhs.size == rhs.size);
   if (lhs.IsConstant() && rhs.IsConstant())
   {
     // compile-time
@@ -831,7 +813,6 @@ void CodeGenerator::AndValueInPlace(Value& lhs, const Value& rhs)
 
 Value CodeGenerator::XorValues(const Value& lhs, const Value& rhs)
 {
-  DebugAssert(lhs.size == rhs.size);
   if (lhs.IsConstant() && rhs.IsConstant())
   {
     // compile-time
@@ -2185,7 +2166,6 @@ bool CodeGenerator::Compile_Branch(const CodeBlockInstruction& cbi)
 
     // compute return address, which is also set as the new pc when the branch isn't taken
     Value next_pc = CalculatePC(4);
-    DebugAssert(next_pc.IsConstant());
     if (condition != Condition::Always)
     {
       next_pc = m_register_cache.AllocateScratch(RegSize_32);

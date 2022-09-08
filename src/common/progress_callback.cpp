@@ -178,7 +178,6 @@ void BaseProgressCallback::PushState()
 
 void BaseProgressCallback::PopState()
 {
-  DebugAssert(m_saved_state);
   State* state = m_saved_state;
   m_saved_state = nullptr;
 

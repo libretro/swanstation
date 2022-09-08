@@ -270,8 +270,6 @@ void GPU_HW_OpenGL::UpdateSettings()
 
 void GPU_HW_OpenGL::MapBatchVertexPointer(u32 required_vertices)
 {
-  DebugAssert(!m_batch_start_vertex_ptr);
-
   const GL::StreamBuffer::MappingResult res =
     m_vertex_stream_buffer->Map(sizeof(BatchVertex), required_vertices * sizeof(BatchVertex));
 
@@ -283,8 +281,6 @@ void GPU_HW_OpenGL::MapBatchVertexPointer(u32 required_vertices)
 
 void GPU_HW_OpenGL::UnmapBatchVertexPointer(u32 used_vertices)
 {
-  DebugAssert(m_batch_start_vertex_ptr);
-
   m_vertex_stream_buffer->Unmap(used_vertices * sizeof(BatchVertex));
   m_vertex_stream_buffer->Bind();
   m_batch_start_vertex_ptr = nullptr;
@@ -1305,7 +1301,6 @@ void GPU_HW_OpenGL::ClearDepthBuffer()
 
 void GPU_HW_OpenGL::DownsampleFramebuffer(GL::Texture& source, u32 left, u32 top, u32 width, u32 height)
 {
-  DebugAssert(m_downsample_mode != GPUDownsampleMode::Adaptive);
   DownsampleFramebufferBoxFilter(source, left, top, width, height);
 }
 

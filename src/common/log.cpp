@@ -313,7 +313,6 @@ void SetConsoleOutputParams(bool Enabled, const char* ChannelFilter, LOGLEVEL Le
 
 void SetFilterLevel(LOGLEVEL level)
 {
-  DebugAssert(level < LOGLEVEL_COUNT);
   s_filter_level = level;
 }
 

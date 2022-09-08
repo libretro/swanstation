@@ -401,11 +401,8 @@ bool DMA::TransferChannel(Channel channel)
 void DMA::HaltTransfer(TickCount duration)
 {
   m_halt_ticks_remaining += duration;
-  if (m_unhalt_event->IsActive())
-    return;
-
-  DebugAssert(!m_unhalt_event->IsActive());
-  m_unhalt_event->SetIntervalAndSchedule(m_halt_ticks_remaining);
+  if (!m_unhalt_event->IsActive())
+    m_unhalt_event->SetIntervalAndSchedule(m_halt_ticks_remaining);
 }
 
 void DMA::UnhaltTransfer(TickCount ticks)

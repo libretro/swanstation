@@ -151,7 +151,6 @@ void GPUBackend::PushCommand(GPUBackendCommand* cmd)
   else
   {
     const u32 new_write_ptr = m_command_fifo_write_ptr.fetch_add(cmd->size) + cmd->size;
-    DebugAssert(new_write_ptr <= COMMAND_QUEUE_SIZE);
     UNREFERENCED_VARIABLE(new_write_ptr);
     if (GetPendingCommandSize() >= THRESHOLD_TO_WAKE_GPU)
       WakeGPUThread();
@@ -238,7 +237,6 @@ void GPUBackend::RunGPULoop()
       {
         case GPUBackendCommandType::Wraparound:
         {
-          DebugAssert(read_ptr == COMMAND_QUEUE_SIZE);
           write_ptr = m_command_fifo_write_ptr.load();
           read_ptr = 0;
         }
@@ -246,7 +244,6 @@ void GPUBackend::RunGPULoop()
 
         case GPUBackendCommandType::Sync:
         {
-          DebugAssert(read_ptr == write_ptr);
           m_sync_event.Signal();
           allow_sleep = static_cast<const GPUBackendSyncCommand*>(cmd)->allow_sleep;
         }

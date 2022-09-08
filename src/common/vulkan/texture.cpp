@@ -203,7 +203,6 @@ void Texture::Destroy(bool defer /* = true */)
   // If we don't have device memory allocated, the image is not owned by us (e.g. swapchain)
   if (m_device_memory != VK_NULL_HANDLE)
   {
-    DebugAssert(m_image != VK_NULL_HANDLE);
     if (defer)
       g_vulkan_context->DeferImageDestruction(m_image);
     else

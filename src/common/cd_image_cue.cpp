@@ -267,7 +267,6 @@ bool CDImageCueSheet::OpenAndParse(const char* filename, Common::Error* error)
 
     // and the last index is added here
     const u32 track_end_index = track_start + track_length;
-    DebugAssert(track_end_index >= last_index_offset);
     if (track_end_index > last_index_offset)
     {
       last_index.length = track_end_index - last_index_offset;
@@ -308,8 +307,6 @@ bool CDImageCueSheet::HasNonStandardSubchannel() const
 
 bool CDImageCueSheet::ReadSectorFromIndex(void* buffer, const Index& index, LBA lba_in_index)
 {
-  DebugAssert(index.file_index < m_files.size());
-
   TrackFile& tf = m_files[index.file_index];
   const u64 file_position = index.file_offset + (static_cast<u64>(lba_in_index) * index.file_sector_size);
   if (tf.file_position != file_position)

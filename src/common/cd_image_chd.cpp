@@ -355,7 +355,6 @@ bool CDImageCHD::ReadSectorFromIndex(void* buffer, const Index& index, LBA lba_i
   const u32 disc_frame = static_cast<LBA>(index.file_offset) + lba_in_index;
   const u32 hunk_index = static_cast<u32>(disc_frame / m_sectors_per_hunk);
   const u32 hunk_offset = static_cast<u32>((disc_frame % m_sectors_per_hunk) * CHD_CD_SECTOR_DATA_SIZE);
-  DebugAssert((m_hunk_size - hunk_offset) >= CHD_CD_SECTOR_DATA_SIZE);
 
   if (m_current_hunk_index != hunk_index && !ReadHunk(hunk_index))
     return false;

@@ -242,8 +242,6 @@ void GPU_HW_Vulkan::UpdateSettings()
 
 void GPU_HW_Vulkan::MapBatchVertexPointer(u32 required_vertices)
 {
-  DebugAssert(!m_batch_start_vertex_ptr);
-
   const u32 required_space = required_vertices * sizeof(BatchVertex);
   if (!m_vertex_stream_buffer.ReserveMemory(required_space, sizeof(BatchVertex)))
   {
@@ -260,7 +258,6 @@ void GPU_HW_Vulkan::MapBatchVertexPointer(u32 required_vertices)
 
 void GPU_HW_Vulkan::UnmapBatchVertexPointer(u32 used_vertices)
 {
-  DebugAssert(m_batch_start_vertex_ptr);
   if (used_vertices > 0)
     m_vertex_stream_buffer.CommitMemory(used_vertices * sizeof(BatchVertex));
 
@@ -378,8 +375,6 @@ void GPU_HW_Vulkan::DestroyResources()
 void GPU_HW_Vulkan::BeginRenderPass(VkRenderPass render_pass, VkFramebuffer framebuffer, u32 x, u32 y, u32 width,
                                     u32 height, const VkClearValue* clear_value /* = nullptr */)
 {
-  DebugAssert(m_current_render_pass == VK_NULL_HANDLE);
-
   const VkRenderPassBeginInfo bi = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
                                     nullptr,
                                     render_pass,

@@ -414,8 +414,6 @@ std::string CDImagePPF::GetSubImageMetadata(u32 index, const std::string_view& t
 
 bool CDImagePPF::ReadSectorFromIndex(void* buffer, const Index& index, LBA lba_in_index)
 {
-  DebugAssert(index.file_index == 0);
-
   const u32 sector_number = index.start_lba_on_disc + lba_in_index;
   const auto it = m_replacement_map.find(sector_number);
   if (it == m_replacement_map.end())

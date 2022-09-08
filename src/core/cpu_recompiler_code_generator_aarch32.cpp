@@ -51,7 +51,6 @@ static const a32::Register GetHostReg8(HostReg reg)
 
 static const a32::Register GetHostReg8(const Value& value)
 {
-  DebugAssert(value.size == RegSize_8 && value.IsInHostRegister());
   return a32::Register(value.host_reg);
 }
 
@@ -62,7 +61,6 @@ static const a32::Register GetHostReg16(HostReg reg)
 
 static const a32::Register GetHostReg16(const Value& value)
 {
-  DebugAssert(value.size == RegSize_16 && value.IsInHostRegister());
   return a32::Register(value.host_reg);
 }
 
@@ -73,7 +71,6 @@ static const a32::Register GetHostReg32(HostReg reg)
 
 static const a32::Register GetHostReg32(const Value& value)
 {
-  DebugAssert(value.size == RegSize_32 && value.IsInHostRegister());
   return a32::Register(value.host_reg);
 }
 
@@ -157,16 +154,11 @@ void CodeGenerator::EmitBeginBlock(bool allocate_registers /* = true */)
   if (allocate_registers)
   {
     // Save the link register, since we'll be calling functions.
-    const bool link_reg_allocated = m_register_cache.AllocateHostReg(14);
-    DebugAssert(link_reg_allocated);
-    UNREFERENCED_VARIABLE(link_reg_allocated);
+    m_register_cache.AllocateHostReg(14);
     m_register_cache.AssumeCalleeSavedRegistersAreSaved();
 
     // Store the CPU struct pointer. TODO: make this better.
-    const bool cpu_reg_allocated = m_register_cache.AllocateHostReg(RCPUPTR);
-    // m_emit->Mov(GetCPUPtrReg(), reinterpret_cast<uintptr_t>(&g_state));
-    DebugAssert(cpu_reg_allocated);
-    UNREFERENCED_VARIABLE(cpu_reg_allocated);
+    m_register_cache.AllocateHostReg(RCPUPTR);
   }
 }
 
@@ -317,7 +309,6 @@ void CodeGenerator::EmitZeroExtend(HostReg to_reg, RegSize to_size, HostReg from
 void CodeGenerator::EmitCopyValue(HostReg to_reg, const Value& value)
 {
   // TODO: mov x, 0 -> xor x, x
-  DebugAssert(value.IsConstant() || value.IsInHostRegister());
 
   switch (value.size)
   {
@@ -1266,7 +1257,6 @@ void CodeGenerator::EmitLoadGuestMemoryFastmem(const CodeBlockInstruction& cbi, 
   SwitchToFarCode();
 
   // we add the ticks *after* the add here, since we counted incorrectly, then correct for it below
-  DebugAssert(m_delayed_cycles_add > 0);
   EmitAddCPUStructField(offsetof(State, pending_ticks), Value::FromConstantU32(static_cast<u32>(m_delayed_cycles_add)));
   m_delayed_cycles_add += Bus::RAM_READ_TICKS;
 
@@ -1421,7 +1411,6 @@ void CodeGenerator::EmitStoreGuestMemoryFastmem(const CodeBlockInstruction& cbi,
   bpi.host_slowmem_pc = GetCurrentFarCodePointer();
   SwitchToFarCode();
 
-  DebugAssert(m_delayed_cycles_add > 0);
   EmitAddCPUStructField(offsetof(State, pending_ticks), Value::FromConstantU32(static_cast<u32>(m_delayed_cycles_add)));
 
   EmitStoreGuestMemorySlowmem(cbi, address, size, actual_value, true);

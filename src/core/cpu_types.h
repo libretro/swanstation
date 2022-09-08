@@ -67,8 +67,6 @@ enum class Reg : u8
   count
 };
 
-const char* GetRegName(Reg reg);
-
 enum class InstructionOp : u8
 {
   funct = 0,

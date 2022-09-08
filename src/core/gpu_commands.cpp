@@ -38,7 +38,6 @@ void GPU::ExecuteCommands()
 
         case BlitterState::WritingVRAM:
         {
-          DebugAssert(m_blit_remaining_words > 0);
           const u32 words_to_copy = std::min(m_blit_remaining_words, m_fifo.GetSize());
           m_blit_buffer.reserve(m_blit_buffer.size() + words_to_copy);
           for (u32 i = 0; i < words_to_copy; i++)
@@ -498,8 +497,6 @@ bool GPU::HandleCopyRectangleVRAMToCPUCommand()
   m_vram_transfer.y = Truncate16((FifoPop() >> 16) & VRAM_HEIGHT_MASK);
   m_vram_transfer.width = ((Truncate16(FifoPeek()) - 1) & VRAM_WIDTH_MASK) + 1;
   m_vram_transfer.height = ((Truncate16(FifoPop() >> 16) - 1) & VRAM_HEIGHT_MASK) + 1;
-
-  DebugAssert(m_vram_transfer.col == 0 && m_vram_transfer.row == 0);
 
   // all rendering should be done first...
   FlushRender();

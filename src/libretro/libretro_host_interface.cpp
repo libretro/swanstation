@@ -559,7 +559,6 @@ void LibretroHostInterface::retro_run_frame()
   m_display->Render();
 
   auto* const audio_stream = dynamic_cast<LibretroAudioStream*>(m_audio_stream.get());
-  DebugAssert(audio_stream);
   audio_stream->UploadToFrontend();
 }
 
@@ -1065,7 +1064,6 @@ void LibretroHostInterface::UpdateControllers()
 void LibretroHostInterface::UpdateControllersDigitalController(u32 index)
 {
   DigitalController* controller = static_cast<DigitalController*>(System::GetController(index));
-  DebugAssert(controller);
 
   static constexpr std::array<std::pair<DigitalController::Button, u32>, 14> mapping = {
     {{DigitalController::Button::Left, RETRO_DEVICE_ID_JOYPAD_LEFT},
@@ -1102,7 +1100,6 @@ void LibretroHostInterface::UpdateControllersDigitalController(u32 index)
 void LibretroHostInterface::UpdateControllersAnalogController(u32 index)
 {
   AnalogController* controller = static_cast<AnalogController*>(System::GetController(index));
-  DebugAssert(controller);
 
   static constexpr std::array<std::pair<AnalogController::Button, u32>, 16> button_mapping = {
     {{AnalogController::Button::Left, RETRO_DEVICE_ID_JOYPAD_LEFT},
@@ -1177,7 +1174,6 @@ void LibretroHostInterface::UpdateControllersAnalogController(u32 index)
 void LibretroHostInterface::UpdateControllersAnalogJoystick(u32 index)
 {
   AnalogJoystick* controller = static_cast<AnalogJoystick*>(System::GetController(index));
-  DebugAssert(controller);
 
   static constexpr std::array<std::pair<AnalogJoystick::Button, u32>, 16> button_mapping = {
     {{AnalogJoystick::Button::Left, RETRO_DEVICE_ID_JOYPAD_LEFT},
@@ -1228,7 +1224,6 @@ void LibretroHostInterface::UpdateControllersAnalogJoystick(u32 index)
 void LibretroHostInterface::UpdateControllersNeGcon(u32 index)
 {
   NeGcon* controller = static_cast<NeGcon*>(System::GetController(index));
-  DebugAssert(controller);
 
   static constexpr std::array<std::pair<NeGcon::Button, u32>, 8> button_mapping = {
     {{NeGcon::Button::Left, RETRO_DEVICE_ID_JOYPAD_LEFT},
@@ -1281,7 +1276,6 @@ void LibretroHostInterface::UpdateControllersNeGcon(u32 index)
 void LibretroHostInterface::UpdateControllersNamcoGunCon(u32 index)
 {
   NamcoGunCon* controller = static_cast<NamcoGunCon*>(System::GetController(index));
-  DebugAssert(controller);
 
   static constexpr std::array<std::pair<NamcoGunCon::Button, u32>, 4> button_mapping = {
     {{NamcoGunCon::Button::Trigger, RETRO_DEVICE_ID_LIGHTGUN_TRIGGER},
@@ -1308,7 +1302,6 @@ void LibretroHostInterface::UpdateControllersNamcoGunCon(u32 index)
 void LibretroHostInterface::UpdateControllersPlayStationMouse(u32 index)
 {
   PlayStationMouse* controller = static_cast<PlayStationMouse*>(System::GetController(index));
-  DebugAssert(controller);
 
   static constexpr std::array<std::pair<PlayStationMouse::Button, u32>, 2> button_mapping = {
     {{PlayStationMouse::Button::Left, RETRO_DEVICE_ID_MOUSE_LEFT},

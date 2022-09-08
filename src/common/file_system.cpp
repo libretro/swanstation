@@ -411,8 +411,6 @@ static bool GetRelativePathForUriPath(const char* path, const char* filename, st
 void CanonicalizePath(char* Destination, u32 cbDestination, const char* Path, bool OSPath /*= true*/)
 {
   u32 i, j;
-  DebugAssert(Destination && cbDestination > 0 && Path);
-
   // get length
   u32 pathLength = static_cast<u32>(std::strlen(Path));
 

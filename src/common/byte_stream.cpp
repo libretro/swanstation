@@ -28,7 +28,7 @@
 class FileByteStream : public ByteStream
 {
 public:
-  FileByteStream(FILE* pFile) : m_pFile(pFile) { DebugAssert(m_pFile != nullptr); }
+  FileByteStream(FILE* pFile) : m_pFile(pFile) { }
 
   virtual ~FileByteStream() override { fclose(m_pFile); }
 
@@ -817,8 +817,6 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
 
   if (openMode & BYTESTREAM_OPEN_ATOMIC_UPDATE)
   {
-    DebugAssert(openMode & (BYTESTREAM_OPEN_CREATE | BYTESTREAM_OPEN_WRITE));
-
 #ifndef _UWP
     // generate the temporary file name
     u32 fileNameLength = static_cast<u32>(std::strlen(fileName));
@@ -1041,8 +1039,6 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
 
   if (openMode & BYTESTREAM_OPEN_ATOMIC_UPDATE)
   {
-    DebugAssert(openMode & (BYTESTREAM_OPEN_CREATE | BYTESTREAM_OPEN_WRITE));
-
     // generate the temporary file name
     const u32 fileNameLength = static_cast<u32>(std::strlen(fileName));
     char* temporaryFileName = (char*)alloca(fileNameLength + 8);
@@ -1112,13 +1108,11 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
 
 std::unique_ptr<MemoryByteStream> ByteStream_CreateMemoryStream(void* pMemory, u32 Size)
 {
-  DebugAssert(pMemory != nullptr && Size > 0);
   return std::make_unique<MemoryByteStream>(pMemory, Size);
 }
 
 std::unique_ptr<ReadOnlyMemoryByteStream> ByteStream_CreateReadOnlyMemoryStream(const void* pMemory, u32 Size)
 {
-  DebugAssert(pMemory != nullptr && Size > 0);
   return std::make_unique<ReadOnlyMemoryByteStream>(pMemory, Size);
 }
 

@@ -385,8 +385,6 @@ bool MDEC::DecodeColoredMacroblock()
 
 void MDEC::ScheduleBlockCopyOut(TickCount ticks)
 {
-  DebugAssert(!HasPendingBlockCopyOut());
-
   m_block_copy_out_event->SetIntervalAndSchedule(ticks);
 }
 
@@ -646,8 +644,6 @@ void MDEC::y_to_mono(const std::array<s16, 64>& Yblk)
 
 void MDEC::HandleSetQuantTableCommand()
 {
-  DebugAssert(m_remaining_halfwords >= 32);
-
   // TODO: Remove extra copies..
   std::array<u16, 32> packed_data;
   m_data_in_fifo.PopRange(packed_data.data(), static_cast<u32>(packed_data.size()));
@@ -656,8 +652,6 @@ void MDEC::HandleSetQuantTableCommand()
 
   if (m_remaining_halfwords > 0)
   {
-    DebugAssert(m_remaining_halfwords >= 32);
-
     m_data_in_fifo.PopRange(packed_data.data(), static_cast<u32>(packed_data.size()));
     std::memcpy(m_iq_uv.data(), packed_data.data(), m_iq_uv.size());
   }
@@ -665,8 +659,6 @@ void MDEC::HandleSetQuantTableCommand()
 
 void MDEC::HandleSetScaleCommand()
 {
-  DebugAssert(m_remaining_halfwords == 64);
-
   // TODO: Remove extra copies..
   std::array<u16, 64> packed_data;
   m_data_in_fifo.PopRange(packed_data.data(), static_cast<u32>(packed_data.size()));

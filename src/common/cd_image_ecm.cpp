@@ -538,8 +538,6 @@ bool CDImageEcm::ReadSectorFromIndex(void* buffer, const Index& index, LBA lba_i
       return false;
   }
 
-  DebugAssert(file_start >= m_chunk_start && file_end <= (m_chunk_start + m_chunk_buffer.size()));
-
   const size_t chunk_offset = static_cast<size_t>(file_start - m_chunk_start);
   std::memcpy(buffer, &m_chunk_buffer[chunk_offset], RAW_SECTOR_SIZE);
   return true;

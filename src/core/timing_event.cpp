@@ -93,7 +93,6 @@ static void SortEvent(TimingEvent* event)
     else
     {
       // insert at front
-      DebugAssert(s_active_events_head);
       s_active_events_head->prev = event;
       event->prev = nullptr;
       event->next = s_active_events_head;
@@ -134,7 +133,6 @@ static void SortEvent(TimingEvent* event)
     else
     {
       // insert at back
-      DebugAssert(s_active_events_tail);
       s_active_events_tail->next = event;
       event->next = nullptr;
       event->prev = s_active_events_tail;
@@ -145,7 +143,6 @@ static void SortEvent(TimingEvent* event)
 
 static void AddActiveEvent(TimingEvent* event)
 {
-  DebugAssert(!event->prev && !event->next);
   s_active_event_count++;
 
   TimingEvent* current = nullptr;
@@ -193,16 +190,10 @@ static void AddActiveEvent(TimingEvent* event)
 
 static void RemoveActiveEvent(TimingEvent* event)
 {
-  DebugAssert(s_active_event_count > 0);
-
   if (event->next)
-  {
     event->next->prev = event->prev;
-  }
   else
-  {
     s_active_events_tail = event->prev;
-  }
 
   if (event->prev)
   {
@@ -257,8 +248,6 @@ static TimingEvent* FindActiveEvent(const char* name)
 
 void RunEvents()
 {
-  DebugAssert(!s_current_event);
-
   TickCount pending_ticks = CPU::GetPendingTicks();
   CPU::ResetPendingTicks();
   while (pending_ticks > 0)
@@ -393,8 +382,6 @@ void TimingEvent::Delay(TickCount ticks)
   }
 
   m_downcount += ticks;
-
-  DebugAssert(TimingEvents::s_current_event != this);
   TimingEvents::SortEvent(this);
 }
 
@@ -458,7 +445,6 @@ void TimingEvent::InvokeEarly(bool force /* = false */)
   m_callback(m_callback_param, ticks_to_execute, 0);
 
   // Since we've changed the downcount, we need to re-sort the events.
-  DebugAssert(TimingEvents::s_current_event != this);
   TimingEvents::SortEvent(this);
 }
 

@@ -202,8 +202,6 @@ void GPU_HW_D3D11::UpdateSettings()
 
 void GPU_HW_D3D11::MapBatchVertexPointer(u32 required_vertices)
 {
-  DebugAssert(!m_batch_start_vertex_ptr);
-
   const D3D11::StreamBuffer::MappingResult res =
     m_vertex_stream_buffer.Map(m_context.Get(), sizeof(BatchVertex), required_vertices * sizeof(BatchVertex));
 
@@ -215,7 +213,6 @@ void GPU_HW_D3D11::MapBatchVertexPointer(u32 required_vertices)
 
 void GPU_HW_D3D11::UnmapBatchVertexPointer(u32 used_vertices)
 {
-  DebugAssert(m_batch_start_vertex_ptr);
   m_vertex_stream_buffer.Unmap(m_context.Get(), used_vertices * sizeof(BatchVertex));
   m_batch_start_vertex_ptr = nullptr;
   m_batch_end_vertex_ptr = nullptr;
@@ -1100,8 +1097,6 @@ void GPU_HW_D3D11::UpdateDepthBufferFromMaskBit()
 
 void GPU_HW_D3D11::ClearDepthBuffer()
 {
-  DebugAssert(m_pgxp_depth_buffer);
-
   m_context->ClearDepthStencilView(m_vram_depth_view.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
   m_last_depth_z = 1.0f;
 }

@@ -75,10 +75,7 @@ void Value::Clear()
 void Value::Release()
 {
   if (IsScratch())
-  {
-    DebugAssert(IsInHostRegister() && regcache);
     regcache->FreeHostReg(host_reg);
-  }
 }
 
 void Value::ReleaseAndClear()
@@ -89,13 +86,11 @@ void Value::ReleaseAndClear()
 
 void Value::Discard()
 {
-  DebugAssert(IsInHostRegister());
   regcache->DiscardHostReg(host_reg);
 }
 
 void Value::Undiscard()
 {
-  DebugAssert(IsInHostRegister());
   regcache->UndiscardHostReg(host_reg);
 }
 
@@ -216,7 +211,6 @@ bool RegisterCache::AllocateHostReg(HostReg reg, HostRegState state /*= HostRegS
       HostRegState::CalleeSaved)
   {
     // new register we need to save..
-    DebugAssert(m_state.callee_saved_order_count < HostReg_Count);
     m_code_generator.EmitPushHostReg(reg, GetActiveCalleeSavedRegisterCount());
     m_state.callee_saved_order[m_state.callee_saved_order_count++] = reg;
     m_state.host_reg_state[reg] |= HostRegState::CalleeSavedAllocated;
@@ -227,19 +221,16 @@ bool RegisterCache::AllocateHostReg(HostReg reg, HostRegState state /*= HostRegS
 
 void RegisterCache::DiscardHostReg(HostReg reg)
 {
-  DebugAssert(IsHostRegInUse(reg));
   m_state.host_reg_state[reg] |= HostRegState::Discarded;
 }
 
 void RegisterCache::UndiscardHostReg(HostReg reg)
 {
-  DebugAssert(IsHostRegInUse(reg));
   m_state.host_reg_state[reg] &= ~HostRegState::Discarded;
 }
 
 void RegisterCache::FreeHostReg(HostReg reg)
 {
-  DebugAssert(IsHostRegInUse(reg));
   m_state.host_reg_state[reg] &= ~HostRegState::InUse;
 }
 
@@ -283,7 +274,6 @@ void RegisterCache::ReserveCallerSavedRegisters()
     if ((m_state.host_reg_state[reg] & (HostRegState::CalleeSaved | HostRegState::CalleeSavedAllocated)) ==
         HostRegState::CalleeSaved)
     {
-      DebugAssert(m_state.callee_saved_order_count < HostReg_Count);
       m_code_generator.EmitPushHostReg(static_cast<HostReg>(reg), GetActiveCalleeSavedRegisterCount());
       m_state.callee_saved_order[m_state.callee_saved_order_count++] = static_cast<HostReg>(reg);
       m_state.host_reg_state[reg] |= HostRegState::CalleeSavedAllocated;
@@ -364,15 +354,10 @@ u32 RegisterCache::PopCalleeSavedRegisters(bool commit)
   do
   {
     const HostReg reg = m_state.callee_saved_order[i - 1];
-    DebugAssert((m_state.host_reg_state[reg] & (HostRegState::CalleeSaved | HostRegState::CalleeSavedAllocated)) ==
-                (HostRegState::CalleeSaved | HostRegState::CalleeSavedAllocated));
 
     if (i > 1)
     {
       const HostReg reg2 = m_state.callee_saved_order[i - 2];
-      DebugAssert((m_state.host_reg_state[reg2] & (HostRegState::CalleeSaved | HostRegState::CalleeSavedAllocated)) ==
-                  (HostRegState::CalleeSaved | HostRegState::CalleeSavedAllocated));
-
       m_code_generator.EmitPopHostRegPair(reg2, reg, i - 1);
       i -= 2;
       count += 2;
@@ -405,8 +390,6 @@ void RegisterCache::ReserveCalleeSavedRegisters()
     if ((m_state.host_reg_state[reg] & (HostRegState::CalleeSaved | HostRegState::CalleeSavedAllocated)) ==
         HostRegState::CalleeSaved)
     {
-      DebugAssert(m_state.callee_saved_order_count < HostReg_Count);
-
       // can we find a paired register? (mainly for ARM)
       u32 reg_pair;
       for (reg_pair = reg + 1; reg_pair < HostReg_Count; reg_pair++)
@@ -520,8 +503,6 @@ Value RegisterCache::ReadGuestRegister(Reg guest_reg, bool cache /* = true */, b
     else if (force_host_register)
     {
       // if it's not in a register, it should be constant
-      DebugAssert(cache_value.IsConstant());
-
       HostReg host_reg;
       if (forced_host_reg == HostReg_Invalid)
       {
@@ -596,7 +577,6 @@ Value RegisterCache::ReadGuestRegisterToScratch(Reg guest_reg)
 Value RegisterCache::WriteGuestRegister(Reg guest_reg, Value&& value)
 {
   // ignore writes to register zero
-  DebugAssert(value.size == RegSize_32);
   if (guest_reg == Reg::zero)
     return std::move(value);
 
@@ -617,7 +597,6 @@ Value RegisterCache::WriteGuestRegister(Reg guest_reg, Value&& value)
   }
 
   InvalidateGuestRegister(guest_reg);
-  DebugAssert(!cache_value.IsValid());
 
   if (value.IsConstant())
   {
@@ -650,7 +629,6 @@ Value RegisterCache::WriteGuestRegister(Reg guest_reg, Value&& value)
 void RegisterCache::WriteGuestRegisterDelayed(Reg guest_reg, Value&& value)
 {
   // ignore writes to register zero
-  DebugAssert(value.size == RegSize_32);
   if (guest_reg == Reg::zero)
     return;
 
@@ -849,7 +827,6 @@ void RegisterCache::PushRegisterToOrder(Reg reg)
 
 void RegisterCache::AppendRegisterToOrder(Reg reg)
 {
-  DebugAssert(m_state.guest_reg_order_count < HostReg_Count);
   if (m_state.guest_reg_order_count > 0)
     std::memmove(&m_state.guest_reg_order[1], &m_state.guest_reg_order[0], sizeof(Reg) * m_state.guest_reg_order_count);
   m_state.guest_reg_order[0] = reg;

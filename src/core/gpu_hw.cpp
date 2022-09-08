@@ -370,7 +370,6 @@ void GPU_HW::SetBatchDepthBuffer(bool enabled)
 
 void GPU_HW::CheckForDepthClear(const BatchVertex* vertices, u32 num_vertices)
 {
-  DebugAssert(num_vertices == 3 || num_vertices == 4);
   float average_z;
   if (num_vertices == 3)
     average_z = std::min((vertices[0].w + vertices[1].w + vertices[2].w) / 3.0f, 1.0f);
@@ -523,8 +522,6 @@ void GPU_HW::LoadVertices()
   {
     case GPUPrimitive::Polygon:
     {
-      DebugAssert(GetBatchVertexSpace() >= (rc.quad_polygon ? 6u : 3u));
-
       const u32 first_color = rc.color_for_first_vertex;
       const bool shaded = rc.shading_enable;
       const bool textured = rc.texture_enable;
@@ -709,7 +706,6 @@ void GPU_HW::LoadVertices()
       // we can split the rectangle up into potentially 8 quads
       if (m_batch.use_depth_buffer)
         SetBatchDepthBuffer(false);
-      DebugAssert(GetBatchVertexSpace() >= MAX_VERTICES_FOR_RECTANGLE);
 
       // Split the rectangle into multiple quads if it's greater than 256x256, as the texture page should repeat.
       u16 tex_top = orig_tex_top;
@@ -777,8 +773,6 @@ void GPU_HW::LoadVertices()
 
       if (!rc.polyline)
       {
-        DebugAssert(GetBatchVertexSpace() >= 2);
-
         u32 start_color, end_color;
         GPUVertexPosition start_pos, end_pos;
         if (rc.shading_enable)
@@ -833,7 +827,6 @@ void GPU_HW::LoadVertices()
       {
         // Multiply by two because we don't use line strips.
         const u32 num_vertices = GetPolyLineVertexCount();
-        DebugAssert(GetBatchVertexSpace() >= (num_vertices * 2));
 
         if (!IsDrawingAreaIsValid())
           return;
@@ -1114,7 +1107,6 @@ void GPU_HW::FillDrawCommand(GPUBackendDrawCommand* cmd, GPURenderCommand rc) co
 
 void GPU_HW::ReadSoftwareRendererVRAM(u32 x, u32 y, u32 width, u32 height)
 {
-  DebugAssert(m_sw_renderer);
   m_sw_renderer->Sync(false);
 }
 
@@ -1167,7 +1159,6 @@ void GPU_HW::FillVRAM(u32 x, u32 y, u32 width, u32 height, u32 color)
 
 void GPU_HW::UpdateVRAM(u32 x, u32 y, u32 width, u32 height, const void* data, bool set_mask, bool check_mask)
 {
-  DebugAssert((x + width) <= VRAM_WIDTH && (y + height) <= VRAM_HEIGHT);
   IncludeVRAMDirtyRectangle(Common::Rectangle<u32>::FromExtents(x, y, width, height));
 
   if (check_mask)

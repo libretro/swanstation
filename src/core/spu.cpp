@@ -462,7 +462,6 @@ void SPU::WriteRegister(u32 offset, u16 value)
             TickCount ticks = std::numeric_limits<TickCount>::max();
 	    if (ticks > 0)
               ExecuteFIFOWriteToRAM(ticks);
-            DebugAssert(m_transfer_fifo.IsEmpty());
           }
           else
             m_transfer_fifo.Clear();
@@ -578,7 +577,6 @@ void SPU::WriteVoiceRegister(u32 offset, u16 value)
   // per-voice registers
   const u32 reg_index = (offset % 0x10);
   const u32 voice_index = (offset / 0x10);
-  DebugAssert(voice_index < 24);
 
   Voice& voice = m_voices[voice_index];
   if (voice.IsOn() || m_key_on_register & (1u << voice_index))
@@ -1350,7 +1348,6 @@ ALWAYS_INLINE_RELEASE std::tuple<s32, s32> SPU::SampleVoice(u32 voice_index)
   // Shouldn't ever overflow because if sample_index == 27, step == 0x4000 there won't be a carry out from the
   // interpolation index. If there is a carry out, bit 12 will never be 1, so it'll never add more than 4 to
   // sample_index, which should never be >27.
-  DebugAssert(voice.counter.sample_index < NUM_SAMPLES_PER_ADPCM_BLOCK);
   voice.counter.bits += step;
 
   if (voice.counter.sample_index >= NUM_SAMPLES_PER_ADPCM_BLOCK)

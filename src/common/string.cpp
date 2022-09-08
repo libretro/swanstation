@@ -20,8 +20,6 @@ const String EmptyString;
 // helper functions
 static String::StringData* StringDataAllocate(u32 allocSize)
 {
-  DebugAssert(allocSize > 0);
-
   String::StringData* pStringData =
     reinterpret_cast<String::StringData*>(std::malloc(sizeof(String::StringData) + allocSize));
   pStringData->pBuffer = reinterpret_cast<char*>(pStringData + 1);
@@ -44,7 +42,6 @@ static String::StringData* StringDataAllocate(u32 allocSize)
 
 static inline void StringDataAddRef(String::StringData* pStringData)
 {
-  DebugAssert(pStringData->ReferenceCount > 0);
   ++pStringData->ReferenceCount;
 }
 
@@ -53,7 +50,6 @@ static inline void StringDataRelease(String::StringData* pStringData)
   if (pStringData->ReferenceCount == -1)
     return;
 
-  DebugAssert(pStringData->ReferenceCount > 0);
   u32 newRefCount = --pStringData->ReferenceCount;
   if (!newRefCount)
     std::free(pStringData);
@@ -61,8 +57,6 @@ static inline void StringDataRelease(String::StringData* pStringData)
 
 static String::StringData* StringDataClone(const String::StringData* pStringData, u32 newSize, bool copyPastString)
 {
-  DebugAssert(newSize >= 0);
-
   String::StringData* pClone = StringDataAllocate(newSize);
   if (pStringData->StringLength > 0)
   {
@@ -96,9 +90,6 @@ static String::StringData* StringDataClone(const String::StringData* pStringData
 
 static String::StringData* StringDataReallocate(String::StringData* pStringData, u32 newSize)
 {
-  DebugAssert(newSize > pStringData->StringLength);
-  DebugAssert(pStringData->ReferenceCount == 1);
-
   // perform realloc
   pStringData = reinterpret_cast<String::StringData*>(std::realloc(pStringData, sizeof(String::StringData) + newSize));
   pStringData->pBuffer = reinterpret_cast<char*>(pStringData + 1);
@@ -226,9 +217,6 @@ void String::InternalAppend(const char* pString, u32 Length)
 {
   EnsureRemainingSpace(Length);
 
-  DebugAssert((Length + m_pStringData->StringLength) < m_pStringData->BufferSize);
-  DebugAssert(m_pStringData->ReferenceCount <= 1 && !m_pStringData->ReadOnly);
-
   std::memcpy(m_pStringData->pBuffer + m_pStringData->StringLength, pString, Length);
   m_pStringData->StringLength += Length;
   m_pStringData->pBuffer[m_pStringData->StringLength] = 0;
@@ -237,9 +225,6 @@ void String::InternalAppend(const char* pString, u32 Length)
 void String::InternalPrepend(const char* pString, u32 Length)
 {
   EnsureRemainingSpace(Length);
-
-  DebugAssert((Length + m_pStringData->StringLength) < m_pStringData->BufferSize);
-  DebugAssert(m_pStringData->ReferenceCount <= 1 && !m_pStringData->ReadOnly);
 
   std::memmove(m_pStringData->pBuffer + Length, m_pStringData->pBuffer, m_pStringData->StringLength);
   std::memcpy(m_pStringData->pBuffer, pString, Length);
@@ -302,7 +287,6 @@ void String::AppendSubString(const String& appendStr, s32 Offset /* = 0 */, s32 
     realCount = std::min(appendStrLength - realOffset, (u32)Count);
 
   // should be safe
-  DebugAssert((realOffset + realCount) <= appendStrLength);
   if (realCount > 0)
     InternalAppend(appendStr.GetCharArray() + realOffset, realCount);
 }
@@ -326,7 +310,6 @@ void String::AppendSubString(const char* appendText, s32 Offset /* = 0 */, s32 C
     realCount = std::min(appendTextLength - realOffset, (u32)Count);
 
   // should be safe
-  DebugAssert((realOffset + realCount) <= appendTextLength);
   if (realCount > 0)
     InternalAppend(appendText + realOffset, realCount);
 }
@@ -427,7 +410,6 @@ void String::PrependSubString(const String& appendStr, s32 Offset /* = 0 */, s32
     realCount = std::min(appendStrLength - realOffset, (u32)Count);
 
   // should be safe
-  DebugAssert((realOffset + realCount) <= appendStrLength);
   if (realCount > 0)
     InternalPrepend(appendStr.GetCharArray() + realOffset, realCount);
 }
@@ -451,7 +433,6 @@ void String::PrependSubString(const char* appendText, s32 Offset /* = 0 */, s32 
     realCount = std::min(appendTextLength - realOffset, (u32)Count);
 
   // should be safe
-  DebugAssert((realOffset + realCount) <= appendTextLength);
   if (realCount > 0)
     InternalPrepend(appendText + realOffset, realCount);
 }
@@ -519,7 +500,6 @@ void String::InsertString(s32 offset, const char* appendStr, u32 appendStrLength
     realOffset = std::min((u32)offset, m_pStringData->StringLength);
 
   // determine number of characters after offset
-  DebugAssert(realOffset <= m_pStringData->StringLength);
   u32 charactersAfterOffset = m_pStringData->StringLength - realOffset;
   if (charactersAfterOffset > 0)
     std::memmove(m_pStringData->pBuffer + offset + appendStrLength, m_pStringData->pBuffer + offset,
@@ -759,28 +739,24 @@ void String::Obliterate()
 
 s32 String::Find(char c, u32 Offset /* = 0*/) const
 {
-  DebugAssert(Offset <= m_pStringData->StringLength);
   char* pAt = std::strchr(m_pStringData->pBuffer + Offset, c);
   return (pAt == NULL) ? -1 : s32(pAt - m_pStringData->pBuffer);
 }
 
 s32 String::RFind(char c, u32 Offset /* = 0*/) const
 {
-  DebugAssert(Offset <= m_pStringData->StringLength);
   char* pAt = std::strrchr(m_pStringData->pBuffer + Offset, c);
   return (pAt == NULL) ? -1 : s32(pAt - m_pStringData->pBuffer);
 }
 
 s32 String::Find(const char* str, u32 Offset /* = 0 */) const
 {
-  DebugAssert(Offset <= m_pStringData->StringLength);
   char* pAt = std::strstr(m_pStringData->pBuffer + Offset, str);
   return (pAt == NULL) ? -1 : s32(pAt - m_pStringData->pBuffer);
 }
 
 void String::Reserve(u32 newReserve, bool Force /* = false */)
 {
-  DebugAssert(!Force || newReserve >= m_pStringData->StringLength);
 
   u32 newSize = (Force) ? newReserve + 1 : std::max(newReserve + 1, m_pStringData->BufferSize);
   StringData* pNewStringData;
@@ -835,8 +811,6 @@ void String::Resize(u32 newSize, char fillerCharacter /* = ' ' */, bool skrinkIf
   else
   {
     // owns the buffer, and going smaller
-    DebugAssert(newSize < m_pStringData->BufferSize);
-
     // update length and terminator
 #if _DEBUG
     std::memset(m_pStringData->pBuffer + newSize, 0, m_pStringData->BufferSize - newSize);
@@ -911,7 +885,6 @@ void String::Erase(s32 Offset, s32 Count /* = INT_std::max */)
   else
   {
     u32 afterEraseBlock = m_pStringData->StringLength - realOffset - realCount;
-    DebugAssert(afterEraseBlock > 0);
 
     std::memmove(m_pStringData->pBuffer + Offset, m_pStringData->pBuffer + realOffset + realCount, afterEraseBlock);
     m_pStringData->StringLength = m_pStringData->StringLength - realCount;
