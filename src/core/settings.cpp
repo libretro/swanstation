@@ -141,10 +141,8 @@ void Settings::Load(SettingsInterface& si)
       .value_or(DEFAULT_CONSOLE_REGION);
   enable_8mb_ram = si.GetBoolValue("Console", "Enable8MBRAM", false);
 
-  start_fullscreen = si.GetBoolValue("Main", "StartFullscreen", false);
   load_devices_from_save_states = si.GetBoolValue("Main", "LoadDevicesFromSaveStates", false);
   apply_game_settings = si.GetBoolValue("Main", "ApplyGameSettings", true);
-  auto_load_cheats = si.GetBoolValue("Main", "AutoLoadCheats", true);
   disable_all_enhancements = si.GetBoolValue("Main", "DisableAllEnhancements", false);
   rewind_enable = si.GetBoolValue("Main", "RewindEnable", false);
   rewind_save_frequency = si.GetFloatValue("Main", "RewindFrequency", 10.0f);
@@ -169,14 +167,12 @@ void Settings::Load(SettingsInterface& si)
 
   gpu_renderer = ParseRendererName(si.GetStringValue("GPU", "Renderer", GetRendererName(DEFAULT_GPU_RENDERER)).c_str())
                    .value_or(DEFAULT_GPU_RENDERER);
-  gpu_adapter = si.GetStringValue("GPU", "Adapter", "");
   gpu_resolution_scale = static_cast<u32>(si.GetIntValue("GPU", "ResolutionScale", 1));
   gpu_multisamples = static_cast<u32>(si.GetIntValue("GPU", "Multisamples", 1));
   gpu_use_debug_device = si.GetBoolValue("GPU", "UseDebugDevice", false);
   gpu_per_sample_shading = si.GetBoolValue("GPU", "PerSampleShading", false);
   gpu_use_thread = si.GetBoolValue("GPU", "UseThread", true);
   gpu_use_software_renderer_for_readbacks = si.GetBoolValue("GPU", "UseSoftwareRendererForReadbacks", false);
-  gpu_threaded_presentation = si.GetBoolValue("GPU", "ThreadedPresentation", true);
   gpu_true_color = si.GetBoolValue("GPU", "TrueColor", false);
   gpu_scaled_dithering = si.GetBoolValue("GPU", "ScaledDithering", false);
   gpu_texture_filter =
@@ -222,8 +218,6 @@ void Settings::Load(SettingsInterface& si)
   display_integer_scaling = si.GetBoolValue("Display", "IntegerScaling", false);
   display_stretch = si.GetBoolValue("Display", "Stretch", false);
   display_show_osd_messages = si.GetBoolValue("Display", "ShowOSDMessages", true);
-  display_show_resolution = si.GetBoolValue("Display", "ShowResolution", false);
-  display_show_status_indicators = si.GetBoolValue("Display", "ShowStatusIndicators", true);
   display_show_enhancements = si.GetBoolValue("Display", "ShowEnhancements", false);
 
   cdrom_readahead_sectors = static_cast<u8>(si.GetIntValue("CDROM", "ReadaheadSectors", DEFAULT_CDROM_READAHEAD_SECTORS));
@@ -234,8 +228,6 @@ void Settings::Load(SettingsInterface& si)
   cdrom_read_speedup = si.GetIntValue("CDROM", "ReadSpeedup", 1);
   cdrom_seek_speedup = si.GetIntValue("CDROM", "SeekSpeedup", 1);
 
-  audio_output_volume = si.GetIntValue("Audio", "OutputVolume", 100);
-  audio_fast_forward_volume = si.GetIntValue("Audio", "FastForwardVolume", 100);
   audio_buffer_size = si.GetIntValue("Audio", "BufferSize", HostInterface::DEFAULT_AUDIO_BUFFER_SIZE);
 
   dma_max_slice_ticks = si.GetIntValue("Hacks", "DMAMaxSliceTicks", DEFAULT_DMA_MAX_SLICE_TICKS);
@@ -295,11 +287,6 @@ void Settings::Load(SettingsInterface& si)
 
 static std::array<const char*, LOGLEVEL_COUNT> s_log_level_names = {
   {"None", "Error", "Warning", "Perf", "Info", "Verbose", "Dev", "Profile", "Debug", "Trace"}};
-static std::array<const char*, LOGLEVEL_COUNT> s_log_level_display_names = {
-  {TRANSLATABLE("LogLevel", "None"), TRANSLATABLE("LogLevel", "Error"), TRANSLATABLE("LogLevel", "Warning"),
-   TRANSLATABLE("LogLevel", "Performance"), TRANSLATABLE("LogLevel", "Information"),
-   TRANSLATABLE("LogLevel", "Verbose"), TRANSLATABLE("LogLevel", "Developer"), TRANSLATABLE("LogLevel", "Profile"),
-   TRANSLATABLE("LogLevel", "Debug"), TRANSLATABLE("LogLevel", "Trace")}};
 
 std::optional<LOGLEVEL> Settings::ParseLogLevelName(const char* str)
 {
@@ -318,11 +305,6 @@ std::optional<LOGLEVEL> Settings::ParseLogLevelName(const char* str)
 const char* Settings::GetLogLevelName(LOGLEVEL level)
 {
   return s_log_level_names[static_cast<int>(level)];
-}
-
-const char* Settings::GetLogLevelDisplayName(LOGLEVEL level)
-{
-  return s_log_level_display_names[static_cast<int>(level)];
 }
 
 static std::array<const char*, 4> s_console_region_names = {{"Auto", "NTSC-J", "NTSC-U", "PAL"}};
@@ -519,9 +501,6 @@ const char* Settings::GetTextureFilterDisplayName(GPUTextureFilter filter)
 }
 
 static constexpr auto s_downsample_mode_names = make_array("Disabled", "Box", "Adaptive");
-static constexpr auto s_downsample_mode_display_names = make_array(
-  TRANSLATABLE("GPUDownsampleMode", "Disabled"), TRANSLATABLE("GPUDownsampleMode", "Box (Downsample 3D/Smooth All)"),
-  TRANSLATABLE("GPUDownsampleMode", "Adaptive (Preserve 3D/Smooth 2D)"));
 
 std::optional<GPUDownsampleMode> Settings::ParseDownsampleModeName(const char* str)
 {
@@ -540,11 +519,6 @@ std::optional<GPUDownsampleMode> Settings::ParseDownsampleModeName(const char* s
 const char* Settings::GetDownsampleModeName(GPUDownsampleMode mode)
 {
   return s_downsample_mode_names[static_cast<int>(mode)];
-}
-
-const char* Settings::GetDownsampleModeDisplayName(GPUDownsampleMode mode)
-{
-  return s_downsample_mode_display_names[static_cast<int>(mode)];
 }
 
 static std::array<const char*, 3> s_display_crop_mode_names = {{"None", "Overscan", "Borders"}};
@@ -656,27 +630,13 @@ const char* Settings::GetControllerTypeName(ControllerType type)
   return s_controller_type_names[static_cast<int>(type)];
 }
 
-const char* Settings::GetControllerTypeDisplayName(ControllerType type)
-{
-  return s_controller_display_names[static_cast<int>(type)];
-}
-
 static std::array<const char*, 7> s_memory_card_type_names = {
   {"None", "Shared", "PerGame", "PerGameTitle", "PerGameFileTitle", "NonPersistent", "Libretro"}};
-static std::array<const char*, 7> s_memory_card_type_display_names = {
-  {TRANSLATABLE("MemoryCardType", "No Memory Card"), TRANSLATABLE("MemoryCardType", "Shared Between All Games"),
-   TRANSLATABLE("MemoryCardType", "Separate Card Per Game (Game Code)"),
-   TRANSLATABLE("MemoryCardType", "Separate Card Per Game (Game Title)"),
-   TRANSLATABLE("MemoryCardType", "Separate Card Per Game (File Title)"),
-   TRANSLATABLE("MemoryCardType", "Non-Persistent Card (Do Not Save)"),
-   TRANSLATABLE("MemoryCardType", "Libretro SRM")
-}};
 
 // these need to be performed as static assert - if e set the std::array size according to MemoryCardType::Count then
 // it will just null-fill unspecified items and we could still have issues with the descriptions not matching the enum.
 // (todo: generally these enum-to-string things are better implemented as lambda switch statements)
 static_assert(s_memory_card_type_names.size()         == (intmax_t)MemoryCardType::Count);
-static_assert(s_memory_card_type_display_names.size() == (intmax_t)MemoryCardType::Count);
 
 std::optional<MemoryCardType> Settings::ParseMemoryCardTypeName(const char* str)
 {
@@ -697,15 +657,7 @@ const char* Settings::GetMemoryCardTypeName(MemoryCardType type)
   return s_memory_card_type_names[static_cast<int>(type)];
 }
 
-const char* Settings::GetMemoryCardTypeDisplayName(MemoryCardType type)
-{
-  return s_memory_card_type_display_names[static_cast<int>(type)];
-}
-
 static std::array<const char*, 4> s_multitap_enable_mode_names = {{"Disabled", "Port1Only", "Port2Only", "BothPorts"}};
-static std::array<const char*, 4> s_multitap_enable_mode_display_names = {
-  {TRANSLATABLE("MultitapMode", "Disabled"), TRANSLATABLE("MultitapMode", "Enable on Port 1 Only"),
-   TRANSLATABLE("MultitapMode", "Enable on Port 2 Only"), TRANSLATABLE("MultitapMode", "Enable on Ports 1 and 2")}};
 
 std::optional<MultitapMode> Settings::ParseMultitapModeName(const char* str)
 {
@@ -724,9 +676,4 @@ std::optional<MultitapMode> Settings::ParseMultitapModeName(const char* str)
 const char* Settings::GetMultitapModeName(MultitapMode mode)
 {
   return s_multitap_enable_mode_names[static_cast<size_t>(mode)];
-}
-
-const char* Settings::GetMultitapModeDisplayName(MultitapMode mode)
-{
-  return s_multitap_enable_mode_display_names[static_cast<size_t>(mode)];
 }

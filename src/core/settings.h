@@ -69,10 +69,8 @@ struct Settings
   CPUFastmemMode cpu_fastmem_mode = CPUFastmemMode::Disabled;
   bool cpu_fastmem_rewrite = false;
 
-  bool start_fullscreen = false;
   bool load_devices_from_save_states = false;
   bool apply_game_settings = true;
-  bool auto_load_cheats = false;
   bool disable_all_enhancements = false;
 
   bool rewind_enable = false;
@@ -81,12 +79,10 @@ struct Settings
   u32 runahead_frames = 0;
 
   GPURenderer gpu_renderer = GPURenderer::Software;
-  std::string gpu_adapter;
   u32 gpu_resolution_scale = 1;
   u32 gpu_multisamples = 1;
   bool gpu_use_thread = true;
   bool gpu_use_software_renderer_for_readbacks = false;
-  bool gpu_threaded_presentation = true;
   bool gpu_use_debug_device = false;
   bool gpu_per_sample_shading = false;
   bool gpu_true_color = false;
@@ -117,8 +113,6 @@ struct Settings
   bool display_integer_scaling = false;
   bool display_stretch = false;
   bool display_show_osd_messages = true;
-  bool display_show_resolution = false;
-  bool display_show_status_indicators = true;
   bool display_show_enhancements = false;
   float gpu_pgxp_tolerance = -1.0f;
   float gpu_pgxp_depth_clear_threshold = 300.0f / 4096.0f;
@@ -131,8 +125,6 @@ struct Settings
   u32 cdrom_read_speedup = 1;
   u32 cdrom_seek_speedup = 1;
 
-  s32 audio_output_volume = 100;
-  s32 audio_fast_forward_volume = 100;
   u32 audio_buffer_size = 2048;
 
   // timing hacks section
@@ -231,7 +223,6 @@ struct Settings
 
   static std::optional<LOGLEVEL> ParseLogLevelName(const char* str);
   static const char* GetLogLevelName(LOGLEVEL level);
-  static const char* GetLogLevelDisplayName(LOGLEVEL level);
 
   static std::optional<ConsoleRegion> ParseConsoleRegionName(const char* str);
   static const char* GetConsoleRegionName(ConsoleRegion region);
@@ -270,15 +261,12 @@ struct Settings
 
   static std::optional<ControllerType> ParseControllerTypeName(const char* str);
   static const char* GetControllerTypeName(ControllerType type);
-  static const char* GetControllerTypeDisplayName(ControllerType type);
 
   static std::optional<MemoryCardType> ParseMemoryCardTypeName(const char* str);
   static const char* GetMemoryCardTypeName(MemoryCardType type);
-  static const char* GetMemoryCardTypeDisplayName(MemoryCardType type);
 
   static std::optional<MultitapMode> ParseMultitapModeName(const char* str);
   static const char* GetMultitapModeName(MultitapMode mode);
-  static const char* GetMultitapModeDisplayName(MultitapMode mode);
 
   // Default to D3D11 on Windows as it's more performant and at this point, less buggy.
 #ifdef _WIN32
