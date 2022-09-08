@@ -53,8 +53,6 @@ public:
   ALWAYS_INLINE u32 GetByteStride() const { return (sizeof(PixelType) * m_width); }
   ALWAYS_INLINE const PixelType* GetPixels() const { return m_pixels.data(); }
   ALWAYS_INLINE PixelType* GetPixels() { return m_pixels.data(); }
-  ALWAYS_INLINE const PixelType* GetRowPixels(u32 y) const { return &m_pixels[y * m_width]; }
-  ALWAYS_INLINE PixelType* GetRowPixels(u32 y) { return &m_pixels[y * m_width]; }
   ALWAYS_INLINE void SetPixel(u32 x, u32 y, PixelType pixel) { m_pixels[y * m_width + x] = pixel; }
   ALWAYS_INLINE PixelType GetPixel(u32 x, u32 y) const { return m_pixels[y * m_width + x]; }
 
@@ -95,8 +93,6 @@ private:
 using RGBA8Image = Image<u32>;
 
 bool LoadImageFromFile(Common::RGBA8Image* image, const char* filename);
-bool LoadImageFromBuffer(Common::RGBA8Image* image, const void* buffer, std::size_t buffer_size);
-bool LoadImageFromStream(Common::RGBA8Image* image, ByteStream* stream);
 bool WriteImageToFile(const Common::RGBA8Image& image, const char* filename);
 
 } // namespace Common
