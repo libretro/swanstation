@@ -148,47 +148,6 @@ bool Texture::Create(u32 width, u32 height, u32 levels, u32 layers, VkFormat for
   return true;
 }
 
-bool Texture::Adopt(VkImage existing_image, VkImageViewType view_type, u32 width, u32 height, u32 levels, u32 layers,
-                    VkFormat format, VkSampleCountFlagBits samples)
-{
-  // Only need to create the image view, this is mainly for swap chains.
-  VkImageViewCreateInfo view_info = {VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-                                     nullptr,
-                                     0,
-                                     existing_image,
-                                     view_type,
-                                     format,
-                                     {VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY,
-                                      VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY},
-                                     {Util::IsDepthFormat(format) ?
-                                        static_cast<VkImageAspectFlags>(VK_IMAGE_ASPECT_DEPTH_BIT) :
-                                        static_cast<VkImageAspectFlags>(VK_IMAGE_ASPECT_COLOR_BIT),
-                                      0, levels, 0, layers}};
-
-  // Memory is managed by the owner of the image.
-  VkImageView view = VK_NULL_HANDLE;
-  VkResult res = vkCreateImageView(g_vulkan_context->GetDevice(), &view_info, nullptr, &view);
-  if (res != VK_SUCCESS)
-  {
-    LOG_VULKAN_ERROR(res, "vkCreateImageView failed: ");
-    return false;
-  }
-
-  if (IsValid())
-    Destroy(true);
-
-  m_width = width;
-  m_height = height;
-  m_levels = levels;
-  m_layers = layers;
-  m_format = format;
-  m_samples = samples;
-  m_view_type = view_type;
-  m_image = existing_image;
-  m_view = view;
-  return true;
-}
-
 void Texture::Destroy(bool defer /* = true */)
 {
   if (m_view != VK_NULL_HANDLE)

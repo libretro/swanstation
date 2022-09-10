@@ -155,46 +155,6 @@ bool Texture::Create(u32 width, u32 height, u32 samples, DXGI_FORMAT format, DXG
   return true;
 }
 
-bool Texture::Adopt(ComPtr<ID3D12Resource> texture, DXGI_FORMAT srv_format, DXGI_FORMAT rtv_format,
-                    DXGI_FORMAT dsv_format, D3D12_RESOURCE_STATES state)
-{
-  const D3D12_RESOURCE_DESC desc(texture->GetDesc());
-
-  DescriptorHandle srv_descriptor, rtv_descriptor;
-  if (srv_format != DXGI_FORMAT_UNKNOWN)
-  {
-    if (!CreateSRVDescriptor(texture.Get(), srv_format, desc.SampleDesc.Count > 1, &srv_descriptor))
-      return false;
-  }
-
-  if (rtv_format != DXGI_FORMAT_UNKNOWN)
-  {
-    if (!CreateRTVDescriptor(texture.Get(), rtv_format, desc.SampleDesc.Count > 1, &rtv_descriptor))
-    {
-      g_d3d12_context->GetDescriptorHeapManager().Free(&srv_descriptor);
-      return false;
-    }
-  }
-  else if (dsv_format != DXGI_FORMAT_UNKNOWN)
-  {
-    if (!CreateDSVDescriptor(texture.Get(), dsv_format, desc.SampleDesc.Count > 1, &rtv_descriptor))
-    {
-      g_d3d12_context->GetDescriptorHeapManager().Free(&srv_descriptor);
-      return false;
-    }
-  }
-
-  m_resource = std::move(texture);
-  m_srv_descriptor = std::move(srv_descriptor);
-  m_rtv_or_dsv_descriptor = std::move(rtv_descriptor);
-  m_width = static_cast<u32>(desc.Width);
-  m_height = desc.Height;
-  m_samples = desc.SampleDesc.Count;
-  m_format = desc.Format;
-  m_state = state;
-  return true;
-}
-
 void Texture::Destroy(bool defer /* = true */)
 {
   if (defer)

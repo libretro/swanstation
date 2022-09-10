@@ -285,7 +285,7 @@ void BufferMemoryBarrier(VkCommandBuffer command_buffer, VkBuffer buffer, VkAcce
   vkCmdPipelineBarrier(command_buffer, src_stage_mask, dst_stage_mask, 0, 0, nullptr, 1, &buffer_info, 0, nullptr);
 }
 
-const char* VkResultToString(VkResult res)
+static const char* VkResultToString(VkResult res)
 {
   switch (res)
   {
@@ -362,73 +362,9 @@ const char* VkResultToString(VkResult res)
       return "VK_ERROR_INVALID_SHADER_NV";
 
     default:
-      return "UNKNOWN_VK_RESULT";
+      break;
   }
-}
-const char* VkImageLayoutToString(VkImageLayout layout)
-{
-  switch (layout)
-  {
-    case VK_IMAGE_LAYOUT_UNDEFINED:
-      return "VK_IMAGE_LAYOUT_UNDEFINED";
-
-    case VK_IMAGE_LAYOUT_GENERAL:
-      return "VK_IMAGE_LAYOUT_GENERAL";
-
-    case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
-      return "VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL";
-
-    case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
-      return "VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL";
-
-    case VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL:
-      return "VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL";
-
-    case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
-      return "VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL";
-
-    case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
-      return "VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL";
-
-    case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
-      return "VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL";
-
-    case VK_IMAGE_LAYOUT_PREINITIALIZED:
-      return "VK_IMAGE_LAYOUT_PREINITIALIZED";
-
-    case VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL:
-      return "VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL";
-
-    case VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL:
-      return "VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL";
-
-    case VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL:
-      return "VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL";
-
-    case VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL:
-      return "VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL";
-
-    case VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL:
-      return "VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL";
-
-    case VK_IMAGE_LAYOUT_STENCIL_READ_ONLY_OPTIMAL:
-      return "VK_IMAGE_LAYOUT_STENCIL_READ_ONLY_OPTIMAL";
-
-    case VK_IMAGE_LAYOUT_PRESENT_SRC_KHR:
-      return "VK_IMAGE_LAYOUT_PRESENT_SRC_KHR";
-
-    case VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR:
-      return "VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR";
-
-    case VK_IMAGE_LAYOUT_SHADING_RATE_OPTIMAL_NV:
-      return "VK_IMAGE_LAYOUT_SHADING_RATE_OPTIMAL_NV";
-
-    case VK_IMAGE_LAYOUT_FRAGMENT_DENSITY_MAP_OPTIMAL_EXT:
-      return "VK_IMAGE_LAYOUT_FRAGMENT_DENSITY_MAP_OPTIMAL_EXT";
-
-    default:
-      return "UNKNOWN_VK_RESULT";
-  }
+  return "UNKNOWN_VK_RESULT";
 }
 
 void LogVulkanResult(int level, const char* func_name, VkResult res, const char* msg, ...)

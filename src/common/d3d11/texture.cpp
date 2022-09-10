@@ -89,49 +89,6 @@ bool Texture::Create(ID3D11Device* device, u32 width, u32 height, u32 levels, u3
   return true;
 }
 
-bool Texture::Adopt(ID3D11Device* device, ComPtr<ID3D11Texture2D> texture)
-{
-  D3D11_TEXTURE2D_DESC desc;
-  texture->GetDesc(&desc);
-
-  ComPtr<ID3D11ShaderResourceView> srv;
-  if (desc.BindFlags & D3D11_BIND_SHADER_RESOURCE)
-  {
-    const D3D11_SRV_DIMENSION srv_dimension =
-      (desc.SampleDesc.Count > 1) ? D3D11_SRV_DIMENSION_TEXTURE2DMS : D3D11_SRV_DIMENSION_TEXTURE2D;
-    const CD3D11_SHADER_RESOURCE_VIEW_DESC srv_desc(srv_dimension, desc.Format, 0, desc.MipLevels, 0, desc.ArraySize);
-    const HRESULT hr = device->CreateShaderResourceView(texture.Get(), &srv_desc, srv.ReleaseAndGetAddressOf());
-    if (FAILED(hr))
-    {
-      Log_ErrorPrintf("Create SRV for adopted texture failed: 0x%08X", hr);
-      return false;
-    }
-  }
-
-  ComPtr<ID3D11RenderTargetView> rtv;
-  if (desc.BindFlags & D3D11_BIND_RENDER_TARGET)
-  {
-    const D3D11_RTV_DIMENSION rtv_dimension =
-      (desc.SampleDesc.Count > 1) ? D3D11_RTV_DIMENSION_TEXTURE2DMS : D3D11_RTV_DIMENSION_TEXTURE2D;
-    const CD3D11_RENDER_TARGET_VIEW_DESC rtv_desc(rtv_dimension, desc.Format, 0, 0, desc.ArraySize);
-    const HRESULT hr = device->CreateRenderTargetView(texture.Get(), &rtv_desc, rtv.ReleaseAndGetAddressOf());
-    if (FAILED(hr))
-    {
-      Log_ErrorPrintf("Create RTV for adopted texture failed: 0x%08X", hr);
-      return false;
-    }
-  }
-
-  m_texture = std::move(texture);
-  m_srv = std::move(srv);
-  m_rtv = std::move(rtv);
-  m_width = desc.Width;
-  m_height = desc.Height;
-  m_levels = static_cast<u16>(desc.MipLevels);
-  m_samples = static_cast<u16>(desc.SampleDesc.Count);
-  return true;
-}
-
 void Texture::Destroy()
 {
   m_rtv.Reset();

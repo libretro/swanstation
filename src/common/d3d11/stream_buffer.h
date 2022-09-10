@@ -21,7 +21,6 @@ public:
   ALWAYS_INLINE u32 GetPosition() const { return m_position; }
 
   bool Create(ID3D11Device* device, D3D11_BIND_FLAG bind_flags, u32 size);
-  void Adopt(ComPtr<ID3D11Buffer> buffer);
   void Release();
   
   struct MappingResult

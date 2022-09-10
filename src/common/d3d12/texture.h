@@ -37,8 +37,6 @@ public:
 
   bool Create(u32 width, u32 height, u32 samples, DXGI_FORMAT format, DXGI_FORMAT srv_format, DXGI_FORMAT rtv_format,
               DXGI_FORMAT dsv_format, D3D12_RESOURCE_FLAGS flags);
-  bool Adopt(ComPtr<ID3D12Resource> texture, DXGI_FORMAT srv_format, DXGI_FORMAT rtv_format, DXGI_FORMAT dsv_format,
-             D3D12_RESOURCE_STATES state);
 
   D3D12_RESOURCE_DESC GetDesc() const;
 

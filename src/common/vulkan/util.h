@@ -52,8 +52,6 @@ void BufferMemoryBarrier(VkCommandBuffer command_buffer, VkBuffer buffer, VkAcce
                          VkAccessFlags dst_access_mask, VkDeviceSize offset, VkDeviceSize size,
                          VkPipelineStageFlags src_stage_mask, VkPipelineStageFlags dst_stage_mask);
 
-const char* VkResultToString(VkResult res);
-const char* VkImageLayoutToString(VkImageLayout layout);
 void LogVulkanResult(int level, const char* func_name, VkResult res, const char* msg, ...) printflike(4, 5);
 
 #define LOG_VULKAN_ERROR(res, ...) ::Vulkan::Util::LogVulkanResult(1, __func__, res, __VA_ARGS__)

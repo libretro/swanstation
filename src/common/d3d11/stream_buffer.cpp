@@ -62,16 +62,6 @@ bool StreamBuffer::Create(ID3D11Device* device, D3D11_BIND_FLAG bind_flags, u32 
   return true;
 }
 
-void StreamBuffer::Adopt(ComPtr<ID3D11Buffer> buffer)
-{
-  m_buffer = std::move(buffer);
-
-  D3D11_BUFFER_DESC desc;
-  m_buffer->GetDesc(&desc);
-  m_size = desc.ByteWidth;
-  m_position = 0;
-}
-
 void StreamBuffer::Release()
 {
   m_buffer.Reset();

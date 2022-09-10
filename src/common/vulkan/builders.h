@@ -221,37 +221,6 @@ private:
   std::array<VkImageView, MAX_ATTACHMENTS> m_images;
 };
 
-class RenderPassBuilder
-{
-  enum : u32
-  {
-    MAX_ATTACHMENTS = 2,
-    MAX_ATTACHMENT_REFERENCES = 2,
-    MAX_SUBPASSES = 1,
-  };
-
-public:
-  RenderPassBuilder();
-
-  void Clear();
-
-  VkRenderPass Create(VkDevice device, bool clear = true);
-
-  u32 AddAttachment(VkFormat format, VkSampleCountFlagBits samples, VkAttachmentLoadOp load_op,
-                    VkAttachmentStoreOp store_op, VkImageLayout initial_layout, VkImageLayout final_layout);
-
-  u32 AddSubpass();
-  void AddSubpassColorAttachment(u32 subpass, u32 attachment, VkImageLayout layout);
-  void AddSubpassDepthAttachment(u32 subpass, u32 attachment, VkImageLayout layout);
-
-private:
-  VkRenderPassCreateInfo m_ci;
-  std::array<VkAttachmentDescription, MAX_ATTACHMENTS> m_attachments;
-  std::array<VkAttachmentReference, MAX_ATTACHMENT_REFERENCES> m_attachment_references;
-  u32 m_num_attachment_references = 0;
-  std::array<VkSubpassDescription, MAX_SUBPASSES> m_subpasses;
-};
-
 class BufferViewBuilder
 {
 public:

@@ -43,9 +43,6 @@ public:
   bool Create(u32 width, u32 height, u32 levels, u32 layers, VkFormat format, VkSampleCountFlagBits samples,
               VkImageViewType view_type, VkImageTiling tiling, VkImageUsageFlags usage);
 
-  bool Adopt(VkImage existing_image, VkImageViewType view_type, u32 width, u32 height, u32 levels, u32 layers,
-             VkFormat format, VkSampleCountFlagBits samples);
-
   void Destroy(bool defer = true);
 
   // Used when the render pass is changing the image layout, or to force it to
