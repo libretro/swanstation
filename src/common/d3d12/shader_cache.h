@@ -35,17 +35,9 @@ public:
   {
     return GetShaderBlob(EntryType::VertexShader, shader_code);
   }
-  ALWAYS_INLINE ComPtr<ID3DBlob> GetGeometryShader(std::string_view shader_code)
-  {
-    return GetShaderBlob(EntryType::GeometryShader, shader_code);
-  }
   ALWAYS_INLINE ComPtr<ID3DBlob> GetPixelShader(std::string_view shader_code)
   {
     return GetShaderBlob(EntryType::PixelShader, shader_code);
-  }
-  ALWAYS_INLINE ComPtr<ID3DBlob> GetComputeShader(std::string_view shader_code)
-  {
-    return GetShaderBlob(EntryType::ComputeShader, shader_code);
   }
 
   ComPtr<ID3DBlob> GetShaderBlob(EntryType type, std::string_view shader_code);

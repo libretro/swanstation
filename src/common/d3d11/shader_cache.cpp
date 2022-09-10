@@ -238,16 +238,6 @@ ShaderCache::ComPtr<ID3D11VertexShader> ShaderCache::GetVertexShader(ID3D11Devic
   return D3D11::ShaderCompiler::CreateVertexShader(device, blob.Get());
 }
 
-ShaderCache::ComPtr<ID3D11GeometryShader> ShaderCache::GetGeometryShader(ID3D11Device* device,
-                                                                         std::string_view shader_code)
-{
-  ComPtr<ID3DBlob> blob = GetShaderBlob(ShaderCompiler::Type::Geometry, std::move(shader_code));
-  if (!blob)
-    return {};
-
-  return D3D11::ShaderCompiler::CreateGeometryShader(device, blob.Get());
-}
-
 ShaderCache::ComPtr<ID3D11PixelShader> ShaderCache::GetPixelShader(ID3D11Device* device, std::string_view shader_code)
 {
   ComPtr<ID3DBlob> blob = GetShaderBlob(ShaderCompiler::Type::Pixel, std::move(shader_code));
@@ -255,16 +245,6 @@ ShaderCache::ComPtr<ID3D11PixelShader> ShaderCache::GetPixelShader(ID3D11Device*
     return {};
 
   return D3D11::ShaderCompiler::CreatePixelShader(device, blob.Get());
-}
-
-ShaderCache::ComPtr<ID3D11ComputeShader> ShaderCache::GetComputeShader(ID3D11Device* device,
-                                                                       std::string_view shader_code)
-{
-  ComPtr<ID3DBlob> blob = GetShaderBlob(ShaderCompiler::Type::Compute, std::move(shader_code));
-  if (!blob)
-    return {};
-
-  return D3D11::ShaderCompiler::CreateComputeShader(device, blob.Get());
 }
 
 ShaderCache::ComPtr<ID3DBlob> ShaderCache::CompileAndAddShaderBlob(const CacheIndexKey& key,

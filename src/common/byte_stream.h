@@ -63,9 +63,7 @@ public:
   virtual bool Commit() = 0;
 
   // state accessors
-  inline bool InErrorState() const { return m_errorState; }
   inline void SetErrorState() { m_errorState = true; }
-  inline void ClearErrorState() { m_errorState = false; }
 
 protected:
   ByteStream() : m_errorState(false) {}

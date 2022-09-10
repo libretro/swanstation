@@ -26,9 +26,7 @@ public:
   ComPtr<ID3DBlob> GetShaderBlob(ShaderCompiler::Type type, std::string_view shader_code);
 
   ComPtr<ID3D11VertexShader> GetVertexShader(ID3D11Device* device, std::string_view shader_code);
-  ComPtr<ID3D11GeometryShader> GetGeometryShader(ID3D11Device* device, std::string_view shader_code);
   ComPtr<ID3D11PixelShader> GetPixelShader(ID3D11Device* device, std::string_view shader_code);
-  ComPtr<ID3D11ComputeShader> GetComputeShader(ID3D11Device* device, std::string_view shader_code);
 
 private:
   static constexpr u32 FILE_VERSION = 2;

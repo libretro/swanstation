@@ -23,7 +23,6 @@ public:
   ALWAYS_INLINE bool IsValid() const { return static_cast<bool>(m_buffer); }
   ALWAYS_INLINE ID3D12Resource* GetBuffer() const { return m_buffer.Get(); }
   ALWAYS_INLINE D3D12_GPU_VIRTUAL_ADDRESS GetGPUPointer() const { return m_gpu_pointer; }
-  ALWAYS_INLINE void* GetHostPointer() const { return m_host_pointer; }
   ALWAYS_INLINE void* GetCurrentHostPointer() const { return m_host_pointer + m_current_offset; }
   ALWAYS_INLINE D3D12_GPU_VIRTUAL_ADDRESS GetCurrentGPUPointer() const { return m_gpu_pointer + m_current_offset; }
   ALWAYS_INLINE u32 GetSize() const { return m_size; }

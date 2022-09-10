@@ -26,8 +26,6 @@ public:
   ALWAYS_INLINE bool IsValid() const { return (m_buffer != VK_NULL_HANDLE); }
   ALWAYS_INLINE VkBuffer GetBuffer() const { return m_buffer; }
   ALWAYS_INLINE const VkBuffer* GetBufferPointer() const { return &m_buffer; }
-  ALWAYS_INLINE VkDeviceMemory GetDeviceMemory() const { return m_memory; }
-  ALWAYS_INLINE void* GetHostPointer() const { return m_host_pointer; }
   ALWAYS_INLINE void* GetCurrentHostPointer() const { return m_host_pointer + m_current_offset; }
   ALWAYS_INLINE u32 GetCurrentSize() const { return m_size; }
   ALWAYS_INLINE u32 GetCurrentSpace() const { return m_current_space; }

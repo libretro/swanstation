@@ -31,9 +31,7 @@ public:
   VkShaderModule GetShaderModule(ShaderCompiler::Type type, std::string_view shader_code);
 
   VkShaderModule GetVertexShader(std::string_view shader_code);
-  VkShaderModule GetGeometryShader(std::string_view shader_code);
   VkShaderModule GetFragmentShader(std::string_view shader_code);
-  VkShaderModule GetComputeShader(std::string_view shader_code);
 
 private:
   static constexpr u32 FILE_VERSION = 2;

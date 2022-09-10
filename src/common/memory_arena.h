@@ -20,9 +20,7 @@ public:
     ~View();
 
     void* GetBasePointer() const { return m_base_pointer; }
-    size_t GetArenaOffset() const { return m_arena_offset; }
     size_t GetMappingSize() const { return m_mapping_size; }
-    bool IsWritable() const { return m_writable; }
 
   private:
     MemoryArena* m_parent;
@@ -38,8 +36,6 @@ public:
   static void* FindBaseAddressForMapping(size_t size);
 
   ALWAYS_INLINE size_t GetSize() const { return m_size; }
-  ALWAYS_INLINE bool IsWritable() const { return m_writable; }
-  ALWAYS_INLINE bool IsExecutable() const { return m_executable; }
 
   bool IsValid() const;
   bool Create(size_t size, bool writable, bool executable);

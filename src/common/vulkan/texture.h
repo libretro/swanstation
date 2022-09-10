@@ -37,7 +37,6 @@ public:
   ALWAYS_INLINE VkImageLayout GetLayout() const { return m_layout; }
   ALWAYS_INLINE VkImageViewType GetViewType() const { return m_view_type; }
   ALWAYS_INLINE VkImage GetImage() const { return m_image; }
-  ALWAYS_INLINE VkDeviceMemory GetDeviceMemory() const { return m_device_memory; }
   ALWAYS_INLINE VkImageView GetView() const { return m_view; }
 
   bool Create(u32 width, u32 height, u32 levels, u32 layers, VkFormat format, VkSampleCountFlagBits samples,

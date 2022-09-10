@@ -469,19 +469,9 @@ VkShaderModule ShaderCache::GetVertexShader(std::string_view shader_code)
   return GetShaderModule(ShaderCompiler::Type::Vertex, std::move(shader_code));
 }
 
-VkShaderModule ShaderCache::GetGeometryShader(std::string_view shader_code)
-{
-  return GetShaderModule(ShaderCompiler::Type::Geometry, std::move(shader_code));
-}
-
 VkShaderModule ShaderCache::GetFragmentShader(std::string_view shader_code)
 {
   return GetShaderModule(ShaderCompiler::Type::Fragment, std::move(shader_code));
-}
-
-VkShaderModule ShaderCache::GetComputeShader(std::string_view shader_code)
-{
-  return GetShaderModule(ShaderCompiler::Type::Compute, std::move(shader_code));
 }
 
 std::optional<ShaderCompiler::SPIRVCodeVector> ShaderCache::CompileAndAddShaderSPV(const CacheIndexKey& key,
