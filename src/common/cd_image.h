@@ -241,10 +241,8 @@ public:
   u32 GetIndexNumber() const { return m_current_index->index_number; }
   u32 GetTrackNumber() const { return m_current_index->track_number; }
   u32 GetTrackCount() const { return static_cast<u32>(m_tracks.size()); }
-  LBA GetTrackStartPosition(u8 track) const;
   Position GetTrackStartMSFPosition(u8 track) const;
   LBA GetTrackLength(u8 track) const;
-  Position GetTrackMSFLength(u8 track) const;
   TrackMode GetTrackMode(u8 track) const;
   LBA GetTrackIndexPosition(u8 track, u8 index) const;
   LBA GetTrackIndexLength(u8 track, u8 index) const;

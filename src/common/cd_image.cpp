@@ -75,11 +75,6 @@ std::unique_ptr<CDImage> CDImage::Open(const char* filename, OpenFlags open_flag
   return nullptr;
 }
 
-CDImage::LBA CDImage::GetTrackStartPosition(u8 track) const
-{
-  return m_tracks[track - 1].start_lba;
-}
-
 CDImage::Position CDImage::GetTrackStartMSFPosition(u8 track) const
 {
   return Position::FromLBA(m_tracks[track - 1].start_lba);
@@ -88,11 +83,6 @@ CDImage::Position CDImage::GetTrackStartMSFPosition(u8 track) const
 CDImage::LBA CDImage::GetTrackLength(u8 track) const
 {
   return m_tracks[track - 1].length;
-}
-
-CDImage::Position CDImage::GetTrackMSFLength(u8 track) const
-{
-  return Position::FromLBA(m_tracks[track - 1].length);
 }
 
 CDImage::TrackMode CDImage::GetTrackMode(u8 track) const

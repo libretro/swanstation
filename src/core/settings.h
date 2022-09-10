@@ -303,22 +303,11 @@ struct Settings
 
   static constexpr LOGLEVEL DEFAULT_LOG_LEVEL = LOGLEVEL_INFO;
 
-  // Enable console logging by default on Linux platforms.
-#if defined(__linux__) && !defined(__ANDROID__)
-  static constexpr bool DEFAULT_LOG_TO_CONSOLE = true;
-#else
-  static constexpr bool DEFAULT_LOG_TO_CONSOLE = false;
-#endif
-
   // Android doesn't create settings until they're first opened, so we have to override the defaults here.
 #ifndef __ANDROID__
-  static constexpr bool DEFAULT_VSYNC_VALUE = false;
   static constexpr bool DEFAULT_FAST_BOOT_VALUE = false;
-  static constexpr float DEFAULT_DISPLAY_MAX_FPS = 0.0f;
 #else
-  static constexpr bool DEFAULT_VSYNC_VALUE = true;
   static constexpr bool DEFAULT_FAST_BOOT_VALUE = true;
-  static constexpr float DEFAULT_DISPLAY_MAX_FPS = 60.0f;
 #endif
 };
 

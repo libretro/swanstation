@@ -33,29 +33,3 @@
 #error Unknown compiler.
 
 #endif
-
-#if defined(CPU_X64)
-#define CPU_ARCH_STR "x64"
-#elif defined(CPU_X86)
-#define CPU_ARCH_STR "x86"
-#elif defined(CPU_AARCH32)
-#define CPU_ARCH_STR "AArch32"
-#elif defined(CPU_AARCH64)
-#define CPU_ARCH_STR "AArch64"
-#else
-#define CPU_ARCH_STR "Unknown"
-#endif
-
-#if defined(_WIN32)
-#define SYSTEM_STR "Windows"
-#elif defined(__ANDROID__)
-#define SYSTEM_STR "Android"
-#elif defined(__linux__)
-#define SYSTEM_STR "Linux"
-#elif defined(__FreeBSD__)
-#define SYSTEM_STR "FreeBSD"
-#elif defined(__APPLE__)
-#define SYSTEM_STR "macOS"
-#else
-#define SYSTEM_STR "Unknown"
-#endif
