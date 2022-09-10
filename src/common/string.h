@@ -71,9 +71,6 @@ public:
   void Assign(const std::string_view& copyString);
   void Assign(String&& moveString);
 
-  // assignment but ensures that we have our own copy.
-  void AssignCopy(const String& copyString);
-
   // Ensures that the string has its own unique copy of the data.
   void EnsureOwnWritableCopy();
 
@@ -107,31 +104,6 @@ public:
   void AppendFormattedString(const char* FormatString, ...) printflike(2, 3);
   void AppendFormattedStringVA(const char* FormatString, va_list ArgPtr);
 
-  // append a single character to this string
-  void PrependCharacter(char c);
-
-  // append a string to this string
-  void PrependString(const String& appendStr);
-  void PrependString(const char* appendText);
-  void PrependString(const char* appendString, u32 Count);
-  void PrependString(const std::string& appendStr);
-  void PrependString(const std::string_view& appendStr);
-
-  // append a substring of the specified string to this string
-  void PrependSubString(const String& appendStr, s32 Offset = 0, s32 Count = std::numeric_limits<s32>::max());
-  void PrependSubString(const char* appendText, s32 Offset = 0, s32 Count = std::numeric_limits<s32>::max());
-
-  // append formatted string to this string
-  void PrependFormattedString(const char* FormatString, ...) printflike(2, 3);
-  void PrependFormattedStringVA(const char* FormatString, va_list ArgPtr);
-
-  // insert a string at the specified offset
-  void InsertString(s32 offset, const String& appendStr);
-  void InsertString(s32 offset, const char* appendStr);
-  void InsertString(s32 offset, const char* appendStr, u32 appendStrLength);
-  void InsertString(s32 offset, const std::string& appendStr);
-  void InsertString(s32 offset, const std::string_view& appendStr);
-
   // set to formatted string
   void Format(const char* FormatString, ...) printflike(2, 3);
   void FormatVA(const char* FormatString, va_list ArgPtr);
@@ -139,12 +111,8 @@ public:
   // compare one string to another
   bool Compare(const String& otherString) const;
   bool Compare(const char* otherText) const;
-  bool SubCompare(const String& otherString, u32 Length) const;
-  bool SubCompare(const char* otherText, u32 Length) const;
   bool CompareInsensitive(const String& otherString) const;
   bool CompareInsensitive(const char* otherText) const;
-  bool SubCompareInsensitive(const String& otherString, u32 Length) const;
-  bool SubCompareInsensitive(const char* otherText, u32 Length) const;
 
   // numerical compares
   int NumericCompare(const String& otherString) const;
@@ -162,7 +130,6 @@ public:
   // rfind is the same except it starts at the end instead of the start
   // returns -1 if it is not found, otherwise the offset in the string
   s32 Find(char c, u32 Offset = 0) const;
-  s32 RFind(char c, u32 Offset = 0) const;
 
   // searches for a string inside a string
   // rfind is the same except it starts at the end instead of the start
@@ -179,7 +146,7 @@ public:
   void UpdateSize();
 
   // shrink the string to the minimum size possible
-  void Shrink(bool Force = false);
+  void Shrink(bool Force);
 
   // gets the size of the string
   u32 GetLength() const { return m_pStringData->StringLength; }
@@ -192,9 +159,6 @@ public:
     EnsureOwnWritableCopy();
     return m_pStringData->BufferSize;
   }
-
-  // creates a new string using part of this string
-  String SubString(s32 Offset, s32 Count = std::numeric_limits<s32>::max()) const;
 
   // erase count characters at offset from this string. if count is less than zero, everything past offset is erased
   void Erase(s32 Offset, s32 Count = std::numeric_limits<s32>::max());
@@ -282,7 +246,6 @@ public:
 
 protected:
   // Internal append function.
-  void InternalPrepend(const char* pString, u32 Length);
   void InternalAppend(const char* pString, u32 Length);
 
   // Pointer to string data.
@@ -407,7 +370,6 @@ private:
 // stack string types
 typedef StackString<64> TinyString;
 typedef StackString<256> SmallString;
-typedef StackString<512> LargeString;
 typedef StackString<512> PathString;
 
 // empty string global

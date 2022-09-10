@@ -40,11 +40,6 @@ static String::StringData* StringDataAllocate(u32 allocSize)
   return pStringData;
 }
 
-static inline void StringDataAddRef(String::StringData* pStringData)
-{
-  ++pStringData->ReferenceCount;
-}
-
 static inline void StringDataRelease(String::StringData* pStringData)
 {
   if (pStringData->ReferenceCount == -1)
@@ -103,9 +98,7 @@ static String::StringData* StringDataReallocate(String::StringData* pStringData,
   }
 #else
   if (newSize > pStringData->BufferSize)
-  {
     pStringData->pBuffer[newSize - 1] = 0;
-  }
 #endif
 
   // update size
@@ -137,7 +130,7 @@ String::String(const String& copyString)
   {
     m_pStringData = copyString.m_pStringData;
     if (!m_pStringData->ReadOnly)
-      StringDataAddRef(m_pStringData);
+      ++m_pStringData->ReferenceCount;
   }
   // create a clone for ourselves
   else
@@ -218,16 +211,6 @@ void String::InternalAppend(const char* pString, u32 Length)
   EnsureRemainingSpace(Length);
 
   std::memcpy(m_pStringData->pBuffer + m_pStringData->StringLength, pString, Length);
-  m_pStringData->StringLength += Length;
-  m_pStringData->pBuffer[m_pStringData->StringLength] = 0;
-}
-
-void String::InternalPrepend(const char* pString, u32 Length)
-{
-  EnsureRemainingSpace(Length);
-
-  std::memmove(m_pStringData->pBuffer + Length, m_pStringData->pBuffer, m_pStringData->StringLength);
-  std::memcpy(m_pStringData->pBuffer, pString, Length);
   m_pStringData->StringLength += Length;
   m_pStringData->pBuffer[m_pStringData->StringLength] = 0;
 }
@@ -355,174 +338,6 @@ void String::AppendFormattedStringVA(const char* FormatString, va_list ArgPtr)
     std::free(pHeapBuffer);
 }
 
-void String::PrependCharacter(char c)
-{
-  InternalPrepend(&c, 1);
-}
-
-void String::PrependString(const String& appendStr)
-{
-  if (appendStr.GetLength() > 0)
-    InternalPrepend(appendStr.GetCharArray(), appendStr.GetLength());
-}
-
-void String::PrependString(const char* appendText)
-{
-  u32 textLength = static_cast<u32>(std::strlen(appendText));
-  if (textLength > 0)
-    InternalPrepend(appendText, textLength);
-}
-
-void String::PrependString(const char* appendString, u32 Count)
-{
-  if (Count > 0)
-    InternalPrepend(appendString, Count);
-}
-
-void String::PrependString(const std::string& appendStr)
-{
-  if (!appendStr.empty())
-    InternalPrepend(appendStr.c_str(), static_cast<u32>(appendStr.size()));
-}
-
-void String::PrependString(const std::string_view& appendStr)
-{
-  if (!appendStr.empty())
-    InternalPrepend(appendStr.data(), static_cast<u32>(appendStr.size()));
-}
-
-void String::PrependSubString(const String& appendStr, s32 Offset /* = 0 */, s32 Count /* = INT_std::max */)
-{
-  u32 appendStrLength = appendStr.GetLength();
-
-  // calc real offset
-  u32 realOffset;
-  if (Offset < 0)
-    realOffset = (u32)std::max((s32)0, (s32)appendStrLength + Offset);
-  else
-    realOffset = std::min((u32)Offset, appendStrLength);
-
-  // calc real count
-  u32 realCount;
-  if (Count < 0)
-    realCount = std::min(appendStrLength - realOffset, (u32)std::max((s32)0, (s32)appendStrLength + Count));
-  else
-    realCount = std::min(appendStrLength - realOffset, (u32)Count);
-
-  // should be safe
-  if (realCount > 0)
-    InternalPrepend(appendStr.GetCharArray() + realOffset, realCount);
-}
-
-void String::PrependSubString(const char* appendText, s32 Offset /* = 0 */, s32 Count /* = INT_std::max */)
-{
-  u32 appendTextLength = static_cast<u32>(std::strlen(appendText));
-
-  // calc real offset
-  u32 realOffset;
-  if (Offset < 0)
-    realOffset = (u32)std::max((s32)0, (s32)appendTextLength + Offset);
-  else
-    realOffset = std::min((u32)Offset, appendTextLength);
-
-  // calc real count
-  u32 realCount;
-  if (Count < 0)
-    realCount = std::min(appendTextLength - realOffset, (u32)std::max((s32)0, (s32)appendTextLength + Count));
-  else
-    realCount = std::min(appendTextLength - realOffset, (u32)Count);
-
-  // should be safe
-  if (realCount > 0)
-    InternalPrepend(appendText + realOffset, realCount);
-}
-
-void String::PrependFormattedString(const char* FormatString, ...)
-{
-  va_list ap;
-  va_start(ap, FormatString);
-  PrependFormattedStringVA(FormatString, ap);
-  va_end(ap);
-}
-
-void String::PrependFormattedStringVA(const char* FormatString, va_list ArgPtr)
-{
-  // We have a 1KB byte buffer on the stack here. If this is too little, we'll grow it via the heap,
-  // but 1KB should be enough for most strings.
-  char stackBuffer[1024];
-  char* pHeapBuffer = NULL;
-  char* pBuffer = stackBuffer;
-  u32 currentBufferSize = countof(stackBuffer);
-  u32 charsWritten;
-
-  for (;;)
-  {
-    int ret = std::vsnprintf(pBuffer, currentBufferSize, FormatString, ArgPtr);
-    if (ret < 0 || ((u32)ret >= (currentBufferSize - 1)))
-    {
-      currentBufferSize *= 2;
-      pBuffer = pHeapBuffer = reinterpret_cast<char*>(std::realloc(pHeapBuffer, currentBufferSize));
-      continue;
-    }
-
-    charsWritten = (u32)ret;
-    break;
-  }
-
-  InternalPrepend(pBuffer, charsWritten);
-
-  if (pHeapBuffer != NULL)
-    std::free(pHeapBuffer);
-}
-
-void String::InsertString(s32 offset, const String& appendStr)
-{
-  InsertString(offset, appendStr, appendStr.GetLength());
-}
-
-void String::InsertString(s32 offset, const char* appendStr)
-{
-  InsertString(offset, appendStr, static_cast<u32>(std::strlen(appendStr)));
-}
-
-void String::InsertString(s32 offset, const char* appendStr, u32 appendStrLength)
-{
-  if (appendStrLength == 0)
-    return;
-
-  EnsureRemainingSpace(appendStrLength);
-
-  // calc real offset
-  u32 realOffset;
-  if (offset < 0)
-    realOffset = (u32)std::max((s32)0, (s32)m_pStringData->StringLength + offset);
-  else
-    realOffset = std::min((u32)offset, m_pStringData->StringLength);
-
-  // determine number of characters after offset
-  u32 charactersAfterOffset = m_pStringData->StringLength - realOffset;
-  if (charactersAfterOffset > 0)
-    std::memmove(m_pStringData->pBuffer + offset + appendStrLength, m_pStringData->pBuffer + offset,
-                 charactersAfterOffset);
-
-  // insert the string
-  std::memcpy(m_pStringData->pBuffer + realOffset, appendStr, appendStrLength);
-  m_pStringData->StringLength += appendStrLength;
-
-  // ensure null termination
-  m_pStringData->pBuffer[m_pStringData->StringLength] = 0;
-}
-
-void String::InsertString(s32 offset, const std::string& appendStr)
-{
-  InsertString(offset, appendStr.c_str(), static_cast<u32>(appendStr.size()));
-}
-
-void String::InsertString(s32 offset, const std::string_view& appendStr)
-{
-  InsertString(offset, appendStr.data(), static_cast<u32>(appendStr.size()));
-}
-
 void String::Format(const char* FormatString, ...)
 {
   va_list ap;
@@ -551,7 +366,7 @@ void String::Assign(const String& copyString)
   {
     m_pStringData = copyString.m_pStringData;
     if (!m_pStringData->ReadOnly)
-      StringDataAddRef(m_pStringData);
+      ++m_pStringData->ReferenceCount;
   }
   // create a clone for ourselves
   else
@@ -586,12 +401,6 @@ void String::Assign(const std::string_view& copyString)
   AppendString(copyString.data(), static_cast<u32>(copyString.size()));
 }
 
-void String::AssignCopy(const String& copyString)
-{
-  Clear();
-  AppendString(copyString);
-}
-
 void String::Swap(String& swapString)
 {
   std::swap(m_pStringData, swapString.m_pStringData);
@@ -607,16 +416,6 @@ bool String::Compare(const char* otherText) const
   return (std::strcmp(m_pStringData->pBuffer, otherText) == 0);
 }
 
-bool String::SubCompare(const String& otherString, u32 Length) const
-{
-  return (std::strncmp(m_pStringData->pBuffer, otherString.m_pStringData->pBuffer, Length) == 0);
-}
-
-bool String::SubCompare(const char* otherText, u32 Length) const
-{
-  return (std::strncmp(m_pStringData->pBuffer, otherText, Length) == 0);
-}
-
 bool String::CompareInsensitive(const String& otherString) const
 {
   return (CASE_COMPARE(m_pStringData->pBuffer, otherString.m_pStringData->pBuffer) == 0);
@@ -625,16 +424,6 @@ bool String::CompareInsensitive(const String& otherString) const
 bool String::CompareInsensitive(const char* otherText) const
 {
   return (CASE_COMPARE(m_pStringData->pBuffer, otherText) == 0);
-}
-
-bool String::SubCompareInsensitive(const String& otherString, u32 Length) const
-{
-  return (CASE_N_COMPARE(m_pStringData->pBuffer, otherString.m_pStringData->pBuffer, Length) == 0);
-}
-
-bool String::SubCompareInsensitive(const char* otherText, u32 Length) const
-{
-  return (CASE_N_COMPARE(m_pStringData->pBuffer, otherText, Length) == 0);
 }
 
 int String::NumericCompare(const String& otherString) const
@@ -743,12 +532,6 @@ s32 String::Find(char c, u32 Offset /* = 0*/) const
   return (pAt == NULL) ? -1 : s32(pAt - m_pStringData->pBuffer);
 }
 
-s32 String::RFind(char c, u32 Offset /* = 0*/) const
-{
-  char* pAt = std::strrchr(m_pStringData->pBuffer + Offset, c);
-  return (pAt == NULL) ? -1 : s32(pAt - m_pStringData->pBuffer);
-}
-
 s32 String::Find(const char* str, u32 Offset /* = 0 */) const
 {
   char* pAt = std::strstr(m_pStringData->pBuffer + Offset, str);
@@ -831,18 +614,11 @@ void String::UpdateSize()
   m_pStringData->StringLength = static_cast<u32>(std::strlen(m_pStringData->pBuffer));
 }
 
-void String::Shrink(bool Force /* = false */)
+void String::Shrink(bool Force)
 {
   // only shrink of we own the buffer, or forced
   if (Force || m_pStringData->ReferenceCount == 1)
     Reserve(m_pStringData->StringLength);
-}
-
-String String::SubString(s32 Offset, s32 Count /* = -1 */) const
-{
-  String returnStr;
-  returnStr.AppendSubString(*this, Offset, Count);
-  return returnStr;
 }
 
 void String::Erase(s32 Offset, s32 Count /* = INT_std::max */)
@@ -918,25 +694,6 @@ u32 String::Replace(const char* searchString, const char* replaceString)
 {
   u32 nReplacements = 0;
   u32 searchStringLength = static_cast<u32>(std::strlen(searchString));
-
-#if 0
-    u32 replaceStringLength = static_cast<u32>(std::strlen(replaceString));
-    s32 lengthDifference = (s32)replaceStringLength - (s32)searchStringLength;
-
-    char *pCurrent = std::strchr(m_pStringData->pBuffer, searchString);
-    while (pCurrent != NULL)
-    {
-        if ((nReplacements++) == 0)
-        {
-            if (lengthDifference > 0)
-                EnsureRemainingSpace(lengthDifference);
-            else
-                EnsureOwnCopy();
-        }
-        else if (lengthDifference > 0)
-            EnsureRemainingSpace(lengthDifference);
-    }
-#endif
 
   // TODO: Fastpath if strlen(searchString) == strlen(replaceString)
 
