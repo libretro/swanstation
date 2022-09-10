@@ -17,8 +17,6 @@ public:
 
   void Destroy();
 
-  void SetLinearFilter(bool enabled);
-
   bool IsValid() const { return m_id != 0; }
   bool IsMultisampled() const { return m_samples > 1; }
   GLuint GetGLId() const { return m_id; }
@@ -26,7 +24,6 @@ public:
   u32 GetHeight() const { return m_height; }
   u32 GetSamples() const { return m_samples; }
 
-  GLuint GetGLFramebufferID() const { return m_fbo_id; }
   GLenum GetGLTarget() const { return IsMultisampled() ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D; }
 
   void Bind();

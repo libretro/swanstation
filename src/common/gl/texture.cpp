@@ -85,15 +85,6 @@ void Texture::Replace(u32 width, u32 height, GLenum internal_format, GLenum form
   glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, format, type, data);
 }
 
-void Texture::SetLinearFilter(bool enabled)
-{
-  Bind();
-
-  const GLenum target = GetGLTarget();
-  glTexParameteri(target, GL_TEXTURE_MIN_FILTER, enabled ? GL_LINEAR : GL_NEAREST);
-  glTexParameteri(target, GL_TEXTURE_MAG_FILTER, enabled ? GL_LINEAR : GL_NEAREST);
-}
-
 bool Texture::CreateFramebuffer()
 {
   if (!IsValid())

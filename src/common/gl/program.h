@@ -16,9 +16,6 @@ public:
   static GLuint CompileShader(GLenum type, const std::string_view source);
   static void ResetLastProgram();
 
-  bool IsVaild() const { return m_program_id != 0; }
-  bool IsBound() const { return s_last_program_id == m_program_id; }
-
   bool Compile(const std::string_view vertex_shader, const std::string_view geometry_shader,
                const std::string_view fragment_shader);
 
