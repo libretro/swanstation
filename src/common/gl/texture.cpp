@@ -1,7 +1,4 @@
 #include "texture.h"
-#include "../assert.h"
-#include "../log.h"
-Log_SetChannel(GL);
 
 namespace GL {
 
@@ -61,7 +58,6 @@ bool Texture::Create(u32 width, u32 height, u32 samples, GLenum internal_format,
   GLenum error = glGetError();
   if (error != GL_NO_ERROR)
   {
-    Log_ErrorPrintf("Failed to create texture: 0x%X", error);
     glDeleteTextures(1, &id);
     return false;
   }
@@ -158,43 +154,6 @@ Texture& Texture::operator=(Texture&& moved)
   moved.m_samples = 0;
   moved.m_fbo_id = 0;
   return *this;
-}
-
-void Texture::GetTextureSubImage(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
-                                 GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
-                                 GLsizei bufSize, void* pixels)
-{
-  if (GLAD_GL_VERSION_4_5 || GLAD_GL_ARB_get_texture_sub_image)
-  {
-    glGetTextureSubImage(texture, level, xoffset, yoffset, zoffset, width, height, depth, format, type, bufSize,
-                         pixels);
-    return;
-  }
-
-  GLenum target = GL_READ_FRAMEBUFFER;
-  GLenum target_binding = GL_READ_FRAMEBUFFER_BINDING;
-  if (GLAD_GL_ES_VERSION_2_0 && !GLAD_GL_ES_VERSION_3_0)
-  {
-    // GLES2 doesn't have GL_READ_FRAMEBUFFER.
-    target = GL_FRAMEBUFFER;
-    target_binding = GL_FRAMEBUFFER_BINDING;
-  }
-
-  GLuint old_read_fbo;
-  glGetIntegerv(target_binding, reinterpret_cast<GLint*>(&old_read_fbo));
-
-  GLuint temp_fbo;
-  glGenFramebuffers(1, &temp_fbo);
-  glBindFramebuffer(target, temp_fbo);
-  if (zoffset > 0 && (GLAD_GL_VERSION_3_0 || GLAD_GL_ES_VERSION_3_0))
-    glFramebufferTextureLayer(target, GL_COLOR_ATTACHMENT0, texture, level, zoffset);
-  else
-    glFramebufferTexture2D(target, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, level);
-
-  glReadPixels(xoffset, yoffset, width, height, format, type, pixels);
-
-  glBindFramebuffer(target, old_read_fbo);
-  glDeleteFramebuffers(1, &temp_fbo);
 }
 
 } // namespace GL
