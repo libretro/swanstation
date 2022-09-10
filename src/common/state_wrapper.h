@@ -24,7 +24,6 @@ public:
   StateWrapper(const StateWrapper&) = delete;
   ~StateWrapper();
 
-  ByteStream* GetStream() const { return m_stream; }
   bool HasError() const { return m_error; }
   bool IsReading() const { return (m_mode == Mode::Read); }
   bool IsWriting() const { return (m_mode == Mode::Write); }
