@@ -11,8 +11,6 @@
 template<typename BackingDataType, typename DataType, unsigned BitIndex, unsigned BitCount>
 struct BitField
 {
-  static_assert(!std::is_same_v<DataType, bool> || BitCount == 1, "Boolean bitfields should only be 1 bit");
-
   // We have to delete the copy assignment operator otherwise we can't use this class in anonymous structs/unions.
   BitField& operator=(const BitField& rhs) = delete;
 

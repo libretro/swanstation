@@ -931,10 +931,6 @@ void CodeGenerator::BlockPrologue()
 
   EmitStoreCPUStructField(offsetof(State, exception_raised), Value::FromConstantU8(0));
 
-#if 0
-  EmitFunctionCall(nullptr, &Thunks::LogPC, Value::FromConstantU32(m_pc));
-#endif
-
   if (m_block->uncached_fetch_ticks > 0 || m_block->icache_line_count > 0)
     EmitICacheCheckAndUpdate();
 

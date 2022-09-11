@@ -1,4 +1,3 @@
-#include "assert.h"
 #include "cd_image.h"
 #include "cd_subchannel_replacement.h"
 #include "error.h"
@@ -26,7 +25,6 @@ struct TrackEntry
   u32 track_offset_in_mdf;
   u8 unk5[36];
 };
-static_assert(sizeof(TrackEntry) == 0x50, "TrackEntry is 0x50 bytes");
 #pragma pack(pop)
 
 class CDImageMds : public CDImage

@@ -404,28 +404,7 @@ void ExecuteRecompiler()
   g_using_interpreter = false;
   g_state.frame_done = false;
 
-#if 0
-  while (!g_state.frame_done)
-  {
-    if (HasPendingInterrupt())
-    {
-      SafeReadInstruction(g_state.regs.pc, &g_state.next_instruction.bits);
-      DispatchInterrupt();
-    }
-
-    TimingEvents::UpdateCPUDowncount();
-
-    while (g_state.pending_ticks < g_state.downcount)
-    {
-      const u32 pc = g_state.regs.pc;
-      s_single_block_asm_dispatcher(s_fast_map[pc >> 16][pc >> 2]);
-    }
-
-    TimingEvents::RunEvents();
-  }
-#else
   s_asm_dispatcher();
-#endif
 
   // in case we switch to interpreter...
   g_state.regs.npc = g_state.regs.pc;
@@ -602,11 +581,6 @@ bool CompileBlock(CodeBlock* block)
   u32 pc = block->GetPC();
   bool is_branch_delay_slot = false;
   bool is_load_delay_slot = false;
-
-#if 0
-  if (pc == 0x0005aa90)
-    __debugbreak();
-#endif
 
   block->icache_line_count = 0;
   block->uncached_fetch_ticks = 0;

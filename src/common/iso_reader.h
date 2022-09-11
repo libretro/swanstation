@@ -23,7 +23,6 @@ public:
     char standard_identifier[5];
     u8 version;
   };
-  static_assert(sizeof(ISOVolumeDescriptorHeader) == 7);
 
   struct ISOBootRecord
   {
@@ -32,7 +31,6 @@ public:
     char boot_identifier[32];
     u8 data[1977];
   };
-  static_assert(sizeof(ISOBootRecord) == 2048);
 
   struct ISOPVDDateTime
   {
@@ -45,7 +43,6 @@ public:
     char milliseconds[2];
     s8 gmt_offset;
   };
-  static_assert(sizeof(ISOPVDDateTime) == 17);
 
   struct ISOPrimaryVolumeDescriptor
   {
@@ -86,7 +83,6 @@ public:
     u8 application_used[512];
     u8 reserved[653];
   };
-  static_assert(sizeof(ISOPrimaryVolumeDescriptor) == 2048);
 
   struct ISODirectoryEntryDateTime
   {

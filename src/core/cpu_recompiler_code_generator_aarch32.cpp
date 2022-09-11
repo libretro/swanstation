@@ -1,5 +1,4 @@
 #include "common/align.h"
-#include "common/assert.h"
 #include "common/log.h"
 #include "cpu_core.h"
 #include "cpu_core_private.h"
@@ -224,12 +223,6 @@ void CodeGenerator::FinalizeBlock(CodeBlock::HostCodePointer* out_host_code, u32
                                m_code_buffer->GetFreeCodeSpace(), a32::A32);
   m_far_emitter = CodeEmitter(static_cast<vixl::byte*>(m_code_buffer->GetFreeFarCodePointer()),
                               m_code_buffer->GetFreeFarCodeSpace(), a32::A32);
-
-#if 0
-  a32::PrintDisassembler dis(std::cout, 0);
-  dis.SetCodeAddress(reinterpret_cast<uintptr_t>(*out_host_code));
-  dis.DisassembleA32Buffer(reinterpret_cast<u32*>(*out_host_code), *out_host_code_size);
-#endif
 }
 
 void CodeGenerator::EmitSignExtend(HostReg to_reg, RegSize to_size, HostReg from_reg, RegSize from_size)
@@ -1666,8 +1659,6 @@ void CodeGenerator::EmitICacheCheckAndUpdate()
 
 void CodeGenerator::EmitStallUntilGTEComplete()
 {
-  static_assert(offsetof(State, pending_ticks) + sizeof(u32) == offsetof(State, gte_completion_tick));
-
   m_emit->ldr(GetHostReg32(RARG1), a32::MemOperand(GetCPUPtrReg(), offsetof(State, pending_ticks)));
   m_emit->ldr(GetHostReg32(RARG2), a32::MemOperand(GetCPUPtrReg(), offsetof(State, gte_completion_tick)));
 

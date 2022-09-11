@@ -1,5 +1,4 @@
 #include "settings.h"
-#include "common/assert.h"
 #include "common/make_array.h"
 #include "common/string_util.h"
 #include "host_display.h"
@@ -626,11 +625,6 @@ const char* Settings::GetControllerTypeName(ControllerType type)
 
 static std::array<const char*, 7> s_memory_card_type_names = {
   {"None", "Shared", "PerGame", "PerGameTitle", "PerGameFileTitle", "NonPersistent", "Libretro"}};
-
-// these need to be performed as static assert - if e set the std::array size according to MemoryCardType::Count then
-// it will just null-fill unspecified items and we could still have issues with the descriptions not matching the enum.
-// (todo: generally these enum-to-string things are better implemented as lambda switch statements)
-static_assert(s_memory_card_type_names.size()         == (intmax_t)MemoryCardType::Count);
 
 std::optional<MemoryCardType> Settings::ParseMemoryCardTypeName(const char* str)
 {

@@ -179,7 +179,6 @@ public:
       return *this;
     }
   };
-  static_assert(sizeof(SubChannelQ) == SUBCHANNEL_BYTES_PER_FRAME, "SubChannelQ is correct size");
 
   struct Track
   {

@@ -282,19 +282,7 @@ std::unique_ptr<StreamBuffer> StreamBuffer::Create(GLenum target, u32 size)
       return buf;
   }
 
-  // BufferSubData is slower on all drivers except NVIDIA...
-#if 0
-  const char* vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
-  if (std::strcmp(vendor, "ARM") == 0 || std::strcmp(vendor, "Qualcomm") == 0)
-  {
-    // Mali and Adreno drivers can't do sub-buffer tracking...
-    return detail::BufferDataStreamBuffer::Create(target, size);
-  }
-
-  return detail::BufferSubDataStreamBuffer::Create(target, size);
-#else
   return detail::BufferDataStreamBuffer::Create(target, size);
-#endif
 }
 
 } // namespace GL

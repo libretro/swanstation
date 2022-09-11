@@ -769,13 +769,6 @@ void GPU::UpdateCRTCTickEvent()
     ticks_until_event = std::min(ticks_until_event, std::max<TickCount>(ticks_until_irq, 0));
   }
 
-#if 0
-  const TickCount ticks_until_hblank =
-    (m_crtc_state.current_tick_in_scanline >= m_crtc_state.horizontal_display_end) ?
-    (m_crtc_state.horizontal_total - m_crtc_state.current_tick_in_scanline + m_crtc_state.horizontal_display_end) :
-    (m_crtc_state.horizontal_display_end - m_crtc_state.current_tick_in_scanline);
-#endif
-
   m_crtc_tick_event->Schedule(CRTCTicksToSystemTicks(ticks_until_event, m_crtc_state.fractional_ticks));
 }
 

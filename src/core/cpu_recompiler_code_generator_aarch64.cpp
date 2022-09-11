@@ -1,5 +1,4 @@
 #include "common/align.h"
-#include "common/assert.h"
 #include "common/log.h"
 #include "cpu_core.h"
 #include "cpu_core_private.h"
@@ -1832,7 +1831,6 @@ void CodeGenerator::EmitICacheCheckAndUpdate()
 
 void CodeGenerator::EmitStallUntilGTEComplete()
 {
-  static_assert(offsetof(State, pending_ticks) + sizeof(u32) == offsetof(State, gte_completion_tick));
   m_emit->ldp(GetHostReg32(RARG1), GetHostReg32(RARG2),
               a64::MemOperand(GetCPUPtrReg(), offsetof(State, pending_ticks)));
 

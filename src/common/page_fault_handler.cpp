@@ -143,7 +143,6 @@ struct UnwindHandler
 };
 
 static constexpr size_t UNWIND_HANDLER_ALLOC_SIZE = 4096;
-static_assert(sizeof(UnwindHandler) <= UNWIND_HANDLER_ALLOC_SIZE);
 
 static EXCEPTION_DISPOSITION UnwindExceptionHandler(PEXCEPTION_RECORD ExceptionRecord, ULONG64 EstablisherFrame,
                                                     PCONTEXT ContextRecord, PDISPATCHER_CONTEXT DispatcherContext)

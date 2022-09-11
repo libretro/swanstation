@@ -2387,7 +2387,6 @@ static s16 GetPeakVolume(const u8* raw_sector, u8 channel)
   static constexpr u32 NUM_SAMPLES = CDImage::RAW_SECTOR_SIZE / sizeof(s16);
 
 #if defined(CPU_X64)
-  static_assert(Common::IsAlignedPow2(NUM_SAMPLES, 8));
   const u8* current_ptr = raw_sector;
   __m128i v_peak = _mm_set1_epi16(0);
   for (u32 i = 0; i < NUM_SAMPLES; i += 8)

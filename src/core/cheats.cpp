@@ -1,6 +1,5 @@
 #include "cheats.h"
 #include "bus.h"
-#include "common/assert.h"
 #include "common/byte_stream.h"
 #include "common/log.h"
 #include "common/string.h"
@@ -42,9 +41,6 @@ template<typename T>
 static T DoMemoryRead(VirtualMemoryAddress address)
 {
   using UnsignedType = typename std::make_unsigned_t<T>;
-  static_assert(std::is_same_v<UnsignedType, u8> || std::is_same_v<UnsignedType, u16> ||
-                std::is_same_v<UnsignedType, u32>);
-
   T result;
   if constexpr (std::is_same_v<UnsignedType, u8>)
     return CPU::SafeReadMemoryByte(address, &result) ? result : static_cast<T>(0);
@@ -58,9 +54,6 @@ template<typename T>
 static void DoMemoryWrite(PhysicalMemoryAddress address, T value)
 {
   using UnsignedType = typename std::make_unsigned_t<T>;
-  static_assert(std::is_same_v<UnsignedType, u8> || std::is_same_v<UnsignedType, u16> ||
-                std::is_same_v<UnsignedType, u32>);
-
   if constexpr (std::is_same_v<UnsignedType, u8>)
     CPU::SafeWriteMemoryByte(address, value);
   else if constexpr (std::is_same_v<UnsignedType, u16>)

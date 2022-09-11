@@ -62,7 +62,6 @@ union XA_ADPCMBlockHeader
 
   u8 GetFilter() const { return filter; }
 };
-static_assert(sizeof(XA_ADPCMBlockHeader) == 1, "XA-ADPCM block header is one byte");
 
 // Decodes XA-ADPCM samples in an audio sector. Stereo samples are interleaved with left first.
 void DecodeADPCMSector(const void* data, s16* samples, s32* last_samples);

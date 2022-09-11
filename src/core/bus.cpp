@@ -1399,17 +1399,11 @@ bool FetchInstruction()
   {
     case 0x00: // KUSEG 0M-512M
     case 0x04: // KSEG0 - physical memory cached
-    {
-#if 0
-      DoInstructionRead<true, false, 1, false>(address, &g_state.next_instruction.bits);
-#else
       if (CompareICacheTag(address))
         g_state.next_instruction.bits = ReadICache(address);
       else
         g_state.next_instruction.bits = FillICache(address);
-#endif
-    }
-    break;
+      break;
 
     case 0x05: // KSEG1 - physical memory uncached
     {
@@ -1750,13 +1744,6 @@ void* GetDirectWriteMemoryPointer(VirtualMemoryAddress address, MemoryAccessSize
     return nullptr;
 
   const PhysicalMemoryAddress paddr = address & PHYSICAL_MEMORY_ADDRESS_MASK;
-
-#if 0
-  // Not enabled until we can protect code regions.
-  if (paddr < RAM_MIRROR_END)
-    return &g_ram[paddr & RAM_MASK];
-#endif
-
   if ((paddr & DCACHE_LOCATION_MASK) == DCACHE_LOCATION)
     return &g_state.dcache[paddr & DCACHE_OFFSET_MASK];
 

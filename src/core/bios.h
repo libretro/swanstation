@@ -52,7 +52,6 @@ struct PSEXEHeader
   u32 reserved[5];       // 0x038-0x04B
   char marker[0x7B4];    // 0x04C-0x7FF
 };
-static_assert(sizeof(PSEXEHeader) == 0x800);
 #pragma pack(pop)
 
 Hash GetHash(const Image& image);

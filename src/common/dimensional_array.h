@@ -64,7 +64,6 @@ template<typename T, std::size_t rank_param, std::size_t... sizes>
 struct DimensionalArrayExplicitRank : public GetArrayImplType<T, rank_param, sizes...>
 {
   static constexpr std::size_t rank = rank_param;
-  static_assert(rank > 0, "Attempted to create dimensional array with rank less than 1");
   using ArrayImplType = GetArrayImplType<T, rank, sizes...>;
   using ArrayImplType::ArrayImplType;
 

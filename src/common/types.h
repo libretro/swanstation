@@ -181,7 +181,6 @@ ALWAYS_INLINE constexpr bool ConvertToBool(TValue value)
 template<typename TValue>
 ALWAYS_INLINE bool ConvertToBoolUnchecked(TValue value)
 {
-  // static_assert(sizeof(uint8) == sizeof(bool));
   bool ret;
   std::memcpy(&ret, &value, sizeof(bool));
   return ret;

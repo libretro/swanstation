@@ -40,7 +40,6 @@ struct PBPHeader
     };
   };
 };
-static_assert(sizeof(PBPHeader) == 0x28);
 
 struct SFOHeader
 {
@@ -50,7 +49,6 @@ struct SFOHeader
   u32 data_table_offset; // Relative to start of SFOHeader, 0x00000100 expected
   u32 num_table_entries; // 0x00000009
 };
-static_assert(sizeof(SFOHeader) == 0x14);
 
 struct SFOIndexTableEntry
 {
@@ -60,7 +58,6 @@ struct SFOIndexTableEntry
   u32 data_total_size; // Size of data field in bytes, data_total_size >= data_size
   u32 data_offset;     // Relative to data_table_offset
 };
-static_assert(sizeof(SFOIndexTableEntry) == 0x10);
 
 using SFOIndexTable = std::vector<SFOIndexTableEntry>;
 using SFOTableDataValue = std::variant<std::string, u32>;
@@ -74,7 +71,6 @@ struct BlockTableEntry
   u8 checksum[0x10];
   u64 padding;
 };
-static_assert(sizeof(BlockTableEntry) == 0x20);
 
 struct TOCEntry
 {
@@ -92,18 +88,6 @@ struct TOCEntry
   u8 zero;
   Timecode userdata_start;
 };
-static_assert(sizeof(TOCEntry) == 0x0A);
-
-#if 0
-struct AudioTrackTableEntry
-{
-  u32 block_offset;
-  u32 block_size;
-  u32 block_padding;
-  u32 block_checksum;
-};
-static_assert(sizeof(CDDATrackTableEntry) == 0x10);
-#endif
 
 #pragma pack(pop)
 

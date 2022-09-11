@@ -49,7 +49,6 @@ protected:
     MAX_VERTICES_FOR_RECTANGLE = 6 * (((MAX_PRIMITIVE_WIDTH + (TEXTURE_PAGE_WIDTH - 1)) / TEXTURE_PAGE_WIDTH) + 1u) *
                                  (((MAX_PRIMITIVE_HEIGHT + (TEXTURE_PAGE_HEIGHT - 1)) / TEXTURE_PAGE_HEIGHT) + 1u)
   };
-  static_assert(VRAM_UPDATE_TEXTURE_BUFFER_SIZE >= VRAM_WIDTH * VRAM_HEIGHT * sizeof(u16));
 
   struct BatchVertex
   {

@@ -122,7 +122,6 @@ union Regs
   };
 #pragma pack(pop)
 };
-static_assert(sizeof(Regs) == (sizeof(u32) * NUM_REGS));
 
 union Instruction
 {
