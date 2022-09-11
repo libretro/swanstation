@@ -2,11 +2,6 @@
 
 namespace Common {
 template<typename T>
-constexpr bool IsAligned(T value, unsigned int alignment)
-{
-  return (value % static_cast<T>(alignment)) == 0;
-}
-template<typename T>
 constexpr T AlignUp(T value, unsigned int alignment)
 {
   return (value + static_cast<T>(alignment - 1)) / static_cast<T>(alignment) * static_cast<T>(alignment);
