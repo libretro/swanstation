@@ -1,6 +1,5 @@
 #include "staging_texture.h"
 #include "../align.h"
-#include "../assert.h"
 #include "../log.h"
 #include "context.h"
 #include "util.h"

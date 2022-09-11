@@ -1,6 +1,5 @@
 #include "libretro_d3d11_host_display.h"
 #include "common/align.h"
-#include "common/assert.h"
 #include "common/d3d11/shader_cache.h"
 #include "common/d3d11/shader_compiler.h"
 #include "common/log.h"

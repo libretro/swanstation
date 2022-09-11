@@ -1,5 +1,4 @@
 #include "gpu_hw_vulkan.h"
-#include "common/assert.h"
 #include "common/log.h"
 #include "common/scope_guard.h"
 #include "common/state_wrapper.h"

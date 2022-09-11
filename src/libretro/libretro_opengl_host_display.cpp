@@ -1,6 +1,5 @@
 #include "libretro_opengl_host_display.h"
 #include "common/align.h"
-#include "common/assert.h"
 #include "common/log.h"
 #include "core/gpu.h"
 #include "libretro_host_interface.h"

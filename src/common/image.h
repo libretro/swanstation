@@ -1,5 +1,4 @@
 #pragma once
-#include "assert.h"
 #include "types.h"
 #include <algorithm>
 #include <cstring>

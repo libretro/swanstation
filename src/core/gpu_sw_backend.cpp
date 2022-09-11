@@ -1,5 +1,4 @@
 #include "gpu_sw_backend.h"
-#include "common/assert.h"
 #include "gpu_sw_backend.h"
 #include "host_display.h"
 #include "system.h"

@@ -1,7 +1,4 @@
 #include "staging_texture.h"
-#include "../assert.h"
-#include "../log.h"
-Log_SetChannel(D3D11);
 
 namespace D3D11 {
 
@@ -20,10 +17,7 @@ bool StagingTexture::Create(ID3D11Device* device, u32 width, u32 height, DXGI_FO
   ComPtr<ID3D11Texture2D> texture;
   const HRESULT tex_hr = device->CreateTexture2D(&desc, nullptr, texture.GetAddressOf());
   if (FAILED(tex_hr))
-  {
-    Log_ErrorPrintf("Create texture failed: 0x%08X", tex_hr);
     return false;
-  }
 
   m_texture = std::move(texture);
   m_width = desc.Width;
@@ -41,10 +35,7 @@ bool StagingTexture::Map(ID3D11DeviceContext* context, bool writing)
 {
   const HRESULT hr = context->Map(m_texture.Get(), 0, writing ? D3D11_MAP_WRITE : D3D11_MAP_READ, 0, &m_map);
   if (FAILED(hr))
-  {
-    Log_ErrorPrintf("Map staging texture failed: 0x%08X", hr);
     return false;
-  }
 
   return true;
 }
@@ -78,10 +69,7 @@ bool AutoStagingTexture::EnsureSize(ID3D11DeviceContext* context, u32 width, u32
   ComPtr<ID3D11Texture2D> new_texture;
   HRESULT hr = device->CreateTexture2D(&new_desc, nullptr, new_texture.GetAddressOf());
   if (FAILED(hr))
-  {
-    Log_ErrorPrintf("Create texture failed: 0x%08X", hr);
     return false;
-  }
 
   m_texture = std::move(new_texture);
   m_width = width;

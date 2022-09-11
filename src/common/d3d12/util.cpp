@@ -1,5 +1,4 @@
 #include "util.h"
-#include "../assert.h"
 #include "../log.h"
 #include "../string.h"
 #include "../string_util.h"

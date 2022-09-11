@@ -1,5 +1,4 @@
 #include "memory_arena.h"
-#include "common/assert.h"
 #include "common/log.h"
 #include "common/string_util.h"
 Log_SetChannel(Common::MemoryArena);

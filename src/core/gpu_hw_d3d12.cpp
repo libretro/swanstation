@@ -1,6 +1,5 @@
 #include "gpu_hw_d3d12.h"
 #include "common/align.h"
-#include "common/assert.h"
 #include "common/d3d11/shader_compiler.h"
 #include "common/d3d12/context.h"
 #include "common/d3d12/descriptor_heap_manager.h"

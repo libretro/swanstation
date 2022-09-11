@@ -1,4 +1,3 @@
-#include "assert.h"
 #include "cd_image.h"
 #include "error.h"
 #include "string_util.h"

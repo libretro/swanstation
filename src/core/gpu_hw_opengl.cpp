@@ -1,5 +1,4 @@
 #include "gpu_hw_opengl.h"
-#include "common/assert.h"
 #include "common/log.h"
 #include "common/state_wrapper.h"
 #include "common/timer.h"

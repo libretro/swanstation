@@ -1,4 +1,3 @@
-#include "common/assert.h"
 #include "libretro_host_interface.h"
 #include "scmversion/scmversion.h"
 

@@ -1,6 +1,5 @@
 #include "gpu_hw.h"
 #include "common/align.h"
-#include "common/assert.h"
 #include "common/state_wrapper.h"
 #include "cpu_core.h"
 #include "gpu_sw_backend.h"

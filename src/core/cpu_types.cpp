@@ -1,5 +1,4 @@
 #include "cpu_types.h"
-#include "common/assert.h"
 #include <array>
 
 namespace CPU {

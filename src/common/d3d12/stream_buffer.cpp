@@ -4,7 +4,6 @@
 
 #include "stream_buffer.h"
 #include "../align.h"
-#include "../assert.h"
 #include "../log.h"
 #include "context.h"
 #include <algorithm>

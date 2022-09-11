@@ -1,5 +1,4 @@
 #include "namco_guncon.h"
-#include "common/assert.h"
 #include "common/state_wrapper.h"
 #include "gpu.h"
 #include "host_display.h"

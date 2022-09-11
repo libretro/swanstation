@@ -1,5 +1,4 @@
 #include "event.h"
-#include "assert.h"
 
 #if defined(_WIN32)
 #include "windows_headers.h"

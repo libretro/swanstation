@@ -1,5 +1,4 @@
 #include "string.h"
-#include "assert.h"
 #include <algorithm>
 #include <cctype>
 #include <cstdio>

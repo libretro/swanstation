@@ -1,6 +1,5 @@
 #include "psf_loader.h"
 #include "bios.h"
-#include "common/assert.h"
 #include "common/file_system.h"
 #include "system.h"
 #include "zlib.h"

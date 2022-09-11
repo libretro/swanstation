@@ -1,5 +1,4 @@
 #include "gpu_hw_shadergen.h"
-#include "common/assert.h"
 #include <cstdio>
 #include <glad.h>
 

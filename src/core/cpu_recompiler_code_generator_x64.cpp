@@ -1,5 +1,4 @@
 #include "common/align.h"
-#include "common/assert.h"
 #include "common/log.h"
 #include "cpu_core.h"
 #include "cpu_core_private.h"

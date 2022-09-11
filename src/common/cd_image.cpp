@@ -1,5 +1,4 @@
 #include "cd_image.h"
-#include "assert.h"
 #include "file_system.h"
 #include "log.h"
 #include "string_util.h"

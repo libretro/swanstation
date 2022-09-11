@@ -1,12 +1,10 @@
 #include "analog_controller.h"
-#include "common/log.h"
 #include "common/state_wrapper.h"
 #include "common/string_util.h"
 #include "host_interface.h"
 #include "settings.h"
 #include "system.h"
 #include <cmath>
-Log_SetChannel(AnalogController);
 
 AnalogController::AnalogController(u32 index) : m_index(index)
 {
@@ -219,7 +217,6 @@ void AnalogController::SetAnalogMode(bool enabled)
   if (m_analog_mode == enabled)
     return;
 
-  Log_InfoPrintf("Controller %u switched to %s mode.", m_index + 1u, enabled ? "analog" : "digital");
   g_host_interface->AddFormattedOSDMessage(
     5.0f,
     enabled ? g_host_interface->TranslateString("AnalogController", "Controller %u switched to analog mode.") :
@@ -394,9 +391,6 @@ bool AnalogController::Transfer(const u8 data_in, u8* data_out)
       }
       else
       {
-        if (m_configuration_mode)
-          Log_ErrorPrintf("Unimplemented config mode command 0x%02X", data_in);
-
         *data_out = 0xFF;
         return false;
       }
@@ -616,31 +610,31 @@ bool AnalogController::Transfer(const u8 data_in, u8* data_out)
     break;
 
     case Command::GetSetRumble:
-    {
-      int rumble_index = m_command_step - 2;
-      if (rumble_index >= 0)
       {
-        m_tx_buffer[m_command_step] = m_rumble_config[rumble_index];
-        m_rumble_config[rumble_index] = data_in;
+        int rumble_index = m_command_step - 2;
+        if (rumble_index >= 0)
+        {
+          m_tx_buffer[m_command_step] = m_rumble_config[rumble_index];
+          m_rumble_config[rumble_index] = data_in;
 
-        if (data_in == 0x00)
-          m_rumble_config_small_motor_index = rumble_index;
-        else if (data_in == 0x01)
-          m_rumble_config_large_motor_index = rumble_index;
+          if (data_in == 0x00)
+            m_rumble_config_small_motor_index = rumble_index;
+          else if (data_in == 0x01)
+            m_rumble_config_large_motor_index = rumble_index;
+        }
+
+        if (m_command_step == 7)
+        {
+          if (m_rumble_config_large_motor_index == -1)
+            SetMotorState(LargeMotor, 0);
+
+          if (m_rumble_config_small_motor_index == -1)
+            SetMotorState(SmallMotor, 0);
+        }
       }
-
-      if (m_command_step == 7)
-      {
-        if (m_rumble_config_large_motor_index == -1)
-          SetMotorState(LargeMotor, 0);
-
-        if (m_rumble_config_small_motor_index == -1)
-          SetMotorState(SmallMotor, 0);
-      }
-    }
-    break;
-
-      DefaultCaseIsUnreachable();
+      break;
+    default:
+      break;
   }
 
   *data_out = m_tx_buffer[m_command_step];

@@ -1,4 +1,3 @@
-#include "assert.h"
 #include "cd_image.h"
 #include "cd_subchannel_replacement.h"
 #include "error.h"

@@ -1,5 +1,4 @@
 #include "gpu_hw_d3d11.h"
-#include "common/assert.h"
 #include "common/d3d11/shader_compiler.h"
 #include "common/log.h"
 #include "common/state_wrapper.h"

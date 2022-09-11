@@ -4,7 +4,6 @@
 // Refer to the LICENSE file included.
 
 #include "context.h"
-#include "../assert.h"
 #include "../log.h"
 #include "../string_util.h"
 #include "../window_info.h"

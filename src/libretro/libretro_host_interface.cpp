@@ -1,5 +1,4 @@
 #include "libretro_host_interface.h"
-#include "common/assert.h"
 #include "common/byte_stream.h"
 #include "common/file_system.h"
 #include "common/log.h"

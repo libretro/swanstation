@@ -1,5 +1,4 @@
 #include "file_system.h"
-#include "assert.h"
 #include "byte_stream.h"
 #include "log.h"
 #include "string_util.h"

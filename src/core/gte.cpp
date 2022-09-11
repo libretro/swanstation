@@ -1,5 +1,4 @@
 #include "gte.h"
-#include "common/assert.h"
 #include "common/bitutils.h"
 #include "common/state_wrapper.h"
 #include "cpu_core.h"

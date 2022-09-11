@@ -1,5 +1,4 @@
 #include "byte_stream.h"
-#include "assert.h"
 #include "file_system.h"
 #include "string_util.h"
 #include <algorithm>

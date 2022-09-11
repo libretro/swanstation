@@ -1,6 +1,5 @@
 add_library(common
   align.h
-  assert.h
   audio_stream.cpp
   audio_stream.h
   bitfield.h

@@ -1,5 +1,4 @@
 #include "game_settings.h"
-#include "common/assert.h"
 #include "common/log.h"
 #include "common/string.h"
 #include "common/string_util.h"

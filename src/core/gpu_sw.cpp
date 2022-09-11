@@ -1,6 +1,5 @@
 #include "gpu_sw.h"
 #include "common/align.h"
-#include "common/assert.h"
 #include "common/make_array.h"
 #include "common/platform.h"
 #include "host_display.h"

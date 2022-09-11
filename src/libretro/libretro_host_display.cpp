@@ -1,6 +1,5 @@
 #include "libretro_host_display.h"
 #include "common/align.h"
-#include "common/assert.h"
 #include "libretro_host_interface.h"
 #include <libretro.h>
 #include <array>

@@ -1,5 +1,4 @@
 #include "libretro_audio_stream.h"
-#include "common/assert.h"
 #include "libretro_host_interface.h"
 #include <algorithm>
 #include <array>

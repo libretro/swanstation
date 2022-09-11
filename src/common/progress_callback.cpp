@@ -1,5 +1,4 @@
 #include "progress_callback.h"
-#include "assert.h"
 #include "byte_stream.h"
 #include "log.h"
 #include <cmath>

@@ -1,6 +1,5 @@
 #include "host_display.h"
 #include "common/align.h"
-#include "common/assert.h"
 #include "common/string_util.h"
 #include "common/timer.h"
 #include "host_interface.h"

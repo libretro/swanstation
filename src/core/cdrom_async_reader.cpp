@@ -1,5 +1,4 @@
 #include "cdrom_async_reader.h"
-#include "common/assert.h"
 #include "common/log.h"
 #include "common/timer.h"
 Log_SetChannel(CDROMAsyncReader);

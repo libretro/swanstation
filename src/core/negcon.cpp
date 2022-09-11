@@ -1,5 +1,4 @@
 #include "negcon.h"
-#include "common/assert.h"
 #include "common/state_wrapper.h"
 #include "host_interface.h"
 #include <array>

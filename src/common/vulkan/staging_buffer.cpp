@@ -4,7 +4,6 @@
 // Refer to the LICENSE file included.
 
 #include "staging_buffer.h"
-#include "../assert.h"
 #include "context.h"
 #include "util.h"
 

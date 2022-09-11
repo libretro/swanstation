@@ -1,6 +1,5 @@
 #include "stream_buffer.h"
 #include "../align.h"
-#include "../assert.h"
 #include <array>
 #include <cstdio>
 

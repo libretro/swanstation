@@ -1,6 +1,5 @@
 #include "jit_code_buffer.h"
 #include "align.h"
-#include "assert.h"
 #include "platform.h"
 #include <algorithm>
 

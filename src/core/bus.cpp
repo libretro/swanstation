@@ -1,7 +1,6 @@
 #include "bus.h"
 #include "cdrom.h"
 #include "common/align.h"
-#include "common/assert.h"
 #include "common/make_array.h"
 #include "common/state_wrapper.h"
 #include "cpu_code_cache.h"

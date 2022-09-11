@@ -1,5 +1,4 @@
 #include "log.h"
-#include "assert.h"
 #include "string.h"
 #include "timer.h"
 #include <cstdio>

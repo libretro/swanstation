@@ -1,5 +1,4 @@
 #include "timing_event.h"
-#include "common/assert.h"
 #include "common/state_wrapper.h"
 #include "cpu_core.h"
 #include "cpu_core_private.h"

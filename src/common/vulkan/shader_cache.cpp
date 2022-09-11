@@ -1,5 +1,4 @@
 #include "shader_cache.h"
-#include "../assert.h"
 #include "../file_system.h"
 #include "../log.h"
 #include "../md5_digest.h"

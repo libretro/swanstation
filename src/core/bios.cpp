@@ -1,5 +1,4 @@
 #include "bios.h"
-#include "common/assert.h"
 #include "common/file_system.h"
 #include "common/md5_digest.h"
 #include <array>

@@ -1,5 +1,4 @@
 #include "audio_stream.h"
-#include "assert.h"
 #include <algorithm>
 #include <cstring>
 

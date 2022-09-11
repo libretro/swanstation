@@ -1,5 +1,4 @@
 #include "shadergen.h"
-#include "common/assert.h"
 #include <cstdio>
 #include <cstring>
 #include <glad.h>

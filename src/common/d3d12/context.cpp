@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include "context.h"
-#include "../assert.h"
 #include "../log.h"
 #include "../scope_guard.h"
 #include <algorithm>

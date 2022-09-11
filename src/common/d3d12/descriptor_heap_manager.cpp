@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include "descriptor_heap_manager.h"
-#include "../assert.h"
 #include "../log.h"
 #include "context.h"
 Log_SetChannel(DescriptorHeapManager);

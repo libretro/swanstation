@@ -1,5 +1,4 @@
 #include "builders.h"
-#include "../assert.h"
 #include "util.h"
 
 namespace Vulkan {

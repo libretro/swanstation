@@ -4,7 +4,6 @@
 // Refer to the LICENSE file included.
 
 #include "shader_compiler.h"
-#include "../assert.h"
 #include "../log.h"
 #include "../string_util.h"
 #include "util.h"

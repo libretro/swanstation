@@ -224,8 +224,8 @@ bool Multitap::Transfer(const u8 data_in, u8* data_out)
       }
     }
     break;
-
-      DefaultCaseIsUnreachable();
+    default:
+      break;
   }
   return ack;
 }
