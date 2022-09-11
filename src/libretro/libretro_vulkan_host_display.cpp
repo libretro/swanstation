@@ -1,5 +1,4 @@
 #include "libretro_vulkan_host_display.h"
-#include "common/align.h"
 #include "common/log.h"
 #include "common/vulkan/builders.h"
 #include "common/vulkan/context.h"

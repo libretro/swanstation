@@ -333,9 +333,7 @@ void GPU_SW::CopyOut24Bit(u32 src_x, u32 src_y, u32 skip_x, u32 width, u32 heigh
   {
     if (!m_host_display->BeginSetDisplayPixels(display_format, width, height, reinterpret_cast<void**>(&dst_ptr),
                                                &dst_stride))
-    {
       return;
-    }
   }
   else
   {

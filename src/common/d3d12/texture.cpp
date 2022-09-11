@@ -1,11 +1,9 @@
 #include "texture.h"
 #include "../align.h"
-#include "../log.h"
 #include "context.h"
 #include "staging_texture.h"
 #include "stream_buffer.h"
 #include "util.h"
-Log_SetChannel(D3D12);
 
 namespace D3D12 {
 
@@ -108,10 +106,7 @@ bool Texture::Create(u32 width, u32 height, u32 samples, DXGI_FORMAT format, DXG
     (rtv_format != DXGI_FORMAT_UNKNOWN || dsv_format != DXGI_FORMAT_UNKNOWN) ? &optimized_clear_value : nullptr,
     IID_PPV_ARGS(resource.GetAddressOf()));
   if (FAILED(hr))
-  {
-    Log_ErrorPrintf("Create texture failed: 0x%08X", hr);
     return false;
-  }
 
   DescriptorHandle srv_descriptor, rtv_descriptor;
   bool is_depth_view = false;
@@ -299,10 +294,7 @@ void Texture::CopyToUploadBuffer(const void* src_data, u32 src_pitch, u32 height
 bool Texture::CreateSRVDescriptor(ID3D12Resource* resource, DXGI_FORMAT format, bool multisampled, DescriptorHandle* dh)
 {
   if (!g_d3d12_context->GetDescriptorHeapManager().Allocate(dh))
-  {
-    Log_ErrorPrintf("Failed to allocate SRV descriptor");
     return false;
-  }
 
   D3D12_SHADER_RESOURCE_VIEW_DESC desc = {
     format, multisampled ? D3D12_SRV_DIMENSION_TEXTURE2DMS : D3D12_SRV_DIMENSION_TEXTURE2D,
@@ -317,10 +309,7 @@ bool Texture::CreateSRVDescriptor(ID3D12Resource* resource, DXGI_FORMAT format, 
 bool Texture::CreateRTVDescriptor(ID3D12Resource* resource, DXGI_FORMAT format, bool multisampled, DescriptorHandle* dh)
 {
   if (!g_d3d12_context->GetRTVHeapManager().Allocate(dh))
-  {
-    Log_ErrorPrintf("Failed to allocate SRV descriptor");
     return false;
-  }
 
   D3D12_RENDER_TARGET_VIEW_DESC desc = {format,
                                         multisampled ? D3D12_RTV_DIMENSION_TEXTURE2DMS : D3D12_RTV_DIMENSION_TEXTURE2D};
@@ -332,10 +321,7 @@ bool Texture::CreateRTVDescriptor(ID3D12Resource* resource, DXGI_FORMAT format, 
 bool Texture::CreateDSVDescriptor(ID3D12Resource* resource, DXGI_FORMAT format, bool multisampled, DescriptorHandle* dh)
 {
   if (!g_d3d12_context->GetDSVHeapManager().Allocate(dh))
-  {
-    Log_ErrorPrintf("Failed to allocate SRV descriptor");
     return false;
-  }
 
   D3D12_DEPTH_STENCIL_VIEW_DESC desc = {
     format, multisampled ? D3D12_DSV_DIMENSION_TEXTURE2DMS : D3D12_DSV_DIMENSION_TEXTURE2D, D3D12_DSV_FLAG_NONE};

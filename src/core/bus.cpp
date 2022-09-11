@@ -1382,9 +1382,7 @@ static bool DoAlignmentCheck(VirtualMemoryAddress address)
       return true;
   }
   else
-  {
     return true;
-  }
 
   g_state.cop0_regs.BadVaddr = address;
   RaiseException(type == MemoryAccessType::Read ? Exception::AdEL : Exception::AdES);

@@ -1,9 +1,7 @@
 #include "staging_texture.h"
 #include "../align.h"
-#include "../log.h"
 #include "context.h"
 #include "util.h"
-Log_SetChannel(D3D12);
 
 namespace D3D12 {
 
@@ -16,8 +14,8 @@ StagingTexture::~StagingTexture()
 
 bool StagingTexture::Create(u32 width, u32 height, DXGI_FORMAT format, bool for_uploading)
 {
-  const u32 texel_size = GetTexelSize(format);
-  const u32 row_pitch = Common::AlignUpPow2(width * texel_size, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+  const u32 texel_size  = GetTexelSize(format);
+  const u32 row_pitch   = Common::AlignUpPow2(width * texel_size, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
   const u32 buffer_size = height * row_pitch;
 
   const D3D12_HEAP_PROPERTIES heap_properties = {for_uploading ? D3D12_HEAP_TYPE_UPLOAD : D3D12_HEAP_TYPE_READBACK};
@@ -39,10 +37,7 @@ bool StagingTexture::Create(u32 width, u32 height, DXGI_FORMAT format, bool for_
   HRESULT hr = g_d3d12_context->GetDevice()->CreateCommittedResource(
     &heap_properties, D3D12_HEAP_FLAG_NONE, &desc, state, nullptr, IID_PPV_ARGS(resource.GetAddressOf()));
   if (FAILED(hr))
-  {
-    Log_ErrorPrintf("Create buffer failed: 0x%08X", hr);
     return false;
-  }
 
   Destroy(true);
 
@@ -78,10 +73,7 @@ bool StagingTexture::Map(bool writing)
 
   const HRESULT hr = m_resource->Map(0, writing ? nullptr : &range, &m_mapped_pointer);
   if (FAILED(hr))
-  {
-    Log_ErrorPrintf("Map staging buffer failed: 0x%08X", hr);
     return false;
-  }
 
   m_mapped_for_write = writing;
   return true;

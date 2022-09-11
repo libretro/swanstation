@@ -5,10 +5,8 @@
 
 #include "stream_buffer.h"
 #include "../align.h"
-#include "../log.h"
 #include "context.h"
 #include "util.h"
-Log_SetChannel(Vulkan::StreamBuffer);
 
 namespace Vulkan {
 

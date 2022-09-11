@@ -1,12 +1,9 @@
-#include "common/align.h"
-#include "common/log.h"
 #include "cpu_core.h"
 #include "cpu_core_private.h"
 #include "cpu_recompiler_code_generator.h"
 #include "cpu_recompiler_thunks.h"
 #include "settings.h"
 #include "timing_event.h"
-Log_SetChannel(CPU::Recompiler);
 
 namespace a64 = vixl::aarch64;
 

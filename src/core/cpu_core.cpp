@@ -24,7 +24,7 @@ bool g_using_interpreter = false;
 static constexpr u32 INVALID_BREAKPOINT_PC = UINT32_C(0xFFFFFFFF);
 static u32 s_last_breakpoint_check_pc = INVALID_BREAKPOINT_PC;
 
-void Initialize()
+void Initialize(void)
 {
   // From nocash spec.
   g_state.cop0_regs.PRID = UINT32_C(0x00000002);

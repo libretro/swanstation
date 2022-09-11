@@ -1,5 +1,4 @@
 #include "gpu_hw.h"
-#include "common/align.h"
 #include "common/state_wrapper.h"
 #include "cpu_core.h"
 #include "gpu_sw_backend.h"
@@ -9,6 +8,8 @@
 #include <cmath>
 #include <sstream>
 #include <tuple>
+
+#define IS_POW2(value) (((value) & ((value) - 1)) == 0)
 
 template<typename T>
 ALWAYS_INLINE static constexpr std::tuple<T, T> MinMax(T v1, T v2)
