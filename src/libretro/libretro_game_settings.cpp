@@ -4,159 +4,60 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
 {
   std::unique_ptr<GameSettings::Entry> gs = std::make_unique<GameSettings::Entry>();
 
-  if (game_code == "SLUS-00077")
+  /* These games use a software renderer using hardware lines
+   * It cannot be upscaled, and PGXP has to be disabled
+   */
+  if (   game_code == "SLUS-00077" /* Doom (NTSC-U)        */
+      || game_code == "SLES-00132" /* Doom (PAL)           */
+      || game_code == "SLPS-00308" /* Doom (NTSC-J)        */
+      || game_code == "SLUS-00331" /* Final Doom (NTSC-U)  */
+      || game_code == "SLES-00487" /* Final Doom (PAL)     */
+      || game_code == "SLPS-00727" /* Final Doom (NTSC-J)  */
+      || game_code == "SLES-00703" /* Duke Nukem (PAL)     */
+      || game_code == "SLES-00987" /* Duke Nukem (PAL)     */
+      || game_code == "SLES-01027" /* Duke Nukem (PAL-FR)  */
+      || game_code == "SLPS-01557" /* Duke Nukem - Total Meltdown (NTSC-J)  */
+      || game_code == "SLUS-00355" /* Duke Nukem - Total Meltdown (NTSC-U)  */
+      || game_code == "SLES-00081" /* Defcon 5 (PAL)  */
+      || game_code == "SLES-00146" /* Defcon 5 (PAL)  */
+      || game_code == "SLES-00148" /* Defcon 5 (PAL)  */
+      || game_code == "SLES-00149" /* Defcon 5 (PAL)  */
+      || game_code == "SLPS-00275" /* Defcon 5 (NTSC-J)  */
+      || game_code == "SLES-00147" /* Defcon 5 (PAL)  */
+      || game_code == "SLUS-00009" /* Defcon 5 (NTSC-U)  */
+      || game_code == "SLUS-00297" /* Star Wars - Dark Forces (NTSC-U)  */
+     ) 
   {
     gs->AddTrait(GameSettings::Trait::DisableUpscaling);
     gs->AddTrait(GameSettings::Trait::DisablePGXP);
     return gs;
   }
 
-  if (game_code == "SLES-00132")
-  {
-    gs->AddTrait(GameSettings::Trait::DisableUpscaling);
-    gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (game_code == "SLPS-00308")
-  {
-    gs->AddTrait(GameSettings::Trait::DisableUpscaling);
-    gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (game_code == "SLUS-00331")
-  {
-    gs->AddTrait(GameSettings::Trait::DisableUpscaling);
-    gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (game_code == "SLES-00487")
-  {
-    gs->AddTrait(GameSettings::Trait::DisableUpscaling);
-    gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (game_code == "SLPS-00727")
-  {
-    gs->AddTrait(GameSettings::Trait::DisableUpscaling);
-    gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (game_code == "SLES-00703")
-  {
-    gs->AddTrait(GameSettings::Trait::DisableUpscaling);
-    gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (game_code == "SLES-00987")
-  {
-    gs->AddTrait(GameSettings::Trait::DisableUpscaling);
-    gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (game_code == "SLED-01027")
-  {
-    gs->AddTrait(GameSettings::Trait::DisableUpscaling);
-    gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (game_code == "SLPS-01557")
-  {
-    gs->AddTrait(GameSettings::Trait::DisableUpscaling);
-    gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (game_code == "SLUS-00355")
-  {
-    gs->AddTrait(GameSettings::Trait::DisableUpscaling);
-    gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (game_code == "SLES-00081")
-  {
-    gs->AddTrait(GameSettings::Trait::DisableUpscaling);
-    gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (game_code == "SLES-00149")
-  {
-    gs->AddTrait(GameSettings::Trait::DisableUpscaling);
-    gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (game_code == "SLES-00148")
-  {
-    gs->AddTrait(GameSettings::Trait::DisableUpscaling);
-    gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (game_code == "SLES-00146")
-  {
-    gs->AddTrait(GameSettings::Trait::DisableUpscaling);
-    gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (game_code == "SLPS-00275")
-  {
-    gs->AddTrait(GameSettings::Trait::DisableUpscaling);
-    gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (game_code == "SLES-00147")
-  {
-    gs->AddTrait(GameSettings::Trait::DisableUpscaling);
-    gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (game_code == "SLUS-00009")
-  {
-    gs->AddTrait(GameSettings::Trait::DisableUpscaling);
-    gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (game_code == "SLPM-87089")
+  if (   game_code == "SLPM-87089" /* Pop'n Music 6 (NTSC-J)    */
+      || game_code == "SLPS-03336" /* Mr. Driller G (NTSC-J)    */
+      || game_code == "SLUS-00952" /* Arcade Party Pak (NTSC-U) */
+      || game_code == "SCES-01312" /* Devil Dice (PAL)          */
+     )
   {
     gs->AddTrait(GameSettings::Trait::ForceInterlacing);
     return gs;
   }
 
-  if (game_code == "SLPS-03336")
-  {
-    gs->AddTrait(GameSettings::Trait::ForceInterlacing);
-    return gs;
-  }
-
-  if (game_code == "SLUS-01260")
+  if (game_code == "SLUS-01260") /* Pro Pinball Big Race USA (NTSC-U) */
   {
     gs->AddTrait(GameSettings::Trait::ForceSoftwareRenderer);
     gs->AddTrait(GameSettings::Trait::ForceInterlacing);
     return gs;
   }
 
-  if (game_code == "SLES-01211")
+  if (game_code == "SLES-01211") /* Pro Pinball Big Race USA (PAL) */
   {
     gs->AddTrait(GameSettings::Trait::ForceSoftwareRenderer);
     gs->AddTrait(GameSettings::Trait::ForceInterlacing);
     return gs;
   }
 
-  if (game_code == "SLUS-01261")
+  if (game_code == "SLUS-01261") /* Pro Pinball - Fantastic Journey (NTSC-U) */
   {
     gs->AddTrait(GameSettings::Trait::ForceSoftwareRenderer);
     gs->AddTrait(GameSettings::Trait::ForceInterlacing);
@@ -184,27 +85,27 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SLUS-00639")
+  if (game_code == "SLUS-00639") /* Pro Pinball: Timeshock! (NTSC-U) */
   {
     gs->AddTrait(GameSettings::Trait::ForceSoftwareRenderer);
     gs->AddTrait(GameSettings::Trait::ForceInterlacing);
     return gs;
   }
 
-  if (game_code == "SLUS-90039")
+  if (game_code == "SLUS-90039") /* Pro Pinball: Timeshock! (NTSC-U) */
   {
     gs->AddTrait(GameSettings::Trait::ForceSoftwareRenderer);
     gs->AddTrait(GameSettings::Trait::ForceInterlacing);
     return gs;
   }
 
-  if (game_code == "SLUS-00337")
+  if (game_code == "SLUS-00337") /* True Pinball (NTSC-U) */
   {
     gs->AddTrait(GameSettings::Trait::ForceInterlacing);
     return gs;
   }
 
-  if (game_code == "SLPS-03553")
+  if (game_code == "SLPS-03553") /* Naruto - Shinobi no Sato no Jintori Kassen (NTSC_J) *?
   {
     gs->AddTrait(GameSettings::Trait::ForceInterlacing);
     return gs;
@@ -222,38 +123,19 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SLUS-00952")
-  {
-    gs->AddTrait(GameSettings::Trait::ForceInterlacing);
-    return gs;
-  }
-
-  if (game_code == "SCES-01312")
-  {
-    gs->AddTrait(GameSettings::Trait::ForceInterlacing);
-    return gs;
-  }
-
   if (game_code == "SCPS-10126")
   {
     gs->AddTrait(GameSettings::Trait::ForceSoftwareRenderer);
     return gs;
   }
 
-  if (game_code == "SLPS-00078")
+  if (game_code == "SLPS-00078") /* Gakkou no kowai uwasa - Hanako Sangakita!! (NTSC-J) */
   {
     gs->AddTrait(GameSettings::Trait::DisableTrueColor);
     return gs;
   }
 
-  if (game_code == "SLUS-00297")
-  {
-    gs->AddTrait(GameSettings::Trait::DisableUpscaling);
-    gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (game_code == "SLPS-00435")
+  if (game_code == "SLPS-00435") /* PS1 Megatudo 2096 (NTSC-J) */
   {
     gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
     return gs;
@@ -373,13 +255,13 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SCES-02777")
+  if (game_code == "SCES-02777") /* Formula One 2000 (PAL) */
   {
     gs->AddTrait(GameSettings::Trait::ForceInterpreter);
     return gs;
   }
 
-  if (game_code == "SCES-02779")
+  if (game_code == "SCES-02779") /* Formula One 2000 (I-S) */
   {
     gs->AddTrait(GameSettings::Trait::ForceInterpreter);
     return gs;
@@ -421,7 +303,7 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SCES-02222")
+  if (game_code == "SCES-02222") /* Formula One '99 (PAL) */
   {
     gs->AddTrait(GameSettings::Trait::ForceInterpreter);
     return gs;
@@ -445,25 +327,25 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SCES-03886")
+  if (game_code == "SCES-03886") /* Formula One Arcade (PAL) */
   {
     gs->AddTrait(GameSettings::Trait::ForceInterpreter);
     return gs;
   }
 
-  if (game_code == "SLUS-00183")
+  if (game_code == "SLUS-00183") /* Zero Divide (NTSC-U) */
   {
     gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
     return gs;
   }
 
-  if (game_code == "SCPS-10059")
+  if (game_code == "SCPS-10059") /* Legaia Densetsu (NTSC-J) */
   {
     gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
     return gs;
   }
 
-  if (game_code == "SCUS-94254")
+  if (game_code == "SCUS-94254") /* Legend of Legaia (NTSC-U) */
   {
     gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
     return gs;
@@ -583,25 +465,25 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SLPS-02361")
+  if (game_code == "SLPS-02361") /* Touge Max G (NTSC-J) */
   {
     gs->AddTrait(GameSettings::Trait::ForcePGXPVertexCache);
     return gs;
   }
 
-  if (game_code == "SLPS-00712")
+  if (game_code == "SLPS-00712") /* Tenga Seiha (NTSC-J) */
   {
     gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
     return gs;
   }
 
-  if (game_code == "SLPS-01434")
+  if (game_code == "SLPS-01434") /* 3D Kakutou Tsukuru (NTSC-J) */
   {
     gs->AddTrait(GameSettings::Trait::ForceInterlacing);
     return gs;
   }
 
-  if (game_code == "SLUS-00684")
+  if (game_code == "SLUS-00684") /* Jackie Chan's Stuntmaster (NTSC-U) */
   {
     gs->AddTrait(GameSettings::Trait::ForceInterpreter);
     return gs;
@@ -613,55 +495,55 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SLPM-86750")
+  if (game_code == "SLPM-86750") /* Shiritsu Justice Gakuen - Nekketsu Seishun Nikki 2 [Capkore] (NTSC-J) */
   {
     gs->AddTrait(GameSettings::Trait::ForceInterlacing);
     return gs;
   }
 
-  if (game_code == "SLPS-02120")
+  if (game_code == "SLPS-02120") /* Shiritsu Justice Gakuen - Nekketsu Seishun Nikki 2 (NTSC-J) */
   {
     gs->AddTrait(GameSettings::Trait::ForceInterlacing);
     return gs;
   }
 
-  if (game_code == "SLUS-00348")
+  if (game_code == "SLUS-00348") /* Hexen (NTSC-U) */
   {
     gs->AddTrait(GameSettings::Trait::DisableUpscaling);
     return gs;
   }
 
-  if (game_code == "SLPS-01762")
+  if (game_code == "SLPS-01762") /* Pepsiman (NTSC-J) */
   {
     gs->AddTrait(GameSettings::Trait::DisablePGXPCulling);
     return gs;
   }
 
-  if (game_code == "SLES-03868")
+  if (game_code == "SLES-03868") /* Marcel Desailly Pro Football (PAL) */
   {
     gs->AddTrait(GameSettings::Trait::DisablePGXPCulling);
     return gs;
   }
 
-  if (game_code == "SLED-02439")
+  if (game_code == "SLED-02439") /* Compilation 03 */
   {
     gs->AddTrait(GameSettings::Trait::DisablePGXPCulling);
     return gs;
   }
 
-  if (game_code == "SCES-02835")
+  if (game_code == "SCES-02835") /* Spyro - Year Of The Dragon (PAL) */
   {
     gs->AddTrait(GameSettings::Trait::ForcePGXPCPUMode);
     return gs;
   }
 
-  if (game_code == "SCES-02104")
+  if (game_code == "SCES-02104") /* Spyro 2 - Gateway To Glimmer (PAL) */
   {
     gs->AddTrait(GameSettings::Trait::ForcePGXPCPUMode);
     return gs;
   }
 
-  if (game_code == "SCES-01438")
+  if (game_code == "SCES-01438") /* Spyro The Dragon (PAL) */
   {
     gs->AddTrait(GameSettings::Trait::DisablePGXPCulling);
     gs->AddTrait(GameSettings::Trait::ForcePGXPCPUMode);
@@ -680,13 +562,13 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SCPS-10085")
+  if (game_code == "SCPS-10085") /* Spyro The Dragon (NTSC-J) */
   {
     gs->AddTrait(GameSettings::Trait::ForcePGXPCPUMode);
     return gs;
   }
 
-  if (game_code == "SCUS-94228")
+  if (game_code == "SCUS-94228") /* Spyro The Dragon (NTSC-U) */
   {
     gs->AddTrait(GameSettings::Trait::DisablePGXPCulling);
     gs->AddTrait(GameSettings::Trait::ForcePGXPCPUMode);
@@ -729,25 +611,25 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SLES-12399")
+  if (game_code == "SLES-12399") /* Grandia (PAL) */
   {
     gs->AddTrait(GameSettings::Trait::ForcePGXPCPUMode);
     return gs;
   }
 
-  if (game_code == "SLPS-02124")
+  if (game_code == "SLPS-02124") /* Grandia (NTSC-J) */
   {
     gs->AddTrait(GameSettings::Trait::ForcePGXPCPUMode);
     return gs;
   }
 
-  if (game_code == "SLPS-91205")
+  if (game_code == "SLPS-91205") /* Grandia [PlayStation The Best] (NTSC-J) */
   {
     gs->AddTrait(GameSettings::Trait::ForcePGXPCPUMode);
     return gs;
   }
 
-  if (game_code == "SLPS-02125")
+  if (game_code == "SLPS-02125") /* Grandia (NTSC-J) */
   {
     gs->AddTrait(GameSettings::Trait::ForcePGXPCPUMode);
     return gs;
@@ -933,13 +815,13 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SLES-03665")
+  if (game_code == "SLES-03665") /* Harry Potter and the Philosopher's Stone (PAL) */
   {
     gs->AddTrait(GameSettings::Trait::ForcePGXPCPUMode);
     return gs;
   }
 
-  if (game_code == "SLES-03663")
+  if (game_code == "SLES-03663") /* Harry Potter and the Philosopher's Stone (PAL) */
   {
     gs->AddTrait(GameSettings::Trait::ForcePGXPCPUMode);
     return gs;
@@ -981,46 +863,38 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SCPS-45404")
+  if (game_code == "SCPS-45404") /* Racing Lagoon (NTSC-J) */
   {
     gs->AddTrait(GameSettings::Trait::ForcePGXPCPUMode);
     gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
     return gs;
   }
 
-  if (game_code == "SLPS-00869")
+  if (
+         game_code == "SLPS-00935" /* Choukousoku GranDoll (NTSC-J) */
+      || game_code == "SLPS-00870" /* Choukousoku GranDoll (NTSC-J) */
+      || game_code == "SLPS-00869" /* Choukousoku GranDoll (NTSC-J) */
+     ) 
   {
     gs->AddTrait(GameSettings::Trait::DisablePGXP);
     return gs;
   }
 
-  if (game_code == "SLPS-00870")
-  {
-    gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (game_code == "SLPS-00935")
-  {
-    gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (game_code == "SLUS-01138")
+  if (game_code == "SLUS-01138") /* Vampire Hunter D (NTSC-U) */
   {
     gs->dma_max_slice_ticks = 200;
     gs->gpu_max_run_ahead = 1;
     return gs;
   }
 
-  if (game_code == "SLPS-02376")
+  if (game_code == "SLPS-02376") /* Little Princess - Maru Oukoko No Ningyou Hime 2 (NTSC-J) */
   {
     gs->dma_max_slice_ticks = 100;
     gs->gpu_max_run_ahead = 1;
     return gs;
   }
 
-  if (game_code == "SLUS-00282")
+  if (game_code == "SLUS-00282") /* Red Asphalt (NTSC-U) */
   {
     gs->dma_max_slice_ticks = 200;
     gs->gpu_max_run_ahead = 1;
@@ -1083,42 +957,14 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SLES-10643")
-  {
-    gs->dma_max_slice_ticks = 200;
-    gs->gpu_max_run_ahead = 1;
-    return gs;
-  }
-
-  if (game_code == "SLPS-00638")
-  {
-    gs->dma_max_slice_ticks = 200;
-    gs->gpu_max_run_ahead = 1;
-    return gs;
-  }
-
-  if (game_code == "SLPS-00639")
-  {
-    gs->dma_max_slice_ticks = 200;
-    gs->gpu_max_run_ahead = 1;
-    return gs;
-  }
-
-  if (game_code == "SLES-00644")
-  {
-    gs->dma_max_slice_ticks = 200;
-    gs->gpu_max_run_ahead = 1;
-    return gs;
-  }
-
-  if (game_code == "SLES-10644")
-  {
-    gs->dma_max_slice_ticks = 200;
-    gs->gpu_max_run_ahead = 1;
-    return gs;
-  }
-
-  if (game_code == "SLUS-00381")
+  if (   game_code == "SLES-10643" /* Star Wars - Rebel Assault II - The Hidden Empire (PAL) */
+      || game_code == "SLPS-00638" /* Star Wars - Rebel Assault II - The Hidden Empire (NTSC-J) */
+      || game_code == "SLPS-00639" /* Star Wars - Rebel Assault II - The Hidden Empire (NTSC-J) */
+      || game_code == "SLES-00644" /* Star Wars - Rebel Assault II - The Hidden Empire (PAL) */
+      || game_code == "SLES-10644" /* Star Wars - Rebel Assault II - The Hidden Empire (PAL) */
+      || game_code == "SLUS-00381" /* Star Wars - Rebel Assault II - The Hidden Empire (NTSC-U) */
+      || game_code == "SLUS-00386" /* Star Wars - Rebel Assault II - The Hidden Empire (NTSC-U) */
+     ) 
   {
     gs->dma_max_slice_ticks = 200;
     gs->gpu_max_run_ahead = 1;
@@ -1132,104 +978,43 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SLUS-00386")
-  {
-    gs->dma_max_slice_ticks = 200;
-    gs->gpu_max_run_ahead = 1;
-    return gs;
-  }
-
-  if (game_code == "SLUS-00022")
+  if (game_code == "SLUS-00022") /* Slam'n'Jam '96 Featuring Magic & Kareem */
   {
     gs->AddTrait(GameSettings::Trait::DisableUpscaling);
     return gs;
   }
 
-  if (game_code == "SLUS-00292")
+  if (game_code == "SLUS-00292") /* Suikoden (NTSC-U) */
   {
     gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
     return gs;
   }
 
-  if (game_code == "SCUS-94577")
+  if (game_code == "SCUS-94577") /* NHL Faceoff 2001 (NTSC-U) */
   {
     gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
     return gs;
   }
 
-  if (game_code == "SCUS-94578")
+  if (game_code == "SCUS-94578") /* NHL Faceoff 2001 Demo (NTSC-U) */
   {
     gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
     return gs;
   }
 
-  if (game_code == "SLUS-00232")
-  {
-    gs->dma_max_slice_ticks = 100;
-    return gs;
-  }
-
-  if (game_code == "SLES-00526")
-  {
-    gs->dma_max_slice_ticks = 100;
-    return gs;
-  }
-
-  if (game_code == "SLED-00570")
-  {
-    gs->dma_max_slice_ticks = 100;
-    return gs;
-  }
-
-  if (game_code == "SLUS-00547")
-  {
-    gs->dma_max_slice_ticks = 100;
-    return gs;
-  }
-
-  if (game_code == "SLES-01239")
-  {
-    gs->dma_max_slice_ticks = 100;
-    return gs;
-  }
-
-  if (game_code == "SLED-01311")
-  {
-    gs->dma_max_slice_ticks = 100;
-    return gs;
-  }
-
-  if (game_code == "SLED-01310")
-  {
-    gs->dma_max_slice_ticks = 100;
-    return gs;
-  }
-
-  if (game_code == "SLPS-00900")
-  {
-    gs->dma_max_slice_ticks = 100;
-    return gs;
-  }
-
-  if (game_code == "SLPS-03581")
-  {
-    gs->dma_max_slice_ticks = 100;
-    return gs;
-  }
-
-  if (game_code == "SLPS-91064")
-  {
-    gs->dma_max_slice_ticks = 100;
-    return gs;
-  }
-
-  if (game_code == "SCUS-94182")
-  {
-    gs->dma_max_slice_ticks = 100;
-    return gs;
-  }
-
-  if (game_code == "SLUS-01323")
+  if (   game_code == "SLUS-00232" /* Pandemonium! (NTSC-U) */
+      || game_code == "SLES-00526" /* Pandemonium! (PAL)    */
+      || game_code == "SLED-00570" /* Pandemonium! (Demo Disc)(PAL)    */
+      || game_code == "SLUS-00547" /* Adidas Power Soccer '98 (NTSC-U) */
+      || game_code == "SLES-01239" /* Adidas Power Soccer '98 (PAL)    */
+      || game_code == "SLED-01311" /* Adidas Power Soccer '98 (PAL)    */
+      || game_code == "SLED-01310" /* Adidas Power Soccer '98 (PAL-FR) */
+      || game_code == "SLPS-00900" /* Armored Core (NTSC-J) */
+      || game_code == "SLPS-03581" /* Armored Core [Premium Box] (NTSC-J) */
+      || game_code == "SLPS-91064" /* Armored Core [PlayStation The Best] (NTSC-J) */
+      || game_code == "SCUS-94182" /* Armored Core (NTSC-U) */
+      || game_code == "SLUS-01323" /* Armored Core [Reprint] (NTSC-U) */
+) 
   {
     gs->dma_max_slice_ticks = 100;
     return gs;
@@ -1265,7 +1050,7 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SLPM-87395")
+  if (game_code == "SLPM-87395") /* Chrono Cross (Ultimate Hits) (NTSC-J) */
   {
     gs->dma_max_slice_ticks = 100;
     gs->dma_halt_ticks = 150;
@@ -1273,7 +1058,7 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SLPS-02364")
+  if (game_code == "SLPS-02364") /* Chrono Cross (NTSC-J) */
   {
     gs->dma_max_slice_ticks = 100;
     gs->dma_halt_ticks = 150;
@@ -1281,7 +1066,7 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SLPS-02777")
+  if (game_code == "SLPS-02777") /* Chrono Cross (Square Millennium Collection) (NTSC-J) */
   {
     gs->dma_max_slice_ticks = 100;
     gs->dma_halt_ticks = 150;
@@ -1337,7 +1122,7 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SLUS-01080")
+  if (game_code == "SLUS-01080") /* Chrono Cross - Disc 2/2 (NTSC-U) */
   {
     gs->dma_max_slice_ticks = 100;
     gs->dma_halt_ticks = 150;
@@ -1345,7 +1130,7 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SLUS-00912")
+  if (game_code == "SLUS-00912") /* Destruction Derby Raw (NTSC-U) */
   {
     gs->AddTrait(GameSettings::Trait::ForceInterlacing);
     return gs;
@@ -1399,13 +1184,13 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SLES-02605")
+  if (game_code == "SLES-02605") /* Colin McRae Rally 2.0 (PAL) */
   {
     gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
     return gs;
   }
 
-  if (game_code == "SLUS-01222")
+  if (game_code == "SLUS-01222") /* Colin McRae Rally 2.0 (NTSC-U) */
   {
     gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
     return gs;
@@ -1423,7 +1208,7 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SLUS-00860")
+  if (game_code == "SLUS-00860") /* Tony Hawk's Pro Skater (NTSC-U) */
   {
     gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
     return gs;
@@ -1459,7 +1244,7 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SLPM-86751")
+  if (game_code == "SLPM-86751") /* Tony Hawk's Pro Skater 2 (NTSC-U) */
   {
     gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
     return gs;
@@ -1525,25 +1310,25 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SLPS-02833")
+  if (game_code == "SLPS-02833") /* Lagnacure [Artdink Best Choice] (NTSC-J) */
   {
     gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
     return gs;
   }
 
-  if (game_code == "SCPS-45120")
+  if (game_code == "SCPS-45120") /* Lagnacure (NTSC-J) */
   {
     gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
     return gs;
   }
 
-  if (game_code == "SLPS-01009")
+  if (game_code == "SLPS-01009") /* Lagnacure (NTSC-J) */
   {
     gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
     return gs;
   }
 
-  if (game_code == "SCUS-94243")
+  if (game_code == "SCUS-94243")/* Einhander (NTSC-U) */
   {
     gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
     return gs;
