@@ -16,29 +16,3 @@
 #endif
 
 #include <windows.h>
-
-// hurr i'm windows, i like to conflict, fixme properly later please...
-#if defined(FindTexture)
-#undef FindTexture
-#endif
-#if defined(DrawText)
-#undef DrawText
-#endif
-#if defined(CreateDirectory)
-#undef CreateDirectory
-#endif
-#if defined(CopyFile)
-#undef CopyFile
-#endif
-#if defined(DeleteFile)
-#undef DeleteFile
-#endif
-#if defined(Yield)
-#undef Yield
-#endif
-#if defined(LoadIcon)
-#undef LoadIcon
-#endif
-#if defined(GetObject)
-#undef GetObject
-#endif

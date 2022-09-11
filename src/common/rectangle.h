@@ -37,9 +37,6 @@ struct Rectangle
   /// Returns a new rectangle from the specified position and size.
   static Rectangle FromExtents(T x, T y, T width, T height) { return Rectangle(x, y, x + width, y + height); }
 
-  /// Sets the rectangle to invalid coordinates (right < left, top < bottom).
-  constexpr void SetInvalid() { Set(InvalidMinCoord, InvalidMinCoord, InvalidMaxCoord, InvalidMaxCoord); }
-
   /// Returns the width of the rectangle.
   constexpr T GetWidth() const { return right - left; }
 
@@ -104,9 +101,6 @@ struct Rectangle
   {
     return !(left >= rhs.right || rhs.left >= right || top >= rhs.bottom || rhs.top >= bottom);
   }
-
-  /// Tests whether the specified point is contained in the rectangle.
-  constexpr bool Contains(T x, T y) const { return (x >= left && x < right && y >= top && y < bottom); }
 
   /// Expands the bounds of the rectangle to contain the specified point.
   constexpr void Include(T x, T y)

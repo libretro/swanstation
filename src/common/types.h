@@ -72,16 +72,6 @@ using u32 = uint32_t;
 using s64 = int64_t;
 using u64 = uint64_t;
 
-// Enable use of static_assert in constexpr if
-template<class T>
-struct dependent_false : std::false_type
-{
-};
-template<int T>
-struct dependent_int_false : std::false_type
-{
-};
-
 // Zero-extending helper
 template<typename TReturn, typename TValue>
 ALWAYS_INLINE constexpr TReturn ZeroExtend(TValue value)

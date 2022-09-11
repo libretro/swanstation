@@ -217,7 +217,11 @@ protected:
     m_vram_dirty_rect.Set(0, 0, VRAM_WIDTH, VRAM_HEIGHT);
     m_draw_mode.SetTexturePageChanged();
   }
-  void ClearVRAMDirtyRectangle() { m_vram_dirty_rect.SetInvalid(); }
+  void ClearVRAMDirtyRectangle()
+  {
+    // Sets the rectangle to invalid coordinates (right < left, top < bottom).
+    m_vram_dirty_rect.Set(m_vram_dirty_rect.InvalidMinCoord, m_vram_dirty_rect.InvalidMinCoord, m_vram_dirty_rect.InvalidMaxCoord, m_vram_dirty_rect.InvalidMaxCoord);
+  }
   void IncludeVRAMDirtyRectangle(const Common::Rectangle<u32>& rect);
 
   bool IsFlushed() const { return m_batch_current_vertex_ptr == m_batch_start_vertex_ptr; }
