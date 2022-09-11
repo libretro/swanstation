@@ -15,13 +15,11 @@ public:
   enum class Type
   {
     None = 0,   // Set by default constructor, returns 'No Error'.
-    Errno = 1,  // Error that is set by system functions, such as open().
-    User = 3   // When translated, will return 'User Error %u' if no message is specified.
+    User = 1   // When translated, will return 'User Error %u' if no message is specified.
   };
 
   // setter functions
   void Clear();
-  void SetErrno(int err);
   void SetMessage(const char* msg);
   void SetFormattedMessage(const char* format, ...) printflike(2, 3);
 
@@ -39,7 +37,6 @@ private:
   union
   {
     int none;
-    int errno_f; // renamed from errno to avoid conflicts with #define'd errnos.
     int user;
   } m_error{};
   StackString<16> m_code_string;

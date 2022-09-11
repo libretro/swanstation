@@ -63,9 +63,6 @@ bool CDImageMds::OpenAndParse(const char* filename, Common::Error* error)
   if (!mds_fp)
   {
     Log_ErrorPrintf("Failed to open mds '%s': errno %d", filename, errno);
-    if (error)
-      error->SetErrno(errno);
-
     return false;
   }
 

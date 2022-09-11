@@ -330,12 +330,7 @@ bool CDImagePBP::Open(const char* filename, Common::Error* error)
 
   m_file = FileSystem::OpenCFile(filename, "rb");
   if (!m_file)
-  {
-    if (error)
-      error->SetErrno(errno);
-
     return false;
-  }
 
   m_filename = filename;
 

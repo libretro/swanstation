@@ -91,9 +91,6 @@ bool CDImageCHD::Open(const char* filename, Common::Error* error)
   if (!m_fp)
   {
     Log_ErrorPrintf("Failed to open CHD '%s': errno %d", filename, errno);
-    if (error)
-      error->SetErrno(errno);
-
     return false;
   }
 

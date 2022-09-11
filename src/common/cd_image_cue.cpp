@@ -50,9 +50,6 @@ bool CDImageCueSheet::OpenAndParse(const char* filename, Common::Error* error)
   if (!fp)
   {
     Log_ErrorPrintf("Failed to open cuesheet '%s': errno %d", filename, errno);
-    if (error)
-      error->SetErrno(errno);
-
     return false;
   }
 

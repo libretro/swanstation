@@ -1446,9 +1446,8 @@ void LibretroHostInterface::SwitchToHardwareRenderer()
 
   WindowInfo wi;
   wi.display_connection = &g_libretro_host_interface.m_hw_render_callback;
-  wi.surface_width = avi.geometry.base_width;
-  wi.surface_height = avi.geometry.base_height;
-  wi.surface_scale = 1.0f;
+  wi.surface_width      = avi.geometry.base_width;
+  wi.surface_height     = avi.geometry.base_height;
 
   // use the existing device if we just resized the window
   std::optional<GPURenderer> renderer;

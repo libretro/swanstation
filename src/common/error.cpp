@@ -6,8 +6,6 @@
 // Platform-specific includes
 #if defined(_WIN32)
 #include "windows_headers.h"
-static_assert(std::is_same<DWORD, unsigned long>::value, "DWORD is unsigned long");
-static_assert(std::is_same<HRESULT, long>::value, "HRESULT is long");
 #endif
 
 namespace Common {
@@ -33,25 +31,6 @@ void Error::Clear()
   m_error.none = 0;
   m_code_string.Clear();
   m_message.Clear();
-}
-
-void Error::SetErrno(int err)
-{
-  m_type = Type::Errno;
-  m_error.errno_f = err;
-
-  m_code_string.Format("%i", err);
-
-#ifdef _MSC_VER
-  strerror_s(m_message.GetWriteableCharArray(), m_message.GetBufferSize(), err);
-  m_message.UpdateSize();
-#else
-  const char* message = std::strerror(err);
-  if (message)
-    m_message = message;
-  else
-    m_message = StaticString("<Could not get error message>");
-#endif
 }
 
 void Error::SetMessage(const char* msg)
@@ -91,10 +70,6 @@ bool Error::operator==(const Error& e) const
   {
     case Type::None:
       return true;
-
-    case Type::Errno:
-      return m_error.errno_f == e.m_error.errno_f;
-
     case Type::User:
       return m_error.user == e.m_error.user;
   }
@@ -108,10 +83,6 @@ bool Error::operator!=(const Error& e) const
   {
     case Type::None:
       return false;
-
-    case Type::Errno:
-      return m_error.errno_f != e.m_error.errno_f;
-
     case Type::User:
       return m_error.user != e.m_error.user;
   }
