@@ -1,6 +1,4 @@
 add_library(swanstation_libretro SHARED
-  game_settings.cpp
-  game_settings.h
   libretro_audio_stream.cpp
   libretro_audio_stream.h
   libretro_game_settings.cpp
