@@ -11,7 +11,6 @@
 #include <algorithm>
 #include <array>
 #include <cstdarg>
-#include <string_view>
 namespace Vulkan {
 namespace Util {
 

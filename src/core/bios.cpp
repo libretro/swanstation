@@ -221,8 +221,7 @@ DiscRegion GetPSExeDiscRegion(const PSEXEHeader& header)
     return DiscRegion::NTSC_J;
   else if (std::memcmp(header.marker, pal_id, sizeof(pal_id) - 1) == 0)
     return DiscRegion::PAL;
-  else
-    return DiscRegion::Other;
+  return DiscRegion::Other;
 }
 
 } // namespace BIOS
