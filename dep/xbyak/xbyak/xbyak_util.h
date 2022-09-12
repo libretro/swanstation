@@ -3,7 +3,6 @@
 
 /**
 	utility class and functions for Xbyak
-	Xbyak::util::Clock ; rdtsc timer
 	Xbyak::util::Cpu ; detect CPU
 	@note this header is UNDER CONSTRUCTION!
 */
@@ -260,40 +259,6 @@ public:
 	{
 		return (type & type_) != 0;
 	}
-};
-
-class Clock {
-public:
-	static inline uint64 getRdtsc()
-	{
-#ifdef _MSC_VER
-		return __rdtsc();
-#else
-		unsigned int eax, edx;
-		__asm__ volatile("rdtsc" : "=a"(eax), "=d"(edx));
-		return ((uint64)edx << 32) | eax;
-#endif
-	}
-	Clock()
-		: clock_(0)
-		, count_(0)
-	{
-	}
-	void begin()
-	{
-		clock_ -= getRdtsc();
-	}
-	void end()
-	{
-		clock_ += getRdtsc();
-		count_++;
-	}
-	int getCount() const { return count_; }
-	uint64 getClock() const { return clock_; }
-	void clear() { count_ = 0; clock_ = 0; }
-private:
-	uint64 clock_;
-	int count_;
 };
 
 #ifdef XBYAK64
