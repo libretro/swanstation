@@ -4,8 +4,6 @@
 #include "common/string_util.h"
 #include "core/host_interface.h"
 #include "core/settings.h"
-#include <array>
-#include <utility>
 Log_SetChannel(GameSettings);
 
 #ifdef _WIN32

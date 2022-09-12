@@ -26,7 +26,6 @@
 #include <cstring>
 #include <tuple>
 #include <utility>
-#include <vector>
 #include "scmversion/scmversion.h"
 Log_SetChannel(LibretroHostInterface);
 
