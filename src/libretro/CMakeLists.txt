@@ -15,7 +15,6 @@ add_library(swanstation_libretro SHARED
   libretro_settings_interface.h
   libretro_vulkan_host_display.cpp
   libretro_vulkan_host_display.h
-  main.cpp
 )
 
 if(WIN32)
