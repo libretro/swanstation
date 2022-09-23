@@ -104,6 +104,7 @@ enum class DisplayAspectRatio : u8
   R19_9,
   R20_9,
   PAR1_1,
+  Native,
   Count
 };
 

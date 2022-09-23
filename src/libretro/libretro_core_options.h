@@ -811,6 +811,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "Custom",         "Custom"},
          { "Auto",           "Corrected" },
          { "PAR 1:1",        "PAR 1:1 (Uncorrected)" },
+         { "Native",         "Game Native" },
          { NULL, NULL },
       },
       "Auto"
