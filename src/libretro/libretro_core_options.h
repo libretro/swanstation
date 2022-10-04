@@ -499,11 +499,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "Software", "Software" },
          { NULL, NULL },
       },
-#ifdef WIN32
-      "D3D11"
-#else
       "Auto"
-#endif
    },
    {
       "duckstation_GPU.ResolutionScale",
