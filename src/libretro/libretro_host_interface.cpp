@@ -1307,47 +1307,47 @@ void LibretroHostInterface::UpdateControllersAnalogController(u32 index)
     if (g_settings.controller_analog_combo == 1)
     {
       analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_L3 && PadCombo_R3);
-	}
+    }
     else if (g_settings.controller_analog_combo == 2)
     {
       analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_L2 && PadCombo_R2 && PadCombo_Start && PadCombo_Select);
-	}
+    }
     else if (g_settings.controller_analog_combo == 3)
     {
       analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_Select);
-	}
+    }
     else if (g_settings.controller_analog_combo == 4)
     {
       analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_Start);
-	}
+    }
     else if (g_settings.controller_analog_combo == 5)
     {
       analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_L3);
-	}
+    }
     else if (g_settings.controller_analog_combo == 6)
     {
       analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_R3);
-	}
+    }
     else if (g_settings.controller_analog_combo == 7)
     {
       analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_Select);
-	}
+    }
     else if (g_settings.controller_analog_combo == 8)
     {
       analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_Start);
-	}
+    }
     else if (g_settings.controller_analog_combo == 9)
     {
       analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_L3);
-	}
+    }
     else if (g_settings.controller_analog_combo == 10)
     {
       analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_R3);
-	}
+    }
     else if (g_settings.controller_analog_combo == 11)
     {
       analog_press_status = (PadCombo_L3 && PadCombo_R3);
-	}	
+    }	
   }
 
   // Workaround for the fact it will otherwise spam the analog button.
