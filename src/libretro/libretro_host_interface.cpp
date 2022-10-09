@@ -194,7 +194,7 @@ static retro_log_callback s_libretro_log_callback = {};
 static bool s_libretro_log_callback_valid = false;
 static bool s_libretro_log_callback_registered = false;
 static bool libretro_supports_option_categories = false;
-static bool analog_press = false;
+static bool analog_pressed = false;
 static bool port_allowed = false;
 static unsigned libretro_msg_interface_version = 0;
 
@@ -1291,20 +1291,77 @@ void LibretroHostInterface::UpdateControllersAnalogController(u32 index)
     m_rumble_interface.set_rumble_state(index, RETRO_RUMBLE_WEAK, weak);
   }
 
-  const u16 L1 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L);
-  const u16 R1 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R);
-  const u16 L3 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3);
-  const u16 R3 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3);
+  const u16 PadCombo_L1 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L);
+  const u16 PadCombo_R1 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R);
+  const u16 PadCombo_L2 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2);
+  const u16 PadCombo_R2 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2);
+  const u16 PadCombo_L3 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3);
+  const u16 PadCombo_R3 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3);
+  const u16 PadCombo_Start = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START);
+  const u16 PadCombo_Select = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT);
+  int analog_press_status = 0;
+
+  // Check if we're allowed to press the analog button, and then set the selected combo.
+  if (!analog_pressed)
+  {
+    if (g_settings.controller_analog_combo == 1)
+    {
+      analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_L3 && PadCombo_R3);
+	}
+    else if (g_settings.controller_analog_combo == 2)
+    {
+      analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_L2 && PadCombo_R2 && PadCombo_Start && PadCombo_Select);
+	}
+    else if (g_settings.controller_analog_combo == 3)
+    {
+      analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_Select);
+	}
+    else if (g_settings.controller_analog_combo == 4)
+    {
+      analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_Start);
+	}
+    else if (g_settings.controller_analog_combo == 5)
+    {
+      analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_L3);
+	}
+    else if (g_settings.controller_analog_combo == 6)
+    {
+      analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_R3);
+	}
+    else if (g_settings.controller_analog_combo == 7)
+    {
+      analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_Select);
+	}
+    else if (g_settings.controller_analog_combo == 8)
+    {
+      analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_Start);
+	}
+    else if (g_settings.controller_analog_combo == 9)
+    {
+      analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_L3);
+	}
+    else if (g_settings.controller_analog_combo == 10)
+    {
+      analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_R3);
+	}
+    else if (g_settings.controller_analog_combo == 11)
+    {
+      analog_press_status = (PadCombo_L3 && PadCombo_R3);
+	}	
+  }
 
   // Workaround for the fact it will otherwise spam the analog button.
-  if (!analog_press && L1 && R1 && L3 && R3)
+  if (analog_press_status)
   {
-    analog_press = true;
-    controller->SetButtonState(AnalogController::Button::Analog, (L1 && R1 && L3 && R3));
+    analog_pressed = true;
+    controller->SetButtonState(AnalogController::Button::Analog, (analog_press_status));
+    analog_press_status = 0;
   }
-  if (analog_press && !L1 && !R1 && !L3 && !R3)
+
+  // Check if all possible combo buttons are released.
+  if (analog_pressed && !PadCombo_L1 && !PadCombo_R1 && !PadCombo_L2 && !PadCombo_R2 && !PadCombo_L3 && !PadCombo_R3 && !PadCombo_Start && !PadCombo_Select)
   {
-    analog_press = false;
+    analog_pressed = false;
   }
 }
 

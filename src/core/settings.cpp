@@ -250,6 +250,8 @@ void Settings::Load(SettingsInterface& si)
         .value_or(DEFAULT_CONTROLLER_2_TYPE);
   }
 
+  controller_analog_combo = si.GetIntValue("Controller", "AnalogCombo", 1);
+
   memory_card_types[0] =
     ParseMemoryCardTypeName(
       si.GetStringValue("MemoryCards", "Card1Type", GetMemoryCardTypeName(DEFAULT_MEMORY_CARD_1_TYPE)).c_str())
