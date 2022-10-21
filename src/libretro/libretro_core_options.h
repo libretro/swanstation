@@ -1068,7 +1068,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "11", "L3 + R3" },
          { NULL, NULL },
       },
-      "1"
+      "2"
    },
    {
       "duckstation_Controller1.ForceAnalogOnReset",
