@@ -978,7 +978,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "false", "Disabled" },
          { NULL, NULL },
       },
-      "false"
+      "true"
    },
    {
       "duckstation_MemoryCards.Card1Type",
