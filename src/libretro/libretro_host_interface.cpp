@@ -836,6 +836,7 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
   static bool vram_rewrite_replacements_prev;
   static bool cdrom_preload_enable_prev;
   static DisplayAspectRatio aspect_ratio_prev;
+  static MemoryCardType second_memcard_prev;
 
   const CPUExecutionMode cpu_execution_mode =
     Settings::ParseCPUExecutionMode(
@@ -868,12 +869,18 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
       .value_or(Settings::DEFAULT_DISPLAY_ASPECT_RATIO);
   const bool custom_aspect_ratio = (aspect_ratio == DisplayAspectRatio::Custom);
 
+  const MemoryCardType second_memcard =
+    Settings::ParseMemoryCardTypeName(
+      si.GetStringValue("MemoryCards", "Card2Type", Settings::GetMemoryCardTypeName(Settings::DEFAULT_MEMORY_CARD_2_TYPE)).c_str())
+      .value_or(Settings::DEFAULT_MEMORY_CARD_2_TYPE);
+  const bool per_game_titles = (second_memcard == MemoryCardType::PerGameTitle);
+
   if (!controller)
   {
     if (cpu_execution_mode == cpu_execution_mode_prev && cpu_fastmem_mode == cpu_fastmem_mode_prev && pgxp_enable == pgxp_enable_prev && 
         multitap_mode == multitap_mode_prev && vram_rewrite_replacements == vram_rewrite_replacements_prev &&
         cdrom_preload_enable == cdrom_preload_enable_prev && aspect_ratio == aspect_ratio_prev &&
-        hardware_renderer == hardware_renderer_prev)
+        hardware_renderer == hardware_renderer_prev && second_memcard == second_memcard_prev)
     {
       return false;
     }
@@ -887,6 +894,7 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
   vram_rewrite_replacements_prev = vram_rewrite_replacements;
   cdrom_preload_enable_prev = cdrom_preload_enable;
   aspect_ratio_prev = aspect_ratio;
+  second_memcard_prev = second_memcard;
 
   struct retro_core_option_display option_display;
 
@@ -956,6 +964,10 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
   option_display.key = "duckstation_Display.CustomAspectRatioNumerator";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
   option_display.key = "duckstation_Display.CustomAspectRatioDenominator";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+
+  option_display.visible = per_game_titles;
+  option_display.key = "duckstation_MemoryCards.UsePlaylistTitle";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
   for (u32 i = 0; i < NUM_CONTROLLER_AND_CARD_PORTS; i++)
