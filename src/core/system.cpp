@@ -1082,11 +1082,8 @@ bool DoLoadState(ByteStream* state, bool force_software_renderer, bool update_di
       {
         if (old_media)
         {
-          g_host_interface->AddFormattedOSDMessage(
-            30.0f,
-            g_host_interface->TranslateString("OSDMessage", "Failed to open CD image from save state '%s': %s. Using "
-                                                            "existing image '%s', this may result in instability."),
-            media_filename.c_str(), error.GetCodeAndMessage().GetCharArray(), old_media->GetFileName().c_str());
+          Log_InfoPrintf("Failed to open CD image from save state '%s': %s. Using existing image '%s', this may result in instability.",
+                         media_filename.c_str(), error.GetCodeAndMessage().GetCharArray(), old_media->GetFileName().c_str());
           media = std::move(old_media);
         }
         else
