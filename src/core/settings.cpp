@@ -252,7 +252,10 @@ void Settings::Load(SettingsInterface& si)
 
   controller_analog_combo = si.GetIntValue("Controller", "AnalogCombo", 1);
 
-  memory_card_types[0] = MemoryCardType::Libretro;
+  memory_card_types[0] =
+    ParseMemoryCardTypeName(
+      si.GetStringValue("MemoryCards", "Card1Type", GetMemoryCardTypeName(DEFAULT_MEMORY_CARD_1_TYPE)).c_str())
+      .value_or(DEFAULT_MEMORY_CARD_1_TYPE);
   memory_card_types[1] =
     ParseMemoryCardTypeName(
       si.GetStringValue("MemoryCards", "Card2Type", GetMemoryCardTypeName(DEFAULT_MEMORY_CARD_2_TYPE)).c_str())
