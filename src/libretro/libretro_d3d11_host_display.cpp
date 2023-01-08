@@ -185,7 +185,6 @@ void LibretroD3D11HostDisplay::DestroyRenderDevice()
 {
   ClearSoftwareCursor();
   DestroyResources();
-  DestroyRenderSurface();
   m_context.Reset();
   m_device.Reset();
 }
@@ -223,8 +222,6 @@ bool LibretroD3D11HostDisplay::ChangeRenderWindow(const WindowInfo& new_wi)
   m_window_info = new_wi;
   return true;
 }
-
-void LibretroD3D11HostDisplay::DestroyRenderSurface() {}
 
 bool LibretroD3D11HostDisplay::CreateResources()
 {

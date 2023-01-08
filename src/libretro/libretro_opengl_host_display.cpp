@@ -345,8 +345,6 @@ bool LibretroOpenGLHostDisplay::ChangeRenderWindow(const WindowInfo& new_wi)
   return true;
 }
 
-void LibretroOpenGLHostDisplay::DestroyRenderSurface() {}
-
 bool LibretroOpenGLHostDisplay::CreateResources()
 {
   static constexpr char fullscreen_quad_vertex_shader[] = R"(

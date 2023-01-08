@@ -81,8 +81,6 @@ void LibretroHostDisplay::DestroyRenderDevice()
   ClearSoftwareCursor();
 }
 
-void LibretroHostDisplay::DestroyRenderSurface() {}
-
 bool LibretroHostDisplay::CreateResources()
 {
   return true;

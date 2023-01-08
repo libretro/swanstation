@@ -57,8 +57,6 @@ void* LibretroVulkanHostDisplay::GetRenderContext() const
   return nullptr;
 }
 
-void LibretroVulkanHostDisplay::DestroyRenderSurface() {}
-
 static constexpr std::array<VkFormat, static_cast<u32>(HostDisplayPixelFormat::Count)> s_display_pixel_format_mapping =
   {{VK_FORMAT_UNDEFINED, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_R5G6B5_UNORM_PACK16,
     VK_FORMAT_A1R5G5B5_UNORM_PACK16}};
@@ -284,7 +282,6 @@ void LibretroVulkanHostDisplay::DestroyRenderDevice()
   DestroyResources();
 
   Vulkan::ShaderCache::Destroy();
-  DestroyRenderSurface();
   Vulkan::Context::Destroy();
   Vulkan::ResetVulkanLibraryFunctionPointers();
 }
