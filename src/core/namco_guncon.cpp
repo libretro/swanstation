@@ -262,6 +262,7 @@ void NamcoGunCon::LoadSettings(const char* section)
 {
   Controller::LoadSettings(section);
 
+  // Todo: Get the crosshair to actually display //
   std::string path = g_host_interface->GetStringSettingValue(section, "CrosshairImagePath");
   if (path != m_crosshair_image_path)
   {
@@ -273,7 +274,7 @@ void NamcoGunCon::LoadSettings(const char* section)
     }
   }
 
-/* Todo: Replace this with something that works for Libretro
+/* Creates the crosshair from resources.cpp
 #ifndef __ANDROID__
   if (!m_crosshair_image.IsValid())
   {
