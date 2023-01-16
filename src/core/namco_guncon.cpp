@@ -273,7 +273,7 @@ void NamcoGunCon::LoadSettings(const char* section)
     }
   }
 
-/* Disable this for Libretro
+/* Todo: Replace this with something that works for Libretro
 #ifndef __ANDROID__
   if (!m_crosshair_image.IsValid())
   {
