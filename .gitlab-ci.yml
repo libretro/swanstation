@@ -76,10 +76,10 @@ libretro-build-osx-x64:
     - .core-defs
 
 # MacOS arm64
-libretro-build-osx-arm64:
-  extends:
-    - .libretro-osx-cmake-arm64
-    - .core-defs
+#libretro-build-osx-arm64:
+  #extends:
+    #- .libretro-osx-cmake-arm64
+    #- .core-defs
 
 ################################### CELLULAR #################################
 # Android ARMv7a
