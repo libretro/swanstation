@@ -26,7 +26,6 @@
 #include <cstring>
 #include <tuple>
 #include <utility>
-#include "scmversion/scmversion.h"
 Log_SetChannel(LibretroHostInterface);
 
 #ifdef WIN32
@@ -60,7 +59,7 @@ RETRO_API void retro_get_system_info(struct retro_system_info* info)
   info->library_name = "SwanStation";
 #endif
 
-  info->library_version = g_scm_short_str;
+  info->library_version = "1.0.0";
   info->valid_extensions = "exe|psexe|cue|bin|img|iso|chd|pbp|ecm|mds|psf|m3u";
   info->need_fullpath = true;
   info->block_extract = false;
