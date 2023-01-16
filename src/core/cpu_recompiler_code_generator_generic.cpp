@@ -1,9 +1,7 @@
-#include "common/log.h"
 #include "cpu_core.h"
 #include "cpu_core_private.h"
 #include "cpu_recompiler_code_generator.h"
 #include "settings.h"
-Log_SetChannel(Recompiler::CodeGenerator);
 
 namespace CPU::Recompiler {
 

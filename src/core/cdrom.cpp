@@ -1859,7 +1859,9 @@ bool CDROM::CompleteSeek()
 
 void CDROM::DoSeekComplete(TickCount ticks_late)
 {
+#if 0
   const bool logical = (m_drive_state == DriveState::SeekingLogical);
+#endif
   const bool seek_okay = CompleteSeek();
   if (seek_okay)
   {
