@@ -777,7 +777,8 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "duckstation_Display.AspectRatio",
       "Core Provided Aspect Ratio",
       NULL,
-      "Sets the preferred aspect ratio. Will only work when the 'Core Provided' aspect ratio is selected inside RetroArch's Video settings.",
+      "Sets the preferred aspect ratio. Will only work when the 'Core Provided' aspect ratio is selected inside RetroArch's Video settings. "
+      "Will be forced to 'Corrected' when using a Namco GunCon controller in either port 1 or 2",
       NULL,
       "display",
       {
@@ -791,7 +792,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "Native",         "Game Native" },
          { NULL, NULL },
       },
-      "Auto"
+      "4:3"
    },
    {
       "duckstation_Display.CustomAspectRatioNumerator",
