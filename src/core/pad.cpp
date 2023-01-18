@@ -59,14 +59,14 @@ bool Pad::DoStateController(StateWrapper& sw, u32 i)
 
   if (controller_type != state_controller_type)
   {
-      // mismatched controller states prevents us from loading the state into the user's preferred controller.
-      // just doing a reset here is a little dodgy. If there's an active xfer on the state-saved controller
-      // then who knows what might happen as the rest of the packet streams in. (possibly the SIO xfer will
-      // timeout and the controller will just correct itself on the next frame's read attempt -- after all on
-      // physical HW removing a controller is allowed and could happen in the middle of SIO comms)
+    // mismatched controller states prevents us from loading the state into the user's preferred controller.
+    // just doing a reset here is a little dodgy. If there's an active xfer on the state-saved controller
+    // then who knows what might happen as the rest of the packet streams in. (possibly the SIO xfer will
+    // timeout and the controller will just correct itself on the next frame's read attempt -- after all on
+    // physical HW removing a controller is allowed and could happen in the middle of SIO comms)
 
-      if (m_controllers[i])
-        m_controllers[i]->Reset();
+    if (m_controllers[i])
+      m_controllers[i]->Reset();
   }
 
   // we still need to read/write the save state controller state even if the controller does not exist.
