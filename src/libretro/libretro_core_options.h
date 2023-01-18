@@ -3934,10 +3934,10 @@ struct retro_core_option_v2_definition option_defs_us[] = {
    },
    {
       "duckstation_Main.LoadDevicesFromSaveStates",
-      "Load Devices From Save States",
+      "Load Memory Cards From Save States",
       NULL,
-      "Sets whether the contents of devices and memory cards will be loaded when a save state is loaded. "
-      "Disabling this will simulate a replug of devices and memory cards.",
+      "Sets whether the contents memory cards will be loaded when a save state is loaded. "
+      "Disabling this will simulate a replug of memory cards.",
       NULL,
       "advanced",
       {

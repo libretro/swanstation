@@ -59,31 +59,6 @@ bool Pad::DoStateController(StateWrapper& sw, u32 i)
 
   if (controller_type != state_controller_type)
   {
-    // UI notification portion is separated from emulation portion (intentional condition check redundancy)
-    if (g_settings.load_devices_from_save_states)
-    {
-      g_host_interface->AddFormattedOSDMessage(
-        10.0f,
-        g_host_interface->TranslateString(
-          "OSDMessage", "Save state contains controller type %s in port %u, but %s is used. Switching."),
-        Settings::GetControllerTypeName(state_controller_type), i + 1u,
-        Settings::GetControllerTypeName(controller_type));
-    }
-    else
-    {
-      g_host_interface->AddFormattedOSDMessage(
-        10.0f, g_host_interface->TranslateString("OSDMessage", "Ignoring mismatched controller type %s in port %u."),
-        Settings::GetControllerTypeName(state_controller_type), i + 1u);
-    }
-
-    if (g_settings.load_devices_from_save_states)
-    {
-      m_controllers[i].reset();
-      if (state_controller_type != ControllerType::None)
-        m_controllers[i] = Controller::Create(state_controller_type, i);
-    }
-    else
-    {
       // mismatched controller states prevents us from loading the state into the user's preferred controller.
       // just doing a reset here is a little dodgy. If there's an active xfer on the state-saved controller
       // then who knows what might happen as the rest of the packet streams in. (possibly the SIO xfer will
@@ -92,7 +67,6 @@ bool Pad::DoStateController(StateWrapper& sw, u32 i)
 
       if (m_controllers[i])
         m_controllers[i]->Reset();
-    }
   }
 
   // we still need to read/write the save state controller state even if the controller does not exist.
@@ -104,9 +78,9 @@ bool Pad::DoStateController(StateWrapper& sw, u32 i)
     return false;
 
   if (auto& controller = m_controllers[i]; controller && controller->GetType() == state_controller_type)
-    return controller->DoState(sw, g_settings.load_devices_from_save_states);
+    return controller->DoState(sw, false);
   else if (auto dummy = Controller::Create(state_controller_type, i); dummy)
-    return dummy->DoState(sw, g_settings.load_devices_from_save_states);
+    return dummy->DoState(sw, false);
 
   return true;
 }
