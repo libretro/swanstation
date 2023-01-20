@@ -195,9 +195,6 @@ bool Pad::DoState(StateWrapper& sw)
       // honoring load_devices_from_save_states in this case seems debatable, but might as well...
       if (m_controllers[i])
       {
-        if (g_settings.load_devices_from_save_states)
-          m_controllers[i].reset();
-        else
           m_controllers[i]->Reset();
       }
 
