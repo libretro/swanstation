@@ -3934,21 +3934,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "true"
    },
    {
-      "duckstation_Main.LoadDevicesFromSaveStates",
-      "Load Memory Cards From Save States",
-      NULL,
-      "Sets whether the contents memory cards will be loaded when a save state is loaded. "
-      "Disabling this will simulate a replug of memory cards.",
-      NULL,
-      "advanced",
-      {
-         { "true",  "Enabled" },
-         { "false", "Disabled" },
-         { NULL, NULL },
-      },
-      "true"
-   },
-   {
       "duckstation_Logging.LogLevel",
       "Log Level",
       NULL,

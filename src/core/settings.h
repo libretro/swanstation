@@ -69,7 +69,7 @@ struct Settings
   CPUFastmemMode cpu_fastmem_mode = CPUFastmemMode::Disabled;
   bool cpu_fastmem_rewrite = false;
 
-  bool load_devices_from_save_states = false;
+  bool load_devices_from_save_states = true;
   bool apply_game_settings = true;
   bool disable_all_enhancements = false;
 

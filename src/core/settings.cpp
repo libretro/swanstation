@@ -140,7 +140,7 @@ void Settings::Load(SettingsInterface& si)
       .value_or(DEFAULT_CONSOLE_REGION);
   enable_8mb_ram = si.GetBoolValue("Console", "Enable8MBRAM", false);
 
-  load_devices_from_save_states = si.GetBoolValue("Main", "LoadDevicesFromSaveStates", false);
+  load_devices_from_save_states = si.GetBoolValue("Main", "LoadDevicesFromSaveStates", true);
   apply_game_settings = si.GetBoolValue("Main", "ApplyGameSettings", true);
   disable_all_enhancements = si.GetBoolValue("Main", "DisableAllEnhancements", false);
   rewind_enable = si.GetBoolValue("Main", "RewindEnable", false);
