@@ -778,7 +778,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "Core Provided Aspect Ratio",
       NULL,
       "Sets the preferred aspect ratio. Will only work when the 'Core Provided' aspect ratio is selected inside RetroArch's Video settings. "
-      "Will be forced to 'Corrected' when using a Namco GunCon controller in either port 1 or 2",
+      "Change to either 'Corrected', 'Game Native', or 'PAR 1:1 (Uncorrected)' when using a Namco GunCon controller in either port 1 or 2",
       NULL,
       "display",
       {
