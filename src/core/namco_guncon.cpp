@@ -246,12 +246,8 @@ u32 NamcoGunCon::StaticGetVibrationMotorCount()
 
 Controller::SettingList NamcoGunCon::StaticGetSettings()
 {
-  static constexpr std::array<SettingInfo, 3> settings = {
-    {{SettingInfo::Type::Path, "CrosshairImagePath", TRANSLATABLE("NamcoGunCon", "Crosshair Image Path"),
-      TRANSLATABLE("NamcoGunCon", "Path to an image to use as a crosshair/cursor.")},
-     {SettingInfo::Type::Float, "CrosshairScale", TRANSLATABLE("NamcoGunCon", "Crosshair Image Scale"),
-      TRANSLATABLE("NamcoGunCon", "Scale of crosshair image on screen."), "1.0", "0.0001", "100.0", "0.10"},
-     {SettingInfo::Type::Float, "XScale", TRANSLATABLE("NamcoGunCon", "X Scale"),
+  static constexpr std::array<SettingInfo, 1> settings = {
+    {{SettingInfo::Type::Float, "XScale", TRANSLATABLE("NamcoGunCon", "X Scale"),
       TRANSLATABLE("NamcoGunCon", "Scales X coordinates relative to the center of the screen."), "1.0", "0.01", "2.0",
       "0.01"}}};
 
@@ -262,38 +258,16 @@ void NamcoGunCon::LoadSettings(const char* section)
 {
   Controller::LoadSettings(section);
 
-  // Todo: Get the crosshair to actually display //
-  std::string path = g_host_interface->GetStringSettingValue(section, "CrosshairImagePath");
-  if (path != m_crosshair_image_path)
-  {
-    m_crosshair_image_path = std::move(path);
-    if (m_crosshair_image_path.empty() ||
-        !Common::LoadImageFromFile(&m_crosshair_image, m_crosshair_image_path.c_str()))
-    {
-      m_crosshair_image.Invalidate();
-    }
-  }
+  m_crosshair_image.SetPixels(Resources::CROSSHAIR_IMAGE_WIDTH, Resources::CROSSHAIR_IMAGE_HEIGHT,
+                              Resources::CROSSHAIR_IMAGE_DATA.data());
 
-/* Creates the crosshair from resources.cpp
-#ifndef __ANDROID__
-  if (!m_crosshair_image.IsValid())
-  {
-    m_crosshair_image.SetPixels(Resources::CROSSHAIR_IMAGE_WIDTH, Resources::CROSSHAIR_IMAGE_HEIGHT,
-                                Resources::CROSSHAIR_IMAGE_DATA.data());
-  }
-#endif
-*/
-
-  m_crosshair_image_scale = g_host_interface->GetFloatSettingValue(section, "CrosshairScale", 1.0f);
+  m_crosshair_image_scale = 1.0f;
 
   m_x_scale = g_host_interface->GetFloatSettingValue(section, "XScale", 1.0f);
 }
 
 bool NamcoGunCon::GetSoftwareCursor(const Common::RGBA8Image** image, float* image_scale, bool* relative_mode)
 {
-  if (!m_crosshair_image.IsValid())
-    return false;
-
   *image = &m_crosshair_image;
   *image_scale = m_crosshair_image_scale;
   *relative_mode = false;

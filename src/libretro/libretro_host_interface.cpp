@@ -961,7 +961,6 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
 
   for (u32 i = 0; i < NUM_CONTROLLER_AND_CARD_PORTS; i++)
   {
-
     if (multitap_mode == MultitapMode::Port1Only || multitap_mode == MultitapMode::Port2Only)
       port_allowed = (i < 5);
     else if (multitap_mode == MultitapMode::BothPorts)

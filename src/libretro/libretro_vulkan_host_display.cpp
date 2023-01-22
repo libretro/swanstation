@@ -426,6 +426,36 @@ void LibretroVulkanHostDisplay::DestroyResources()
   Vulkan::ShaderCompiler::DeinitializeGlslang();
 }
 
+void LibretroVulkanHostDisplay::RenderSoftwareCursor() {}
+
+void LibretroVulkanHostDisplay::RenderSoftwareCursor(s32 left, s32 top, s32 width, s32 height, HostDisplayTexture* texture)
+{
+  VkCommandBuffer cmdbuffer = g_vulkan_context->GetCurrentCommandBuffer();
+  //const Vulkan::Util::DebugScope debugScope(cmdbuffer, "VulkanHostDisplay::RenderSoftwareCursor: {%u,%u} %ux%u", left,
+                                            //top, width, height);
+
+  VkDescriptorSet ds = g_vulkan_context->AllocateDescriptorSet(m_descriptor_set_layout);
+  if (ds == VK_NULL_HANDLE)
+  {
+    Log_ErrorPrintf("Skipping rendering software cursor because of no descriptor set");
+    return;
+  }
+
+  {
+    Vulkan::DescriptorSetUpdateBuilder dsupdate;
+    dsupdate.AddCombinedImageSamplerDescriptorWrite(
+      ds, 0, static_cast<LibretroVulkanHostDisplayTexture*>(texture)->GetTexture().GetView(), m_linear_sampler);
+    dsupdate.Update(g_vulkan_context->GetDevice());
+  }
+
+  const PushConstants pc{0.0f, 0.0f, 1.0f, 1.0f};
+  vkCmdBindPipeline(cmdbuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_cursor_pipeline);
+  vkCmdPushConstants(cmdbuffer, m_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pc), &pc);
+  vkCmdBindDescriptorSets(cmdbuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline_layout, 0, 1, &ds, 0, nullptr);
+  Vulkan::Util::SetViewportAndScissor(cmdbuffer, left, top, width, height);
+  vkCmdDraw(cmdbuffer, 3, 1, 0, 0);
+}
+
 void LibretroVulkanHostDisplay::ResizeRenderWindow(s32 new_window_width, s32 new_window_height)
 {
   m_window_info.surface_width = static_cast<u32>(new_window_width);
@@ -464,6 +494,10 @@ bool LibretroVulkanHostDisplay::Render()
   const u32 resolution_scale = g_libretro_host_interface.GetResolutionScale();
   const u32 display_width = static_cast<u32>(m_display_width) * resolution_scale;
   const u32 display_height = static_cast<u32>(m_display_height) * resolution_scale;
+  const int16_t gun_x = g_retro_input_state_callback(0, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_SCREEN_X);
+  const int16_t gun_y = g_retro_input_state_callback(0, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_SCREEN_Y);
+  const s32 pos_x = (g_retro_input_state_callback(0, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_IS_OFFSCREEN) ? 0 : (((static_cast<s32>(gun_x) + 0x7FFF) * display_width) / 0xFFFF));
+  const s32 pos_y = (g_retro_input_state_callback(0, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_IS_OFFSCREEN) ? 0 : (((static_cast<s32>(gun_y) + 0x7FFF) * display_height) / 0xFFFF));
   if (display_width == 0 || display_height == 0 || !CheckFramebufferSize(display_width, display_height))
     return false;
 
@@ -483,6 +517,21 @@ bool LibretroVulkanHostDisplay::Render()
     RenderDisplay(left, top, width, height, m_display_texture_handle, m_display_texture_width, m_display_texture_height,
                   m_display_texture_view_x, m_display_texture_view_y, m_display_texture_view_width,
                   m_display_texture_view_height, m_display_linear_filtering);
+  }
+
+  if (HasSoftwareCursor() && HasDisplayTexture())
+  {
+    const float width_scale = (display_width / 1120.0f);
+    const float height_scale = (display_height / 960.0f);
+    const u32 cursor_extents_x = static_cast<u32>(static_cast<float>(m_cursor_texture->GetWidth()) * width_scale * 0.5f);
+    const u32 cursor_extents_y = static_cast<u32>(static_cast<float>(m_cursor_texture->GetHeight()) * height_scale * 0.5f);
+
+    const s32 out_left = pos_x - cursor_extents_x;
+    const s32 out_top = pos_y - cursor_extents_y;
+    const s32 out_width = cursor_extents_x * 2u;
+    const s32 out_height = cursor_extents_y * 2u;
+
+    RenderSoftwareCursor(out_left, out_top, out_width, out_height, m_cursor_texture.get());
   }
 
   vkCmdEndRenderPass(cmdbuffer);

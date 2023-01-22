@@ -157,7 +157,7 @@ std::tuple<s32, s32, s32, s32> HostDisplay::CalculateSoftwareCursorDrawRect() co
 
 std::tuple<s32, s32, s32, s32> HostDisplay::CalculateSoftwareCursorDrawRect(s32 cursor_x, s32 cursor_y) const
 {
-  const float scale = m_cursor_texture_scale;
+  const float scale = 1.0f;
   const u32 cursor_extents_x = static_cast<u32>(static_cast<float>(m_cursor_texture->GetWidth()) * scale * 0.5f);
   const u32 cursor_extents_y = static_cast<u32>(static_cast<float>(m_cursor_texture->GetHeight()) * scale * 0.5f);
 

@@ -88,6 +88,8 @@ bool LibretroHostDisplay::CreateResources()
 
 void LibretroHostDisplay::DestroyResources() {}
 
+void LibretroHostDisplay::RenderSoftwareCursor() {}
+
 bool LibretroHostDisplay::ChangeRenderWindow(const WindowInfo& wi)
 {
   m_window_info = wi;

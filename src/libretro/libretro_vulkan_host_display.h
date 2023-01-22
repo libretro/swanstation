@@ -43,6 +43,8 @@ public:
 protected:
   bool CreateResources() override;
   void DestroyResources() override;
+  void RenderSoftwareCursor() override;
+  void RenderSoftwareCursor(s32 left, s32 top, s32 width, s32 height, HostDisplayTexture* texture_handle);
 
 private:
   static constexpr VkFormat FRAMEBUFFER_FORMAT = VK_FORMAT_R8G8B8A8_UNORM;
