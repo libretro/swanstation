@@ -251,6 +251,7 @@ void Settings::Load(SettingsInterface& si)
   }
 
   controller_analog_combo = si.GetIntValue("Controller", "AnalogCombo", 1);
+  controller_enable_rumble = si.GetBoolValue("Controller", "EnableRumble", true);
 
   memory_card_types[0] =
     ParseMemoryCardTypeName(

@@ -1298,7 +1298,7 @@ void LibretroHostInterface::UpdateControllersAnalogController(u32 index)
     controller->SetAxisState(static_cast<s32>(it.first), std::clamp(static_cast<float>(state) / 32767.0f, -1.0f, 1.0f));
   }
 
-  if (m_rumble_interface_valid)
+  if (m_rumble_interface_valid && g_settings.controller_enable_rumble)
   {
     const u16 strong = static_cast<u16>(static_cast<u32>(controller->GetVibrationMotorStrength(0) * 65535.0f));
     const u16 weak = static_cast<u16>(static_cast<u32>(controller->GetVibrationMotorStrength(1) * 65535.0f));

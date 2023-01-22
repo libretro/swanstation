@@ -1344,6 +1344,20 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "2"
    },
    {
+      "duckstation_Controller.EnableRumble",
+      "DualShock Enable Rumble",
+      NULL,
+      "Enable haptic feedback when using a rumble-equipped gamepad with input device set to 'DualShock'.",
+      NULL,
+      "port",
+      {
+         { "true",  "Enabled" },
+         { "false", "Disabled" },
+         { NULL, NULL },
+      },
+      "true"
+   },
+   {
       "duckstation_Controller1.ForceAnalogOnReset",
       "Controller 1 Force Analog Mode on Reset",
       NULL,

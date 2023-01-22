@@ -161,6 +161,7 @@ struct Settings
   bool controller_disable_analog_mode_forcing = false;
 
   u32 controller_analog_combo = 1;
+  bool controller_enable_rumble = true;
 
   std::array<MemoryCardType, NUM_CONTROLLER_AND_CARD_PORTS> memory_card_types{};
   std::array<std::string, NUM_CONTROLLER_AND_CARD_PORTS> memory_card_paths{};
