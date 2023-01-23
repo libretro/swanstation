@@ -486,7 +486,8 @@ float GPU::GetDisplayAspectRatio() const
 
     return corrected_ar;
   }
-  else if (g_settings.display_aspect_ratio == DisplayAspectRatio::Native)
+  else if (g_settings.display_aspect_ratio == DisplayAspectRatio::Native || g_settings.controller_types[0] == ControllerType::NamcoGunCon || 
+           g_settings.controller_types[1] == ControllerType::NamcoGunCon)
   {
     const CRTCState& cs = m_crtc_state;
     float relative_width = static_cast<float>(cs.horizontal_visible_end - cs.horizontal_visible_start);

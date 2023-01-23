@@ -955,12 +955,6 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
   option_display.key = "duckstation_CDROM.PreCacheCHD";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
-  option_display.visible = custom_aspect_ratio;
-  option_display.key = "duckstation_Display.CustomAspectRatioNumerator";
-  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_Display.CustomAspectRatioDenominator";
-  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-
   option_display.visible = pgxp_depth_buffer_enable;
   option_display.key = "duckstation_GPU.PGXPDepthClearThreshold";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
@@ -1003,6 +997,19 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
     option_display.key = (TinyString::FromFormat("duckstation_Controller%u.XScale", (i + 1)));
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
   }
+
+  const bool guncon_aspect = (retropad_device[0] == RETRO_DEVICE_PS_GUNCON || retropad_device[1] == RETRO_DEVICE_PS_GUNCON);
+  const bool show_custom_ar = (!guncon_aspect && custom_aspect_ratio);
+
+  option_display.visible = !guncon_aspect;
+  option_display.key = "duckstation_Display.AspectRatio";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+
+  option_display.visible = show_custom_ar;
+  option_display.key = "duckstation_Display.CustomAspectRatioNumerator";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+  option_display.key = "duckstation_Display.CustomAspectRatioDenominator";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
   return true;
 }
