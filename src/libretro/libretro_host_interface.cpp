@@ -996,6 +996,8 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
     option_display.visible = guncon_active;
     option_display.key = (TinyString::FromFormat("duckstation_Controller%u.XScale", (i + 1)));
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+    option_display.key = (TinyString::FromFormat("duckstation_Controller%u.YScale", (i + 1)));
+    g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
   }
 
   const bool guncon_aspect = (retropad_device[0] == RETRO_DEVICE_PS_GUNCON || retropad_device[1] == RETRO_DEVICE_PS_GUNCON);

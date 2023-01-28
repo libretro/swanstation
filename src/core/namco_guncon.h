@@ -63,6 +63,7 @@ private:
   std::string m_crosshair_image_path;
   float m_crosshair_image_scale = 1.0f;
   float m_x_scale = 1.0f;
+  float m_y_scale = 1.0f;
 
   // buttons are active low
   u16 m_button_state = UINT16_C(0xFFFF);

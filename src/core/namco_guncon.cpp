@@ -184,7 +184,7 @@ void NamcoGunCon::UpdatePosition()
   // are we within the active display area?
   u32 tick, line;
   if (mouse_x < 0 || mouse_y < 0 ||
-      !g_gpu->ConvertScreenCoordinatesToBeamTicksAndLines(mouse_x, mouse_y, m_x_scale, &tick, &line) ||
+      !g_gpu->ConvertScreenCoordinatesToBeamTicksAndLines(mouse_x, mouse_y, m_x_scale, m_y_scale, &tick, &line) ||
       m_shoot_offscreen)
   {
     m_position_x = 0x01;
@@ -264,6 +264,8 @@ void NamcoGunCon::LoadSettings(const char* section)
   m_crosshair_image_scale = 1.0f;
 
   m_x_scale = g_host_interface->GetFloatSettingValue(section, "XScale", 1.0f);
+
+  m_y_scale = g_host_interface->GetFloatSettingValue(section, "YScale", 1.0f);
 }
 
 bool NamcoGunCon::GetSoftwareCursor(const Common::RGBA8Image** image, float* image_scale, bool* relative_mode)
