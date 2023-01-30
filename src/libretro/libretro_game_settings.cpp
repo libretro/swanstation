@@ -367,7 +367,11 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
-  if (game_code == "SLPS-00078") /* Gakkou no kowai uwasa - Hanako Sangakita!! (NTSC-J) */
+  if (   game_code == "SLPS-00078" /* Gakkou no kowai uwasa - Hanako Sangakita!! (NTSC-J) */
+      || game_code == "SLES-01064" /* Mega Man 8 (PAL) */
+      || game_code == "SLUS-00453" /* Mega Man 8 (NTSC-U) */
+      || game_code == "SLPS-00630" /* Mega Man 8 (NTSC-J) */
+     )
   {
     gs->AddTrait(GameSettings::Trait::DisableTrueColor);
     return gs;
