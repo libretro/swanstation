@@ -14,7 +14,7 @@ namespace GameSettings {
 
 void Entry::ApplySettings(bool display_osd_messages) const
 {
-  constexpr float osd_duration = 10.0f;
+  constexpr float osd_duration = 5.0f;
 
   if (runahead_frames.has_value())
     g_settings.runahead_frames = runahead_frames.value();
@@ -71,6 +71,8 @@ void Entry::ApplySettings(bool display_osd_messages) const
 
   if (gpu_renderer.has_value())
     g_settings.gpu_renderer = gpu_renderer.value();
+  if (gpu_use_software_renderer_for_readbacks.has_value())
+    g_settings.gpu_use_software_renderer_for_readbacks = gpu_use_software_renderer_for_readbacks.value();
   if (gpu_resolution_scale.has_value())
     g_settings.gpu_resolution_scale = gpu_resolution_scale.value();
   if (gpu_multisamples.has_value())
@@ -126,6 +128,17 @@ void Entry::ApplySettings(bool display_osd_messages) const
     }
 
     g_settings.gpu_renderer = GPURenderer::Software;
+  }
+
+  if (HasTrait(Trait::ForceSoftwareRendererForReadbacks))
+  {
+    if (display_osd_messages && g_settings.gpu_renderer != GPURenderer::Software && !g_settings.gpu_use_software_renderer_for_readbacks)
+    {
+      g_host_interface->AddOSDMessage(
+        g_host_interface->TranslateStdString("OSDMessage", "Using software renderer for readbacks based on game settings."), osd_duration);
+    }
+
+    g_settings.gpu_use_software_renderer_for_readbacks = true;
   }
 
   if (HasTrait(Trait::ForceInterlacing))
@@ -267,12 +280,6 @@ void Entry::ApplySettings(bool display_osd_messages) const
     g_settings.gpu_pgxp_depth_buffer = false;
   }
 
-  if (HasTrait(Trait::ForceSoftwareRenderer))
-  {
-    Log_WarningPrint("Using software renderer for readbacks.");
-    g_settings.gpu_renderer = GPURenderer::Software;
-  }
-
   if (HasTrait(Trait::ForceRecompilerMemoryExceptions))
   {
     Log_WarningPrint("Memory exceptions for recompiler forced by game settings.");
@@ -364,6 +371,15 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
   if (game_code == "SCPS-10126") /* Addie No Okurimono - To Moze from Addie (NTSC-J) */
   {
     gs->AddTrait(GameSettings::Trait::ForceSoftwareRenderer);
+    return gs;
+  }
+
+  if (   game_code == "SCPS-45446" /* Chrono Trigger */
+      || game_code == "SLPM-87374" /* Chrono Trigger (NTSC-J) */
+      || game_code == "SLUS-01363" /* Final Fantasy Chronicles - Chrono Trigger (NTSC-U) */
+     )
+  {
+    gs->AddTrait(GameSettings::Trait::ForceSoftwareRendererForReadbacks);
     return gs;
   }
 

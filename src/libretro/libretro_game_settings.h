@@ -58,6 +58,7 @@ struct Entry
   std::optional<DisplayCropMode> display_crop_mode;
   std::optional<DisplayAspectRatio> display_aspect_ratio;
   std::optional<GPURenderer> gpu_renderer;
+  std::optional<bool> gpu_use_software_renderer_for_readbacks;
   std::optional<GPUDownsampleMode> gpu_downsample_mode;
   std::optional<bool> display_linear_upscaling;
   std::optional<bool> display_force_4_3_for_24bit;
