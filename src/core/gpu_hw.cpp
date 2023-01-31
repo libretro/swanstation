@@ -60,7 +60,7 @@ bool GPU_HW::Initialize(HostDisplay* host_display)
   m_using_uv_limits = ShouldUseUVLimits();
   m_chroma_smoothing = g_settings.gpu_24bit_chroma_smoothing;
   m_downsample_mode = GetDownsampleMode(m_resolution_scale);
-  m_disable_color_perspective = ShouldDisableColorPerspective();
+  m_disable_color_perspective = m_supports_disable_color_perspective && ShouldDisableColorPerspective();
 
   if (m_multisamples != g_settings.gpu_multisamples)
   {
@@ -139,7 +139,7 @@ void GPU_HW::UpdateHWSettings(bool* framebuffer_changed, bool* shaders_changed)
   const bool per_sample_shading = g_settings.gpu_per_sample_shading && m_supports_per_sample_shading;
   const GPUDownsampleMode downsample_mode = GetDownsampleMode(resolution_scale);
   const bool use_uv_limits = ShouldUseUVLimits();
-  const bool disable_color_perspective = ShouldDisableColorPerspective();
+  const bool disable_color_perspective = m_supports_disable_color_perspective && ShouldDisableColorPerspective();
 
   *framebuffer_changed =
     (m_resolution_scale != resolution_scale || m_multisamples != multisamples || m_downsample_mode != downsample_mode);
