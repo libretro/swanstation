@@ -189,6 +189,7 @@ void Settings::Load(SettingsInterface& si)
   gpu_pgxp_enable = si.GetBoolValue("GPU", "PGXPEnable", false);
   gpu_pgxp_culling = si.GetBoolValue("GPU", "PGXPCulling", true);
   gpu_pgxp_texture_correction = si.GetBoolValue("GPU", "PGXPTextureCorrection", true);
+  gpu_pgxp_color_correction = si.GetBoolValue("GPU", "PGXPColorCorrection", false);
   gpu_pgxp_vertex_cache = si.GetBoolValue("GPU", "PGXPVertexCache", false);
   gpu_pgxp_cpu = si.GetBoolValue("GPU", "PGXPCPU", false);
   gpu_pgxp_preserve_proj_fp = si.GetBoolValue("GPU", "PGXPPreserveProjFP", false);

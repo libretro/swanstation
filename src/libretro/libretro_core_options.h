@@ -557,9 +557,9 @@ struct retro_core_option_v2_definition option_defs_us[] = {
    },
    {
       "duckstation_GPU.PGXPTextureCorrection",
-      "PGXP Texture Correction",
+      "PGXP Perspective Correct Textures",
       NULL,
-      "Uses perspective-correct interpolation for texture coordinates and colors, straightening out warped textures. "
+      "Uses perspective-correct interpolation for texture coordinates, straightening out warped textures. "
       "Requires geometry correction enabled.",
       NULL,
       "enhancement",
@@ -569,6 +569,21 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { NULL, NULL },
       },
       "true"
+   },
+   {
+      "duckstation_GPU.PGXPColorCorrection",
+      "PGXP Perspective Correct Colors",
+      NULL,
+      "Uses perspective-correct interpolation for vertex colors, which can improve visuals in some games, but cause rendering errors in others. "
+      "Requires geometry correction enabled.",
+      NULL,
+      "enhancement",
+      {
+         { "true",  "Enabled" },
+         { "false", "Disabled" },
+         { NULL, NULL },
+      },
+      "false"
    },
    {
       "duckstation_GPU.PGXPDepthBuffer",
