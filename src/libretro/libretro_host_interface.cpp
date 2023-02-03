@@ -22,6 +22,7 @@
 #include "libretro_opengl_host_display.h"
 #include "libretro_settings_interface.h"
 #include "libretro_vulkan_host_display.h"
+#include "version.h"
 #include <array>
 #include <cstring>
 #include <tuple>
@@ -59,7 +60,10 @@ RETRO_API void retro_get_system_info(struct retro_system_info* info)
   info->library_name = "SwanStation";
 #endif
 
-  info->library_version = "1.0.0";
+#ifndef GIT_VERSION
+#define GIT_VERSION "undefined"
+#endif
+  info->library_version = "1.0.0 " GIT_VERSION;
   info->valid_extensions = "exe|psexe|cue|bin|img|iso|chd|pbp|ecm|mds|psf|m3u";
   info->need_fullpath = true;
   info->block_extract = false;
