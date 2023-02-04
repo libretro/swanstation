@@ -92,7 +92,7 @@ void Entry::ApplySettings(bool display_osd_messages) const
   {
     if (g_settings.gpu_widescreen_hack)
     {
-      gamesettings_message.append("Widescreen hack disabled by game settings. ", 38);
+      gamesettings_message.append("Widescreen hack disabled by game settings. ", 43);
     }
 
     g_settings.gpu_widescreen_hack = false;
