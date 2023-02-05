@@ -180,7 +180,6 @@ void CDROM::SoftReset(TickCount ticks_late)
   m_play_after_seek = false;
   m_muted = false;
   m_adpcm_muted = false;
-  m_last_sector_header_valid = false;
   m_last_cdda_report_frame_nibble = 0xFF;
 
   ResetAudioDecoder();
@@ -715,7 +714,8 @@ TickCount CDROM::GetTicksForSeek(CDImage::LBA new_lba, bool ignore_speed_change)
 
   if (lba_diff < 32)
   {
-    ticks += ticks_per_sector * std::min<u32>(5u, lba_diff);
+    // Special case: when we land exactly on the right sector, we're already too late.
+    ticks += ticks_per_sector * std::min<u32>(5u, (lba_diff == 0) ? 4u : lba_diff);
   }
   else
   {
@@ -1586,6 +1586,11 @@ void CDROM::BeginReading(TickCount ticks_late /* = 0 */, bool after_seek /* = fa
   // Fixes crash in Disney's The Lion King - Simba's Mighty Adventure.
   if (IsSeeking())
   {
+
+    // Implicit seeks won't trigger the read, so swap it for a logical.
+    if (m_drive_state == DriveState::SeekingImplicit)
+      m_drive_state = DriveState::SeekingLogical;
+
     m_read_after_seek = true;
     m_play_after_seek = false;
     return;

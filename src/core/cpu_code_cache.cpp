@@ -184,13 +184,13 @@ using HostCodeMap = std::map<CodeBlock::HostCodePointer, CodeBlock*>;
 static CodeBlockKey GetNextBlockKey();
 
 /// Looks up the block in the cache if it's already been compiled.
-static CodeBlock* LookupBlock(CodeBlockKey key);
+static CodeBlock* LookupBlock(CodeBlockKey key, bool allow_flush);
 
 /// Can the current block execute? This will re-validate the block if necessary.
 /// The block can also be flushed if recompilation failed, so ignore the pointer if false is returned.
-static bool RevalidateBlock(CodeBlock* block);
+static bool RevalidateBlock(CodeBlock* block, bool allow_flush);
 
-static bool CompileBlock(CodeBlock* block);
+static bool CompileBlock(CodeBlock* block, bool allow_flush);
 static void RemoveReferencesToBlock(CodeBlock* block);
 static void AddBlockToPageMap(CodeBlock* block);
 static void RemoveBlockFromPageMap(CodeBlock* block);
@@ -293,7 +293,7 @@ static void ExecuteImpl()
     next_block_key = GetNextBlockKey();
     while (g_state.pending_ticks < g_state.downcount)
     {
-      CodeBlock* block = LookupBlock(next_block_key);
+      CodeBlock* block = LookupBlock(next_block_key, true);
       if (!block)
       {
         InterpretUncachedBlock<pgxp_mode>();
@@ -317,7 +317,7 @@ static void ExecuteImpl()
       {
         // we can jump straight to it if there's no pending interrupts
         // ensure it's not a self-modifying block
-        if (!block->invalidated || RevalidateBlock(block))
+        if (!block->invalidated || RevalidateBlock(block, true))
           goto reexecute_block;
       }
       else if (!block->invalidated)
@@ -329,7 +329,7 @@ static void ExecuteImpl()
           CodeBlock* linked_block = li.block;
           if (linked_block->key.bits == next_block_key.bits)
           {
-            if (linked_block->invalidated && !RevalidateBlock(linked_block))
+            if (linked_block->invalidated && !RevalidateBlock(linked_block, true))
             {
               // CanExecuteBlock can result in a block flush, so stop iterating here.
               break;
@@ -342,7 +342,7 @@ static void ExecuteImpl()
         }
 
         // No acceptable blocks found in the successor list, try a new one.
-        CodeBlock* next_block = LookupBlock(next_block_key);
+        CodeBlock* next_block = LookupBlock(next_block_key, false);
         if (next_block)
         {
           // Link the previous block to this new block if we find a new block.
@@ -463,7 +463,7 @@ static void FallbackExistingBlockToInterpreter(CodeBlock* block)
   delete block;
 }
 
-CodeBlock* LookupBlock(CodeBlockKey key)
+CodeBlock* LookupBlock(CodeBlockKey key, bool allow_flush)
 {
   BlockMap::iterator iter = s_blocks.find(key.bits);
   if (iter != s_blocks.end())
@@ -474,7 +474,7 @@ CodeBlock* LookupBlock(CodeBlockKey key)
       return existing_block;
 
     // if compilation fails or we're forced back to the interpreter, bail out
-    if (RevalidateBlock(existing_block))
+    if (RevalidateBlock(existing_block, allow_flush))
       return existing_block;
     else
       return nullptr;
@@ -483,7 +483,7 @@ CodeBlock* LookupBlock(CodeBlockKey key)
   CodeBlock* block = new CodeBlock(key);
   block->recompile_frame_number = System::GetFrameNumber();
 
-  if (CompileBlock(block))
+  if (CompileBlock(block, allow_flush))
   {
     // add it to the page map if it's in ram
     AddBlockToPageMap(block);
@@ -500,11 +500,13 @@ CodeBlock* LookupBlock(CodeBlockKey key)
     block = nullptr;
   }
 
-  s_blocks.emplace(key.bits, block);
+  if (block || allow_flush)
+    s_blocks.emplace(key.bits, block);
+
   return block;
 }
 
-bool RevalidateBlock(CodeBlock* block)
+bool RevalidateBlock(CodeBlock* block, bool allow_flush)
 {
   for (const CodeBlockInstruction& cbi : block->instructions)
   {
@@ -553,7 +555,7 @@ recompile:
 
   block->instructions.clear();
 
-  if (!CompileBlock(block))
+  if (!CompileBlock(block, allow_flush))
   {
     FallbackExistingBlockToInterpreter(block);
     return false;
@@ -575,7 +577,7 @@ recompile:
   return true;
 }
 
-bool CompileBlock(CodeBlock* block)
+bool CompileBlock(CodeBlock* block, bool allow_flush)
 {
   u32 pc = block->GetPC();
   bool is_branch_delay_slot = false;
@@ -614,9 +616,9 @@ bool CompileBlock(CodeBlock* block)
         block->icache_line_count++;
         last_cache_line = icache_line;
       }
-      block->uncached_fetch_ticks += GetInstructionReadTicks(pc);
     }
 
+    block->uncached_fetch_ticks += GetInstructionReadTicks(pc);
     block->contains_loadstore_instructions |= cbi.is_load_instruction;
     block->contains_loadstore_instructions |= cbi.is_store_instruction;
 
@@ -673,8 +675,16 @@ bool CompileBlock(CodeBlock* block)
         s_code_buffer.GetFreeFarCodeSpace() <
           (block->instructions.size() * Recompiler::MAX_FAR_HOST_BYTES_PER_INSTRUCTION))
     {
-      Log_WarningPrintf("Out of code space, flushing all blocks.");
-      Flush();
+      if (allow_flush)
+      {
+        Log_WarningPrintf("Out of code space, flushing all blocks.");
+        Flush();
+      }
+      else
+      {
+        Log_ErrorPrintf("Out of code space and cannot flush while compiling %08X.", block->GetPC());
+        return false;
+      }
     }
 
     s_code_buffer.WriteProtect(false);
@@ -697,7 +707,7 @@ bool CompileBlock(CodeBlock* block)
 
 void FastCompileBlockFunction()
 {
-  CodeBlock* block = LookupBlock(GetNextBlockKey());
+  CodeBlock* block = LookupBlock(GetNextBlockKey(), true);
   if (block)
   {
     s_single_block_asm_dispatcher(block->host_code);
@@ -1086,9 +1096,9 @@ void CPU::Recompiler::Thunks::ResolveBranch(CodeBlock* block, void* host_pc, voi
   using namespace CPU::CodeCache;
 
   CodeBlockKey key = GetNextBlockKey();
-  CodeBlock* successor_block = LookupBlock(key);
-  if (!successor_block || (successor_block->invalidated && !RevalidateBlock(successor_block)) || !block->can_link ||
-      !successor_block->can_link)
+  CodeBlock* successor_block = LookupBlock(key, false);
+  if (!successor_block || (successor_block->invalidated && !RevalidateBlock(successor_block, false)) ||
+      !block->can_link || !successor_block->can_link)
   {
     // just turn it into a return to the dispatcher instead.
     s_code_buffer.WriteProtect(false);
