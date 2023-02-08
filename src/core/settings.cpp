@@ -229,6 +229,8 @@ void Settings::Load(SettingsInterface& si)
 
   audio_buffer_size = si.GetIntValue("Audio", "BufferSize", HostInterface::DEFAULT_AUDIO_BUFFER_SIZE);
 
+  use_old_mdec_routines = si.GetBoolValue("Hacks", "UseOldMDECRoutines", false);
+
   dma_max_slice_ticks = si.GetIntValue("Hacks", "DMAMaxSliceTicks", DEFAULT_DMA_MAX_SLICE_TICKS);
   dma_halt_ticks = si.GetIntValue("Hacks", "DMAHaltTicks", DEFAULT_DMA_HALT_TICKS);
   gpu_fifo_size = static_cast<u32>(si.GetIntValue("Hacks", "GPUFIFOSize", DEFAULT_GPU_FIFO_SIZE));

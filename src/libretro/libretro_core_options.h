@@ -4552,6 +4552,20 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       },
       "false"
    },
+   {
+      "duckstation_Hacks.UseOldMDECRoutines",
+      "Use Old MDEC Routines",
+      NULL,
+      "Use old routines for MDEC content.",
+      NULL,
+      "advanced",
+      {
+         { "true",  "Enabled" },
+         { "false", "Disabled" },
+         { NULL, NULL },
+      },
+      "false"
+   },
    { NULL, NULL, NULL, NULL, NULL, NULL, {{0}}, NULL },
 };
 
