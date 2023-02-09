@@ -1106,8 +1106,7 @@ void LibretroHostInterface::UpdateSettings()
   {
     if (g_settings.gpu_renderer != old_settings.gpu_renderer)
     {
-      ReportFormattedMessage("Switch to %s renderer pending, please restart the core to apply.",
-                             Settings::GetRendererDisplayName(g_settings.gpu_renderer));
+      ReportFormattedMessage("Renderer switch pending, please restart the core to apply.");
       g_settings.gpu_renderer = old_settings.gpu_renderer;
     }
   }
