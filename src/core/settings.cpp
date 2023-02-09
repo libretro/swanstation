@@ -189,7 +189,6 @@ void Settings::Load(SettingsInterface& si)
   gpu_pgxp_enable = si.GetBoolValue("GPU", "PGXPEnable", false);
   gpu_pgxp_culling = si.GetBoolValue("GPU", "PGXPCulling", true);
   gpu_pgxp_texture_correction = si.GetBoolValue("GPU", "PGXPTextureCorrection", true);
-  gpu_pgxp_color_correction = si.GetBoolValue("GPU", "PGXPColorCorrection", false);
   gpu_pgxp_vertex_cache = si.GetBoolValue("GPU", "PGXPVertexCache", false);
   gpu_pgxp_cpu = si.GetBoolValue("GPU", "PGXPCPU", false);
   gpu_pgxp_preserve_proj_fp = si.GetBoolValue("GPU", "PGXPPreserveProjFP", false);
@@ -228,8 +227,6 @@ void Settings::Load(SettingsInterface& si)
   cdrom_seek_speedup = si.GetIntValue("CDROM", "SeekSpeedup", 1);
 
   audio_buffer_size = si.GetIntValue("Audio", "BufferSize", HostInterface::DEFAULT_AUDIO_BUFFER_SIZE);
-
-  use_old_mdec_routines = si.GetBoolValue("Hacks", "UseOldMDECRoutines", false);
 
   dma_max_slice_ticks = si.GetIntValue("Hacks", "DMAMaxSliceTicks", DEFAULT_DMA_MAX_SLICE_TICKS);
   dma_halt_ticks = si.GetIntValue("Hacks", "DMAHaltTicks", DEFAULT_DMA_HALT_TICKS);

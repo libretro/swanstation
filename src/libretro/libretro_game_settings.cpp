@@ -132,20 +132,10 @@ void Entry::ApplySettings(bool display_osd_messages) const
   {
     if (g_settings.gpu_pgxp_enable && g_settings.gpu_pgxp_texture_correction)
     {
-      gamesettings_message.append("PGXP perspective corrected textures disabled by game settings. ", 63);
+      gamesettings_message.append("PGXP texture correction disabled by game settings. ", 51);
     }
 
     g_settings.gpu_pgxp_texture_correction = false;
-  }
-
-  if (HasTrait(Trait::DisablePGXPColorCorrection))
-  {
-    if (g_settings.gpu_pgxp_enable && g_settings.gpu_pgxp_color_correction)
-    {
-      gamesettings_message.append("PGXP perspective corrected colors disabled by game settings. ", 61);
-    }
-
-    g_settings.gpu_pgxp_color_correction = false;
   }
 
   if (HasTrait(Trait::ForcePGXPVertexCache))
@@ -248,15 +238,6 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
   {
     gs->AddTrait(GameSettings::Trait::DisableUpscaling);
     gs->AddTrait(GameSettings::Trait::DisablePGXP);
-    return gs;
-  }
-
-  if (   game_code == "SCUS-94244" /* Crash Bandicoot - Warped (NTSC-U)    */
-      || game_code == "SCES-01420" /* Crash Bandicoot 3 - Warped (PAL)    */
-      || game_code == "SCPS-10073" /* Crash Bandicoot 3 - Buttobi! Sekai Isshuu (NTSC-J) */
-     )
-  {
-    gs->AddTrait(GameSettings::Trait::DisablePGXPColorCorrection);
     return gs;
   }
 

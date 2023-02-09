@@ -233,7 +233,6 @@ void GPU_HW_D3D12::SetCapabilities()
 
   m_supports_dual_source_blend = true;
   m_supports_per_sample_shading = true;
-  m_supports_disable_color_perspective = true;
   Log_InfoPrintf("Dual-source blend: %s", m_supports_dual_source_blend ? "supported" : "not supported");
   Log_InfoPrintf("Per-sample shading: %s", m_supports_per_sample_shading ? "supported" : "not supported");
   Log_InfoPrintf("Max multisamples: %u", m_max_multisamples);
@@ -411,7 +410,7 @@ bool GPU_HW_D3D12::CompilePipelines()
 
   GPU_HW_ShaderGen shadergen(m_host_display->GetRenderAPI(), m_resolution_scale, m_multisamples, m_per_sample_shading,
                              m_true_color, m_scaled_dithering, m_texture_filtering, m_using_uv_limits,
-                             m_pgxp_depth_buffer, m_disable_color_perspective, m_supports_dual_source_blend);
+                             m_pgxp_depth_buffer, m_supports_dual_source_blend);
 
   ShaderCompileProgressTracker progress("Compiling Pipelines", 2 + (4 * 9 * 2 * 2) + (2 * 4 * 5 * 9 * 2 * 2) + 1 +
                                                                  (2 * 2) + 2 + 2 + 1 + 1 + (2 * 3) + 1);

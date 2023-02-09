@@ -329,8 +329,8 @@ const char* ShaderGen::GetInterpolationQualifier(bool interface_block, bool cent
 void ShaderGen::DeclareVertexEntryPoint(
   std::stringstream& ss, const std::initializer_list<const char*>& attributes, u32 num_color_outputs,
   u32 num_texcoord_outputs, const std::initializer_list<std::pair<const char*, const char*>>& additional_outputs,
-  bool declare_vertex_id /* = false */, const char* output_block_suffix /* = "" */, bool msaa /* = false */,
-  bool ssaa /* = false */, bool noperspective_color /* = false */)
+  bool declare_vertex_id /* = false */, const char* output_block_suffix /* = "" */,
+  bool centroid_interpolation /* = false */, bool sample_interpolation /* = false */)
 {
   if (m_glsl)
   {
@@ -351,14 +351,14 @@ void ShaderGen::DeclareVertexEntryPoint(
 
     if (m_use_glsl_interface_blocks)
     {
-      const char* qualifier = GetInterpolationQualifier(true, msaa, ssaa, true);
+      const char* qualifier = GetInterpolationQualifier(true, centroid_interpolation, sample_interpolation, true);
 
       if (IsVulkan())
         ss << "layout(location = 0) ";
 
       ss << "out VertexData" << output_block_suffix << " {\n";
       for (u32 i = 0; i < num_color_outputs; i++)
-        ss << "  " << (noperspective_color ? "noperspective " : "") << qualifier << "float4 v_col" << i << ";\n";
+        ss << "  " << qualifier << "float4 v_col" << i << ";\n";
 
       for (u32 i = 0; i < num_texcoord_outputs; i++)
         ss << "  " << qualifier << "float2 v_tex" << i << ";\n";
@@ -372,10 +372,10 @@ void ShaderGen::DeclareVertexEntryPoint(
     }
     else
     {
-      const char* qualifier = GetInterpolationQualifier(false, msaa, ssaa, true);
+      const char* qualifier = GetInterpolationQualifier(false, centroid_interpolation, sample_interpolation, true);
 
       for (u32 i = 0; i < num_color_outputs; i++)
-        ss << qualifier << (noperspective_color ? "noperspective " : "") << "out float4 v_col" << i << ";\n";
+        ss << qualifier << "out float4 v_col" << i << ";\n";
 
       for (u32 i = 0; i < num_texcoord_outputs; i++)
         ss << qualifier << "out float2 v_tex" << i << ";\n";
@@ -401,7 +401,7 @@ void ShaderGen::DeclareVertexEntryPoint(
   }
   else
   {
-    const char* qualifier = GetInterpolationQualifier(false, msaa, ssaa, true);
+    const char* qualifier = GetInterpolationQualifier(false, centroid_interpolation, sample_interpolation, true);
 
     ss << "void main(\n";
 
@@ -416,8 +416,7 @@ void ShaderGen::DeclareVertexEntryPoint(
     }
 
     for (u32 i = 0; i < num_color_outputs; i++)
-      ss << "  " << qualifier << (noperspective_color ? "noperspective " : "") << "out float4 v_col" << i << " : COLOR"
-         << i << ",\n";
+      ss << "  " << qualifier << "out float4 v_col" << i << " : COLOR" << i << ",\n";
 
     for (u32 i = 0; i < num_texcoord_outputs; i++)
       ss << "  " << qualifier << "out float2 v_tex" << i << " : TEXCOORD" << i << ",\n";
@@ -438,21 +437,21 @@ void ShaderGen::DeclareFragmentEntryPoint(
   std::stringstream& ss, u32 num_color_inputs, u32 num_texcoord_inputs,
   const std::initializer_list<std::pair<const char*, const char*>>& additional_inputs,
   bool declare_fragcoord /* = false */, u32 num_color_outputs /* = 1 */, bool depth_output /* = false */,
-  bool msaa /* = false */, bool ssaa /* = false */, bool declare_sample_id /* = false */,
-  bool noperspective_color /* = false */)
+  bool centroid_interpolation /* = false */, bool sample_interpolation /* = false */,
+  bool declare_sample_id /* = false */)
 {
   if (m_glsl)
   {
     if (m_use_glsl_interface_blocks)
     {
-      const char* qualifier = GetInterpolationQualifier(true, msaa, ssaa, false);
+      const char* qualifier = GetInterpolationQualifier(true, centroid_interpolation, sample_interpolation, false);
 
       if (IsVulkan())
         ss << "layout(location = 0) ";
 
       ss << "in VertexData {\n";
       for (u32 i = 0; i < num_color_inputs; i++)
-        ss << "  " << qualifier << (noperspective_color ? "noperspective " : "") << "float4 v_col" << i << ";\n";
+        ss << "  " << qualifier << "float4 v_col" << i << ";\n";
 
       for (u32 i = 0; i < num_texcoord_inputs; i++)
         ss << "  " << qualifier << "float2 v_tex" << i << ";\n";
@@ -466,10 +465,10 @@ void ShaderGen::DeclareFragmentEntryPoint(
     }
     else
     {
-      const char* qualifier = GetInterpolationQualifier(false, msaa, ssaa, false);
+      const char* qualifier = GetInterpolationQualifier(false, centroid_interpolation, sample_interpolation, false);
 
       for (u32 i = 0; i < num_color_inputs; i++)
-        ss << qualifier << (noperspective_color ? "noperspective " : "") << "in float4 v_col" << i << ";\n";
+        ss << qualifier << "in float4 v_col" << i << ";\n";
 
       for (u32 i = 0; i < num_texcoord_inputs; i++)
         ss << qualifier << "in float2 v_tex" << i << ";\n";
@@ -515,13 +514,12 @@ void ShaderGen::DeclareFragmentEntryPoint(
   }
   else
   {
-    const char* qualifier = GetInterpolationQualifier(false, msaa, ssaa, false);
+    const char* qualifier = GetInterpolationQualifier(false, centroid_interpolation, sample_interpolation, false);
 
     ss << "void main(\n";
 
     for (u32 i = 0; i < num_color_inputs; i++)
-      ss << "  " << qualifier << (noperspective_color ? "noperspective " : "") << "in float4 v_col" << i << " : COLOR"
-         << i << ",\n";
+      ss << "  " << qualifier << "in float4 v_col" << i << " : COLOR" << i << ",\n";
 
     for (u32 i = 0; i < num_texcoord_inputs; i++)
       ss << "  " << qualifier << "in float2 v_tex" << i << " : TEXCOORD" << i << ",\n";

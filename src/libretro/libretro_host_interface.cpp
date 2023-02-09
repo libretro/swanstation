@@ -940,8 +940,6 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
   option_display.key = "duckstation_GPU.PGXPTextureCorrection";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_GPU.PGXPColorCorrection";
-  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
   option_display.key = "duckstation_GPU.PGXPDepthBuffer";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
   option_display.key = "duckstation_GPU.PGXPVertexCache";
