@@ -95,6 +95,7 @@ struct Settings
   bool gpu_pgxp_enable = false;
   bool gpu_pgxp_culling = true;
   bool gpu_pgxp_texture_correction = true;
+  bool gpu_pgxp_color_correction = false;
   bool gpu_pgxp_vertex_cache = false;
   bool gpu_pgxp_cpu = false;
   bool gpu_pgxp_preserve_proj_fp = false;
@@ -125,6 +126,8 @@ struct Settings
   u32 cdrom_seek_speedup = 1;
 
   u32 audio_buffer_size = 2048;
+
+  bool use_old_mdec_routines = false;
 
   // timing hacks section
   TickCount dma_max_slice_ticks = 1000;

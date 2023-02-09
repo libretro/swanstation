@@ -557,9 +557,9 @@ struct retro_core_option_v2_definition option_defs_us[] = {
    },
    {
       "duckstation_GPU.PGXPTextureCorrection",
-      "PGXP Texture Correction",
+      "PGXP Perspective Correct Textures",
       NULL,
-      "Uses perspective-correct interpolation for texture coordinates and colors, straightening out warped textures. "
+      "Uses perspective-correct interpolation for texture coordinates, straightening out warped textures. "
       "Requires geometry correction enabled.",
       NULL,
       "enhancement",
@@ -569,6 +569,21 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { NULL, NULL },
       },
       "true"
+   },
+   {
+      "duckstation_GPU.PGXPColorCorrection",
+      "PGXP Perspective Correct Colors",
+      NULL,
+      "Uses perspective-correct interpolation for vertex colors, which can improve visuals in some games, but cause rendering errors in others. "
+      "Requires geometry correction enabled.",
+      NULL,
+      "enhancement",
+      {
+         { "true",  "Enabled" },
+         { "false", "Disabled" },
+         { NULL, NULL },
+      },
+      "false"
    },
    {
       "duckstation_GPU.PGXPDepthBuffer",
@@ -4528,6 +4543,20 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "Enabled an additional 6MB of RAM, usually present on dev consoles. Games have to use a "
       "larger heap size for this additional RAM to be usable, and may break games which rely "
       "on memory mirroring, so it should only be used with compatible mods.",
+      NULL,
+      "advanced",
+      {
+         { "true",  "Enabled" },
+         { "false", "Disabled" },
+         { NULL, NULL },
+      },
+      "false"
+   },
+   {
+      "duckstation_Hacks.UseOldMDECRoutines",
+      "Use Old MDEC Routines",
+      NULL,
+      "Use old routines for MDEC content.",
       NULL,
       "advanced",
       {

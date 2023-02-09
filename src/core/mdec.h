@@ -31,6 +31,7 @@ private:
   static constexpr u32 DATA_IN_FIFO_SIZE = 1024;
   static constexpr u32 DATA_OUT_FIFO_SIZE = 768;
   static constexpr u32 NUM_BLOCKS = 6;
+  static constexpr TickCount TICKS_PER_BLOCK = 448;
 
   enum DataOutputDepth : u8
   {
@@ -115,6 +116,8 @@ private:
   // from nocash spec
   bool rl_decode_block(s16* blk, const u8* qt);
   void IDCT(s16* blk);
+  void IDCT_New(s16* blk);
+  void IDCT_Old(s16* blk);
   void yuv_to_rgb(u32 xx, u32 yy, const std::array<s16, 64>& Crblk, const std::array<s16, 64>& Cbblk,
                   const std::array<s16, 64>& Yblk);
   void y_to_mono(const std::array<s16, 64>& Yblk);
