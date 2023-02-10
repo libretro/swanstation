@@ -46,6 +46,10 @@ protected:
   void RenderSoftwareCursor() override;
   void RenderSoftwareCursor(s32 left, s32 top, s32 width, s32 height, HostDisplayTexture* texture_handle);
 
+  void RenderDisplay(s32 left, s32 top, s32 width, s32 height, void* texture_handle, u32 texture_width,
+                     s32 texture_height, s32 texture_view_x, s32 texture_view_y, s32 texture_view_width,
+                     s32 texture_view_height, bool linear_filter);
+
 private:
   static constexpr VkFormat FRAMEBUFFER_FORMAT = VK_FORMAT_R8G8B8A8_UNORM;
 
@@ -56,10 +60,6 @@ private:
     float src_rect_width;
     float src_rect_height;
   };
-
-  void RenderDisplay(s32 left, s32 top, s32 width, s32 height, void* texture_handle, u32 texture_width,
-                     s32 texture_height, s32 texture_view_x, s32 texture_view_y, s32 texture_view_width,
-                     s32 texture_view_height, bool linear_filter);
 
   bool CheckFramebufferSize(u32 width, u32 height);
 

@@ -50,9 +50,6 @@ public:
   bool Render() override;
 
 protected:
-  const char* GetGLSLVersionString() const;
-  std::string GetGLSLVersionHeader() const;
-
   bool CreateResources() override;
   void DestroyResources() override;
   void RenderSoftwareCursor() override;
@@ -61,6 +58,10 @@ protected:
   void RenderDisplay(s32 left, s32 bottom, s32 width, s32 height, void* texture_handle, u32 texture_width,
                      s32 texture_height, s32 texture_view_x, s32 texture_view_y, s32 texture_view_width,
                      s32 texture_view_height, bool linear_filter);
+
+private:
+  const char* GetGLSLVersionString() const;
+  std::string GetGLSLVersionHeader() const;
 
   GL::Program m_display_program;
   GL::Program m_cursor_program;

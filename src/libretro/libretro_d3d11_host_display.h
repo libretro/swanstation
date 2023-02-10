@@ -38,8 +38,6 @@ public:
   bool Render() override;
 
 protected:
-  static constexpr u32 DISPLAY_UNIFORM_BUFFER_SIZE = 16;
-
   bool CreateResources() override;
   void DestroyResources() override;
   void RenderSoftwareCursor() override;
@@ -50,6 +48,8 @@ protected:
                      s32 texture_view_height, bool linear_filter);
 
 private:
+  static constexpr u32 DISPLAY_UNIFORM_BUFFER_SIZE = 16;
+
   template<typename T>
   using ComPtr = Microsoft::WRL::ComPtr<T>;
 
