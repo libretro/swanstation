@@ -505,10 +505,10 @@ bool LibretroOpenGLHostDisplay::Render()
 
   if (HasSoftwareCursor() && HasDisplayTexture())
   {
-    const float width_scale = (display_width / 1120.0f);
-    const float height_scale = (display_height / 960.0f);
-    const u32 cursor_extents_x = static_cast<u32>(static_cast<float>(m_cursor_texture->GetWidth()) * width_scale * 0.5f);
-    const u32 cursor_extents_y = static_cast<u32>(static_cast<float>(m_cursor_texture->GetHeight()) * height_scale * 0.5f);
+    const float width_scale = (display_width / 2400.0f);
+    const float height_scale = (display_height / 1920.0f);
+    const u32 cursor_extents_x = static_cast<u32>(static_cast<float>(m_cursor_texture->GetWidth()) * width_scale);
+    const u32 cursor_extents_y = static_cast<u32>(static_cast<float>(m_cursor_texture->GetHeight()) * height_scale);
 
     const s32 out_left = pos_x - cursor_extents_x;
     const s32 out_top = pos_y - cursor_extents_y;
