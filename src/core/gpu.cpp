@@ -471,7 +471,8 @@ float GPU::GetDisplayAspectRatio() const
   {
     return 4.0f / 3.0f;
   }
-  else if (g_settings.display_aspect_ratio == DisplayAspectRatio::Auto)
+  else if (g_settings.display_aspect_ratio == DisplayAspectRatio::Native || g_settings.display_aspect_ratio == DisplayAspectRatio::Auto ||
+           g_settings.controller_types[0] == ControllerType::NamcoGunCon || g_settings.controller_types[1] == ControllerType::NamcoGunCon)
   {
     const CRTCState& cs = m_crtc_state;
     float relative_width = static_cast<float>(cs.horizontal_visible_end - cs.horizontal_visible_start);
@@ -480,23 +481,7 @@ float GPU::GetDisplayAspectRatio() const
     if (relative_width <= 0 || relative_height <= 0)
       return 4.0f / 3.0f;
 
-    float corrected_ar = (4.0f / 3.0f) * (2560.0f / 2800.0f);
-    corrected_ar *= (m_GPUSTAT.pal_mode ? 288.0f / (288.0f + g_settings.display_line_end_offset - g_settings.display_line_start_offset) : 
-                    240.0f / (240.0f + g_settings.display_line_end_offset - g_settings.display_line_start_offset));
-
-    return corrected_ar;
-  }
-  else if (g_settings.display_aspect_ratio == DisplayAspectRatio::Native || g_settings.controller_types[0] == ControllerType::NamcoGunCon || 
-           g_settings.controller_types[1] == ControllerType::NamcoGunCon)
-  {
-    const CRTCState& cs = m_crtc_state;
-    float relative_width = static_cast<float>(cs.horizontal_visible_end - cs.horizontal_visible_start);
-    float relative_height = static_cast<float>(cs.vertical_visible_end - cs.vertical_visible_start);
-
-    if (relative_width <= 0 || relative_height <= 0)
-      return 4.0f / 3.0f;
-
-    if (m_GPUSTAT.pal_mode)
+    if (m_GPUSTAT.pal_mode && g_settings.display_aspect_ratio == DisplayAspectRatio::Native)
     {
       relative_width /= static_cast<float>(PAL_HORIZONTAL_ACTIVE_END - PAL_HORIZONTAL_ACTIVE_START);
       relative_height /= static_cast<float>(PAL_VERTICAL_ACTIVE_END - PAL_VERTICAL_ACTIVE_START);
