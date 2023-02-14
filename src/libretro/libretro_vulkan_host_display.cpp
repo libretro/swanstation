@@ -519,7 +519,7 @@ bool LibretroVulkanHostDisplay::Render()
                   m_display_texture_view_height, m_display_linear_filtering);
   }
 
-  if (HasSoftwareCursor() && HasDisplayTexture())
+  if (HasSoftwareCursor() && HasDisplayTexture() && (pos_x > 0 || pos_y > 0))
   {
     const float width_scale = (display_width / 2400.0f);
     const float height_scale = (display_height / 1920.0f);
