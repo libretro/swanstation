@@ -500,7 +500,7 @@ bool LibretroOpenGLHostDisplay::Render()
     const auto [left, top, width, height] = CalculateDrawRect(display_width, display_height, 0, false);
     RenderDisplay(left, top, width, height, m_display_texture_handle, m_display_texture_width, m_display_texture_height,
                   m_display_texture_view_x, m_display_texture_view_y, m_display_texture_view_width,
-                  m_display_texture_view_height, m_display_linear_filtering);
+                  m_display_texture_view_height);
   }
 
   if (HasSoftwareCursor() && HasDisplayTexture() && (pos_x > 0 || pos_y > 0))
@@ -526,8 +526,7 @@ bool LibretroOpenGLHostDisplay::Render()
 
 void LibretroOpenGLHostDisplay::RenderDisplay(s32 left, s32 bottom, s32 width, s32 height, void* texture_handle,
                                               u32 texture_width, s32 texture_height, s32 texture_view_x,
-                                              s32 texture_view_y, s32 texture_view_width, s32 texture_view_height,
-                                              bool linear_filter)
+                                              s32 texture_view_y, s32 texture_view_width, s32 texture_view_height)
 {
   glViewport(left, bottom, width, height);
   glDisable(GL_BLEND);
@@ -537,15 +536,12 @@ void LibretroOpenGLHostDisplay::RenderDisplay(s32 left, s32 bottom, s32 width, s
   glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(reinterpret_cast<uintptr_t>(texture_handle)));
   m_display_program.Bind();
 
-  const float position_adjust = m_display_linear_filtering ? 0.5f : 0.0f;
-  const float size_adjust = m_display_linear_filtering ? 1.0f : 0.0f;
-  const float flip_adjust = (texture_view_height < 0) ? -1.0f : 1.0f;
   m_display_program.Uniform4f(
-    0, (static_cast<float>(texture_view_x) + position_adjust) / static_cast<float>(texture_width),
-    (static_cast<float>(texture_view_y) + (position_adjust * flip_adjust)) / static_cast<float>(texture_height),
-    (static_cast<float>(texture_view_width) - size_adjust) / static_cast<float>(texture_width),
-    (static_cast<float>(texture_view_height) - (size_adjust * flip_adjust)) / static_cast<float>(texture_height));
-  glBindSampler(0, linear_filter ? m_display_linear_sampler : m_display_nearest_sampler);
+    0, static_cast<float>(texture_view_x) / static_cast<float>(texture_width),
+    static_cast<float>(texture_view_y) / static_cast<float>(texture_height),
+    static_cast<float>(texture_view_width) / static_cast<float>(texture_width),
+    static_cast<float>(texture_view_height) / static_cast<float>(texture_height));
+  glBindSampler(0, m_display_nearest_sampler);
   glBindVertexArray(m_display_vao);
   glDrawArrays(GL_TRIANGLES, 0, 3);
   glBindSampler(0, 0);

@@ -214,8 +214,6 @@ void Settings::Load(SettingsInterface& si)
   display_active_end_offset = static_cast<s16>(si.GetIntValue("Display", "ActiveEndOffset", 0));
   display_line_start_offset = static_cast<s8>(si.GetIntValue("Display", "LineStartOffset", 0));
   display_line_end_offset = static_cast<s8>(si.GetIntValue("Display", "LineEndOffset", 0));
-  display_linear_filtering = si.GetBoolValue("Display", "LinearFiltering", false);
-  display_stretch = si.GetBoolValue("Display", "Stretch", false);
   display_show_osd_messages = si.GetBoolValue("Display", "ShowOSDMessages", true);
   display_show_enhancements = si.GetBoolValue("Display", "ShowEnhancements", false);
 

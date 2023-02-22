@@ -141,9 +141,6 @@ public:
   virtual void EndSetDisplayPixels() = 0;
   virtual bool SetDisplayPixels(HostDisplayPixelFormat format, u32 width, u32 height, const void* buffer, u32 pitch);
 
-  void SetDisplayLinearFiltering(bool enabled) { m_display_linear_filtering = enabled; }
-  void SetDisplayStretch(bool stretch) { m_display_stretch = stretch; }
-
   /// Sets the software cursor to the specified texture. Ownership of the texture is transferred.
   void SetSoftwareCursor(std::unique_ptr<HostDisplayTexture> texture, float scale = 1.0f);
 
@@ -197,7 +194,5 @@ protected:
   std::unique_ptr<HostDisplayTexture> m_cursor_texture;
   float m_cursor_texture_scale = 1.0f;
 
-  bool m_display_linear_filtering = false;
   bool m_display_changed = false;
-  bool m_display_stretch = false;
 };

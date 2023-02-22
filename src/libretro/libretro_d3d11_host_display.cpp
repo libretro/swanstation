@@ -346,7 +346,7 @@ bool LibretroD3D11HostDisplay::Render()
     const auto [left, top, width, height] = CalculateDrawRect(display_width, display_height, 0, false);
     RenderDisplay(left, top, width, height, m_display_texture_handle, m_display_texture_width, m_display_texture_height,
                   m_display_texture_view_x, m_display_texture_view_y, m_display_texture_view_width,
-                  m_display_texture_view_height, m_display_linear_filtering);
+                  m_display_texture_view_height);
   }
 
   if (HasSoftwareCursor() && HasDisplayTexture() && (pos_x > 0 || pos_y > 0))
@@ -373,22 +373,19 @@ bool LibretroD3D11HostDisplay::Render()
 
 void LibretroD3D11HostDisplay::RenderDisplay(s32 left, s32 top, s32 width, s32 height, void* texture_handle,
                                              u32 texture_width, s32 texture_height, s32 texture_view_x,
-                                             s32 texture_view_y, s32 texture_view_width, s32 texture_view_height,
-                                             bool linear_filter)
+                                             s32 texture_view_y, s32 texture_view_width, s32 texture_view_height)
 {
   m_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
   m_context->VSSetShader(m_display_vertex_shader.Get(), nullptr, 0);
   m_context->PSSetShader(m_display_pixel_shader.Get(), nullptr, 0);
   m_context->PSSetShaderResources(0, 1, reinterpret_cast<ID3D11ShaderResourceView**>(&texture_handle));
-  m_context->PSSetSamplers(0, 1, linear_filter ? m_linear_sampler.GetAddressOf() : m_point_sampler.GetAddressOf());
+  m_context->PSSetSamplers(0, 1, m_point_sampler.GetAddressOf());
 
-  const float position_adjust = m_display_linear_filtering ? 0.5f : 0.0f;
-  const float size_adjust = m_display_linear_filtering ? 1.0f : 0.0f;
   const float uniforms[4] = {
-    (static_cast<float>(texture_view_x) + position_adjust) / static_cast<float>(texture_width),
-    (static_cast<float>(texture_view_y) + position_adjust) / static_cast<float>(texture_height),
-    (static_cast<float>(texture_view_width) - size_adjust) / static_cast<float>(texture_width),
-    (static_cast<float>(texture_view_height) - size_adjust) / static_cast<float>(texture_height)};
+    static_cast<float>(texture_view_x) / static_cast<float>(texture_width),
+    static_cast<float>(texture_view_y) / static_cast<float>(texture_height),
+    static_cast<float>(texture_view_width) / static_cast<float>(texture_width),
+    static_cast<float>(texture_view_height) / static_cast<float>(texture_height)};
   const auto map = m_display_uniform_buffer.Map(m_context.Get(), m_display_uniform_buffer.GetSize(), sizeof(uniforms));
   std::memcpy(map.pointer, uniforms, sizeof(uniforms));
   m_display_uniform_buffer.Unmap(m_context.Get(), sizeof(uniforms));

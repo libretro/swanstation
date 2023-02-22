@@ -516,7 +516,7 @@ bool LibretroVulkanHostDisplay::Render()
     const auto [left, top, width, height] = CalculateDrawRect(display_width, display_height, 0, false);
     RenderDisplay(left, top, width, height, m_display_texture_handle, m_display_texture_width, m_display_texture_height,
                   m_display_texture_view_x, m_display_texture_view_y, m_display_texture_view_width,
-                  m_display_texture_view_height, m_display_linear_filtering);
+                  m_display_texture_view_height);
   }
 
   if (HasSoftwareCursor() && HasDisplayTexture() && (pos_x > 0 || pos_y > 0))
@@ -552,8 +552,7 @@ bool LibretroVulkanHostDisplay::Render()
 
 void LibretroVulkanHostDisplay::RenderDisplay(s32 left, s32 top, s32 width, s32 height, void* texture_handle,
                                               u32 texture_width, s32 texture_height, s32 texture_view_x,
-                                              s32 texture_view_y, s32 texture_view_width, s32 texture_view_height,
-                                              bool linear_filter)
+                                              s32 texture_view_y, s32 texture_view_width, s32 texture_view_height)
 {
   VkCommandBuffer cmdbuffer = g_vulkan_context->GetCurrentCommandBuffer();
 
@@ -565,16 +564,14 @@ void LibretroVulkanHostDisplay::RenderDisplay(s32 left, s32 top, s32 width, s32 
     const Vulkan::Texture* vktex = static_cast<Vulkan::Texture*>(texture_handle);
     Vulkan::DescriptorSetUpdateBuilder dsupdate;
     dsupdate.AddCombinedImageSamplerDescriptorWrite(
-      ds, 0, vktex->GetView(), linear_filter ? m_linear_sampler : m_point_sampler, vktex->GetLayout());
+      ds, 0, vktex->GetView(), m_point_sampler, vktex->GetLayout());
     dsupdate.Update(g_vulkan_context->GetDevice());
   }
 
-  const float position_adjust = m_display_linear_filtering ? 0.5f : 0.0f;
-  const float size_adjust = m_display_linear_filtering ? 1.0f : 0.0f;
-  const PushConstants pc{(static_cast<float>(texture_view_x) + position_adjust) / static_cast<float>(texture_width),
-                         (static_cast<float>(texture_view_y) + position_adjust) / static_cast<float>(texture_height),
-                         (static_cast<float>(texture_view_width) - size_adjust) / static_cast<float>(texture_width),
-                         (static_cast<float>(texture_view_height) - size_adjust) / static_cast<float>(texture_height)};
+  const PushConstants pc{static_cast<float>(texture_view_x) / static_cast<float>(texture_width),
+                         static_cast<float>(texture_view_y) / static_cast<float>(texture_height),
+                         static_cast<float>(texture_view_width) / static_cast<float>(texture_width),
+                         static_cast<float>(texture_view_height) / static_cast<float>(texture_height)};
 
   vkCmdBindPipeline(cmdbuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_display_pipeline);
   vkCmdPushConstants(cmdbuffer, m_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pc), &pc);

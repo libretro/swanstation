@@ -56,10 +56,6 @@ bool HostInterface::BootSystem(std::shared_ptr<SystemBootParameters> parameters)
 {
   AcquireHostDisplay();
 
-  // set host display settings
-  m_display->SetDisplayLinearFiltering(g_settings.display_linear_filtering);
-  m_display->SetDisplayStretch(g_settings.display_stretch);
-
   // create the audio stream. this will never fail, since we'll just fall back to null
   m_audio_stream = CreateAudioStream();
   m_audio_stream->Reconfigure(AUDIO_SAMPLE_RATE, AUDIO_SAMPLE_RATE, AUDIO_CHANNELS, g_settings.audio_buffer_size);
@@ -483,13 +479,6 @@ void HostInterface::CheckForSettingsChanges(const Settings& old_settings)
 
   if (g_settings.multitap_mode != old_settings.multitap_mode)
     System::UpdateMultitaps();
-
-  if (m_display && (g_settings.display_linear_filtering != old_settings.display_linear_filtering ||
-                    g_settings.display_stretch != old_settings.display_stretch))
-  {
-    m_display->SetDisplayLinearFiltering(g_settings.display_linear_filtering);
-    m_display->SetDisplayStretch(g_settings.display_stretch);
-  }
 }
 
 std::string HostInterface::GetUserDirectoryRelativePath(const char* format, ...) const

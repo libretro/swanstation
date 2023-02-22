@@ -91,7 +91,7 @@ void HostDisplay::CalculateDrawRect(s32 window_width, s32 window_height, float* 
                                     bool apply_aspect_ratio /* = true */) const
 {
   const float window_ratio = static_cast<float>(window_width) / static_cast<float>(window_height);
-  const float display_aspect_ratio = m_display_stretch ? window_ratio : m_display_aspect_ratio;
+  const float display_aspect_ratio = m_display_aspect_ratio;
   const float x_scale =
     apply_aspect_ratio ?
       (display_aspect_ratio / (static_cast<float>(m_display_width) / static_cast<float>(m_display_height))) :

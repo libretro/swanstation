@@ -110,8 +110,6 @@ struct Settings
   s8 display_line_end_offset = 0;
   bool display_force_4_3_for_24bit = false;
   bool gpu_24bit_chroma_smoothing = false;
-  bool display_linear_filtering = true;
-  bool display_stretch = false;
   bool display_show_osd_messages = true;
   bool display_show_enhancements = false;
   float gpu_pgxp_tolerance = -1.0f;
