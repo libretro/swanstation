@@ -195,7 +195,7 @@ bool Pad::DoState(StateWrapper& sw)
       // honoring load_devices_from_save_states in this case seems debatable, but might as well...
       if (m_controllers[i])
       {
-          m_controllers[i]->Reset();
+        m_controllers[i]->Reset();
       }
 
       if (m_memory_cards[i])
