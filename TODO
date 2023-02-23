@@ -1,0 +1,10 @@
+List of things to be done, in no particular order:
+- Implement Libretro VFS
+- Implement D3D12 renderer
+- Implement touchscreen support for Namco GunCon (currently only works with mouse)
+- Get Libretro rewind to work without having to disable the recompiler
+- Allow booting into the BIOS when either a non-PSX disc or no disc is inserted
+- Implement a HLE BIOS
+- On Windows, allow compiling the core without having to install Visual Studio
+- Provide a static Makefile like all other Libretro cores
+- Check for and remove all code not used for Libretro (settings, IO & etc.)

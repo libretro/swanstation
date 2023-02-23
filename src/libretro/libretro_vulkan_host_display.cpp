@@ -431,8 +431,6 @@ void LibretroVulkanHostDisplay::RenderSoftwareCursor() {}
 void LibretroVulkanHostDisplay::RenderSoftwareCursor(s32 left, s32 top, s32 width, s32 height, HostDisplayTexture* texture)
 {
   VkCommandBuffer cmdbuffer = g_vulkan_context->GetCurrentCommandBuffer();
-  //const Vulkan::Util::DebugScope debugScope(cmdbuffer, "VulkanHostDisplay::RenderSoftwareCursor: {%u,%u} %ux%u", left,
-                                            //top, width, height);
 
   VkDescriptorSet ds = g_vulkan_context->AllocateDescriptorSet(m_descriptor_set_layout);
   if (ds == VK_NULL_HANDLE)
