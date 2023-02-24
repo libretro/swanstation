@@ -112,7 +112,7 @@ static std::string GetFileMappingName()
 #error Unknown platform.
 #endif
 
-  const std::string ret(StringUtil::StdStringFromFormat("duckstation_%u_%p", pid, ((void*)&GetFileMappingName)));
+  const std::string ret(StringUtil::StdStringFromFormat("swanstation_%u_%p", pid, ((void*)&GetFileMappingName)));
 
   Log_InfoPrintf("File mapping name: %s", ret.c_str());
   return ret;
