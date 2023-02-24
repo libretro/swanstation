@@ -8,7 +8,7 @@ static T GetVariable(const char* section, const char* key, DefaultValueType defa
 {
 
   TinyString full_key;
-  full_key.Format("duckstation_%s.%s", section, key);
+  full_key.Format("swanstation_%s_%s", section, key);
 
   retro_variable rv = {full_key.GetCharArray(), nullptr};
   if (!g_retro_environment_callback(RETRO_ENVIRONMENT_GET_VARIABLE, &rv) || !rv.value)

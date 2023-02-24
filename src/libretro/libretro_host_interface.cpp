@@ -413,9 +413,9 @@ std::string LibretroHostInterface::GetShaderCacheBasePath() const
     }
   }
 
-  // Use a directory named "duckstation_cache" in the save/system directory.
+  // Use a directory named "swanstation_cache" in the save/system directory.
   std::string shader_cache_path = StringUtil::StdStringFromFormat(
-    "%s" FS_OSPATH_SEPARATOR_STR "duckstation_cache" FS_OSPATH_SEPARATOR_STR, save_directory_ptr);
+    "%s" FS_OSPATH_SEPARATOR_STR "swanstation_cache" FS_OSPATH_SEPARATOR_STR, save_directory_ptr);
   if (!FileSystem::DirectoryExists(shader_cache_path.c_str()) &&
       !FileSystem::CreateDirectory(shader_cache_path.c_str(), false))
   {
@@ -431,7 +431,7 @@ std::string LibretroHostInterface::GetStringSettingValue(const char* section, co
                                                          const char* default_value /*= ""*/)
 {
   TinyString name;
-  name.Format("duckstation_%s.%s", section, key);
+  name.Format("swanstation_%s_%s", section, key);
   retro_variable var{name, default_value};
   if (g_retro_environment_callback(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
     return var.value;
@@ -638,9 +638,9 @@ bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
   {
       case  ConsoleRegion::NTSC_J:
       {
-         option_display.key = "duckstation_BIOS.PathNTSCU";
+         option_display.key = "swanstation_BIOS_PathNTSCU";
          g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-         option_display.key = "duckstation_BIOS.PathPAL";
+         option_display.key = "swanstation_BIOS_PathPAL";
          g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
          break;
@@ -648,9 +648,9 @@ bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
 
       case  ConsoleRegion::NTSC_U:
       {
-         option_display.key = "duckstation_BIOS.PathNTSCJ";
+         option_display.key = "swanstation_BIOS_PathNTSCJ";
          g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-         option_display.key = "duckstation_BIOS.PathPAL";
+         option_display.key = "swanstation_BIOS_PathPAL";
          g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
          break;
@@ -658,9 +658,9 @@ bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
 
       case  ConsoleRegion::PAL:
       {
-         option_display.key = "duckstation_BIOS.PathNTSCU";
+         option_display.key = "swanstation_BIOS_PathNTSCU";
          g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-         option_display.key = "duckstation_BIOS.PathNTSCJ";
+         option_display.key = "swanstation_BIOS_PathNTSCJ";
          g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
          break;
@@ -898,71 +898,71 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
   struct retro_core_option_display option_display;
 
   option_display.visible = cpu_recompiler;
-  option_display.key = "duckstation_CPU.RecompilerICache";
+  option_display.key = "swanstation_CPU_RecompilerICache";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_CPU.RecompilerBlockLinking";
+  option_display.key = "swanstation_CPU_RecompilerBlockLinking";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_CPU.FastmemMode";
+  option_display.key = "swanstation_CPU_FastmemMode";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
   option_display.visible = cpu_fastmem_rewrite;
-  option_display.key = "duckstation_CPU.FastmemRewrite";
+  option_display.key = "swanstation_CPU_FastmemRewrite";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
   option_display.visible = hardware_renderer;
-  option_display.key = "duckstation_GPU.UseSoftwareRendererForReadbacks";
+  option_display.key = "swanstation_GPU_UseSoftwareRendererForReadbacks";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_GPU.MSAA";
+  option_display.key = "swanstation_GPU_MSAA";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_GPU.TrueColor";
+  option_display.key = "swanstation_GPU_TrueColor";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_GPU.ScaledDithering";
+  option_display.key = "swanstation_GPU_ScaledDithering";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_GPU.ChromaSmoothing24Bit";
+  option_display.key = "swanstation_GPU_ChromaSmoothing24Bit";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_GPU.TextureFilter";
+  option_display.key = "swanstation_GPU_TextureFilter";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_GPU.DownsampleMode";
+  option_display.key = "swanstation_GPU_DownsampleMode";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_GPU.ResolutionScale";
+  option_display.key = "swanstation_GPU_ResolutionScale";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_TextureReplacements.EnableVRAMWriteReplacements";
+  option_display.key = "swanstation_TextureReplacements_EnableVRAMWriteReplacements";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_GPU.PGXPEnable";
+  option_display.key = "swanstation_GPU_PGXPEnable";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
   option_display.visible = !hardware_renderer;
-  option_display.key = "duckstation_GPU.UseThread";
+  option_display.key = "swanstation_GPU_UseThread";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
   option_display.visible = pgxp_enable;
-  option_display.key = "duckstation_GPU.PGXPCulling";
+  option_display.key = "swanstation_GPU_PGXPCulling";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_GPU.PGXPTextureCorrection";
+  option_display.key = "swanstation_GPU_PGXPTextureCorrection";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_GPU.PGXPColorCorrection";
+  option_display.key = "swanstation_GPU_PGXPColorCorrection";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_GPU.PGXPDepthBuffer";
+  option_display.key = "swanstation_GPU_PGXPDepthBuffer";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_GPU.PGXPVertexCache";
+  option_display.key = "swanstation_GPU_PGXPVertexCache";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_GPU.PGXPCPU";
+  option_display.key = "swanstation_GPU_PGXPCPU";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_GPU.PGXPPreserveProjFP";
+  option_display.key = "swanstation_GPU_PGXPPreserveProjFP";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_GPU.PGXPTolerance";
+  option_display.key = "swanstation_GPU_PGXPTolerance";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
   option_display.visible = vram_rewrite_replacements;
-  option_display.key = "duckstation_TextureReplacements.PreloadTextures";
+  option_display.key = "swanstation_TextureReplacements_PreloadTextures";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
   option_display.visible = !cdrom_preload_enable;
-  option_display.key = "duckstation_CDROM.PreCacheCHD";
+  option_display.key = "swanstation_CDROM_PreCacheCHD";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
   option_display.visible = pgxp_depth_buffer_enable;
-  option_display.key = "duckstation_GPU.PGXPDepthClearThreshold";
+  option_display.key = "swanstation_GPU_PGXPDepthClearThreshold";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
   for (u32 i = 0; i < NUM_CONTROLLER_AND_CARD_PORTS; i++)
@@ -982,27 +982,27 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
     const bool guncon_active = (port_allowed && active_controller == RETRO_DEVICE_PS_GUNCON);
 
     option_display.visible = analog_active;
-    option_display.key = (TinyString::FromFormat("duckstation_Controller%u.AxisScale", (i + 1)));
+    option_display.key = (TinyString::FromFormat("swanstation_Controller%u_AxisScale", (i + 1)));
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
     option_display.visible = dualshock_active;
-    option_display.key = (TinyString::FromFormat("duckstation_Controller%u.ForceAnalogOnReset", (i + 1)));
+    option_display.key = (TinyString::FromFormat("swanstation_Controller%u_ForceAnalogOnReset", (i + 1)));
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-    option_display.key = (TinyString::FromFormat("duckstation_Controller%u.AnalogDPadInDigitalMode", (i + 1)));
+    option_display.key = (TinyString::FromFormat("swanstation_Controller%u_AnalogDPadInDigitalMode", (i + 1)));
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-    option_display.key = (TinyString::FromFormat("duckstation_Controller%u.VibrationBias", (i + 1)));
+    option_display.key = (TinyString::FromFormat("swanstation_Controller%u_VibrationBias", (i + 1)));
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
     option_display.visible = negcon_active;
-    option_display.key = (TinyString::FromFormat("duckstation_Controller%u.SteeringDeadzone", (i + 1)));
+    option_display.key = (TinyString::FromFormat("swanstation_Controller%u_SteeringDeadzone", (i + 1)));
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-    option_display.key = (TinyString::FromFormat("duckstation_Controller%u.TwistResponse", (i + 1)));
+    option_display.key = (TinyString::FromFormat("swanstation_Controller%u_TwistResponse", (i + 1)));
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
     option_display.visible = guncon_active;
-    option_display.key = (TinyString::FromFormat("duckstation_Controller%u.XScale", (i + 1)));
+    option_display.key = (TinyString::FromFormat("swanstation_Controller%u_XScale", (i + 1)));
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-    option_display.key = (TinyString::FromFormat("duckstation_Controller%u.YScale", (i + 1)));
+    option_display.key = (TinyString::FromFormat("swanstation_Controller%u_YScale", (i + 1)));
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
   }
 
@@ -1010,13 +1010,13 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
   const bool show_custom_ar = (!guncon_aspect && custom_aspect_ratio);
 
   option_display.visible = !guncon_aspect;
-  option_display.key = "duckstation_Display.AspectRatio";
+  option_display.key = "swanstation_Display_AspectRatio";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
   option_display.visible = show_custom_ar;
-  option_display.key = "duckstation_Display.CustomAspectRatioNumerator";
+  option_display.key = "swanstation_Display_CustomAspectRatioNumerator";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "duckstation_Display.CustomAspectRatioDenominator";
+  option_display.key = "swanstation_Display_CustomAspectRatioDenominator";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
   return true;
@@ -1587,7 +1587,7 @@ static std::optional<GPURenderer> RenderAPIToRenderer(HostDisplay::RenderAPI api
 
 bool LibretroHostInterface::RequestHardwareRendererContext()
 {
-  retro_variable renderer_variable{"duckstation_GPU.Renderer",
+  retro_variable renderer_variable{"swanstation_GPU_Renderer",
                                    Settings::GetRendererName(Settings::DEFAULT_GPU_RENDERER)};
   if (!g_retro_environment_callback(RETRO_ENVIRONMENT_GET_VARIABLE, &renderer_variable) || !renderer_variable.value)
     renderer_variable.value = Settings::GetRendererName(Settings::DEFAULT_GPU_RENDERER);
