@@ -91,7 +91,7 @@ bool Pad::DoStateMemcard(StateWrapper& sw, u32 i)
 
   sw.Do(&card_present_in_state);
 
-  if (card_present_in_state && !m_memory_cards[i] && g_settings.load_devices_from_save_states)
+  if (card_present_in_state && !m_memory_cards[i])
   {
     g_host_interface->AddFormattedOSDMessage(
       20.0f,
@@ -106,16 +106,6 @@ bool Pad::DoStateMemcard(StateWrapper& sw, u32 i)
 
   if (card_present_in_state)
   {
-    if (sw.IsReading() && !g_settings.load_devices_from_save_states)
-    {
-      // load memcard into a temporary: If the card datas match, take the one from the savestate
-      // since it has other useful non-data state information. Otherwise take the user's card
-      // and perform a re-plugging.
-
-      card_from_state = std::make_unique<MemoryCard>();
-      card_ptr = card_from_state.get();
-    }
-
     if (!sw.DoMarker("MemoryCard") || !card_ptr->DoState(sw))
       return false;
   }
@@ -162,24 +152,12 @@ bool Pad::DoStateMemcard(StateWrapper& sw, u32 i)
 
   if (!card_present_in_state && m_memory_cards[i])
   {
-    if (g_settings.load_devices_from_save_states)
-    {
-      g_host_interface->AddFormattedOSDMessage(
-        20.0f,
-        g_host_interface->TranslateString("OSDMessage",
-                                          "Memory card %u present in system but not in save state. Removing card."),
-        i + 1u);
-      m_memory_cards[i].reset();
-    }
-    else
-    {
-      g_host_interface->AddFormattedOSDMessage(
-        20.0f,
-        g_host_interface->TranslateString("OSDMessage",
-                                          "Memory card %u present in system but not in save state. Replugging card."),
-        i + 1u);
-      m_memory_cards[i]->Reset();
-    }
+    g_host_interface->AddFormattedOSDMessage(
+      20.0f,
+      g_host_interface->TranslateString("OSDMessage",
+                                        "Memory card %u present in system but not in save state. Removing card."),
+      i + 1u);
+    m_memory_cards[i].reset();
   }
 
   return true;
@@ -191,8 +169,6 @@ bool Pad::DoState(StateWrapper& sw)
   {
     if ((sw.GetVersion() < 50) && (i >= 2))
     {
-      // loading from old savestate which only had max 2 controllers.
-      // honoring load_devices_from_save_states in this case seems debatable, but might as well...
       if (m_controllers[i])
       {
         m_controllers[i]->Reset();
@@ -200,10 +176,7 @@ bool Pad::DoState(StateWrapper& sw)
 
       if (m_memory_cards[i])
       {
-        if (g_settings.load_devices_from_save_states)
-          m_memory_cards[i].reset();
-        else
-          m_memory_cards[i]->Reset();
+        m_memory_cards[i].reset();
       }
 
       // ... and make sure to skip trying to read controller_type / card_present flags which don't exist in old states.

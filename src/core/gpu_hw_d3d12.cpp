@@ -407,7 +407,7 @@ bool GPU_HW_D3D12::CompilePipelines()
 {
   D3D12::ShaderCache shader_cache;
   shader_cache.Open(g_host_interface->GetShaderCacheBasePath(), g_d3d12_context->GetFeatureLevel(),
-                    g_settings.gpu_use_debug_device);
+                    false);
 
   GPU_HW_ShaderGen shadergen(m_host_display->GetRenderAPI(), m_resolution_scale, m_multisamples, m_per_sample_shading,
                              m_true_color, m_scaled_dithering, m_texture_filtering, m_using_uv_limits,

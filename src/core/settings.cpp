@@ -140,7 +140,6 @@ void Settings::Load(SettingsInterface& si)
       .value_or(DEFAULT_CONSOLE_REGION);
   enable_8mb_ram = si.GetBoolValue("Console", "Enable8MBRAM", false);
 
-  load_devices_from_save_states = si.GetBoolValue("Main", "LoadDevicesFromSaveStates", true);
   apply_game_settings = si.GetBoolValue("Main", "ApplyGameSettings", true);
   disable_all_enhancements = si.GetBoolValue("Main", "DisableAllEnhancements", false);
   rewind_enable = si.GetBoolValue("Main", "RewindEnable", false);
@@ -168,7 +167,6 @@ void Settings::Load(SettingsInterface& si)
                    .value_or(DEFAULT_GPU_RENDERER);
   gpu_resolution_scale = static_cast<u32>(si.GetIntValue("GPU", "ResolutionScale", 1));
   gpu_multisamples = static_cast<u32>(si.GetIntValue("GPU", "Multisamples", 1));
-  gpu_use_debug_device = si.GetBoolValue("GPU", "UseDebugDevice", false);
   gpu_per_sample_shading = si.GetBoolValue("GPU", "PerSampleShading", false);
   gpu_use_thread = si.GetBoolValue("GPU", "UseThread", true);
   gpu_use_software_renderer_for_readbacks = si.GetBoolValue("GPU", "UseSoftwareRendererForReadbacks", false);

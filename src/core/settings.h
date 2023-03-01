@@ -69,7 +69,6 @@ struct Settings
   CPUFastmemMode cpu_fastmem_mode = CPUFastmemMode::Disabled;
   bool cpu_fastmem_rewrite = false;
 
-  bool load_devices_from_save_states = true;
   bool apply_game_settings = true;
   bool disable_all_enhancements = false;
 
@@ -83,7 +82,6 @@ struct Settings
   u32 gpu_multisamples = 1;
   bool gpu_use_thread = true;
   bool gpu_use_software_renderer_for_readbacks = false;
-  bool gpu_use_debug_device = false;
   bool gpu_per_sample_shading = false;
   bool gpu_true_color = false;
   bool gpu_scaled_dithering = false;

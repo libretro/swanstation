@@ -315,12 +315,10 @@ void HostInterface::FixIncompatibleSettings(bool display_osd_messages)
 
 void HostInterface::CheckForSettingsChanges(const Settings& old_settings)
 {
-  if (System::IsValid() && (g_settings.gpu_renderer != old_settings.gpu_renderer ||
-                            g_settings.gpu_use_debug_device != old_settings.gpu_use_debug_device))
+  if (System::IsValid() && (g_settings.gpu_renderer != old_settings.gpu_renderer))
   {
-    AddFormattedOSDMessage(5.0f, TranslateString("OSDMessage", "Switching to %s%s GPU renderer."),
-                           Settings::GetRendererName(g_settings.gpu_renderer),
-                           g_settings.gpu_use_debug_device ? " (debug)" : "");
+    AddFormattedOSDMessage(5.0f, TranslateString("OSDMessage", "Switching to %s GPU renderer."),
+                           Settings::GetRendererName(g_settings.gpu_renderer));
     RecreateSystem();
   }
 

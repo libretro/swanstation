@@ -184,7 +184,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
    },
    {
       "swanstation_CDROM_LoadImagePatches",
-      "Apply Image Patches",
+      "Apply Image Patches (Restart)",
       NULL,
       "Automatically applies patches to disc images when they are present in the same directory. Currently only PPF "
       "patches are supported with this option. Requires the core to be restarted to apply.",
@@ -368,7 +368,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
    },
    {
       "swanstation_GPU_UseSoftwareRendererForReadbacks",
-      "Use Software Renderer For Readbacks",
+      "Use Software Renderer For Readbacks (Restart)",
       NULL,
       "Runs the software renderer in parallel for VRAM readbacks. On some systems, this may "
       "result in greater performance when using graphical enhancements with the hardware renderer. "
@@ -1272,7 +1272,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
    },
    {
       "swanstation_MemoryCards_Card1Type",
-      "Memory Card 1 Type",
+      "Memory Card 1 Type (Restart)",
       NULL,
       "Sets the type of memory card for Slot 1. Restart the core when switching formats. "
       "'Shared Between All Games' and both 'Separate Card Per Game' options may be used for legacy purposes, "
@@ -1286,13 +1286,14 @@ struct retro_core_option_v2_definition option_defs_us[] = {
          { "Shared",       "Shared Between All Games" },
          { "PerGame",      "Separate Card Per Game (Game Code)" },
          { "PerGameTitle", "Separate Card Per Game (Game Title)" },
+         { "None",         "No Memory Card" },
          { NULL, NULL },
       },
       "Libretro"
    },
    {
       "swanstation_MemoryCards_Card2Type",
-      "Second Memory Card Type",
+      "Memory Card 2 Type",
       NULL,
       "Sets the type of memory card for Slot 2.",
       NULL,
