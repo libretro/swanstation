@@ -133,9 +133,6 @@ public:
   /// Recompile shaders/recreate framebuffers when needed.
   virtual void UpdateSettings();
 
-  /// Updates the resolution scale when it's set to automatic.
-  virtual void UpdateResolutionScale();
-
   float ComputeHorizontalFrequency() const;
   float ComputeVerticalFrequency() const;
   float GetDisplayAspectRatio() const;

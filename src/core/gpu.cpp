@@ -68,8 +68,6 @@ void GPU::CPUClockChanged()
   UpdateCRTCConfig();
 }
 
-void GPU::UpdateResolutionScale() {}
-
 void GPU::Reset(bool clear_vram)
 {
   m_GPUSTAT.bits = 0x14802000;

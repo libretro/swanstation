@@ -37,8 +37,6 @@ public:
   virtual void Reset(bool clear_vram) override;
   virtual bool DoState(StateWrapper& sw, HostDisplayTexture** host_texture, bool update_display) override;
 
-  void UpdateResolutionScale() override final;
-
 protected:
   enum : u32
   {
@@ -93,11 +91,6 @@ protected:
     ALWAYS_INLINE static u32 PackUVLimits(u32 min_u, u32 max_u, u32 min_v, u32 max_v)
     {
       return min_u | (min_v << 8) | (max_u << 16) | (max_v << 24);
-    }
-
-    ALWAYS_INLINE void SetUVLimits(u32 min_u, u32 max_u, u32 min_v, u32 max_v)
-    {
-      uv_limits = PackUVLimits(min_u, max_u, min_v, max_v);
     }
   };
 
@@ -223,8 +216,6 @@ protected:
   }
   void IncludeVRAMDirtyRectangle(const Common::Rectangle<u32>& rect);
 
-  bool IsFlushed() const { return m_batch_current_vertex_ptr == m_batch_start_vertex_ptr; }
-
   u32 GetBatchVertexSpace() const { return static_cast<u32>(m_batch_end_vertex_ptr - m_batch_current_vertex_ptr); }
   u32 GetBatchVertexCount() const { return static_cast<u32>(m_batch_current_vertex_ptr - m_batch_start_vertex_ptr); }
   void EnsureVertexBufferSpace(u32 required_vertices);
@@ -297,11 +288,6 @@ protected:
   void FlushRender() override;
 
   void CalcScissorRect(int* left, int* top, int* right, int* bottom);
-
-  std::tuple<s32, s32> ScaleVRAMCoordinates(s32 x, s32 y) const
-  {
-    return std::make_tuple(x * s32(m_resolution_scale), y * s32(m_resolution_scale));
-  }
 
   /// Computes the area affected by a VRAM transfer, including wrap-around of X.
   Common::Rectangle<u32> GetVRAMTransferBounds(u32 x, u32 y, u32 width, u32 height) const;

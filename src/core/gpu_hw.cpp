@@ -233,14 +233,6 @@ u32 GPU_HW::CalculateResolutionScale() const
   return scale;
 }
 
-void GPU_HW::UpdateResolutionScale()
-{
-  GPU::UpdateResolutionScale();
-
-  if (CalculateResolutionScale() != m_resolution_scale)
-    UpdateSettings();
-}
-
 GPUDownsampleMode GPU_HW::GetDownsampleMode(u32 resolution_scale) const
 {
   if (resolution_scale == 1)
@@ -364,7 +356,7 @@ void GPU_HW::ComputePolygonUVLimits(BatchVertex* vertices, u32 num_vertices)
     max_v--;
 
   for (u32 i = 0; i < num_vertices; i++)
-    vertices[i].SetUVLimits(min_u, max_u, min_v, max_v);
+    vertices[i].uv_limits = BatchVertex::PackUVLimits(min_u, max_u, min_v, max_v);
 }
 
 void GPU_HW::SetBatchDepthBuffer(bool enabled)
@@ -1204,7 +1196,7 @@ void GPU_HW::DispatchRenderCommand()
                                         (m_draw_mode.mode_reg.IsUsingPalette() &&
                                          m_draw_mode.GetTexturePaletteRectangle().Intersects(m_vram_dirty_rect))))
       {
-        if (!IsFlushed())
+        if (m_batch_current_vertex_ptr != m_batch_start_vertex_ptr)
           FlushRender();
 
         UpdateVRAMReadTexture();
