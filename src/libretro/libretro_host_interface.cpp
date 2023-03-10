@@ -835,6 +835,7 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
   static CPUFastmemMode cpu_fastmem_mode_prev;
   static bool hardware_renderer_prev;
   static bool pgxp_enable_prev;
+  static bool support_perspective_prev;
   static MultitapMode multitap_mode_prev;
   static bool vram_rewrite_replacements_prev;
   static bool cdrom_preload_enable_prev;
@@ -858,6 +859,7 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
       .value_or(Settings::DEFAULT_GPU_RENDERER);
   const bool hardware_renderer = (gpu_renderer != GPURenderer::Software);
   const bool pgxp_enable = (hardware_renderer && si.GetBoolValue("GPU", "PGXPEnable", false));
+  const bool support_perspective = (pgxp_enable && gpu_renderer != GPURenderer::HardwareOpenGL);
 
   const MultitapMode multitap_mode =
     Settings::ParseMultitapModeName(si.GetStringValue("ControllerPorts", "MultitapMode", Settings::GetMultitapModeName(Settings::DEFAULT_MULTITAP_MODE)).c_str())
@@ -876,10 +878,11 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
 
   if (!controller)
   {
-    if (cpu_execution_mode == cpu_execution_mode_prev && cpu_fastmem_mode == cpu_fastmem_mode_prev && pgxp_enable == pgxp_enable_prev && 
-        multitap_mode == multitap_mode_prev && vram_rewrite_replacements == vram_rewrite_replacements_prev &&
-        cdrom_preload_enable == cdrom_preload_enable_prev && aspect_ratio == aspect_ratio_prev &&
-        hardware_renderer == hardware_renderer_prev && pgxp_depth_buffer_enable == pgxp_depth_buffer_enable_prev)
+    if (cpu_execution_mode == cpu_execution_mode_prev && cpu_fastmem_mode == cpu_fastmem_mode_prev && hardware_renderer == hardware_renderer_prev &&
+        pgxp_enable == pgxp_enable_prev && support_perspective == support_perspective_prev && multitap_mode == multitap_mode_prev &&
+        vram_rewrite_replacements == vram_rewrite_replacements_prev && cdrom_preload_enable == cdrom_preload_enable_prev &&
+        aspect_ratio == aspect_ratio_prev && pgxp_depth_buffer_enable == pgxp_depth_buffer_enable_prev
+        )
     {
       return false;
     }
@@ -889,6 +892,7 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
   cpu_fastmem_mode_prev = cpu_fastmem_mode;
   hardware_renderer_prev = hardware_renderer;
   pgxp_enable_prev = pgxp_enable;
+  support_perspective_prev = support_perspective;
   multitap_mode_prev = multitap_mode;
   vram_rewrite_replacements_prev = vram_rewrite_replacements;
   cdrom_preload_enable_prev = cdrom_preload_enable;
@@ -940,8 +944,6 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
   option_display.key = "swanstation_GPU_PGXPTextureCorrection";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-  option_display.key = "swanstation_GPU_PGXPColorCorrection";
-  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
   option_display.key = "swanstation_GPU_PGXPDepthBuffer";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
   option_display.key = "swanstation_GPU_PGXPVertexCache";
@@ -951,6 +953,10 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
   option_display.key = "swanstation_GPU_PGXPPreserveProjFP";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
   option_display.key = "swanstation_GPU_PGXPTolerance";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+
+  option_display.visible = support_perspective;
+  option_display.key = "swanstation_GPU_PGXPColorCorrection";
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
   option_display.visible = vram_rewrite_replacements;

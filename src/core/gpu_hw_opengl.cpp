@@ -385,7 +385,7 @@ void GPU_HW_OpenGL::SetCapabilities()
   m_supports_adaptive_downsampling = false;
 
   // noperspective is not supported in GLSL ES.
-  m_supports_disable_color_perspective = !IsGLES();
+  m_supports_disable_color_perspective = false;
 }
 
 bool GPU_HW_OpenGL::CreateFramebuffer()
