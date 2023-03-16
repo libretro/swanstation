@@ -1282,6 +1282,7 @@ void CodeGenerator::EmitLoadGuestMemoryFastmem(const CodeBlockInstruction& cbi, 
   bpi.address_host_reg = HostReg_Invalid;
   bpi.value_host_reg = result.host_reg;
   bpi.guest_pc = m_current_instruction->pc;
+  bpi.fault_count = 0;
 
   HostReg address_reg;
   if (address.IsConstant())
@@ -1452,6 +1453,7 @@ void CodeGenerator::EmitStoreGuestMemoryFastmem(const CodeBlockInstruction& cbi,
   bpi.address_host_reg = HostReg_Invalid;
   bpi.value_host_reg = value.host_reg;
   bpi.guest_pc = m_current_instruction->pc;
+  bpi.fault_count = 0;
 
   HostReg address_reg;
   if (address.IsConstant())

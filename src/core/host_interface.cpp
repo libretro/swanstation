@@ -310,7 +310,20 @@ void HostInterface::FixIncompatibleSettings(bool display_osd_messages)
     AddOSDMessage(TranslateStdString("OSDMessage", "Rewind is not supported on 32-bit ARM for Android."), 30.0f);
     g_settings.rewind_enable = false;
   }
+
+  if (g_settings.runahead_frames > 0)
+  {
+    AddOSDMessage(TranslateStdString("OSDMessage", "Runahead is not supported on 32-bit ARM for Android."), 30.0f);
+    g_settings.runahead_frames = 0;
+  }
 #endif
+
+  if (g_settings.runahead_frames > 0 && g_settings.cpu_recompiler_block_linking)
+  {
+    // Block linking is good for performance, but hurts when regularly loading (i.e. runahead), since everything has to
+    // be unlinked. Which would be thousands of blocks.
+    g_settings.cpu_recompiler_block_linking = false;
+  }
 }
 
 void HostInterface::CheckForSettingsChanges(const Settings& old_settings)
