@@ -148,8 +148,6 @@ void Settings::Load(SettingsInterface& si)
       si.GetStringValue("CPU", "ExecutionMode", GetCPUExecutionModeName(DEFAULT_CPU_EXECUTION_MODE)).c_str())
       .value_or(DEFAULT_CPU_EXECUTION_MODE);
 
-  UpdateOverclockActive();
-
   cpu_recompiler_block_linking = si.GetBoolValue("CPU", "RecompilerBlockLinking", true);
   cpu_recompiler_icache = si.GetBoolValue("CPU", "RecompilerICache", false);
   cpu_fastmem_mode = ParseCPUFastmemMode(
