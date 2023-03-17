@@ -1,10 +1,8 @@
 #include "libretro_game_settings.h"
-#include "common/log.h"
 #include "common/string.h"
 #include "common/string_util.h"
 #include "core/host_interface.h"
 #include "core/settings.h"
-Log_SetChannel(GameSettings);
 
 #ifdef _WIN32
 #include "common/windows_headers.h"
