@@ -1058,9 +1058,9 @@ void LibretroHostInterface::LoadSettings()
   g_settings.gpu_multisamples = StringUtil::FromChars<u32>(msaa).value_or(1);
   g_settings.gpu_per_sample_shading = StringUtil::EndsWith(msaa, "-ssaa");
 
-  // workaround to make sure controller specific settings don't require a re-init
   for (u32 i = 0; i < NUM_CONTROLLER_AND_CARD_PORTS; i++)
   {
+    // workaround to make sure controller specific settings don't require a re-init
     switch (retropad_device[i])
     {
       case RETRO_DEVICE_JOYPAD:
@@ -1093,12 +1093,9 @@ void LibretroHostInterface::LoadSettings()
         g_settings.controller_types[i] = ControllerType::None;
         break;
     }
-  }
-
-  // Ensure we don't use the standalone memcard directory in shared mode.
-  for (u32 i = 0; i < NUM_CONTROLLER_AND_CARD_PORTS; i++)
+    // Ensure we don't use the standalone memcard directory in shared mode.
     g_settings.memory_card_paths[i] = GetSharedMemoryCardPath(i);
-
+  }
 }
 
 void LibretroHostInterface::UpdateSettings()
