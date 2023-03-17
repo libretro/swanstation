@@ -126,9 +126,6 @@ protected:
 
   virtual void OnControllerTypeChanged(u32 slot) = 0;
 
-  /// Loads settings to m_settings and any frontend-specific parameters.
-  virtual void LoadSettings(SettingsInterface& si);
-
   /// Checks and fixes up any incompatible settings.
   virtual void FixIncompatibleSettings(bool display_osd_messages);
 

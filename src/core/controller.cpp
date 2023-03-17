@@ -239,9 +239,6 @@ Controller::SettingList Controller::GetSettings(ControllerType type)
 {
   switch (type)
   {
-    case ControllerType::DigitalController:
-      return DigitalController::StaticGetSettings();
-
     case ControllerType::AnalogController:
       return AnalogController::StaticGetSettings();
 
@@ -253,9 +250,6 @@ Controller::SettingList Controller::GetSettings(ControllerType type)
 
     case ControllerType::NeGcon:
       return NeGcon::StaticGetSettings();
-
-    case ControllerType::PlayStationMouse:
-      return PlayStationMouse::StaticGetSettings();
 
     default:
       return {};

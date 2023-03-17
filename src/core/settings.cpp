@@ -141,21 +141,15 @@ void Settings::Load(SettingsInterface& si)
   enable_8mb_ram = si.GetBoolValue("Console", "Enable8MBRAM", false);
 
   apply_game_settings = si.GetBoolValue("Main", "ApplyGameSettings", true);
-  disable_all_enhancements = si.GetBoolValue("Main", "DisableAllEnhancements", false);
-  rewind_enable = si.GetBoolValue("Main", "RewindEnable", false);
-  rewind_save_frequency = si.GetFloatValue("Main", "RewindFrequency", 10.0f);
-  rewind_save_slots = static_cast<u32>(si.GetIntValue("Main", "RewindSaveSlots", 10));
   runahead_frames = static_cast<u32>(si.GetIntValue("Main", "RunaheadFrameCount", 0));
 
   cpu_execution_mode =
     ParseCPUExecutionMode(
       si.GetStringValue("CPU", "ExecutionMode", GetCPUExecutionModeName(DEFAULT_CPU_EXECUTION_MODE)).c_str())
       .value_or(DEFAULT_CPU_EXECUTION_MODE);
-  cpu_overclock_numerator = std::max(si.GetIntValue("CPU", "OverclockNumerator", 1), 1);
-  cpu_overclock_denominator = std::max(si.GetIntValue("CPU", "OverclockDenominator", 1), 1);
-  cpu_overclock_enable = si.GetBoolValue("CPU", "OverclockEnable", false);
+
   UpdateOverclockActive();
-  cpu_recompiler_memory_exceptions = si.GetBoolValue("CPU", "RecompilerMemoryExceptions", false);
+
   cpu_recompiler_block_linking = si.GetBoolValue("CPU", "RecompilerBlockLinking", true);
   cpu_recompiler_icache = si.GetBoolValue("CPU", "RecompilerICache", false);
   cpu_fastmem_mode = ParseCPUFastmemMode(
@@ -166,8 +160,6 @@ void Settings::Load(SettingsInterface& si)
   gpu_renderer = ParseRendererName(si.GetStringValue("GPU", "Renderer", GetRendererName(DEFAULT_GPU_RENDERER)).c_str())
                    .value_or(DEFAULT_GPU_RENDERER);
   gpu_resolution_scale = static_cast<u32>(si.GetIntValue("GPU", "ResolutionScale", 1));
-  gpu_multisamples = static_cast<u32>(si.GetIntValue("GPU", "Multisamples", 1));
-  gpu_per_sample_shading = si.GetBoolValue("GPU", "PerSampleShading", false);
   gpu_use_thread = si.GetBoolValue("GPU", "UseThread", true);
   gpu_use_software_renderer_for_readbacks = si.GetBoolValue("GPU", "UseSoftwareRendererForReadbacks", false);
   gpu_true_color = si.GetBoolValue("GPU", "TrueColor", false);
@@ -213,7 +205,6 @@ void Settings::Load(SettingsInterface& si)
   display_line_start_offset = static_cast<s8>(si.GetIntValue("Display", "LineStartOffset", 0));
   display_line_end_offset = static_cast<s8>(si.GetIntValue("Display", "LineEndOffset", 0));
   display_show_osd_messages = si.GetBoolValue("Display", "ShowOSDMessages", true);
-  display_show_enhancements = si.GetBoolValue("Display", "ShowEnhancements", false);
 
   cdrom_readahead_sectors = static_cast<u8>(si.GetIntValue("CDROM", "ReadaheadSectors", DEFAULT_CDROM_READAHEAD_SECTORS));
   cdrom_region_check = si.GetBoolValue("CDROM", "RegionCheck", false);
@@ -223,31 +214,9 @@ void Settings::Load(SettingsInterface& si)
   cdrom_read_speedup = si.GetIntValue("CDROM", "ReadSpeedup", 1);
   cdrom_seek_speedup = si.GetIntValue("CDROM", "SeekSpeedup", 1);
 
-  audio_buffer_size = si.GetIntValue("Audio", "BufferSize", HostInterface::DEFAULT_AUDIO_BUFFER_SIZE);
-
   use_old_mdec_routines = si.GetBoolValue("Hacks", "UseOldMDECRoutines", false);
 
-  dma_max_slice_ticks = si.GetIntValue("Hacks", "DMAMaxSliceTicks", DEFAULT_DMA_MAX_SLICE_TICKS);
-  dma_halt_ticks = si.GetIntValue("Hacks", "DMAHaltTicks", DEFAULT_DMA_HALT_TICKS);
-  gpu_fifo_size = static_cast<u32>(si.GetIntValue("Hacks", "GPUFIFOSize", DEFAULT_GPU_FIFO_SIZE));
-  gpu_max_run_ahead = si.GetIntValue("Hacks", "GPUMaxRunAhead", DEFAULT_GPU_MAX_RUN_AHEAD);
-
-  bios_patch_tty_enable = si.GetBoolValue("BIOS", "PatchTTYEnable", false);
   bios_patch_fast_boot = si.GetBoolValue("BIOS", "PatchFastBoot", DEFAULT_FAST_BOOT_VALUE);
-
-  controller_types[0] =
-    ParseControllerTypeName(
-      si.GetStringValue("Controller1", "Type", GetControllerTypeName(DEFAULT_CONTROLLER_1_TYPE)).c_str())
-      .value_or(DEFAULT_CONTROLLER_1_TYPE);
-
-  for (u32 i = 1; i < NUM_CONTROLLER_AND_CARD_PORTS; i++)
-  {
-    controller_types[i] =
-      ParseControllerTypeName(si.GetStringValue(TinyString::FromFormat("Controller%u", i + 1u), "Type",
-                                                GetControllerTypeName(DEFAULT_CONTROLLER_2_TYPE))
-                                .c_str())
-        .value_or(DEFAULT_CONTROLLER_2_TYPE);
-  }
 
   controller_analog_combo = si.GetIntValue("Controller", "AnalogCombo", 1);
   controller_enable_rumble = si.GetBoolValue("Controller", "EnableRumble", true);
@@ -260,9 +229,7 @@ void Settings::Load(SettingsInterface& si)
     ParseMemoryCardTypeName(
       si.GetStringValue("MemoryCards", "Card2Type", GetMemoryCardTypeName(DEFAULT_MEMORY_CARD_2_TYPE)).c_str())
       .value_or(DEFAULT_MEMORY_CARD_2_TYPE);
-  memory_card_paths[0] = si.GetStringValue("MemoryCards", "Card1Path", "");
-  memory_card_paths[1] = si.GetStringValue("MemoryCards", "Card2Path", "");
-  memory_card_directory = si.GetStringValue("MemoryCards", "Directory", "");
+
   memory_card_use_playlist_title = si.GetBoolValue("MemoryCards", "UsePlaylistTitle", true);
 
   multitap_mode =
@@ -276,13 +243,6 @@ void Settings::Load(SettingsInterface& si)
   texture_replacements.enable_vram_write_replacements =
     si.GetBoolValue("TextureReplacements", "EnableVRAMWriteReplacements", false);
   texture_replacements.preload_textures = si.GetBoolValue("TextureReplacements", "PreloadTextures", false);
-  texture_replacements.dump_vram_writes = si.GetBoolValue("TextureReplacements", "DumpVRAMWrites", false);
-  texture_replacements.dump_vram_write_force_alpha_channel =
-    si.GetBoolValue("TextureReplacements", "DumpVRAMWriteForceAlphaChannel", true);
-  texture_replacements.dump_vram_write_width_threshold =
-    si.GetIntValue("TextureReplacements", "DumpVRAMWriteWidthThreshold", 128);
-  texture_replacements.dump_vram_write_height_threshold =
-    si.GetIntValue("TextureReplacements", "DumpVRAMWriteHeightThreshold", 128);
 }
 
 static std::array<const char*, LOGLEVEL_COUNT> s_log_level_names = {

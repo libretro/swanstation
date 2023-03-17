@@ -325,7 +325,6 @@ bool LibretroHostInterface::Initialize()
   P_THIS->m_disk_control_info.image_labels.clear();
 
   InitInterfaces();
-  LibretroSettingsInterface si;
   LoadSettings();
   FixIncompatibleSettings(true);
   UpdateLogging();
@@ -1045,7 +1044,7 @@ std::string LibretroHostInterface::GetBIOSDirectory()
 void LibretroHostInterface::LoadSettings()
 {
   LibretroSettingsInterface si;
-  HostInterface::LoadSettings(si);
+  g_settings.Load(si);
 
   // turn percentage into fraction for overclock
   const u32 overclock_percent = static_cast<u32>(std::max(si.GetIntValue("CPU", "Overclock", 100), 1));

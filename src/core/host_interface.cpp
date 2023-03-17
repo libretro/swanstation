@@ -251,11 +251,6 @@ std::string HostInterface::GetShaderCacheBasePath() const
   return GetUserDirectoryRelativePath("cache/");
 }
 
-void HostInterface::LoadSettings(SettingsInterface& si)
-{
-  g_settings.Load(si);
-}
-
 void HostInterface::FixIncompatibleSettings(bool display_osd_messages)
 {
   if (g_settings.disable_all_enhancements)
