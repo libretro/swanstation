@@ -93,11 +93,6 @@ bool Pad::DoStateMemcard(StateWrapper& sw, u32 i)
 
   if (card_present_in_state && !m_memory_cards[i])
   {
-    g_host_interface->AddFormattedOSDMessage(
-      20.0f,
-      g_host_interface->TranslateString(
-        "OSDMessage", "Memory card %u present in save state but not in system. Creating temporary card."),
-      i + 1u);
     m_memory_cards[i] = MemoryCard::Create();
   }
 
@@ -124,12 +119,6 @@ bool Pad::DoStateMemcard(StateWrapper& sw, u32 i)
       }
       else
       {
-        g_host_interface->AddFormattedOSDMessage(
-          20.0f,
-          g_host_interface->TranslateString(
-            "OSDMessage", "Memory card %u from save state does match current card data. Simulating replugging."),
-          i + 1u);
-
         // this is a potentially serious issue - some games cache info from memcards and jumping around
         // with savestates can lead to card corruption on the next save attempts (and may not be obvious
         // until much later). One workaround is to forcibly eject the card for 30+ frames, long enough
@@ -138,25 +127,12 @@ bool Pad::DoStateMemcard(StateWrapper& sw, u32 i)
         m_memory_cards[i]->Reset();
       }
     }
-    else
-    {
-      g_host_interface->AddFormattedOSDMessage(
-        20.0f,
-        g_host_interface->TranslateString("OSDMessage",
-                                          "Memory card %u present in save state but not in system. Ignoring card."),
-        i + 1u);
-    }
 
     return true;
   }
 
   if (!card_present_in_state && m_memory_cards[i])
   {
-    g_host_interface->AddFormattedOSDMessage(
-      20.0f,
-      g_host_interface->TranslateString("OSDMessage",
-                                        "Memory card %u present in system but not in save state. Removing card."),
-      i + 1u);
     m_memory_cards[i].reset();
   }
 

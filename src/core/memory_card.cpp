@@ -258,9 +258,6 @@ std::unique_ptr<MemoryCard> MemoryCard::Open(std::string_view filename)
   if (!mc->LoadFromFile())
   {
     Log_InfoPrintf("Memory card at '%s' could not be read, formatting.", mc->m_filename.c_str());
-    g_host_interface->AddFormattedOSDMessage(
-      5.0f, g_host_interface->TranslateString("OSDMessage", "Memory card at '%s' could not be read, formatting."),
-      mc->m_filename.c_str());
     mc->Format();
   }
 
@@ -291,20 +288,7 @@ bool MemoryCard::SaveIfChanged(bool display_osd_message)
     return false;
 
   if (!MemoryCardImage::SaveToFile(m_data, m_filename.c_str()))
-  {
-    if (display_osd_message)
-    {
-      g_host_interface->AddFormattedOSDMessage(
-        20.0f, g_host_interface->TranslateString("OSDMessage", "Failed to save memory card to '%s'"),
-        m_filename.c_str());
-    }
-
     return false;
-  }
-
-  if (display_osd_message)
-    g_host_interface->AddFormattedOSDMessage(
-      2.0f, g_host_interface->TranslateString("OSDMessage", "Saved memory card to '%s'"), m_filename.c_str());
 
   return true;
 }

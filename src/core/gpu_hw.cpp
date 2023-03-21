@@ -75,11 +75,6 @@ bool GPU_HW::Initialize(HostDisplay* host_display)
   }
   if (!m_supports_dual_source_blend && TextureFilterRequiresDualSourceBlend(m_texture_filtering))
   {
-    g_host_interface->AddFormattedOSDMessage(
-      20.0f,
-      g_host_interface->TranslateString("OSDMessage",
-                                        "Texture filter '%s' is not supported with the current renderer."),
-      Settings::GetTextureFilterDisplayName(m_texture_filtering));
     m_texture_filtering = GPUTextureFilter::Nearest;
   }
   if (!m_supports_adaptive_downsampling && g_settings.gpu_resolution_scale > 1 &&
@@ -150,30 +145,6 @@ void GPU_HW::UpdateHWSettings(bool* framebuffer_changed, bool* shaders_changed)
      m_using_uv_limits != use_uv_limits || m_chroma_smoothing != g_settings.gpu_24bit_chroma_smoothing ||
      m_downsample_mode != downsample_mode || m_pgxp_depth_buffer != g_settings.UsingPGXPDepthBuffer() ||
      m_disable_color_perspective != disable_color_perspective);
-
-  if (m_resolution_scale != resolution_scale)
-  {
-    g_host_interface->AddFormattedOSDMessage(
-      10.0f, g_host_interface->TranslateString("OSDMessage", "Resolution scale set to %ux (display %ux%u, VRAM %ux%u)"),
-      resolution_scale, m_crtc_state.display_vram_width * resolution_scale,
-      resolution_scale * m_crtc_state.display_vram_height, VRAM_WIDTH * resolution_scale,
-      VRAM_HEIGHT * resolution_scale);
-  }
-
-  if (m_multisamples != multisamples || m_per_sample_shading != per_sample_shading)
-  {
-    if (per_sample_shading)
-    {
-      g_host_interface->AddFormattedOSDMessage(
-        10.0f, g_host_interface->TranslateString("OSDMessage", "Multisample anti-aliasing set to %ux (SSAA)."),
-        multisamples);
-    }
-    else
-    {
-      g_host_interface->AddFormattedOSDMessage(
-        10.0f, g_host_interface->TranslateString("OSDMessage", "Multisample anti-aliasing set to %ux."), multisamples);
-    }
-  }
 
   m_resolution_scale = resolution_scale;
   m_multisamples = multisamples;

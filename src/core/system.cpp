@@ -543,10 +543,8 @@ std::unique_ptr<CDImage> OpenCDImage(const char* path, Common::Error* error, boo
   {
     if (media->HasSubImages() && media->GetSubImageCount() > 1)
     {
-      g_host_interface->AddFormattedOSDMessage(
-        15.0f,
-        g_host_interface->TranslateString("OSDMessage", "CD image preloading not available for multi-disc image '%s'"),
-        FileSystem::GetDisplayNameFromPath(media->GetFileName()).c_str());
+      Log_WarningPrintf("CD image preloading not available for multi-disc image '%s'",
+                        FileSystem::GetDisplayNameFromPath(media->GetFileName()).c_str());
     }
     else
     {
@@ -568,11 +566,8 @@ std::unique_ptr<CDImage> OpenCDImage(const char* path, Common::Error* error, boo
       media = CDImage::OverlayPPFPatch(ppf_filename.c_str(), CDImage::OpenFlags::None, std::move(media));
       if (!media)
       {
-        g_host_interface->AddFormattedOSDMessage(
-          30.0f,
-          g_host_interface->TranslateString("OSDMessage",
-                                            "Failed to apply ppf patch from '%s', using unpatched image."),
-          ppf_filename.c_str());
+        Log_WarningPrintf("Failed to apply ppf patch from '%s', using unpatched image.",
+                          ppf_filename.c_str());
         return OpenCDImage(path, error, force_preload, false);
       }
     }
@@ -785,43 +780,6 @@ bool Initialize(bool force_software_renderer)
   g_mdec.Initialize();
   g_sio.Initialize();
 
-  static constexpr float WARNING_DURATION = 15.0f;
-
-  if (g_settings.cpu_overclock_active)
-  {
-    g_host_interface->AddFormattedOSDMessage(
-      WARNING_DURATION,
-      g_host_interface->TranslateString("OSDMessage",
-                                        "CPU clock speed is set to %u%% (%u / %u). This may result in instability."),
-      g_settings.GetCPUOverclockPercent(), g_settings.cpu_overclock_numerator, g_settings.cpu_overclock_denominator);
-  }
-  if (g_settings.cdrom_read_speedup > 1)
-  {
-    g_host_interface->AddFormattedOSDMessage(
-      WARNING_DURATION,
-      g_host_interface->TranslateString(
-        "OSDMessage", "CD-ROM read speedup set to %ux (effective speed %ux). This may result in instability."),
-      g_settings.cdrom_read_speedup, g_settings.cdrom_read_speedup * 2);
-  }
-  if (g_settings.cdrom_seek_speedup != 1)
-  {
-    if (g_settings.cdrom_seek_speedup == 0)
-    {
-      g_host_interface->AddOSDMessage(
-        g_host_interface->TranslateStdString("OSDMessage",
-                                             "CD-ROM seek speedup set to instant. This may result in instability."),
-        WARNING_DURATION);
-    }
-    else
-    {
-      g_host_interface->AddFormattedOSDMessage(
-        WARNING_DURATION,
-        g_host_interface->TranslateString("OSDMessage",
-                                          "CD-ROM seek speedup set to %ux. This may result in instability."),
-        g_settings.cdrom_seek_speedup);
-    }
-  }
-
   UpdateMemorySaveStateSettings();
   return true;
 }
@@ -980,14 +938,6 @@ bool DoState(StateWrapper& sw, HostDisplayTexture** host_texture, bool update_di
                          (cpu_overclock_active && (g_settings.cpu_overclock_numerator != cpu_overclock_numerator ||
                                                    g_settings.cpu_overclock_denominator != cpu_overclock_denominator))))
   {
-    g_host_interface->AddFormattedOSDMessage(
-      10.0f,
-      g_host_interface->TranslateString("OSDMessage",
-                                        "WARNING: CPU overclock (%u%%) was different in save state (%u%%)."),
-      g_settings.cpu_overclock_enable ? g_settings.GetCPUOverclockPercent() : 100u,
-      cpu_overclock_active ?
-        Settings::CPUOverclockFractionToPercent(cpu_overclock_numerator, cpu_overclock_denominator) :
-        100u);
     UpdateOverclock();
   }
 
@@ -1504,11 +1454,8 @@ static std::unique_ptr<MemoryCard> GetMemoryCardForSlot(u32 slot, MemoryCardType
     {
       if (s_running_game_code.empty())
       {
-        g_host_interface->AddFormattedOSDMessage(
-          5.0f,
-          g_host_interface->TranslateString("System", "Per-game memory card cannot be used for slot %u as the running "
-                                                      "game has no code. Using shared card instead."),
-          slot + 1u);
+        Log_WarningPrintf("Per-game memory card cannot be used for slot %u as the running "
+                          "game has no code. Using shared card instead.", slot + 1u);
         return MemoryCard::Open(g_host_interface->GetSharedMemoryCardPath(slot));
       }
       else
@@ -1521,11 +1468,8 @@ static std::unique_ptr<MemoryCard> GetMemoryCardForSlot(u32 slot, MemoryCardType
     {
       if (s_running_game_title.empty())
       {
-        g_host_interface->AddFormattedOSDMessage(
-          5.0f,
-          g_host_interface->TranslateString("System", "Per-game memory card cannot be used for slot %u as the running "
-                                                      "game has no title. Using shared card instead."),
-          slot + 1u);
+        Log_WarningPrintf("Per-game memory card cannot be used for slot %u as the running "
+                          "game has no title. Using shared card instead.", slot + 1u);
         return MemoryCard::Open(g_host_interface->GetSharedMemoryCardPath(slot));
       }
       else
@@ -1541,11 +1485,8 @@ static std::unique_ptr<MemoryCard> GetMemoryCardForSlot(u32 slot, MemoryCardType
       const std::string_view file_title(FileSystem::GetFileTitleFromPath(display_name));
       if (file_title.empty())
       {
-        g_host_interface->AddFormattedOSDMessage(
-          5.0f,
-          g_host_interface->TranslateString("System", "Per-game memory card cannot be used for slot %u as the running "
-                                                      "game has no path. Using shared card instead."),
-          slot + 1u);
+        Log_WarningPrintf("Per-game memory card cannot be used for slot %u as the running "
+                          "game has no path. Using shared card instead.", slot + 1u);
         return MemoryCard::Open(g_host_interface->GetSharedMemoryCardPath(slot));
       }
       else
@@ -1673,8 +1614,6 @@ bool InsertMedia(const char* path)
 
   if (g_settings.HasAnyPerGameMemoryCards())
   {
-    g_host_interface->AddOSDMessage(
-      g_host_interface->TranslateStdString("System", "Game changed, reloading memory cards."), 10.0f);
     UpdatePerGameMemoryCards();
   }
 

@@ -54,10 +54,8 @@ bool GPU_HW_OpenGL::Initialize(HostDisplay* host_display)
      (host_display->GetRenderAPI() == HostDisplay::RenderAPI::OpenGLES && GLAD_GL_ES_VERSION_3_0));
   if (!opengl_is_available)
   {
-    g_host_interface->AddOSDMessage(
-      g_host_interface->TranslateStdString("OSDMessage", "OpenGL renderer unavailable, your driver or hardware is not "
-                                                         "recent enough. OpenGL 3.1 or OpenGL ES 3.0 is required."),
-      20.0f);
+    Log_ErrorPrintf("OpenGL renderer unavailable, your driver or hardware is not "
+                    "recent enough. OpenGL 3.1 or OpenGL ES 3.0 is required.");
     return false;
   }
 

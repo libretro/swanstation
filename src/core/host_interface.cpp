@@ -282,11 +282,6 @@ void HostInterface::FixIncompatibleSettings(bool display_osd_messages)
   {
     if (g_settings.gpu_renderer == GPURenderer::Software)
     {
-      if (display_osd_messages)
-      {
-        AddOSDMessage(
-          TranslateStdString("OSDMessage", "PGXP is incompatible with the software renderer, disabling PGXP."), 10.0f);
-      }
       g_settings.gpu_pgxp_enable = false;
     }
   }
@@ -302,13 +297,13 @@ void HostInterface::FixIncompatibleSettings(bool display_osd_messages)
 #if defined(__ANDROID__) && defined(__arm__) && !defined(__aarch64__) && !defined(_M_ARM64)
   if (g_settings.rewind_enable)
   {
-    AddOSDMessage(TranslateStdString("OSDMessage", "Rewind is not supported on 32-bit ARM for Android."), 30.0f);
+    Log_WarningPrintf("Rewind is not supported on 32-bit ARM for Android.");
     g_settings.rewind_enable = false;
   }
 
   if (g_settings.runahead_frames > 0)
   {
-    AddOSDMessage(TranslateStdString("OSDMessage", "Runahead is not supported on 32-bit ARM for Android."), 30.0f);
+    Log_WarningPrintf("Runahead is not supported on 32-bit ARM for Android.");
     g_settings.runahead_frames = 0;
   }
 #endif
@@ -325,8 +320,6 @@ void HostInterface::CheckForSettingsChanges(const Settings& old_settings)
 {
   if (System::IsValid() && (g_settings.gpu_renderer != old_settings.gpu_renderer))
   {
-    AddFormattedOSDMessage(5.0f, TranslateString("OSDMessage", "Switching to %s GPU renderer."),
-                           Settings::GetRendererName(g_settings.gpu_renderer));
     RecreateSystem();
   }
 
@@ -346,13 +339,6 @@ void HostInterface::CheckForSettingsChanges(const Settings& old_settings)
         g_settings.cpu_fastmem_mode != old_settings.cpu_fastmem_mode ||
         g_settings.cpu_fastmem_rewrite != old_settings.cpu_fastmem_rewrite)
     {
-      if (g_settings.cpu_execution_mode != old_settings.cpu_execution_mode)
-      {
-         AddFormattedOSDMessage(
-           5.0f, TranslateString("OSDMessage", "Switching to %s CPU execution mode."),
-           TranslateString("CPUExecutionMode", Settings::GetCPUExecutionModeDisplayName(g_settings.cpu_execution_mode))
-             .GetCharArray());
-      }
       CPU::CodeCache::Reinitialize();
       CPU::ClearICache();
     }
@@ -362,7 +348,6 @@ void HostInterface::CheckForSettingsChanges(const Settings& old_settings)
          g_settings.cpu_recompiler_block_linking != old_settings.cpu_recompiler_block_linking ||
          g_settings.cpu_recompiler_icache != old_settings.cpu_recompiler_icache))
     {
-      AddOSDMessage(TranslateStdString("OSDMessage", "Recompiler options changed, flushing all blocks."), 5.0f);
       CPU::CodeCache::Flush();
 
       if (g_settings.cpu_recompiler_icache != old_settings.cpu_recompiler_icache)
@@ -415,10 +400,6 @@ void HostInterface::CheckForSettingsChanges(const Settings& old_settings)
     {
       if (g_settings.IsUsingCodeCache())
       {
-        AddOSDMessage(g_settings.gpu_pgxp_enable ?
-                        TranslateStdString("OSDMessage", "PGXP enabled, recompiling all blocks.") :
-                        TranslateStdString("OSDMessage", "PGXP disabled, recompiling all blocks."),
-                      5.0f);
         CPU::CodeCache::Flush();
       }
 
@@ -613,8 +594,6 @@ void HostInterface::ToggleSoftwareRendering()
 
   const GPURenderer new_renderer = g_gpu->IsHardwareRenderer() ? GPURenderer::Software : g_settings.gpu_renderer;
 
-  AddFormattedOSDMessage(5.0f, TranslateString("OSDMessage", "Switching to %s renderer..."),
-                         Settings::GetRendererDisplayName(new_renderer));
   System::RecreateGPU(new_renderer);
 }
 
