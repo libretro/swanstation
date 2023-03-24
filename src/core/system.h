@@ -82,8 +82,7 @@ ALWAYS_INLINE_RELEASE TickCount ScaleTicksToOverclock(TickCount ticks)
   if (!g_settings.cpu_overclock_active)
     return ticks;
 
-  return static_cast<TickCount>(((static_cast<u64>(static_cast<u32>(ticks)) * g_settings.cpu_overclock_numerator) +
-                                 (g_settings.cpu_overclock_denominator - 1)) /
+  return static_cast<TickCount>((static_cast<u64>(static_cast<u32>(ticks)) * g_settings.cpu_overclock_numerator) /
                                 g_settings.cpu_overclock_denominator);
 }
 

@@ -26,11 +26,9 @@ set(USE_EVDEV OFF)
 # Force PIC when compiling a libretro core.
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-
 # Set _DEBUG macro for Debug builds.
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D_DEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
-
 
 find_package(Git)
 if(GIT_FOUND AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
@@ -51,7 +49,6 @@ endif()
 string(TIMESTAMP BUILD_TIMESTAMP UTC)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/libretro/version.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/src/libretro/version.h" @ONLY)
 
-
 # Release build optimizations for MSVC.
 if(MSVC)
   add_definitions("/D_CRT_SECURE_NO_WARNINGS")
@@ -63,31 +60,31 @@ if(MSVC)
     set(${config} "${${config}} /Oi /Gm- /utf-8 /Zc:__cplusplus")
   endforeach()
 
-  # RelWithDebInfo is set to Ob1 instead of Ob2.   
-  string(REPLACE "/Ob1" "/Ob2" CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
-  string(REPLACE "/Ob1" "/Ob2" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+# RelWithDebInfo is set to Ob1 instead of Ob2.   
+string(REPLACE "/Ob1" "/Ob2" CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
+string(REPLACE "/Ob1" "/Ob2" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 
-  # Disable incremental linking in RelWithDebInfo.
-  string(REPLACE "/INCREMENTAL" "/INCREMENTAL:NO" CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO}")
+# Disable incremental linking in RelWithDebInfo.
+string(REPLACE "/INCREMENTAL" "/INCREMENTAL:NO" CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO}")
 
-  # COMDAT folding/remove unused functions.
-  set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /OPT:REF /OPT:ICF")
-  set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO} /OPT:REF /OPT:ICF")
+# COMDAT folding/remove unused functions.
+set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /OPT:REF /OPT:ICF")
+set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO} /OPT:REF /OPT:ICF")
 
-  # Enable LTO/LTCG on Release builds.
-  if(${CMAKE_BUILD_TYPE} STREQUAL "Release")
-    cmake_policy(SET CMP0069 NEW)
-    include(CheckIPOSupported)
-    check_ipo_supported(RESULT IPO_IS_SUPPORTED)
-    if(IPO_IS_SUPPORTED)
-      message(STATUS "Enabling LTCG/IPO.")
-      set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
-    else()
-      message(WARNING "LTCG/IPO is not supported, this will make the build slightly slower.")
-    endif()
-  endif()
 endif()
 
+# Enable LTO/LTCG on Release builds.
+if(${CMAKE_BUILD_TYPE} STREQUAL "Release")
+  cmake_policy(SET CMP0069 NEW)
+  include(CheckIPOSupported)
+  check_ipo_supported(RESULT IPO_IS_SUPPORTED)
+  if(IPO_IS_SUPPORTED)
+    message(STATUS "Enabling LTCG/IPO.")
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+  else()
+    message(WARNING "LTCG/IPO is not supported, this will make the build slightly slower.")
+  endif()
+endif()
 
 # Default symbol visibility to hidden, that way we don't go through the PLT for intra-library calls.
 set(CMAKE_C_VISIBILITY_PRESET hidden)
@@ -98,7 +95,6 @@ if((CMAKE_COMPILER_IS_GNUCC OR CMAKE_CXX_COMPILER_ID MATCHES "Clang") AND NOT AP
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-semantic-interposition")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-semantic-interposition")
 endif()
-
 
 # Detect C++ version support.
 set(CMAKE_CXX_STANDARD 17)
@@ -113,7 +109,6 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
       check_cxx_flag(-Wno-invalid-offsetof COMPILER_SUPPORTS_OFFSETOF)
     endif()
 endif()
-
 
 # Detect processor type.
 if(APPLE AND "${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64")
@@ -147,19 +142,15 @@ else()
   message(FATAL_ERROR "Unknown system processor: " ${CMAKE_SYSTEM_PROCESSOR})
 endif()
 
-
 # Write binaries to a seperate directory.
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin")
-
 
 # Needed for Linux - put shared libraries in the binary directory.
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 
-
 # Enable threads everywhere.
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-
 
 # Enable large file support on Linux 32-bit platforms.
 # Android is deliberately ommitted here as it didn't support 64-bit ops on files until Android 7/N.
@@ -167,9 +158,7 @@ if((LINUX OR FREEBSD) AND (${CPU_ARCH} STREQUAL "x86" OR ${CPU_ARCH} STREQUAL "a
   add_definitions("-D_FILE_OFFSET_BITS=64")
 endif()
 
-
 # Recursively include the source tree.
 enable_testing()
 add_subdirectory(dep)
 add_subdirectory(src)
-
