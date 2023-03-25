@@ -24,7 +24,7 @@ static constexpr u32 INVALIDATE_THRESHOLD_TO_DISABLE_LINKING = 10;
 #ifdef WITH_RECOMPILER
 
 // Currently remapping the code buffer doesn't work in macOS or Haiku.
-#if !defined(__HAIKU__) && !defined(__APPLE__) && !defined(_UWP)
+#if !defined(__HAIKU__) && !defined(__APPLE__)
 #define USE_STATIC_CODE_BUFFER 1
 #endif
 

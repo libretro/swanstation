@@ -6,10 +6,6 @@
 #include <d3dcompiler.h>
 Log_SetChannel(D3D12::ShaderCache);
 
-#ifdef _UWP
-#include <winrt/Windows.System.Profile.h>
-#endif
-
 namespace D3D12 {
 
 #pragma pack(push, 1)
@@ -26,14 +22,7 @@ struct CacheIndexEntry
 
 static bool CanUsePipelineCache()
 {
-#ifdef _UWP
-  // GetCachedBlob crashes on XBox UWP for some reason...
-  const auto version_info = winrt::Windows::System::Profile::AnalyticsInfo::VersionInfo();
-  const auto device_family = version_info.DeviceFamily();
-  return (device_family != L"Windows.Xbox");
-#else
   return true;
-#endif
 }
 
 ShaderCache::ShaderCache() : m_use_pipeline_cache(CanUsePipelineCache()) {}

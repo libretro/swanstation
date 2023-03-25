@@ -236,12 +236,9 @@ public:
   {
     if (m_discarded)
     {
-#if defined(_WIN32) && !defined(_UWP)
+#if defined(_WIN32)
       // delete the temporary file
       if (!DeleteFileW(StringUtil::UTF8StringToWideString(m_temporaryFileName).c_str())) { }
-#elif defined(_UWP)
-      // delete the temporary file
-      if (!DeleteFileFromAppW(StringUtil::UTF8StringToWideString(m_temporaryFileName).c_str())) { }
 #else
       // delete the temporary file
       if (remove(m_temporaryFileName.c_str()) < 0) { }
@@ -262,15 +259,10 @@ public:
 
     fflush(m_pFile);
 
-#if defined(_WIN32) && !defined(_UWP)
+#if defined(_WIN32)
     // move the atomic file name to the original file name
     if (!MoveFileExW(StringUtil::UTF8StringToWideString(m_temporaryFileName).c_str(),
                      StringUtil::UTF8StringToWideString(m_originalFileName).c_str(), MOVEFILE_REPLACE_EXISTING))
-      m_discarded = true;
-    else
-      m_committed = true;
-#elif defined(_UWP)
-    if (!FileSystem::RenamePath(m_temporaryFileName.c_str(), m_originalFileName.c_str()))
       m_discarded = true;
     else
       m_committed = true;
@@ -814,7 +806,6 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
 
   if (openMode & BYTESTREAM_OPEN_ATOMIC_UPDATE)
   {
-#ifndef _UWP
     // generate the temporary file name
     u32 fileNameLength = static_cast<u32>(std::strlen(fileName));
     char* temporaryFileName = (char*)alloca(fileNameLength + 8);
@@ -823,35 +814,14 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
     // fill in random characters
     _mktemp_s(temporaryFileName, fileNameLength + 8);
     const std::wstring wideTemporaryFileName(StringUtil::UTF8StringToWideString(temporaryFileName));
-#else
-    // On UWP, preserve the extension, as it affects permissions.
-    std::string temporaryFileName;
-    const char* extension = std::strrchr(fileName, '.');
-    if (extension)
-      temporaryFileName.append(fileName, extension - fileName);
-    else
-      temporaryFileName.append(fileName);
-
-    temporaryFileName.append("_XXXXXX");
-    _mktemp_s(temporaryFileName.data(), temporaryFileName.size() + 1);
-    if (extension)
-      temporaryFileName.append(extension);
-
-    const std::wstring wideTemporaryFileName(StringUtil::UTF8StringToWideString(temporaryFileName));
-#endif
 
     // massive hack here
     DWORD desiredAccess = GENERIC_WRITE;
     if (openMode & BYTESTREAM_OPEN_READ)
       desiredAccess |= GENERIC_READ;
 
-#ifndef _UWP
     HANDLE hFile =
       CreateFileW(wideTemporaryFileName.c_str(), desiredAccess, FILE_SHARE_DELETE, NULL, CREATE_NEW, 0, NULL);
-#else
-    HANDLE hFile =
-      CreateFile2FromAppW(wideTemporaryFileName.c_str(), desiredAccess, FILE_SHARE_DELETE, CREATE_NEW, nullptr);
-#endif
 
     if (hFile == INVALID_HANDLE_VALUE)
       return nullptr;
