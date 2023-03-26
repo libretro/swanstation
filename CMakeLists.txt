@@ -82,7 +82,7 @@ if(${CMAKE_BUILD_TYPE} STREQUAL "Release")
     message(STATUS "Enabling LTCG/IPO.")
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
   else()
-    message(WARNING "LTCG/IPO is not supported, this will make the build slightly slower.")
+    message(STATUS "LTCG/IPO is not supported, this will make the build slightly slower.")
   endif()
 endif()
 

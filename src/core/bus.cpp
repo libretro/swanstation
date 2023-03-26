@@ -19,6 +19,12 @@
 #include <tuple>
 #include <utility>
 
+// Disable MSVC unreachable code warnings for code that actually get reached
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4702) // warning C4702: unreachable code
+#endif
+
 namespace Bus {
 
 union MEMDELAY
@@ -1872,3 +1878,7 @@ void UncheckedWriteMemoryWord(u32 address, u32 value)
 } // namespace Recompiler::Thunks
 
 } // namespace CPU
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
