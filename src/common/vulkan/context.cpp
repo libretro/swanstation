@@ -687,15 +687,15 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugMessengerCallback(VkDebugUtilsMessageSeverit
                                                       const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
                                                       void* pUserData)
 {
-  LOGLEVEL level;
+  LogLevel level;
   if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
-    level = LOGLEVEL_ERROR;
+    level = LogLevel::Error;
   else if (severity & (VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT))
-    level = LOGLEVEL_WARNING;
+    level = LogLevel::Warning;
   else if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
-    level = LOGLEVEL_INFO;
+    level = LogLevel::Info;
   else
-    level = LOGLEVEL_DEBUG;
+    level = LogLevel::Debug;
 
   Log::Writef("Vulkan", __func__, level, "Vulkan debug report: (%s) %s",
               pCallbackData->pMessageIdName ? pCallbackData->pMessageIdName : "", pCallbackData->pMessage);

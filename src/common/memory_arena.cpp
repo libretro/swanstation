@@ -295,7 +295,7 @@ bool MemoryArena::ReleaseViewPtr(void* address, size_t size)
     return false;
   }
 
-  const size_t prev_count = m_num_views.fetch_sub(1);
+  m_num_views.fetch_sub(1);
   return true;
 }
 
@@ -335,7 +335,7 @@ bool MemoryArena::ReleaseReservedPtr(void* address, size_t size)
     return false;
   }
 
-  const size_t prev_count = m_num_views.fetch_sub(1);
+  m_num_views.fetch_sub(1);
   return true;
 }
 

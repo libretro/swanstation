@@ -16,10 +16,7 @@ namespace D3D12 {
 // This class provides an abstraction for D3D12 descriptor heaps.
 struct DescriptorHandle final
 {
-  enum : u32
-  {
-    INVALID_INDEX = 0xFFFFFFFF
-  };
+  static constexpr u32 INVALID_INDEX = 0xFFFFFFFF;
 
   D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle{};
   D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle{};

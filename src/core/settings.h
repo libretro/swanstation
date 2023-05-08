@@ -35,10 +35,10 @@ struct SettingInfo
   const char* key;
   const char* visible_name;
   const char* description;
-  const char* default_value;
-  const char* min_value;
-  const char* max_value;
-  const char* step_value;
+  const char* default_value = nullptr;
+  const char* min_value = nullptr;
+  const char* max_value = nullptr;
+  const char* step_value = nullptr;
 
   const char* StringDefaultValue() const;
   bool BooleanDefaultValue() const;
@@ -171,7 +171,7 @@ struct Settings
 
   std::array<TinyString, NUM_CONTROLLER_AND_CARD_PORTS> GeneratePortLabels() const;
 
-  LOGLEVEL log_level = LOGLEVEL_INFO;
+  LogLevel log_level = LogLevel::Info;
 
   ALWAYS_INLINE bool IsUsingCodeCache() const { return (cpu_execution_mode != CPUExecutionMode::Interpreter); }
   ALWAYS_INLINE bool IsUsingRecompiler() const { return (cpu_execution_mode == CPUExecutionMode::Recompiler); }
@@ -210,20 +210,14 @@ struct Settings
   u32 GetCPUOverclockPercent() const;
   void UpdateOverclockActive();
 
-  enum : u32
-  {
-    DEFAULT_DMA_MAX_SLICE_TICKS = 1000,
-    DEFAULT_DMA_HALT_TICKS = 100,
-    DEFAULT_GPU_FIFO_SIZE = 16,
-    DEFAULT_GPU_MAX_RUN_AHEAD = 128,
-    DEFAULT_VRAM_WRITE_DUMP_WIDTH_THRESHOLD = 128,
-    DEFAULT_VRAM_WRITE_DUMP_HEIGHT_THRESHOLD = 128,
-  };
+  static constexpr u32 DEFAULT_DMA_MAX_SLICE_TICKS = 1000, DEFAULT_DMA_HALT_TICKS = 100, DEFAULT_GPU_FIFO_SIZE = 16,
+                       DEFAULT_GPU_MAX_RUN_AHEAD = 128, DEFAULT_VRAM_WRITE_DUMP_WIDTH_THRESHOLD = 128,
+                       DEFAULT_VRAM_WRITE_DUMP_HEIGHT_THRESHOLD = 128;
 
   void Load(SettingsInterface& si);
 
-  static std::optional<LOGLEVEL> ParseLogLevelName(const char* str);
-  static const char* GetLogLevelName(LOGLEVEL level);
+  static std::optional<LogLevel> ParseLogLevelName(const char* str);
+  static const char* GetLogLevelName(LogLevel level);
 
   static std::optional<ConsoleRegion> ParseConsoleRegionName(const char* str);
   static const char* GetConsoleRegionName(ConsoleRegion region);
@@ -303,7 +297,7 @@ struct Settings
   static constexpr MemoryCardType DEFAULT_MEMORY_CARD_2_TYPE = MemoryCardType::None;
   static constexpr MultitapMode DEFAULT_MULTITAP_MODE = MultitapMode::Disabled;
 
-  static constexpr LOGLEVEL DEFAULT_LOG_LEVEL = LOGLEVEL_INFO;
+  static constexpr LogLevel DEFAULT_LOG_LEVEL = LogLevel::Info;
 
   // Android doesn't create settings until they're first opened, so we have to override the defaults here.
 #ifndef __ANDROID__

@@ -102,11 +102,11 @@ public:
 
   // append formatted string to this string
   void AppendFormattedString(const char* FormatString, ...) printflike(2, 3);
-  void AppendFormattedStringVA(const char* FormatString, va_list ArgPtr);
+  void AppendFormattedStringVA(const char* FormatString, std::va_list ArgPtr);
 
   // set to formatted string
   void Format(const char* FormatString, ...) printflike(2, 3);
-  void FormatVA(const char* FormatString, va_list ArgPtr);
+  void FormatVA(const char* FormatString, std::va_list ArgPtr);
 
   // compare one string to another
   bool Compare(const String& otherString) const;
@@ -307,7 +307,7 @@ public:
   // Override the fromstring method
   static StackString FromFormat(const char* FormatString, ...) printflike(1, 2)
   {
-    va_list argPtr;
+    std::va_list argPtr;
     va_start(argPtr, FormatString);
 
     StackString returnValue;

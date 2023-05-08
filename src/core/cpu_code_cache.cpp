@@ -931,7 +931,7 @@ void AddBlockToHostCodeMap(CodeBlock* block)
   if (!g_settings.IsUsingRecompiler())
     return;
 
-  auto ir = s_host_code_map.emplace(block->host_code, block);
+  s_host_code_map.emplace(block->host_code, block);
 }
 
 void RemoveBlockFromHostCodeMap(CodeBlock* block)

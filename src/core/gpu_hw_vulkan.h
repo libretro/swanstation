@@ -42,11 +42,7 @@ protected:
   void DrawBatchVertices(BatchRenderMode render_mode, u32 base_vertex, u32 num_vertices) override;
 
 private:
-  enum : u32
-  {
-    MAX_PUSH_CONSTANTS_SIZE = 64,
-    TEXTURE_REPLACEMENT_BUFFER_SIZE = 64 * 1024 * 1024
-  };
+  static constexpr u32 MAX_PUSH_CONSTANTS_SIZE = 64, TEXTURE_REPLACEMENT_BUFFER_SIZE = 64 * 1024 * 1024;
   void SetCapabilities();
   void DestroyResources();
 

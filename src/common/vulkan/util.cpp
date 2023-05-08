@@ -373,7 +373,7 @@ void LogVulkanResult(int level, const char* func_name, VkResult res, const char*
   std::string real_msg = StringUtil::StdStringFromFormatV(msg, ap);
   va_end(ap);
 
-  Log::Writef("Vulkan", func_name, static_cast<LOGLEVEL>(level), "(%s) %s (%d: %s)", func_name, real_msg.c_str(),
+  Log::Writef("Vulkan", func_name, static_cast<LogLevel>(level), "(%s) %s (%d: %s)", func_name, real_msg.c_str(),
               static_cast<int>(res), VkResultToString(res));
 }
 

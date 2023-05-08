@@ -6,14 +6,9 @@
 namespace CPU {
 
 // Memory address mask used for fetching as well as loadstores (removes cached/uncached/user/kernel bits).
-enum : PhysicalMemoryAddress
-{
-  PHYSICAL_MEMORY_ADDRESS_MASK = 0x1FFFFFFF
-};
-enum : u32
-{
-  INSTRUCTION_SIZE = sizeof(u32)
-};
+inline constexpr u32 PHYSICAL_MEMORY_ADDRESS_MASK = 0x1FFFFFFF;
+
+inline constexpr u32 INSTRUCTION_SIZE = sizeof(u32);
 
 enum class Segment
 {

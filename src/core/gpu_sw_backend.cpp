@@ -595,14 +595,8 @@ void GPU_SW_Backend::DrawTriangle(const GPUBackendDrawPolygonCommand* cmd,
   }
 }
 
-enum
-{
-  Line_XY_FractBits = 32
-};
-enum
-{
-  Line_RGB_FractBits = 12
-};
+constexpr int Line_XY_FractBits = 32;
+constexpr int Line_RGB_FractBits = 12;
 
 struct line_fxp_coord
 {

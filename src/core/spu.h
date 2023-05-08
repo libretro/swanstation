@@ -16,11 +16,7 @@ class TimingEvent;
 class SPU
 {
 public:
-  enum : u32
-  {
-    RAM_SIZE = 512 * 1024,
-    RAM_MASK = RAM_SIZE - 1,
-  };
+  static constexpr u32 RAM_SIZE = 512 * 1024, RAM_MASK = RAM_SIZE - 1;
 
   SPU();
   ~SPU();

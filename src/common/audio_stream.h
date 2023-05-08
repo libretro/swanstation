@@ -14,14 +14,8 @@ class AudioStream
 public:
   using SampleType = s16;
 
-  enum : u32
-  {
-    DefaultInputSampleRate = 44100,
-    DefaultOutputSampleRate = 44100,
-    DefaultBufferSize = 2048,
-    MaxSamples = 32768,
-    FullVolume = 100
-  };
+  static constexpr u32 DefaultInputSampleRate = 44100, DefaultOutputSampleRate = 44100, DefaultBufferSize = 2048,
+                       MaxSamples = 32768, FullVolume = 100;
 
   AudioStream();
   virtual ~AudioStream();

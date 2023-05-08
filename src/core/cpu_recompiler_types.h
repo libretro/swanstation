@@ -66,10 +66,7 @@ enum class Condition : u8
 using HostReg = Xbyak::Operand::Code;
 using CodeEmitter = Xbyak::CodeGenerator;
 using LabelType = Xbyak::Label;
-enum : u32
-{
-  HostReg_Count = 16
-};
+constexpr u32 HostReg_Count = 16;
 constexpr HostReg HostReg_Invalid = static_cast<HostReg>(HostReg_Count);
 constexpr RegSize HostPointerSize = RegSize_64;
 
@@ -94,10 +91,7 @@ constexpr u32 CODE_STORAGE_ALIGNMENT = 4096;
 using HostReg = unsigned;
 using CodeEmitter = vixl::aarch32::MacroAssembler;
 using LabelType = vixl::aarch32::Label;
-enum : u32
-{
-  HostReg_Count = vixl::aarch32::kNumberOfRegisters
-};
+constexpr u32 HostReg_Count = vixl::aarch32::kNumberOfRegisters;
 constexpr HostReg HostReg_Invalid = static_cast<HostReg>(HostReg_Count);
 constexpr RegSize HostPointerSize = RegSize_32;
 
@@ -113,10 +107,7 @@ constexpr u32 CODE_STORAGE_ALIGNMENT = 4096;
 using HostReg = unsigned;
 using CodeEmitter = vixl::aarch64::MacroAssembler;
 using LabelType = vixl::aarch64::Label;
-enum : u32
-{
-  HostReg_Count = vixl::aarch64::kNumberOfRegisters
-};
+constexpr u32 HostReg_Count = vixl::aarch64::kNumberOfRegisters;
 constexpr HostReg HostReg_Invalid = static_cast<HostReg>(HostReg_Count);
 constexpr RegSize HostPointerSize = RegSize_64;
 
@@ -135,10 +126,7 @@ class CodeEmitter
 {
 };
 
-enum : u32
-{
-  HostReg_Count = 1
-};
+constexpr u32 HostReg_Count = 1;
 
 constexpr HostReg HostReg_Invalid = static_cast<HostReg>(HostReg_Count);
 constexpr RegSize HostPointerSize = RegSize_64;

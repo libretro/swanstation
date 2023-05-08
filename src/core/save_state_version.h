@@ -8,11 +8,7 @@ static constexpr u32 SAVE_STATE_MINIMUM_VERSION = 42;
 #pragma pack(push, 4)
 struct SAVE_STATE_HEADER
 {
-  enum : u32
-  {
-    MAX_TITLE_LENGTH = 128,
-    MAX_GAME_CODE_LENGTH = 32
-  };
+  static constexpr u32 MAX_TITLE_LENGTH = 128, MAX_GAME_CODE_LENGTH = 32;
 
   u32 magic;
   u32 version;

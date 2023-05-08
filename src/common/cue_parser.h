@@ -15,13 +15,7 @@ namespace CueParser {
 using TrackMode = CDImage::TrackMode;
 using MSF = CDImage::Position;
 
-enum : s32
-{
-  MIN_TRACK_NUMBER = 1,
-  MAX_TRACK_NUMBER = 99,
-  MIN_INDEX_NUMBER = 0,
-  MAX_INDEX_NUMBER = 99
-};
+inline constexpr s32 MIN_TRACK_NUMBER = 1, MAX_TRACK_NUMBER = 99, MIN_INDEX_NUMBER = 0, MAX_INDEX_NUMBER = 99;
 
 enum class TrackFlag : u32
 {

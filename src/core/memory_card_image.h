@@ -8,17 +8,10 @@
 #include <vector>
 
 namespace MemoryCardImage {
-enum : u32
-{
-  DATA_SIZE = 128 * 1024, // 1mbit
-  BLOCK_SIZE = 8192,
-  FRAME_SIZE = 128,
-  FRAMES_PER_BLOCK = BLOCK_SIZE / FRAME_SIZE,
-  NUM_BLOCKS = DATA_SIZE / BLOCK_SIZE,
-  NUM_FRAMES = DATA_SIZE / FRAME_SIZE,
-  ICON_WIDTH = 16,
-  ICON_HEIGHT = 16
-};
+
+inline constexpr u32 DATA_SIZE = 128 * 1024, // 1mbit
+  BLOCK_SIZE = 8192, FRAME_SIZE = 128, FRAMES_PER_BLOCK = BLOCK_SIZE / FRAME_SIZE, NUM_BLOCKS = DATA_SIZE / BLOCK_SIZE,
+                     NUM_FRAMES = DATA_SIZE / FRAME_SIZE, ICON_WIDTH = 16, ICON_HEIGHT = 16;
 
 using DataArray = std::array<u8, DATA_SIZE>;
 

@@ -55,11 +55,7 @@ protected:
   bool ReadSectorFromIndex(void* buffer, const Index& index, LBA lba_in_index) override;
 
 private:
-  enum : u32
-  {
-    CHD_CD_SECTOR_DATA_SIZE = 2352 + 96,
-    CHD_CD_TRACK_ALIGNMENT = 4
-  };
+  static constexpr u32 CHD_CD_SECTOR_DATA_SIZE = 2352 + 96, CHD_CD_TRACK_ALIGNMENT = 4;
 
   bool ReadHunk(u32 hunk_index);
 

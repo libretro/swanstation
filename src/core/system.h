@@ -34,16 +34,10 @@ struct SystemBootParameters
 
 namespace System {
 
-enum : u32
-{
-  // 5 megabytes is sufficient for now, at the moment they're around 4.3MB, or 10.3MB with 8MB RAM enabled.
-  MAX_SAVE_STATE_SIZE = 11 * 1024 * 1024
-};
+// 5 megabytes is sufficient for now, at the moment they're around 4.3MB, or 10.3MB with 8MB RAM enabled.
+inline constexpr u32 MAX_SAVE_STATE_SIZE = 11 * 1024 * 1024;
 
-enum : TickCount
-{
-  MASTER_CLOCK = 44100 * 0x300 // 33868800Hz or 33.8688MHz, also used as CPU clock
-};
+inline constexpr TickCount MASTER_CLOCK = 44100 * 0x300; // 33868800Hz or 33.8688MHz, also used as CPU clock
 
 enum class State
 {

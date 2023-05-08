@@ -40,10 +40,7 @@ public:
   bool Load(const char* path);
 
 private:
-  enum : u32
-  {
-    MAX_PROGRAM_SIZE = 2 * 1024 * 1024
-  };
+  static constexpr u32 MAX_PROGRAM_SIZE = 2 * 1024 * 1024;
 
   ProgramData m_program_data;
   TagMap m_tags;

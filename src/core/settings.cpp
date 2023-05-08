@@ -243,16 +243,16 @@ void Settings::Load(SettingsInterface& si)
   texture_replacements.preload_textures = si.GetBoolValue("TextureReplacements", "PreloadTextures", false);
 }
 
-static std::array<const char*, LOGLEVEL_COUNT> s_log_level_names = {
+static std::array<const char*, static_cast<std::size_t>(LogLevel::Count)> s_log_level_names = {
   {"None", "Error", "Warning", "Perf", "Info", "Verbose", "Dev", "Profile", "Debug", "Trace"}};
 
-std::optional<LOGLEVEL> Settings::ParseLogLevelName(const char* str)
+std::optional<LogLevel> Settings::ParseLogLevelName(const char* str)
 {
   int index = 0;
   for (const char* name : s_log_level_names)
   {
     if (StringUtil::Strcasecmp(name, str) == 0)
-      return static_cast<LOGLEVEL>(index);
+      return static_cast<LogLevel>(index);
 
     index++;
   }
@@ -260,7 +260,7 @@ std::optional<LOGLEVEL> Settings::ParseLogLevelName(const char* str)
   return std::nullopt;
 }
 
-const char* Settings::GetLogLevelName(LOGLEVEL level)
+const char* Settings::GetLogLevelName(LogLevel level)
 {
   return s_log_level_names[static_cast<int>(level)];
 }

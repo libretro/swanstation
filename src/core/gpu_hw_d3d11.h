@@ -47,11 +47,8 @@ protected:
   void DrawBatchVertices(BatchRenderMode render_mode, u32 base_vertex, u32 num_vertices) override;
 
 private:
-  enum : u32
-  {
-    // Currently we don't stream uniforms, instead just re-map the buffer every time and let the driver take care of it.
-    MAX_UNIFORM_BUFFER_SIZE = 64
-  };
+  // Currently we don't stream uniforms, instead just re-map the buffer every time and let the driver take care of it.
+  static constexpr u32 MAX_UNIFORM_BUFFER_SIZE = 64;
 
   void SetCapabilities();
   bool CreateFramebuffer();

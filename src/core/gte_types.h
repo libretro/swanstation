@@ -4,12 +4,7 @@
 
 namespace GTE {
 
-enum : u32
-{
-  NUM_DATA_REGS = 32,
-  NUM_CONTROL_REGS = 32,
-  NUM_REGS = NUM_DATA_REGS + NUM_CONTROL_REGS
-};
+inline constexpr u32 NUM_DATA_REGS = 32, NUM_CONTROL_REGS = 32, NUM_REGS = NUM_DATA_REGS + NUM_CONTROL_REGS;
 
 union FLAGS
 {

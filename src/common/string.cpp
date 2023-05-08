@@ -298,13 +298,13 @@ void String::AppendSubString(const char* appendText, s32 Offset /* = 0 */, s32 C
 
 void String::AppendFormattedString(const char* FormatString, ...)
 {
-  va_list ap;
+  std::va_list ap;
   va_start(ap, FormatString);
   AppendFormattedStringVA(FormatString, ap);
   va_end(ap);
 }
 
-void String::AppendFormattedStringVA(const char* FormatString, va_list ArgPtr)
+void String::AppendFormattedStringVA(const char* FormatString, std::va_list ArgPtr)
 {
   // We have a 1KB byte buffer on the stack here. If this is too little, we'll grow it via the heap,
   // but 1KB should be enough for most strings.
@@ -316,7 +316,7 @@ void String::AppendFormattedStringVA(const char* FormatString, va_list ArgPtr)
 
   for (;;)
   {
-    va_list ArgPtrCopy;
+    std::va_list ArgPtrCopy;
     va_copy(ArgPtrCopy, ArgPtr);
     int ret = std::vsnprintf(pBuffer, currentBufferSize, FormatString, ArgPtrCopy);
     va_end(ArgPtrCopy);
@@ -339,13 +339,13 @@ void String::AppendFormattedStringVA(const char* FormatString, va_list ArgPtr)
 
 void String::Format(const char* FormatString, ...)
 {
-  va_list ap;
+  std::va_list ap;
   va_start(ap, FormatString);
   FormatVA(FormatString, ap);
   va_end(ap);
 }
 
-void String::FormatVA(const char* FormatString, va_list ArgPtr)
+void String::FormatVA(const char* FormatString, std::va_list ArgPtr)
 {
   if (GetLength() > 0)
     Clear();
@@ -819,7 +819,7 @@ void String::Strip(const char* szStripCharacters /* = " " */)
 String String::FromFormat(const char* FormatString, ...)
 {
   String returnStr;
-  va_list ap;
+  std::va_list ap;
 
   va_start(ap, FormatString);
   returnStr.FormatVA(FormatString, ap);

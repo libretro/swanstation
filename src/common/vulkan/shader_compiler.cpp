@@ -45,7 +45,7 @@ static std::optional<SPIRVCodeVector> CompileShaderToSPV(EShLanguage stage, cons
 
   auto DumpBadShader = [&](const char* msg) {
     std::string filename = StringUtil::StdStringFromFormat("bad_shader_%u.txt", s_next_bad_shader_id++);
-    Log::Writef("Vulkan", "CompileShaderToSPV", LOGLEVEL_ERROR, "%s, writing to %s", msg, filename.c_str());
+    Log::Writef("Vulkan", "CompileShaderToSPV", LogLevel::Error, "%s, writing to %s", msg, filename.c_str());
 
     std::ofstream ofs(filename.c_str(), std::ofstream::out | std::ofstream::binary);
     if (ofs.is_open())

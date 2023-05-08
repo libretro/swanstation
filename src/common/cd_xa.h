@@ -3,12 +3,10 @@
 #include "types.h"
 
 namespace CDXA {
-enum
-{
-  XA_SUBHEADER_SIZE = 4,
-  XA_ADPCM_SAMPLES_PER_SECTOR_4BIT = 4032, // 28 words * 8 nibbles per word * 18 chunks
-  XA_ADPCM_SAMPLES_PER_SECTOR_8BIT = 2016  // 28 words * 4 bytes per word * 18 chunks
-};
+
+inline constexpr u32 XA_SUBHEADER_SIZE = 4,
+                     XA_ADPCM_SAMPLES_PER_SECTOR_4BIT = 4032, // 28 words * 8 nibbles per word * 18 chunks
+  XA_ADPCM_SAMPLES_PER_SECTOR_8BIT = 2016;                    // 28 words * 4 bytes per word * 18 chunks
 
 struct XASubHeader
 {
