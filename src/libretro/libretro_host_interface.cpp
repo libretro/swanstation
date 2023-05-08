@@ -466,9 +466,9 @@ void LibretroHostInterface::GetSystemAVInfo(struct retro_system_av_info* info, b
   std::memset(info, 0, sizeof(*info));
 
   info->geometry.base_width =
-    (m_display ? m_display->GetDisplayWidth() : static_cast<u32>(GPU_MAX_DISPLAY_WIDTH)) * resolution_scale;
+    (m_display ? m_display->GetDisplayWidth() : GPU_MAX_DISPLAY_WIDTH) * resolution_scale;
   info->geometry.base_height =
-    (m_display ? m_display->GetDisplayHeight() : static_cast<u32>(GPU_MAX_DISPLAY_HEIGHT)) * resolution_scale;
+    (m_display ? m_display->GetDisplayHeight() : GPU_MAX_DISPLAY_HEIGHT) * resolution_scale;
   info->geometry.aspect_ratio = (m_display ? m_display->GetDisplayAspectRatio() : (g_gpu ? g_gpu->GetDisplayAspectRatio() : g_settings.GetDisplayAspectRatioValue()));
   info->geometry.max_width = VRAM_WIDTH * resolution_scale;
   info->geometry.max_height = VRAM_HEIGHT * resolution_scale;
