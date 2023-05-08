@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-enum LogLevel;
+enum class LogLevel : u8;
 
 class AudioStream;
 class ByteStream;
