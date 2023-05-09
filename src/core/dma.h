@@ -12,10 +12,7 @@ class TimingEvent;
 class DMA
 {
 public:
-  enum : u32
-  {
-    NUM_CHANNELS = 7
-  };
+  static constexpr u32 NUM_CHANNELS = 7;
 
   enum class Channel : u32
   {

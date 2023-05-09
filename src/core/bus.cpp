@@ -921,6 +921,7 @@ ALWAYS_INLINE static TickCount DoCDROMAccess(u32 offset, u32& value)
         const u32 b2 = ZeroExtend32(g_cdrom.ReadRegister(offset + 2u));
         const u32 b3 = ZeroExtend32(g_cdrom.ReadRegister(offset + 3u));
         value = b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
+        break;
       }
 
       case MemoryAccessSize::HalfWord:
@@ -928,6 +929,7 @@ ALWAYS_INLINE static TickCount DoCDROMAccess(u32 offset, u32& value)
         const u32 lsb = ZeroExtend32(g_cdrom.ReadRegister(offset));
         const u32 msb = ZeroExtend32(g_cdrom.ReadRegister(offset + 1u));
         value = lsb | (msb << 8);
+        break;
       }
 
       case MemoryAccessSize::Byte:
@@ -955,8 +957,7 @@ ALWAYS_INLINE static TickCount DoCDROMAccess(u32 offset, u32& value)
 
       case MemoryAccessSize::Byte:
       default:
-        g_cdrom.WriteRegister(offset, Truncate8(value));
-        break;
+      g_cdrom.WriteRegister(offset, Truncate8(value));
     }
   }
   return 0;

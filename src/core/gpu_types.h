@@ -4,28 +4,16 @@
 #include "types.h"
 #include <array>
 
-enum : u32
-{
-  VRAM_WIDTH = 1024,
-  VRAM_HEIGHT = 512,
-  VRAM_SIZE = VRAM_WIDTH * VRAM_HEIGHT * sizeof(u16),
-  VRAM_WIDTH_MASK = VRAM_WIDTH - 1,
-  VRAM_HEIGHT_MASK = VRAM_HEIGHT - 1,
-  TEXTURE_PAGE_WIDTH = 256,
-  TEXTURE_PAGE_HEIGHT = 256,
+inline constexpr u32 VRAM_WIDTH = 1024, VRAM_HEIGHT = 512, VRAM_SIZE = VRAM_WIDTH * VRAM_HEIGHT * sizeof(u16),
+                     VRAM_WIDTH_MASK = VRAM_WIDTH - 1, VRAM_HEIGHT_MASK = VRAM_HEIGHT - 1, TEXTURE_PAGE_WIDTH = 256,
+                     TEXTURE_PAGE_HEIGHT = 256,
 
-  // In interlaced modes, we can exceed the 512 height of VRAM, up to 576 in PAL games.
-  GPU_MAX_DISPLAY_WIDTH = 720,
-  GPU_MAX_DISPLAY_HEIGHT = 576,
+                     // In interlaced modes, we can exceed the 512 height of VRAM, up to 576 in PAL games.
+  GPU_MAX_DISPLAY_WIDTH = 720, GPU_MAX_DISPLAY_HEIGHT = 576,
 
-  DITHER_MATRIX_SIZE = 4
-};
+                     DITHER_MATRIX_SIZE = 4;
 
-enum : s32
-{
-  MAX_PRIMITIVE_WIDTH = 1024,
-  MAX_PRIMITIVE_HEIGHT = 512,
-};
+inline constexpr s32 MAX_PRIMITIVE_WIDTH = 1024, MAX_PRIMITIVE_HEIGHT = 512;
 
 enum class GPUPrimitive : u8
 {

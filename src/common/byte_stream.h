@@ -3,18 +3,14 @@
 #include <memory>
 
 // base byte stream creation functions
-enum BYTESTREAM_OPEN_MODE
-{
-  BYTESTREAM_OPEN_READ = 1,           // open stream for writing
-  BYTESTREAM_OPEN_WRITE = 2,          // open stream for writing
-  BYTESTREAM_OPEN_APPEND = 4,         // seek to the end
-  BYTESTREAM_OPEN_TRUNCATE = 8,       // truncate the file, seek to start
-  BYTESTREAM_OPEN_CREATE = 16,        // if the file does not exist, create it
-  BYTESTREAM_OPEN_CREATE_PATH = 32,   // if the file parent directories don't exist, create them
-  BYTESTREAM_OPEN_ATOMIC_UPDATE = 64, //
-  BYTESTREAM_OPEN_SEEKABLE = 128,
-  BYTESTREAM_OPEN_STREAMED = 256,
-};
+inline constexpr u32 BYTESTREAM_OPEN_READ = 1, // open stream for writing
+  BYTESTREAM_OPEN_WRITE = 2,                   // open stream for writing
+  BYTESTREAM_OPEN_APPEND = 4,                  // seek to the end
+  BYTESTREAM_OPEN_TRUNCATE = 8,                // truncate the file, seek to start
+  BYTESTREAM_OPEN_CREATE = 16,                 // if the file does not exist, create it
+  BYTESTREAM_OPEN_CREATE_PATH = 32,            // if the file parent directories don't exist, create them
+  BYTESTREAM_OPEN_ATOMIC_UPDATE = 64,          //
+  BYTESTREAM_OPEN_SEEKABLE = 128, BYTESTREAM_OPEN_STREAMED = 256;
 
 // interface class used by readers, writers, etc.
 class ByteStream

@@ -34,11 +34,8 @@ public:
   void Format();
 
 private:
-  enum : u32
-  {
-    // save in three seconds, that should be long enough for everything to finish writing
-    SAVE_DELAY_IN_SECONDS = 5,
-  };
+  // save in three seconds, that should be long enough for everything to finish writing
+  static constexpr u32 SAVE_DELAY_IN_SECONDS = 5;
 
   union FLAG
   {

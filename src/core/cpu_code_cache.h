@@ -28,6 +28,9 @@ union CodeBlockKey
 
   ALWAYS_INLINE u32 GetPCPhysicalAddress() const { return (aligned_pc << 2) & PHYSICAL_MEMORY_ADDRESS_MASK; }
 
+  ALWAYS_INLINE CodeBlockKey() = default;
+  ALWAYS_INLINE CodeBlockKey(const CodeBlockKey&) = default;
+
   ALWAYS_INLINE CodeBlockKey& operator=(const CodeBlockKey& rhs)
   {
     bits = rhs.bits;
@@ -94,13 +97,10 @@ struct CodeBlock
   u32 recompile_count = 0;
   u32 invalidate_frame_number = 0;
 
-  const u32 GetPC() const { return key.GetPC(); }
-  const u32 GetSizeInBytes() const { return static_cast<u32>(instructions.size()) * sizeof(Instruction); }
-  const u32 GetStartPageIndex() const { return (key.GetPCPhysicalAddress() / HOST_PAGE_SIZE); }
-  const u32 GetEndPageIndex() const
-  {
-    return ((key.GetPCPhysicalAddress() + GetSizeInBytes()) / HOST_PAGE_SIZE);
-  }
+  u32 GetPC() const { return key.GetPC(); }
+  u32 GetSizeInBytes() const { return static_cast<u32>(instructions.size()) * sizeof(Instruction); }
+  u32 GetStartPageIndex() const { return (key.GetPCPhysicalAddress() / HOST_PAGE_SIZE); }
+  u32 GetEndPageIndex() const { return ((key.GetPCPhysicalAddress() + GetSizeInBytes()) / HOST_PAGE_SIZE); }
   bool IsInRAM() const
   {
     // TODO: Constant
@@ -110,12 +110,9 @@ struct CodeBlock
 
 namespace CodeCache {
 
-enum : u32
-{
-  FAST_MAP_TABLE_COUNT = 0x10000,
-  FAST_MAP_TABLE_SIZE = 0x10000 / 4, // 16384
-  FAST_MAP_TABLE_SHIFT = 16,
-};
+inline constexpr u32 FAST_MAP_TABLE_COUNT = 0x10000,
+                     FAST_MAP_TABLE_SIZE = 0x10000 / 4, // 16384
+  FAST_MAP_TABLE_SHIFT = 16;
 
 using FastMapTable = CodeBlock::HostCodePointer*;
 

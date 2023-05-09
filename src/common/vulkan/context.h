@@ -19,10 +19,7 @@ namespace Vulkan {
 class Context
 {
 public:
-  enum : u32
-  {
-    NUM_COMMAND_BUFFERS = 2
-  };
+  static constexpr u32 NUM_COMMAND_BUFFERS = 2;
 
   ~Context();
 

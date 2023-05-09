@@ -141,11 +141,7 @@ enum class MultitapMode
   Count
 };
 
-enum : u32
-{
-  NUM_CONTROLLER_AND_CARD_PORTS = 8,
-  NUM_MULTITAPS = 2
-};
+inline constexpr u32 NUM_CONTROLLER_AND_CARD_PORTS = 8, NUM_MULTITAPS = 2;
 
 enum class CPUFastmemMode
 {
@@ -155,8 +151,4 @@ enum class CPUFastmemMode
   Count
 };
 
-enum : size_t
-{
-  HOST_PAGE_SIZE = 4096,
-  HOST_PAGE_OFFSET_MASK = HOST_PAGE_SIZE - 1,
-};
+inline constexpr size_t HOST_PAGE_SIZE = 4096, HOST_PAGE_OFFSET_MASK = HOST_PAGE_SIZE - 1;

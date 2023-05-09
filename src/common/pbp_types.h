@@ -7,14 +7,9 @@
 
 namespace PBP {
 
-enum : u32
-{
-  PBP_HEADER_OFFSET_COUNT = 8u,
-  TOC_NUM_ENTRIES = 102u,
-  BLOCK_TABLE_NUM_ENTRIES = 32256u,
-  DISC_TABLE_NUM_ENTRIES = 5u,
-  DECOMPRESSED_BLOCK_SIZE = 37632u // 2352 bytes per sector * 16 sectors per block
-};
+inline constexpr u32 PBP_HEADER_OFFSET_COUNT = 8u, TOC_NUM_ENTRIES = 102u, BLOCK_TABLE_NUM_ENTRIES = 32256u,
+                     DISC_TABLE_NUM_ENTRIES = 5u,
+                     DECOMPRESSED_BLOCK_SIZE = 37632u; // 2352 bytes per sector * 16 sectors per block
 
 #pragma pack(push, 1)
 

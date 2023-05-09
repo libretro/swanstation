@@ -128,11 +128,7 @@ private:
 
   std::array<u8, static_cast<u8>(Axis::Count)> m_axis_state{};
 
-  enum : u8
-  {
-    LargeMotor = 0,
-    SmallMotor = 1
-  };
+  static constexpr u8 LargeMotor = 0, SmallMotor = 1;
 
   std::array<u8, 6> m_rumble_config{};
   int m_rumble_config_large_motor_index = -1;

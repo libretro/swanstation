@@ -72,11 +72,7 @@ protected:
   std::mutex m_sync_mutex;
   std::condition_variable m_wake_gpu_thread_cv;
 
-  enum : u32
-  {
-    COMMAND_QUEUE_SIZE = 4 * 1024 * 1024,
-    THRESHOLD_TO_WAKE_GPU = 256
-  };
+  static constexpr u32 COMMAND_QUEUE_SIZE = 4 * 1024 * 1024, THRESHOLD_TO_WAKE_GPU = 256;
 
   HeapArray<u8, COMMAND_QUEUE_SIZE> m_command_fifo_data;
   alignas(64) std::atomic<u32> m_command_fifo_read_ptr{0};

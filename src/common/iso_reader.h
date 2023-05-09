@@ -10,10 +10,7 @@ class CDImage;
 class ISOReader
 {
 public:
-  enum : u32
-  {
-    SECTOR_SIZE = 2048
-  };
+  static constexpr u32 SECTOR_SIZE = 2048;
 
 #pragma pack(push, 1)
 

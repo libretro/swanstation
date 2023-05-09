@@ -2,6 +2,7 @@
 #include "byte_stream.h"
 #include "log.h"
 #include <cmath>
+#include <cstdarg>
 #include <cstdio>
 #include <limits>
 Log_SetChannel(ProgressCallback);
@@ -11,7 +12,7 @@ ProgressCallback::~ProgressCallback() {}
 void ProgressCallback::SetFormattedStatusText(const char* Format, ...)
 {
   SmallString str;
-  va_list ap;
+  std::va_list ap;
 
   va_start(ap, Format);
   str.FormatVA(Format, ap);
@@ -23,7 +24,7 @@ void ProgressCallback::SetFormattedStatusText(const char* Format, ...)
 void ProgressCallback::DisplayFormattedError(const char* format, ...)
 {
   SmallString str;
-  va_list ap;
+  std::va_list ap;
 
   va_start(ap, format);
   str.FormatVA(format, ap);
@@ -35,7 +36,7 @@ void ProgressCallback::DisplayFormattedError(const char* format, ...)
 void ProgressCallback::DisplayFormattedWarning(const char* format, ...)
 {
   SmallString str;
-  va_list ap;
+  std::va_list ap;
 
   va_start(ap, format);
   str.FormatVA(format, ap);
@@ -47,7 +48,7 @@ void ProgressCallback::DisplayFormattedWarning(const char* format, ...)
 void ProgressCallback::DisplayFormattedInformation(const char* format, ...)
 {
   SmallString str;
-  va_list ap;
+  std::va_list ap;
 
   va_start(ap, format);
   str.FormatVA(format, ap);
@@ -59,7 +60,7 @@ void ProgressCallback::DisplayFormattedInformation(const char* format, ...)
 void ProgressCallback::DisplayFormattedDebugMessage(const char* format, ...)
 {
   SmallString str;
-  va_list ap;
+  std::va_list ap;
 
   va_start(ap, format);
   str.FormatVA(format, ap);
@@ -71,7 +72,7 @@ void ProgressCallback::DisplayFormattedDebugMessage(const char* format, ...)
 void ProgressCallback::DisplayFormattedModalError(const char* format, ...)
 {
   SmallString str;
-  va_list ap;
+  std::va_list ap;
 
   va_start(ap, format);
   str.FormatVA(format, ap);
@@ -83,7 +84,7 @@ void ProgressCallback::DisplayFormattedModalError(const char* format, ...)
 bool ProgressCallback::DisplayFormattedModalConfirmation(const char* format, ...)
 {
   SmallString str;
-  va_list ap;
+  std::va_list ap;
 
   va_start(ap, format);
   str.FormatVA(format, ap);
@@ -95,7 +96,7 @@ bool ProgressCallback::DisplayFormattedModalConfirmation(const char* format, ...
 void ProgressCallback::DisplayFormattedModalInformation(const char* format, ...)
 {
   SmallString str;
-  va_list ap;
+  std::va_list ap;
 
   va_start(ap, format);
   str.FormatVA(format, ap);

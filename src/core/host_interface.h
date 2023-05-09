@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-enum LOGLEVEL;
+enum class LogLevel : u8;
 
 class AudioStream;
 class ByteStream;
@@ -29,12 +29,7 @@ struct ImageInfo;
 class HostInterface
 {
 public:
-  enum : u32
-  {
-    AUDIO_SAMPLE_RATE = 44100,
-    AUDIO_CHANNELS = 2,
-    DEFAULT_AUDIO_BUFFER_SIZE = 2048
-  };
+  static constexpr u32 AUDIO_SAMPLE_RATE = 44100, AUDIO_CHANNELS = 2, DEFAULT_AUDIO_BUFFER_SIZE = 2048;
 
   HostInterface();
   virtual ~HostInterface();

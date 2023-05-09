@@ -240,11 +240,7 @@ void DMA::UpdateIRQ()
 // controller. Using a too-large slice size will result in the serial timing being off, and the game thinking
 // the controller is disconnected. So we don't hurt performance too much for the general case, we reduce this
 // to equal CPU and DMA time when the controller is transferring, but otherwise leave it at the higher size.
-enum : u32
-{
-  SLICE_SIZE_WHEN_TRANSMITTING_PAD = 100,
-  HALT_TICKS_WHEN_TRANSMITTING_PAD = 100
-};
+static constexpr TickCount SLICE_SIZE_WHEN_TRANSMITTING_PAD = 100, HALT_TICKS_WHEN_TRANSMITTING_PAD = 100;
 
 TickCount DMA::GetTransferSliceTicks() const
 {

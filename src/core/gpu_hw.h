@@ -38,15 +38,11 @@ public:
   virtual bool DoState(StateWrapper& sw, HostDisplayTexture** host_texture, bool update_display) override;
 
 protected:
-  enum : u32
-  {
-    VRAM_UPDATE_TEXTURE_BUFFER_SIZE = 4 * 1024 * 1024,
-    VERTEX_BUFFER_SIZE = 4 * 1024 * 1024,
-    UNIFORM_BUFFER_SIZE = 2 * 1024 * 1024,
-    MAX_BATCH_VERTEX_COUNTER_IDS = 65536 - 2,
-    MAX_VERTICES_FOR_RECTANGLE = 6 * (((MAX_PRIMITIVE_WIDTH + (TEXTURE_PAGE_WIDTH - 1)) / TEXTURE_PAGE_WIDTH) + 1u) *
-                                 (((MAX_PRIMITIVE_HEIGHT + (TEXTURE_PAGE_HEIGHT - 1)) / TEXTURE_PAGE_HEIGHT) + 1u)
-  };
+  static constexpr u32 VRAM_UPDATE_TEXTURE_BUFFER_SIZE = 4 * 1024 * 1024, VERTEX_BUFFER_SIZE = 4 * 1024 * 1024,
+                       UNIFORM_BUFFER_SIZE = 2 * 1024 * 1024, MAX_BATCH_VERTEX_COUNTER_IDS = 65536 - 2,
+                       MAX_VERTICES_FOR_RECTANGLE =
+                         6 * (((MAX_PRIMITIVE_WIDTH + (TEXTURE_PAGE_WIDTH - 1)) / TEXTURE_PAGE_WIDTH) + 1u) *
+                         (((MAX_PRIMITIVE_HEIGHT + (TEXTURE_PAGE_HEIGHT - 1)) / TEXTURE_PAGE_HEIGHT) + 1u);
 
   struct BatchVertex
   {
@@ -374,11 +370,7 @@ protected:
   bool m_batch_ubo_dirty = true;
 
 private:
-  enum : u32
-  {
-    MIN_BATCH_VERTEX_COUNT = 6,
-    MAX_BATCH_VERTEX_COUNT = VERTEX_BUFFER_SIZE / sizeof(BatchVertex)
-  };
+  static constexpr u32 MIN_BATCH_VERTEX_COUNT = 6, MAX_BATCH_VERTEX_COUNT = VERTEX_BUFFER_SIZE / sizeof(BatchVertex);
 
   void LoadVertices();
 

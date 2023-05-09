@@ -1,6 +1,7 @@
 #pragma once
 #include "types.h"
 #include <atomic>
+#include <limits>
 #include <optional>
 
 namespace Common {
@@ -10,10 +11,7 @@ public:
   class View
   {
   public:
-    enum : size_t
-    {
-      RESERVED_REGION_OFFSET = static_cast<size_t>(-1)
-    };
+    static constexpr size_t RESERVED_REGION_OFFSET = std::numeric_limits<size_t>::max();
 
     View(MemoryArena* parent, void* base_pointer, size_t arena_offset, size_t mapping_size, bool writable);
     View(View&& view);

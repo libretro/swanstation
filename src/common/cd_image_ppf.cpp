@@ -8,11 +8,7 @@
 #include <unordered_map>
 Log_SetChannel(CDImagePPF);
 
-enum : u32
-{
-  DESC_SIZE = 50,
-  BLOCKCHECK_SIZE = 1024
-};
+static constexpr u32 DESC_SIZE = 50, BLOCKCHECK_SIZE = 1024;
 
 class CDImagePPF : public CDImage
 {

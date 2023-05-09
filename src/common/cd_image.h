@@ -26,23 +26,12 @@ public:
 
   using LBA = u32;
 
-  enum : u32
-  {
-    RAW_SECTOR_SIZE = 2352,
-    DATA_SECTOR_SIZE = 2048,
-    SECTOR_SYNC_SIZE = 12,
-    SECTOR_HEADER_SIZE = 4,
-    FRAMES_PER_SECOND = 75, // "sectors", or "timecode frames" (not "channel frames")
-    SECONDS_PER_MINUTE = 60,
-    FRAMES_PER_MINUTE = FRAMES_PER_SECOND * SECONDS_PER_MINUTE,
-    SUBCHANNEL_BYTES_PER_FRAME = 12,
-    LEAD_OUT_SECTOR_COUNT = 6750
-  };
+  static constexpr u32 RAW_SECTOR_SIZE = 2352, DATA_SECTOR_SIZE = 2048, SECTOR_SYNC_SIZE = 12, SECTOR_HEADER_SIZE = 4,
+                       FRAMES_PER_SECOND = 75, // "sectors", or "timecode frames" (not "channel frames")
+    SECONDS_PER_MINUTE = 60, FRAMES_PER_MINUTE = FRAMES_PER_SECOND * SECONDS_PER_MINUTE,
+                       SUBCHANNEL_BYTES_PER_FRAME = 12, LEAD_OUT_SECTOR_COUNT = 6750;
 
-  enum : u8
-  {
-    LEAD_OUT_TRACK_NUMBER = 0xAA
-  };
+  static constexpr u8 LEAD_OUT_TRACK_NUMBER = 0xAA;
 
   enum class ReadMode : u32
   {
@@ -141,6 +130,9 @@ public:
       BitField<u8, bool, 5, 1> digital_copy_permitted;
       BitField<u8, bool, 6, 1> data;
       BitField<u8, bool, 7, 1> four_channel_audio;
+
+      Control() = default;
+      Control(const Control&) = default;
 
       Control& operator=(const Control& rhs)
       {

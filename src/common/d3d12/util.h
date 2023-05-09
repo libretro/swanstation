@@ -39,11 +39,7 @@ static inline void SetObjectNameFormatted(ID3D12Object* object, const char* form
 class RootSignatureBuilder
 {
 public:
-  enum : u32
-  {
-    MAX_PARAMETERS = 16,
-    MAX_DESCRIPTOR_RANGES = 16
-  };
+  static constexpr u32 MAX_PARAMETERS = 16, MAX_DESCRIPTOR_RANGES = 16;
 
   RootSignatureBuilder();
 
@@ -69,10 +65,7 @@ private:
 class GraphicsPipelineBuilder
 {
 public:
-  enum : u32
-  {
-    MAX_VERTEX_ATTRIBUTES = 16,
-  };
+  static constexpr u32 MAX_VERTEX_ATTRIBUTES = 16;
 
   GraphicsPipelineBuilder();
 

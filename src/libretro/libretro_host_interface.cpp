@@ -201,15 +201,15 @@ static bool analog_pressed = false;
 static bool port_allowed = false;
 static unsigned libretro_msg_interface_version = 0;
 
-static void LibretroLogCallback(void* pUserParam, const char* channelName, const char* functionName, LOGLEVEL level,
+static void LibretroLogCallback(void* pUserParam, const char* channelName, const char* functionName, LogLevel level,
                                 const char* message)
 {
-  static constexpr std::array<retro_log_level, LOGLEVEL_COUNT> levels = {
+  static constexpr std::array<retro_log_level, static_cast<std::size_t>(LogLevel::Count)> levels = {
     {RETRO_LOG_ERROR, RETRO_LOG_ERROR, RETRO_LOG_WARN, RETRO_LOG_INFO, RETRO_LOG_INFO, RETRO_LOG_INFO, RETRO_LOG_INFO,
      RETRO_LOG_DEBUG, RETRO_LOG_DEBUG, RETRO_LOG_DEBUG}};
 
-  s_libretro_log_callback.log(levels[level], "[%s] %s\n", (level <= LOGLEVEL_PERF) ? functionName : channelName,
-                              message);
+  s_libretro_log_callback.log(levels[static_cast<std::size_t>(level)], "[%s] %s\n",
+                              (level <= LogLevel::Perf) ? functionName : channelName, message);
 }
 
 LibretroHostInterface::LibretroHostInterface() = default;
@@ -567,7 +567,7 @@ bool LibretroHostInterface::retro_load_game(const struct retro_game_info* game)
 
     JOYP(0) JOYP(1) JOYP(2) JOYP(3) JOYP(4) JOYP(5) JOYP(6) JOYP(7)
 
-      {0},
+      {},
   };
 
   g_retro_environment_callback(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, desc);

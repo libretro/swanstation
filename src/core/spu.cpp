@@ -997,11 +997,8 @@ struct ADSRTableEntry
   s32 ticks;
   s32 step;
 };
-enum : u32
-{
-  NUM_ADSR_TABLE_ENTRIES = 128,
-  NUM_ADSR_DIRECTIONS = 2 // increasing, decreasing
-};
+constexpr u32 NUM_ADSR_TABLE_ENTRIES = 128,
+              NUM_ADSR_DIRECTIONS = 2; // increasing, decreasing
 using ADSRTableEntries = std::array<std::array<ADSRTableEntry, NUM_ADSR_TABLE_ENTRIES>, NUM_ADSR_DIRECTIONS>;
 
 static constexpr ADSRTableEntries ComputeADSRTableEntries()

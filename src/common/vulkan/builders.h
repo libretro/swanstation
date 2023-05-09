@@ -8,10 +8,7 @@ namespace Vulkan {
 class DescriptorSetLayoutBuilder
 {
 public:
-  enum : u32
-  {
-    MAX_BINDINGS = 16,
-  };
+  static constexpr u32 MAX_BINDINGS = 16;
 
   DescriptorSetLayoutBuilder();
 
@@ -29,11 +26,7 @@ private:
 class PipelineLayoutBuilder
 {
 public:
-  enum : u32
-  {
-    MAX_SETS = 8,
-    MAX_PUSH_CONSTANTS = 1
-  };
+  static constexpr u32 MAX_SETS = 8, MAX_PUSH_CONSTANTS = 1;
 
   PipelineLayoutBuilder();
 
@@ -54,14 +47,8 @@ private:
 class GraphicsPipelineBuilder
 {
 public:
-  enum : u32
-  {
-    MAX_SHADER_STAGES = 3,
-    MAX_VERTEX_ATTRIBUTES = 16,
-    MAX_VERTEX_BUFFERS = 8,
-    MAX_ATTACHMENTS = 2,
-    MAX_DYNAMIC_STATE = 8
-  };
+  static constexpr u32 MAX_SHADER_STAGES = 3, MAX_VERTEX_ATTRIBUTES = 16, MAX_VERTEX_BUFFERS = 8, MAX_ATTACHMENTS = 2,
+                       MAX_DYNAMIC_STATE = 8;
 
   GraphicsPipelineBuilder();
 
@@ -159,11 +146,7 @@ private:
 
 class DescriptorSetUpdateBuilder
 {
-  enum : u32
-  {
-    MAX_WRITES = 16,
-    MAX_INFOS = 16,
-  };
+  static constexpr u32 MAX_WRITES = 16, MAX_INFOS = 16;
 
 public:
   DescriptorSetUpdateBuilder();
@@ -198,10 +181,7 @@ private:
 
 class FramebufferBuilder
 {
-  enum : u32
-  {
-    MAX_ATTACHMENTS = 2,
-  };
+  static constexpr u32 MAX_ATTACHMENTS = 2;
 
 public:
   FramebufferBuilder();
