@@ -399,22 +399,22 @@ std::string LibretroHostInterface::GetGameMemoryCardPath(const char* game_code, 
 
 std::string LibretroHostInterface::GetShaderCacheBasePath() const
 {
-  // Use the save directory, and failing that, the system directory.
-  const char* save_directory_ptr = nullptr;
-  if (!g_retro_environment_callback(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &save_directory_ptr) || !save_directory_ptr)
+  // Use the system directory, and failing that, the downloads directory.
+  const char* cache_directory_ptr = nullptr;
+  if (!g_retro_environment_callback(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &cache_directory_ptr) || !cache_directory_ptr)
   {
-    save_directory_ptr = nullptr;
-    if (!g_retro_environment_callback(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &save_directory_ptr) ||
-        !save_directory_ptr)
+    cache_directory_ptr = nullptr;
+    if (!g_retro_environment_callback(RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY, &cache_directory_ptr) ||
+        !cache_directory_ptr)
     {
       Log_WarningPrint("No shader cache directory available, startup will be slower.");
       return std::string();
     }
   }
 
-  // Use a directory named "swanstation_cache" in the save/system directory.
+  // Use a directory named "swanstation" in the system/downloads directory.
   std::string shader_cache_path = StringUtil::StdStringFromFormat(
-    "%s" FS_OSPATH_SEPARATOR_STR "swanstation_cache" FS_OSPATH_SEPARATOR_STR, save_directory_ptr);
+    "%s" FS_OSPATH_SEPARATOR_STR "swanstation" FS_OSPATH_SEPARATOR_STR, cache_directory_ptr);
   if (!FileSystem::DirectoryExists(shader_cache_path.c_str()) &&
       !FileSystem::CreateDirectory(shader_cache_path.c_str(), false))
   {
