@@ -67,9 +67,11 @@ private:
                        PARAM_FIFO_SIZE = 16, RESPONSE_FIFO_SIZE = 16, DATA_FIFO_SIZE = RAW_SECTOR_OUTPUT_SIZE,
                        NUM_SECTOR_BUFFERS = 8, AUDIO_FIFO_SIZE = 44100 * 2, AUDIO_FIFO_LOW_WATERMARK = 10,
 
-                       RESET_TICKS = 400000, ID_READ_TICKS = 33868, MOTOR_ON_RESPONSE_TICKS = 400000,
+                       RESET_TICKS = 4000000, ID_READ_TICKS = 33868, MOTOR_ON_RESPONSE_TICKS = 400000,
 
-                       MAX_FAST_FORWARD_RATE = 12, FAST_FORWARD_RATE_STEP = 4;
+                       MAX_FAST_FORWARD_RATE = 12, FAST_FORWARD_RATE_STEP = 4,
+                       MINIMUM_INTERRUPT_DELAY = 5000,
+                       INTERRUPT_DELAY_CYCLES = 2000;
 
   static constexpr u8 INTERRUPT_REGISTER_MASK = 0x1F;
 
@@ -242,7 +244,8 @@ private:
   void SetInterrupt(Interrupt interrupt);
   void SetAsyncInterrupt(Interrupt interrupt);
   void ClearAsyncInterrupt();
-  void DeliverAsyncInterrupt();
+  void DeliverAsyncInterrupt(void*, TickCount ticks, TickCount ticks_late);
+  void QueueDeliverAsyncInterrupt();
   void SendACKAndStat();
   void SendErrorResponse(u8 stat_bits = STAT_ERROR, u8 reason = 0x80);
   void SendAsyncErrorResponse(u8 stat_bits = STAT_ERROR, u8 reason = 0x80);
@@ -303,6 +306,7 @@ private:
 
   std::unique_ptr<TimingEvent> m_command_event;
   std::unique_ptr<TimingEvent> m_command_second_response_event;
+  std::unique_ptr<TimingEvent> m_async_interrupt_event;
   std::unique_ptr<TimingEvent> m_drive_event;
 
   Command m_command = Command::None;
@@ -317,6 +321,7 @@ private:
   u8 m_interrupt_enable_register = INTERRUPT_REGISTER_MASK;
   u8 m_interrupt_flag_register = 0;
   u8 m_pending_async_interrupt = 0;
+  u32 m_last_interrupt_time = 0;
 
   CDImage::Position m_setloc_position = {};
   CDImage::LBA m_requested_lba{};

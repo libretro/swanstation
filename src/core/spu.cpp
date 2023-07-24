@@ -686,7 +686,7 @@ void SPU::IncrementCaptureBufferPosition()
   m_SPUSTAT.second_half_capture_buffer = m_capture_buffer_position >= (CAPTURE_BUFFER_SIZE_PER_CHANNEL / 2);
 }
 
-void ALWAYS_INLINE SPU::ExecuteFIFOReadFromRAM(TickCount& ticks)
+ALWAYS_INLINE_RELEASE void SPU::ExecuteFIFOReadFromRAM(TickCount& ticks)
 {
   u16 value;
   std::memcpy(&value, &m_ram[m_transfer_address], sizeof(u16));
@@ -700,7 +700,7 @@ void ALWAYS_INLINE SPU::ExecuteFIFOReadFromRAM(TickCount& ticks)
   }
 }
 
-void ALWAYS_INLINE SPU::ExecuteFIFOWriteToRAM(TickCount& ticks)
+ALWAYS_INLINE_RELEASE void SPU::ExecuteFIFOWriteToRAM(TickCount& ticks)
 {
   u16 value = m_transfer_fifo.Pop();
   std::memcpy(&m_ram[m_transfer_address], &value, sizeof(u16));
@@ -768,11 +768,17 @@ void SPU::ExecuteTransfer(TickCount ticks)
 
 void SPU::ManualTransferWrite(u16 value)
 {
-  if (m_transfer_fifo.IsFull())
-    return;
+  if (!m_transfer_fifo.IsEmpty() && m_SPUCNT.ram_transfer_mode != RAMTransferMode::DMARead)
+  {
+    if (m_SPUCNT.ram_transfer_mode != RAMTransferMode::Stopped)
+      ExecuteTransfer(std::numeric_limits<s32>::max());
+  }
 
-  m_transfer_fifo.Push(value);
-  UpdateTransferEvent();
+  std::memcpy(&m_ram[m_transfer_address], &value, sizeof(u16));
+  m_transfer_address = (m_transfer_address + sizeof(u16)) & RAM_MASK;
+
+  if (IsRAMIRQTriggerable() && CheckRAMIRQ(m_transfer_address))
+    SPU_TriggerRAMIRQ();
 }
 
 void SPU::UpdateTransferEvent()
