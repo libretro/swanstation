@@ -1956,7 +1956,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
    "Enable VRAM Write Texture Replacement",
    NULL,
    "Replace WRAM write textures with DuckStation formatted texture packs from the textures folder inside the RetroArch "
-   "install directory."
+   "install directory. "
    "Currently only works with the D3D11 & Vulkan renderers.",
    NULL,
    "advanced",
