@@ -335,9 +335,9 @@ struct retro_core_option_v2_definition option_defs_us[] = {
   {"swanstation_GPU_UseSoftwareRendererForReadbacks",
    "Use Software Renderer For Readbacks (Restart)",
    NULL,
-   "Runs the software renderer in parallel for VRAM readbacks. On some systems, this may "
-   "result in greater performance when using graphical enhancements with the hardware renderer. "
-   "Requires the core to be restarted to apply.",
+   "Runs the software renderer in parallel for VRAM readbacks. Some games may require this to be "
+   "enabled to produce proper framebuffer effects (e.g. motion blur, battle swirls ect.), or otherwise "
+   "fix corrupted textures when using the hardware renderers. Requires the core to be restarted to apply.",
    NULL,
    "enhancement",
    {

@@ -301,6 +301,16 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
   if (   game_code == "SCPS-45446" /* Chrono Trigger */
       || game_code == "SLPM-87374" /* Chrono Trigger (NTSC-J) */
       || game_code == "SLUS-01363" /* Final Fantasy Chronicles - Chrono Trigger (NTSC-U) */
+      || game_code == "SCPS-10091" /* Saru! Get You! (NTSC-J) */
+      || game_code == "SCPS-91196" /* Saru! Get You! (NTSC-J) */
+      || game_code == "SCPS-91331" /* Saru! Get You! (NTSC-J) */
+      || game_code == "SCPS-45411" /* Saru! Get You! (NTSC-J) */
+      || game_code == "SCUS-94423" /* Ape Escape (NTSC-U) */
+      || game_code == "SCES-01564" /* Ape Escape (PAL) */
+      || game_code == "SCES-02028" /* Ape Escape (PAL-FR) */
+      || game_code == "SCES-02029" /* Ape Escape (PAL-DE) */
+      || game_code == "SCES-02030" /* Ape Escape (PAL-IT) */
+      || game_code == "SCES-02031" /* Ape Escape (PAL-ES) */
      )
   {
     gs->AddTrait(GameSettings::Trait::ForceSoftwareRendererForReadbacks);

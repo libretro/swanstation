@@ -1018,7 +1018,7 @@ bool DoLoadState(ByteStream* state, bool force_software_renderer, bool update_di
       return false;
     }
 
-    std::unique_ptr<CDImage> old_media = g_cdrom.RemoveMedia();
+    std::unique_ptr<CDImage> old_media = g_cdrom.RemoveMedia(false);
     if (old_media && old_media->GetFileName() == media_filename)
     {
       Log_InfoPrintf("Re-using same media '%s'", media_filename.c_str());
@@ -1088,7 +1088,7 @@ bool DoLoadState(ByteStream* state, bool force_software_renderer, bool update_di
     if (media)
       g_cdrom.InsertMedia(std::move(media));
     else
-      g_cdrom.RemoveMedia();
+      g_cdrom.RemoveMedia(false);
 
     // ensure the correct card is loaded
     if (g_settings.HasAnyPerGameMemoryCards())
@@ -1622,7 +1622,7 @@ bool InsertMedia(const char* path)
 
 void RemoveMedia()
 {
-  g_cdrom.RemoveMedia();
+  g_cdrom.RemoveMedia(false);
   ClearMemorySaveStates();
 }
 
@@ -1745,7 +1745,7 @@ bool SwitchMediaSubImage(u32 index)
   if (!g_cdrom.HasMedia())
     return false;
 
-  std::unique_ptr<CDImage> image = g_cdrom.RemoveMedia();
+  std::unique_ptr<CDImage> image = g_cdrom.RemoveMedia(true);
 
   Common::Error error;
   if (!image->SwitchSubImage(index, &error))

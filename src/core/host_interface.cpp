@@ -348,7 +348,11 @@ void HostInterface::CheckForSettingsChanges(const Settings& old_settings)
          g_settings.cpu_recompiler_block_linking != old_settings.cpu_recompiler_block_linking ||
          g_settings.cpu_recompiler_icache != old_settings.cpu_recompiler_icache))
     {
-      CPU::CodeCache::Flush();
+      // changing memory exceptions can re-enable fastmem
+      if (g_settings.cpu_recompiler_memory_exceptions != old_settings.cpu_recompiler_memory_exceptions)
+        CPU::CodeCache::Reinitialize();
+      else
+        CPU::CodeCache::Flush();
 
       if (g_settings.cpu_recompiler_icache != old_settings.cpu_recompiler_icache)
         CPU::ClearICache();
