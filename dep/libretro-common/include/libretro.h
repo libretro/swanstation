@@ -283,6 +283,14 @@ enum retro_language
    RETRO_LANGUAGE_HEBREW              = 21,
    RETRO_LANGUAGE_ASTURIAN            = 22,
    RETRO_LANGUAGE_FINNISH             = 23,
+   RETRO_LANGUAGE_INDONESIAN          = 24,
+   RETRO_LANGUAGE_SWEDISH             = 25,
+   RETRO_LANGUAGE_UKRAINIAN           = 26,
+   RETRO_LANGUAGE_CZECH               = 27,
+   RETRO_LANGUAGE_CATALAN_VALENCIA    = 28,
+   RETRO_LANGUAGE_CATALAN             = 29,
+   RETRO_LANGUAGE_BRITISH_ENGLISH     = 30,
+   RETRO_LANGUAGE_HUNGARIAN           = 31,
    RETRO_LANGUAGE_LAST,
 
    /* Ensure sizeof(enum) == sizeof(int) */
@@ -1722,6 +1730,70 @@ enum retro_mod
                                             * Must be called in retro_set_environment().
                                             */
 
+#define RETRO_ENVIRONMENT_SET_VARIABLE 70
+                                           /* const struct retro_variable * --
+                                            * Allows an implementation to notify the frontend
+                                            * that a core option value has changed.
+                                            *
+                                            * retro_variable::key and retro_variable::value
+                                            * must match strings that have been set previously
+                                            * via one of the following:
+                                            *
+                                            * - RETRO_ENVIRONMENT_SET_VARIABLES
+                                            * - RETRO_ENVIRONMENT_SET_CORE_OPTIONS
+                                            * - RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL
+                                            * - RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2
+                                            * - RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL
+                                            *
+                                            * After changing a core option value via this
+                                            * callback, RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE
+                                            * will return true.
+                                            *
+                                            * If data is NULL, no changes will be registered
+                                            * and the callback will return true; an
+                                            * implementation may therefore pass NULL in order
+                                            * to test whether the callback is supported.
+                                            */
+
+#define RETRO_ENVIRONMENT_GET_THROTTLE_STATE (71 | RETRO_ENVIRONMENT_EXPERIMENTAL)
+                                           /* struct retro_throttle_state * --
+                                            * Allows an implementation to get details on the actual rate
+                                            * the frontend is attempting to call retro_run().
+                                            */
+
+#define RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT (72 | RETRO_ENVIRONMENT_EXPERIMENTAL)
+                                           /* int * --
+                                            * Tells the core about the context the frontend is asking for savestate.
+                                            * (see enum retro_savestate_context)
+                                            */
+
+#define RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT (73 | RETRO_ENVIRONMENT_EXPERIMENTAL)
+                                            /* struct retro_hw_render_context_negotiation_interface * --
+                                             * Before calling SET_HW_RNEDER_CONTEXT_NEGOTIATION_INTERFACE, a core can query
+                                             * which version of the interface is supported.
+                                             *
+                                             * Frontend looks at interface_type and returns the maximum supported
+                                             * context negotiation interface version.
+                                             * If the interface_type is not supported or recognized by the frontend, a version of 0
+                                             * must be returned in interface_version and true is returned by frontend.
+                                             *
+                                             * If this environment call returns true with interface_version greater than 0,
+                                             * a core can always use a negotiation interface version larger than what the frontend returns, but only
+                                             * earlier versions of the interface will be used by the frontend.
+                                             * A frontend must not reject a negotiation interface version that is larger than
+                                             * what the frontend supports. Instead, the frontend will use the older entry points that it recognizes.
+                                             * If this is incompatible with a particular core's requirements, it can error out early.
+                                             *
+                                             * Backwards compatibility note:
+                                             * This environment call was introduced after Vulkan v1 context negotiation.
+                                             * If this environment call is not supported by frontend - i.e. the environment call returns false -
+                                             * only Vulkan v1 context negotiation is supported (if Vulkan HW rendering is supported at all).
+                                             * If a core uses Vulkan negotiation interface with version > 1, negotiation may fail unexpectedly.
+                                             * All future updates to the context negotiation interface implies that frontend must support
+                                             * this environment call to query support.
+                                             */
+
+
 /* VFS functionality */
 
 /* File paths:
@@ -1896,13 +1968,13 @@ struct retro_vfs_interface_info
 
 enum retro_hw_render_interface_type
 {
-	RETRO_HW_RENDER_INTERFACE_VULKAN = 0,
-	RETRO_HW_RENDER_INTERFACE_D3D9   = 1,
-	RETRO_HW_RENDER_INTERFACE_D3D10  = 2,
-	RETRO_HW_RENDER_INTERFACE_D3D11  = 3,
-	RETRO_HW_RENDER_INTERFACE_D3D12  = 4,
+	RETRO_HW_RENDER_INTERFACE_VULKAN     = 0,
+	RETRO_HW_RENDER_INTERFACE_D3D9       = 1,
+	RETRO_HW_RENDER_INTERFACE_D3D10      = 2,
+	RETRO_HW_RENDER_INTERFACE_D3D11      = 3,
+	RETRO_HW_RENDER_INTERFACE_D3D12      = 4,
    RETRO_HW_RENDER_INTERFACE_GSKIT_PS2  = 5,
-   RETRO_HW_RENDER_INTERFACE_DUMMY  = INT_MAX
+   RETRO_HW_RENDER_INTERFACE_DUMMY      = INT_MAX
 };
 
 /* Base struct. All retro_hw_render_interface_* types
@@ -2678,9 +2750,17 @@ enum retro_hw_context_type
    /* Vulkan, see RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE. */
    RETRO_HW_CONTEXT_VULKAN           = 6,
 
-   /* Direct3D, set version_major to select the type of interface
-    * returned by RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE */
-   RETRO_HW_CONTEXT_DIRECT3D         = 7,
+   /* Direct3D11, see RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE */
+   RETRO_HW_CONTEXT_D3D11            = 7,
+
+   /* Direct3D10, see RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE */
+   RETRO_HW_CONTEXT_D3D10            = 8,
+
+   /* Direct3D12, see RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE */
+   RETRO_HW_CONTEXT_D3D12            = 9,
+
+   /* Direct3D9, see RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE */
+   RETRO_HW_CONTEXT_D3D9             = 10,
 
    RETRO_HW_CONTEXT_DUMMY = INT_MAX
 };
@@ -2957,6 +3037,35 @@ enum retro_pixel_format
 
    /* Ensure sizeof() == sizeof(int). */
    RETRO_PIXEL_FORMAT_UNKNOWN  = INT_MAX
+};
+
+enum retro_savestate_context
+{
+   /* Standard savestate written to disk. */
+   RETRO_SAVESTATE_CONTEXT_NORMAL                 = 0,
+
+   /* Savestate where you are guaranteed that the same instance will load the save state.
+    * You can store internal pointers to code or data.
+    * It's still a full serialization and deserialization, and could be loaded or saved at any time. 
+    * It won't be written to disk or sent over the network.
+    */
+   RETRO_SAVESTATE_CONTEXT_RUNAHEAD_SAME_INSTANCE = 1,
+
+   /* Savestate where you are guaranteed that the same emulator binary will load that savestate.
+    * You can skip anything that would slow down saving or loading state but you can not store internal pointers. 
+    * It won't be written to disk or sent over the network.
+    * Example: "Second Instance" runahead
+    */
+   RETRO_SAVESTATE_CONTEXT_RUNAHEAD_SAME_BINARY   = 2,
+
+   /* Savestate used within a rollback netplay feature.
+    * You should skip anything that would unnecessarily increase bandwidth usage.
+    * It won't be written to disk but it will be sent over the network.
+    */
+   RETRO_SAVESTATE_CONTEXT_ROLLBACK_NETPLAY       = 3,
+
+   /* Ensure sizeof() == sizeof(int). */
+   RETRO_SAVESTATE_CONTEXT_UNKNOWN                = INT_MAX
 };
 
 struct retro_message
@@ -3430,6 +3539,10 @@ struct retro_core_option_definition
    const char *default_value;
 };
 
+#ifdef __PS3__
+#undef local
+#endif
+
 struct retro_core_options_intl
 {
    /* Pointer to an array of retro_core_option_definition structs
@@ -3665,6 +3778,43 @@ struct retro_fastforwarding_override
     * 'inhibit_toggle' is set to false, or the core
     * is unloaded */
    bool inhibit_toggle;
+};
+
+/* During normal operation. Rate will be equal to the core's internal FPS. */
+#define RETRO_THROTTLE_NONE              0
+
+/* While paused or stepping single frames. Rate will be 0. */
+#define RETRO_THROTTLE_FRAME_STEPPING    1
+
+/* During fast forwarding.
+ * Rate will be 0 if not specifically limited to a maximum speed. */
+#define RETRO_THROTTLE_FAST_FORWARD      2
+
+/* During slow motion. Rate will be less than the core's internal FPS. */
+#define RETRO_THROTTLE_SLOW_MOTION       3
+
+/* While rewinding recorded save states. Rate can vary depending on the rewind
+ * speed or be 0 if the frontend is not aiming for a specific rate. */
+#define RETRO_THROTTLE_REWINDING         4
+
+/* While vsync is active in the video driver and the target refresh rate is
+ * lower than the core's internal FPS. Rate is the target refresh rate. */
+#define RETRO_THROTTLE_VSYNC             5
+
+/* When the frontend does not throttle in any way. Rate will be 0.
+ * An example could be if no vsync or audio output is active. */
+#define RETRO_THROTTLE_UNBLOCKED         6
+
+struct retro_throttle_state
+{
+   /* The current throttling mode. Should be one of the values above. */
+   unsigned mode;
+
+   /* How many times per second the frontend aims to call retro_run.
+    * Depending on the mode, it can be 0 if there is no known fixed rate.
+    * This won't be accurate if the total processing time of the core and
+    * the frontend is longer than what is available for one frame. */
+   float rate;
 };
 
 /* Callbacks */

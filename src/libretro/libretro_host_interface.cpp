@@ -1557,7 +1557,7 @@ static std::optional<GPURenderer> RetroHwContextToRenderer(retro_hw_context_type
       return GPURenderer::HardwareVulkan;
 
 #ifdef WIN32
-    case RETRO_HW_CONTEXT_DIRECT3D:
+    case RETRO_HW_CONTEXT_D3D11:
       return GPURenderer::HardwareD3D11;
 #endif
 

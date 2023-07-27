@@ -139,7 +139,7 @@ bool LibretroD3D11HostDisplay::RequestHardwareRendererContext(retro_hw_render_ca
 {
   cb->cache_context = false;
   cb->bottom_left_origin = false;
-  cb->context_type = RETRO_HW_CONTEXT_DIRECT3D;
+  cb->context_type = RETRO_HW_CONTEXT_D3D11;
   cb->version_major = 11;
   cb->version_minor = 0;
 

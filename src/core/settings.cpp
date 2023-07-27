@@ -387,17 +387,13 @@ const char* Settings::GetCPUFastmemModeDisplayName(CPUFastmemMode mode)
 static constexpr auto s_gpu_renderer_names = make_array(
 #ifdef _WIN32
   "D3D11",
-#ifdef USE_D3D12
   "D3D12",
-#endif
 #endif
   "Vulkan", "OpenGL", "Software");
 static constexpr auto s_gpu_renderer_display_names = make_array(
 #ifdef _WIN32
   TRANSLATABLE("GPURenderer", "Hardware (D3D11)"),
-#ifdef USE_D3D12
   TRANSLATABLE("GPURenderer", "Hardware (D3D12)"),
-#endif
 #endif
   TRANSLATABLE("GPURenderer", "Hardware (Vulkan)"), TRANSLATABLE("GPURenderer", "Hardware (OpenGL)"),
   TRANSLATABLE("GPURenderer", "Software"));
