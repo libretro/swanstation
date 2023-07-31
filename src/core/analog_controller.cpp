@@ -546,7 +546,7 @@ bool AnalogController::Transfer(const u8 data_in, u8* data_out)
     {
       if (m_command_step == 2)
       {
-        if (data_in == 0x00 || data_in == 0x01)
+        if ((data_in == 0x00 || data_in == 0x01)  && !m_force_analog_on_reset)
           SetAnalogMode((data_in == 0x01));
       }
       else if (m_command_step == 3)
