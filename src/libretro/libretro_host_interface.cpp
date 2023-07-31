@@ -200,6 +200,7 @@ static bool libretro_supports_option_categories = false;
 static bool analog_pressed = false;
 static bool port_allowed = false;
 static unsigned libretro_msg_interface_version = 0;
+static int analog_index = -1;
 
 static void LibretroLogCallback(void* pUserParam, const char* channelName, const char* functionName, LogLevel level,
                                 const char* message)
@@ -1326,64 +1327,70 @@ void LibretroHostInterface::UpdateControllersAnalogController(u32 index)
   // Check if we're allowed to press the analog button, and then set the selected combo.
   if (!analog_pressed)
   {
-    if (g_settings.controller_analog_combo == 1)
+    switch (g_settings.controller_analog_combo)
     {
-      analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_L3 && PadCombo_R3);
-    }
-    else if (g_settings.controller_analog_combo == 2)
-    {
-      analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_L2 && PadCombo_R2 && PadCombo_Start && PadCombo_Select);
-    }
-    else if (g_settings.controller_analog_combo == 3)
-    {
-      analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_Select);
-    }
-    else if (g_settings.controller_analog_combo == 4)
-    {
-      analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_Start);
-    }
-    else if (g_settings.controller_analog_combo == 5)
-    {
-      analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_L3);
-    }
-    else if (g_settings.controller_analog_combo == 6)
-    {
-      analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_R3);
-    }
-    else if (g_settings.controller_analog_combo == 7)
-    {
-      analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_Select);
-    }
-    else if (g_settings.controller_analog_combo == 8)
-    {
-      analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_Start);
-    }
-    else if (g_settings.controller_analog_combo == 9)
-    {
-      analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_L3);
-    }
-    else if (g_settings.controller_analog_combo == 10)
-    {
-      analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_R3);
-    }
-    else if (g_settings.controller_analog_combo == 11)
-    {
-      analog_press_status = (PadCombo_L3 && PadCombo_R3);
+      case 1:
+        analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_L3 && PadCombo_R3);
+        break;
+
+      case 2:
+        analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_L2 && PadCombo_R2 && PadCombo_Start && PadCombo_Select);
+        break;
+
+      case 3:
+        analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_Select);
+        break;
+
+      case 4:
+        analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_Start);
+        break;
+
+      case 5:
+        analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_L3);
+        break;
+
+      case 6:
+        analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_R3);
+        break;
+
+      case 7:
+        analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_Select);
+        break;
+
+      case 8:
+        analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_Start);
+        break;
+
+      case 9:
+        analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_L3);
+        break;
+
+      case 10:
+        analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_R3);
+        break;
+
+      case 11:
+        analog_press_status = (PadCombo_L3 && PadCombo_R3);
+        break;
     }	
   }
 
   // Workaround for the fact it will otherwise spam the analog button.
   if (analog_press_status)
   {
+    analog_index = index;
     analog_pressed = true;
     controller->SetButtonState(AnalogController::Button::Analog, (analog_press_status));
     analog_press_status = 0;
   }
 
-  // Check if all possible combo buttons are released.
-  if (analog_pressed && !PadCombo_L1 && !PadCombo_R1 && !PadCombo_L2 && !PadCombo_R2 && !PadCombo_L3 && !PadCombo_R3 && !PadCombo_Start && !PadCombo_Select)
+  // Check if all possible combo buttons are released and the index matches the player slot.
+  // Also make sure having another DualShock plugged in doesn't prematurely clear the button block.
+  if ((analog_index == index) && analog_pressed && 
+       !PadCombo_L1 && !PadCombo_R1 && !PadCombo_L2 && !PadCombo_R2 && !PadCombo_L3 && !PadCombo_R3 && !PadCombo_Start && !PadCombo_Select)
   {
     analog_pressed = false;
+	analog_index = -1;
   }
 }
 
