@@ -1957,7 +1957,11 @@ struct retro_core_option_v2_definition option_defs_us[] = {
    NULL,
    "Replace WRAM write textures with DuckStation formatted texture packs from the textures folder inside the RetroArch "
    "install directory. "
+#ifdef WIN32
    "Currently only works with the D3D11 & Vulkan renderers.",
+#else
+   "Currently only works with the Vulkan renderer.",
+#endif
    NULL,
    "advanced",
    {
