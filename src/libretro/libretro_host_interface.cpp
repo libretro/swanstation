@@ -1390,7 +1390,7 @@ void LibretroHostInterface::UpdateControllersAnalogController(u32 index)
        !PadCombo_L1 && !PadCombo_R1 && !PadCombo_L2 && !PadCombo_R2 && !PadCombo_L3 && !PadCombo_R3 && !PadCombo_Start && !PadCombo_Select)
   {
     analog_pressed = false;
-	analog_index = -1;
+    analog_index = -1;
   }
 }
 
