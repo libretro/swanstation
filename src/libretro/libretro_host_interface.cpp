@@ -992,7 +992,7 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
     option_display.visible = dualshock_active;
-    option_display.key = (TinyString::FromFormat("swanstation_Controller%u_ForceAnalogOnReset", (i + 1)));
+    option_display.key = (TinyString::FromFormat("swanstation_Controller%u_ForceAnalog", (i + 1)));
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
     option_display.key = (TinyString::FromFormat("swanstation_Controller%u_AnalogDPadInDigitalMode", (i + 1)));
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);

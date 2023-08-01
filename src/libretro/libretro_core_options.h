@@ -875,13 +875,12 @@ struct retro_core_option_v2_definition option_defs_us[] = {
      {NULL, NULL},
    },
    "true"},
-  {"swanstation_Controller1_ForceAnalogOnReset",
-   "Controller 1 Force Analog Mode on Reset",
+  {"swanstation_Controller1_ForceAnalog",
+   "Controller 1 Force Analog Mode",
    NULL,
-   "Forces analog mode in Analog Controller (DualShock) at start/reset. May cause issues with some games. Only use "
-   "this option for games that support analog mode but do not automatically enable it themselves. When disabled, "
-   "analog "
-   "mode can be toggled by pressing and holding the DualShock Analog Mode Combo.",
+   "Forces analog mode to be always on. May cause issues with some games. "
+   "Only use this option for games that support analog mode but do not automatically enable it themselves. "
+   "When disabled, analog mode can be toggled by pressing and holding the DualShock Analog Mode Combo.",
    NULL,
    "port",
    {
@@ -1036,13 +1035,12 @@ struct retro_core_option_v2_definition option_defs_us[] = {
      {NULL, NULL},
    },
    "linear"},
-  {"swanstation_Controller2_ForceAnalogOnReset",
-   "Controller 2 Force Analog Mode on Reset",
+  {"swanstation_Controller2_ForceAnalog",
+   "Controller 2 Force Analog Mode",
    NULL,
-   "Forces analog mode in Analog Controller (DualShock) at start/reset. May cause issues with some games. Only use "
-   "this option for games that support analog mode but do not automatically enable it themselves. When disabled, "
-   "analog "
-   "mode can be toggled by pressing and holding the DualShock Analog Mode Combo.",
+   "Forces analog mode to be always on. May cause issues with some games. "
+   "Only use this option for games that support analog mode but do not automatically enable it themselves. "
+   "When disabled, analog mode can be toggled by pressing and holding the DualShock Analog Mode Combo.",
    NULL,
    "port",
    {
@@ -1197,13 +1195,12 @@ struct retro_core_option_v2_definition option_defs_us[] = {
      {NULL, NULL},
    },
    "linear"},
-  {"swanstation_Controller3_ForceAnalogOnReset",
-   "Controller 3 Force Analog Mode on Reset",
+  {"swanstation_Controller3_ForceAnalog",
+   "Controller 3 Force Analog Mode",
    NULL,
-   "Forces analog mode in Analog Controller (DualShock) at start/reset. May cause issues with some games. Only use "
-   "this option for games that support analog mode but do not automatically enable it themselves. When disabled, "
-   "analog "
-   "mode can be toggled by pressing and holding the DualShock Analog Mode Combo.",
+   "Forces analog mode to be always on. May cause issues with some games. "
+   "Only use this option for games that support analog mode but do not automatically enable it themselves. "
+   "When disabled, analog mode can be toggled by pressing and holding the DualShock Analog Mode Combo.",
    NULL,
    "port",
    {
@@ -1310,13 +1307,12 @@ struct retro_core_option_v2_definition option_defs_us[] = {
      {NULL, NULL},
    },
    "linear"},
-  {"swanstation_Controller4_ForceAnalogOnReset",
-   "Controller 4 Force Analog Mode on Reset",
+  {"swanstation_Controller4_ForceAnalog",
+   "Controller 4 Force Analog Mode",
    NULL,
-   "Forces analog mode in Analog Controller (DualShock) at start/reset. May cause issues with some games. Only use "
-   "this option for games that support analog mode but do not automatically enable it themselves. When disabled, "
-   "analog "
-   "mode can be toggled by pressing and holding the DualShock Analog Mode Combo.",
+   "Forces analog mode to be always on. May cause issues with some games. "
+   "Only use this option for games that support analog mode but do not automatically enable it themselves. "
+   "When disabled, analog mode can be toggled by pressing and holding the DualShock Analog Mode Combo.",
    NULL,
    "port",
    {
@@ -1423,13 +1419,12 @@ struct retro_core_option_v2_definition option_defs_us[] = {
      {NULL, NULL},
    },
    "linear"},
-  {"swanstation_Controller5_ForceAnalogOnReset",
-   "Controller 5 Force Analog Mode on Reset",
+  {"swanstation_Controller5_ForceAnalog",
+   "Controller 5 Force Analog Mode",
    NULL,
-   "Forces analog mode in Analog Controller (DualShock) at start/reset. May cause issues with some games. Only use "
-   "this option for games that support analog mode but do not automatically enable it themselves. When disabled, "
-   "analog "
-   "mode can be toggled by pressing and holding the DualShock Analog Mode Combo.",
+   "Forces analog mode to be always on. May cause issues with some games. "
+   "Only use this option for games that support analog mode but do not automatically enable it themselves. "
+   "When disabled, analog mode can be toggled by pressing and holding the DualShock Analog Mode Combo.",
    NULL,
    "port",
    {
@@ -1495,13 +1490,12 @@ struct retro_core_option_v2_definition option_defs_us[] = {
      {"126", NULL}, {NULL, NULL},
    },
    "8"},
-  {"swanstation_Controller6_ForceAnalogOnReset",
-   "Controller 6 Force Analog Mode on Reset",
+  {"swanstation_Controller6_ForceAnalog",
+   "Controller 6 Force Analog Mode",
    NULL,
-   "Forces analog mode in Analog Controller (DualShock) at start/reset. May cause issues with some games. Only use "
-   "this option for games that support analog mode but do not automatically enable it themselves. When disabled, "
-   "analog "
-   "mode can be toggled by pressing and holding the DualShock Analog Mode Combo.",
+   "Forces analog mode to be always on. May cause issues with some games. "
+   "Only use this option for games that support analog mode but do not automatically enable it themselves. "
+   "When disabled, analog mode can be toggled by pressing and holding the DualShock Analog Mode Combo.",
    NULL,
    "port",
    {
@@ -1567,13 +1561,12 @@ struct retro_core_option_v2_definition option_defs_us[] = {
      {"126", NULL}, {NULL, NULL},
    },
    "8"},
-  {"swanstation_Controller7_ForceAnalogOnReset",
-   "Controller 7 Force Analog Mode on Reset",
+  {"swanstation_Controller7_ForceAnalog",
+   "Controller 7 Force Analog Mode",
    NULL,
-   "Forces analog mode in Analog Controller (DualShock) at start/reset. May cause issues with some games. Only use "
-   "this option for games that support analog mode but do not automatically enable it themselves. When disabled, "
-   "analog "
-   "mode can be toggled by pressing and holding the DualShock Analog Mode Combo.",
+   "Forces analog mode to be always on. May cause issues with some games. "
+   "Only use this option for games that support analog mode but do not automatically enable it themselves. "
+   "When disabled, analog mode can be toggled by pressing and holding the DualShock Analog Mode Combo.",
    NULL,
    "port",
    {
@@ -1639,13 +1632,12 @@ struct retro_core_option_v2_definition option_defs_us[] = {
      {"126", NULL}, {NULL, NULL},
    },
    "8"},
-  {"swanstation_Controller8_ForceAnalogOnReset",
-   "Controller 8 Force Analog Mode on Reset",
+  {"swanstation_Controller8_ForceAnalog",
+   "Controller 8 Force Analog Mode",
    NULL,
-   "Forces analog mode in Analog Controller (DualShock) at start/reset. May cause issues with some games. Only use "
-   "this option for games that support analog mode but do not automatically enable it themselves. When disabled, "
-   "analog "
-   "mode can be toggled by pressing and holding the DualShock Analog Mode Combo.",
+   "Forces analog mode to be always on. May cause issues with some games. "
+   "Only use this option for games that support analog mode but do not automatically enable it themselves. "
+   "When disabled, analog mode can be toggled by pressing and holding the DualShock Analog Mode Combo.",
    NULL,
    "port",
    {

@@ -33,19 +33,6 @@ void AnalogController::Reset()
   ResetRumbleConfig();
 
   m_status_byte = 0x5A;
-
-  if (m_force_analog_on_reset)
-  {
-    if (g_settings.controller_disable_analog_mode_forcing)
-    {
-      g_host_interface->AddOSDMessage(
-        g_host_interface->TranslateStdString(
-          "OSDMessage", "Analog mode forcing is disabled by game settings. Controller will start in digital mode."),
-        10.0f);
-    }
-    else
-      SetAnalogMode(true);
-  }
 }
 
 bool AnalogController::DoState(StateWrapper& sw, bool apply_input_state)
@@ -129,6 +116,15 @@ void AnalogController::SetAxisState(Axis axis, u8 value)
 
 void AnalogController::SetButtonState(Button button, bool pressed)
 {
+  if (m_force_analog != m_old_force_analog)
+  {
+    m_old_force_analog = m_force_analog;
+    if (m_command == Command::Idle)
+      ProcessAnalogModeToggle();
+    else
+      m_analog_toggle_queued = true;
+  }
+
   if (button == Button::Analog)
   {
     // analog toggle
@@ -214,6 +210,9 @@ void AnalogController::ResetTransferState()
 
 void AnalogController::SetAnalogMode(bool enabled)
 {
+  if (m_force_analog && (m_analog_mode == m_force_analog))
+    return;
+
   if (m_analog_mode == enabled)
     return;
 
@@ -546,7 +545,7 @@ bool AnalogController::Transfer(const u8 data_in, u8* data_out)
     {
       if (m_command_step == 2)
       {
-        if ((data_in == 0x00 || data_in == 0x01)  && !m_force_analog_on_reset)
+        if (data_in == 0x00 || data_in == 0x01)
           SetAnalogMode((data_in == 0x01));
       }
       else if (m_command_step == 3)
@@ -770,7 +769,7 @@ Controller::SettingList AnalogController::StaticGetSettings()
 void AnalogController::LoadSettings(const char* section)
 {
   Controller::LoadSettings(section);
-  m_force_analog_on_reset = g_host_interface->GetBoolSettingValue(section, "ForceAnalogOnReset", false);
+  m_force_analog = g_host_interface->GetBoolSettingValue(section, "ForceAnalog", false);
   m_analog_dpad_in_digital_mode = g_host_interface->GetBoolSettingValue(section, "AnalogDPadInDigitalMode", false);
   m_axis_scale =
     std::clamp(std::abs(g_host_interface->GetFloatSettingValue(section, "AxisScale", 1.00f)), 0.01f, 1.50f);

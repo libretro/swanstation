@@ -157,7 +157,6 @@ struct Settings
   bool enable_8mb_ram = false;
 
   std::array<ControllerType, NUM_CONTROLLER_AND_CARD_PORTS> controller_types{};
-  bool controller_disable_analog_mode_forcing = false;
 
   u32 controller_analog_combo = 1;
   bool controller_enable_rumble = true;
