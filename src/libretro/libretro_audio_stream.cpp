@@ -11,7 +11,7 @@ LibretroAudioStream::LibretroAudioStream() = default;
 
 LibretroAudioStream::~LibretroAudioStream() = default;
 
-void LibretroAudioStream::UploadToFrontend()
+void LibretroAudioStream::FramesAvailable()
 {
   std::array<SampleType, MaxSamples> output_buffer;
   u32 total_samples = 0;
@@ -23,5 +23,3 @@ void LibretroAudioStream::UploadToFrontend()
   }
   g_retro_audio_sample_batch_callback(output_buffer.data(), total_samples / AUDIO_CHANNELS);
 }
-
-void LibretroAudioStream::FramesAvailable() {}

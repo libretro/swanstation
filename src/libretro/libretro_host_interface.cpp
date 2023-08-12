@@ -697,9 +697,6 @@ void LibretroHostInterface::retro_run_frame()
     UpdateGeometry();
 
   m_display->Render();
-
-  auto* const audio_stream = dynamic_cast<LibretroAudioStream*>(m_audio_stream.get());
-  audio_stream->UploadToFrontend();
 }
 
 unsigned LibretroHostInterface::retro_get_region()
@@ -1014,6 +1011,10 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
 
   const bool guncon_aspect = (retropad_device[0] == RETRO_DEVICE_PS_GUNCON || retropad_device[1] == RETRO_DEVICE_PS_GUNCON);
   const bool show_custom_ar = (!guncon_aspect && custom_aspect_ratio);
+
+  option_display.visible = guncon_aspect;
+  option_display.key = "swanstation_Controller_ShowCrosshair";
+  g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
   option_display.visible = !guncon_aspect;
   option_display.key = "swanstation_Display_AspectRatio";
