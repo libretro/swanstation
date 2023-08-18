@@ -11,7 +11,7 @@ LibretroAudioStream::LibretroAudioStream() = default;
 
 LibretroAudioStream::~LibretroAudioStream() = default;
 
-void LibretroAudioStream::FramesAvailable() 
+void LibretroAudioStream::FramesAvailable()
 {
   for (;;)
   {
