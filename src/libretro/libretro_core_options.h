@@ -2034,6 +2034,19 @@ struct retro_core_option_v2_definition option_defs_us[] = {
      {NULL, NULL},
    },
    "false"},
+  {"swanstation_Audio_FastHook",
+   "Use Alternative Audio Hook (Restart)",
+   NULL,
+   "Use a faster and more efficient to submit audio samples to the frontend. Mostly safe to enable, but may hang "
+   "for a select few games that rely on the old method to function. Requires the core to be restarted to apply.",
+   NULL,
+   "advanced",
+   {
+     {"true", "Enabled"},
+     {"false", "Disabled"},
+     {NULL, NULL},
+   },
+   "true"},
   {NULL, NULL, NULL, NULL, NULL, NULL, {{NULL, NULL}}, NULL},
 };
 

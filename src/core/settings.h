@@ -58,6 +58,8 @@ struct Settings
 
   ConsoleRegion region = ConsoleRegion::Auto;
 
+  bool audio_fast_hook = true;
+
   CPUExecutionMode cpu_execution_mode = CPUExecutionMode::Interpreter;
   u32 cpu_overclock_numerator = 1;
   u32 cpu_overclock_denominator = 1;

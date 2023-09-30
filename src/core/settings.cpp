@@ -143,6 +143,8 @@ void Settings::Load(SettingsInterface& si)
   apply_game_settings = si.GetBoolValue("Main", "ApplyGameSettings", true);
   runahead_frames = static_cast<u32>(si.GetIntValue("Main", "RunaheadFrameCount", 0));
 
+  audio_fast_hook = si.GetBoolValue("Audio", "FastHook", true);
+
   cpu_execution_mode =
     ParseCPUExecutionMode(
       si.GetStringValue("CPU", "ExecutionMode", GetCPUExecutionModeName(DEFAULT_CPU_EXECUTION_MODE)).c_str())

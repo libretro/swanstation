@@ -697,6 +697,12 @@ void LibretroHostInterface::retro_run_frame()
     UpdateGeometry();
 
   m_display->Render();
+
+  if (g_settings.audio_fast_hook)
+  {
+    auto* const audio_stream = dynamic_cast<LibretroAudioStream*>(m_audio_stream.get());
+    audio_stream->UploadToFrontend();
+  }
 }
 
 unsigned LibretroHostInterface::retro_get_region()
@@ -1152,6 +1158,12 @@ void LibretroHostInterface::UpdateSettings()
          ReportFormattedMessage("Disabling of software renderer for readbacks pending. Please restart the core to apply.");
 
       g_settings.gpu_use_software_renderer_for_readbacks = old_settings.gpu_use_software_renderer_for_readbacks;
+    }
+
+    if (g_settings.audio_fast_hook != old_settings.audio_fast_hook)
+    {
+      ReportFormattedMessage("Changing audio hook will apply on core reload.");
+      g_settings.audio_fast_hook = old_settings.audio_fast_hook;
     }
   }
 

@@ -9,6 +9,8 @@ public:
   LibretroAudioStream();
   ~LibretroAudioStream();
 
+  void UploadToFrontend();
+
 protected:
   void FramesAvailable() override;
 };
