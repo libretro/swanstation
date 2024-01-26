@@ -30,6 +30,7 @@ enum class Trait : u32
   ForceRecompilerMemoryExceptions,
   ForceRecompilerICache,
   ForceRecompilerLUTFastmem,
+  ForceOldAudioHook,
 
   Count
 };

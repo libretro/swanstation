@@ -206,6 +206,16 @@ void Entry::ApplySettings(bool display_osd_messages) const
     g_settings.cpu_fastmem_mode = CPUFastmemMode::LUT;
   }
 
+  if (HasTrait(Trait::ForceOldAudioHook))
+  {
+    if (g_settings.audio_fast_hook)
+    {
+      gamesettings_message.append("Old audio hook forced by game settings. ", 40);
+    }
+
+    g_settings.audio_fast_hook = false;
+  }
+
   if (display_osd_messages && gamesettings_message.length() > 0)
   {
     g_host_interface->AddOSDMessage(
@@ -610,6 +620,15 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
      )
   {
     gs->AddTrait(GameSettings::Trait::ForceRecompilerLUTFastmem);
+    return gs;
+  }
+
+  if (   
+         game_code == "SLUS-00546" /* Formula 1 - Championship Edition (NTSC-U) */
+      || game_code == "SIPS-60023" /* Formula 1 '97 (NTSC-J) */
+     )
+  {
+    gs->AddTrait(GameSettings::Trait::ForceOldAudioHook);
     return gs;
   }
 
