@@ -52,6 +52,4 @@ For example, if your disc image was named `Spyro3.cue`, you would place the SBI 
 
 ## Disclaimers
 
-Icon by icons8: https://icons8.com/icon/74847/platforms.undefined.short-title
-
 "PlayStation" and "PSX" are registered trademarks of Sony Interactive Entertainment Europe Limited. This project is not affiliated in any way with Sony Interactive Entertainment.
