@@ -506,7 +506,7 @@ float GPU::GetDisplayAspectRatio() const
 
 void GPU::UpdateCRTCConfig()
 {
-  static constexpr std::array<u16, 8> dot_clock_dividers = {{10, 8, 5, 4, 7, 7, 7, 7}};
+  static u16 dot_clock_dividers[8] = {10, 8, 5, 4, 7, 7, 7, 7};
   CRTCState& cs = m_crtc_state;
 
   if (m_GPUSTAT.pal_mode)

@@ -1154,8 +1154,8 @@ void SPU::Voice::TickADSR()
 
 void SPU::Voice::DecodeBlock(const ADPCMBlock& block)
 {
-  static constexpr std::array<s32, 5> filter_table_pos = {{0, 60, 115, 98, 122}};
-  static constexpr std::array<s32, 5> filter_table_neg = {{0, 0, -52, -55, -60}};
+  static s32 filter_table_pos[5] = {0, 60, 115, 98, 122};
+  static s32 filter_table_neg[5] = {0, 0, -52, -55, -60};
 
   // store samples needed for interpolation
   current_block_samples[2] = current_block_samples[NUM_SAMPLES_FROM_LAST_ADPCM_BLOCK + NUM_SAMPLES_PER_ADPCM_BLOCK - 1];
@@ -1187,7 +1187,7 @@ void SPU::Voice::DecodeBlock(const ADPCMBlock& block)
 
 s32 SPU::Voice::Interpolate() const
 {
-  static constexpr std::array<s16, 0x200> gauss = {{
+  static s16 gauss[0x200] = {
     -0x001, -0x001, -0x001, -0x001, -0x001, -0x001, -0x001, -0x001, //
     -0x001, -0x001, -0x001, -0x001, -0x001, -0x001, -0x001, -0x001, //
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0001, //
@@ -1252,15 +1252,15 @@ s32 SPU::Voice::Interpolate() const
     0x589E, 0x58B5, 0x58CB, 0x58E0, 0x58F4, 0x5907, 0x5919, 0x592A, //
     0x593A, 0x5949, 0x5958, 0x5965, 0x5971, 0x597C, 0x5986, 0x598F, //
     0x5997, 0x599E, 0x59A4, 0x59A9, 0x59AD, 0x59B0, 0x59B2, 0x59B3  //
-  }};
+  };
 
-  const u8 i = counter.interpolation_index;
+  const u8 i  = counter.interpolation_index;
   const u32 s = NUM_SAMPLES_FROM_LAST_ADPCM_BLOCK + ZeroExtend32(counter.sample_index.GetValue());
 
-  s32 out = s32(gauss[0x0FF - i]) * s32(current_block_samples[s - 3]);
-  out += s32(gauss[0x1FF - i]) * s32(current_block_samples[s - 2]);
-  out += s32(gauss[0x100 + i]) * s32(current_block_samples[s - 1]);
-  out += s32(gauss[0x000 + i]) * s32(current_block_samples[s - 0]);
+  s32 out     = s32(gauss[0x0FF - i]) * s32(current_block_samples[s - 3]);
+  out        += s32(gauss[0x1FF - i]) * s32(current_block_samples[s - 2]);
+  out        += s32(gauss[0x100 + i]) * s32(current_block_samples[s - 1]);
+  out        += s32(gauss[0x000 + i]) * s32(current_block_samples[s - 0]);
   return out >> 15;
 }
 
@@ -1375,13 +1375,13 @@ ALWAYS_INLINE_RELEASE std::tuple<s32, s32> SPU::SampleVoice(u32 voice_index)
 void SPU::UpdateNoise()
 {
   // Dr Hell's noise waveform, implementation borrowed from pcsx-r.
-  static constexpr std::array<u8, 64> noise_wave_add = {
-    {1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0,
-     0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1}};
-  static constexpr std::array<u8, 5> noise_freq_add = {{0, 84, 140, 180, 210}};
+  static u8 noise_wave_add[64] = {
+    1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0,
+     0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1};
+  static u8 noise_freq_add[5]  = {0, 84, 140, 180, 210};
 
-  const u32 noise_clock = m_SPUCNT.noise_clock;
-  const u32 level = (0x8000u >> (noise_clock >> 2)) << 16;
+  const u32 noise_clock        = m_SPUCNT.noise_clock;
+  const u32 level              = (0x8000u >> (noise_clock >> 2)) << 16;
 
   m_noise_count += 0x10000u + noise_freq_add[noise_clock & 3u];
   if ((m_noise_count & 0xFFFFu) >= noise_freq_add[4])
@@ -1430,7 +1430,7 @@ void SPU::ReverbWrite(u32 address, s16 data)
 }
 
 // Zeroes optimized out; middle removed too(it's 16384)
-static constexpr std::array<s16, 20> s_reverb_resample_coefficients = {
+static s16 s_reverb_resample_coefficients[20] = {
   -1, 2, -10, 35, -103, 266, -616, 1332, -2960, 10246, 10246, -2960, 1332, -616, 266, -103, 35, -10, 2, -1,
 };
 
@@ -1493,7 +1493,7 @@ void SPU::ProcessReverb(s16 left_in, s16 right_in, s32* left_out, s32* right_out
   s32 out[2];
   if (m_reverb_resample_buffer_position & 1u)
   {
-    std::array<s32, 2> downsampled;
+    s32 downsampled[2];
     for (unsigned lr = 0; lr < 2; lr++)
       downsampled[lr] = Reverb4422(&m_reverb_downsample_buffer[lr][(m_reverb_resample_buffer_position - 38) & 0x3F]);
 
