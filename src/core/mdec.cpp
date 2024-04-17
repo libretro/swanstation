@@ -511,10 +511,10 @@ void MDEC::CopyOutBlock()
   Execute();
 }
 
-static constexpr std::array<u8, 64> zagzig = {{0,  1,  8,  16, 9,  2,  3,  10, 17, 24, 32, 25, 18, 11, 4,  5,
+static u8 zagzig[64] = {0,  1,  8,  16, 9,  2,  3,  10, 17, 24, 32, 25, 18, 11, 4,  5,
                                                12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6,  7,  14, 21, 28,
                                                35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51,
-                                               58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63}};
+                                               58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63};
 
 bool MDEC::rl_decode_block(s16* blk, const u8* qt)
 {
@@ -597,7 +597,7 @@ void MDEC::IDCT(s16* blk)
 
 void MDEC::IDCT_New(s16* blk)
 {
-  std::array<s32, 64> temp;
+  s32 temp[64];
   for (u32 x = 0; x < 8; x++)
   {
     for (u32 y = 0; y < 8; y++)
@@ -624,7 +624,7 @@ void MDEC::IDCT_New(s16* blk)
 
 void MDEC::IDCT_Old(s16* blk)
 {
-  std::array<s64, 64> temp_buffer;
+  s64 temp_buffer[64];
   for (u32 x = 0; x < 8; x++)
   {
     for (u32 y = 0; y < 8; y++)

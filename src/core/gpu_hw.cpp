@@ -494,6 +494,7 @@ void GPU_HW::LoadVertices()
   {
     case GPUPrimitive::Polygon:
     {
+      u16 native_texcoords[4];
       const u32 first_color = rc.color_for_first_vertex;
       const bool shaded = rc.shading_enable;
       const bool textured = rc.texture_enable;
@@ -502,7 +503,6 @@ void GPU_HW::LoadVertices()
       const u32 num_vertices = rc.quad_polygon ? 4 : 3;
       std::array<BatchVertex, 4> vertices;
       std::array<std::array<s32, 2>, 4> native_vertex_positions;
-      std::array<u16, 4> native_texcoords;
       bool valid_w = g_settings.gpu_pgxp_texture_correction;
       for (u32 i = 0; i < num_vertices; i++)
       {

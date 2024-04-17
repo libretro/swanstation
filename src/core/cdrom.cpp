@@ -19,7 +19,7 @@ struct CommandInfo
   u8 expected_parameters;
 };
 
-static std::array<CommandInfo, 255> s_command_info = {{
+static CommandInfo s_command_info[255] = {
   {"Sync", 0},       {"Getstat", 0},   {"Setloc", 3},  {"Play", 0},     {"Forward", 0}, {"Backward", 0},
   {"ReadN", 0},      {"MotorOn", 0},   {"Stop", 0},    {"Pause", 0},    {"Reset", 0},   {"Mute", 0},
   {"Demute", 0},     {"Setfilter", 2}, {"Setmode", 1}, {"Getparam", 0}, {"GetlocL", 0}, {"GetlocP", 0},
@@ -63,7 +63,7 @@ static std::array<CommandInfo, 255> s_command_info = {{
   {"Unknown", 0},    {"Unknown", 0},   {"Unknown", 0}, {"Unknown", 0},  {"Unknown", 0}, {"Unknown", 0},
   {"Unknown", 0},    {"Unknown", 0},   {"Unknown", 0}, {"Unknown", 0},  {"Unknown", 0}, {"Unknown", 0},
   {"Unknown", 0},    {"Unknown", 0},   {nullptr, 0} // Unknown
-}};
+};
 
 CDROM g_cdrom;
 
