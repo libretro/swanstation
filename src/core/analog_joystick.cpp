@@ -59,11 +59,6 @@ bool AnalogJoystick::DoState(StateWrapper& sw, bool apply_input_state)
   return true;
 }
 
-std::optional<s32> AnalogJoystick::GetAxisCodeByName(std::string_view axis_name) const
-{
-  return StaticGetAxisCodeByName(axis_name);
-}
-
 std::optional<s32> AnalogJoystick::GetButtonCodeByName(std::string_view button_name) const
 {
   return StaticGetButtonCodeByName(button_name);
@@ -248,24 +243,6 @@ bool AnalogJoystick::Transfer(const u8 data_in, u8* data_out)
 std::unique_ptr<AnalogJoystick> AnalogJoystick::Create(u32 index)
 {
   return std::make_unique<AnalogJoystick>(index);
-}
-
-std::optional<s32> AnalogJoystick::StaticGetAxisCodeByName(std::string_view axis_name)
-{
-#define AXIS(name)                                                                                                     \
-  if (axis_name == #name)                                                                                              \
-  {                                                                                                                    \
-    return static_cast<s32>(ZeroExtend32(static_cast<u8>(Axis::name)));                                                \
-  }
-
-  AXIS(LeftX);
-  AXIS(LeftY);
-  AXIS(RightX);
-  AXIS(RightY);
-
-  return std::nullopt;
-
-#undef AXIS
 }
 
 std::optional<s32> AnalogJoystick::StaticGetButtonCodeByName(std::string_view button_name)

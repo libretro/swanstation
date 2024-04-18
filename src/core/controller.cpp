@@ -85,11 +85,6 @@ std::unique_ptr<Controller> Controller::Create(ControllerType type, u32 index)
   }
 }
 
-std::optional<s32> Controller::GetAxisCodeByName(std::string_view button_name) const
-{
-  return std::nullopt;
-}
-
 std::optional<s32> Controller::GetButtonCodeByName(std::string_view button_name) const
 {
   return std::nullopt;
@@ -176,34 +171,6 @@ u32 Controller::GetVibrationMotorCount(ControllerType type)
     case ControllerType::None:
     default:
       return 0;
-  }
-}
-
-std::optional<s32> Controller::GetAxisCodeByName(ControllerType type, std::string_view axis_name)
-{
-  switch (type)
-  {
-    case ControllerType::DigitalController:
-      return DigitalController::StaticGetAxisCodeByName(axis_name);
-
-    case ControllerType::AnalogController:
-      return AnalogController::StaticGetAxisCodeByName(axis_name);
-
-    case ControllerType::AnalogJoystick:
-      return AnalogJoystick::StaticGetAxisCodeByName(axis_name);
-
-    case ControllerType::NamcoGunCon:
-      return NamcoGunCon::StaticGetAxisCodeByName(axis_name);
-
-    case ControllerType::PlayStationMouse:
-      return PlayStationMouse::StaticGetAxisCodeByName(axis_name);
-
-    case ControllerType::NeGcon:
-      return NeGcon::StaticGetAxisCodeByName(axis_name);
-
-    case ControllerType::None:
-    default:
-      return std::nullopt;
   }
 }
 

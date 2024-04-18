@@ -16,11 +16,6 @@ ControllerType NamcoGunCon::GetType() const
   return ControllerType::NamcoGunCon;
 }
 
-std::optional<s32> NamcoGunCon::GetAxisCodeByName(std::string_view axis_name) const
-{
-  return StaticGetAxisCodeByName(axis_name);
-}
-
 std::optional<s32> NamcoGunCon::GetButtonCodeByName(std::string_view button_name) const
 {
   return StaticGetButtonCodeByName(button_name);
@@ -201,11 +196,6 @@ void NamcoGunCon::UpdatePosition()
 std::unique_ptr<NamcoGunCon> NamcoGunCon::Create()
 {
   return std::make_unique<NamcoGunCon>();
-}
-
-std::optional<s32> NamcoGunCon::StaticGetAxisCodeByName(std::string_view button_name)
-{
-  return std::nullopt;
 }
 
 std::optional<s32> NamcoGunCon::StaticGetButtonCodeByName(std::string_view button_name)

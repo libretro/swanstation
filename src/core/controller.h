@@ -30,9 +30,6 @@ public:
   /// Returns the type of controller.
   virtual ControllerType GetType() const = 0;
 
-  /// Gets the integer code for an axis in the specified controller type.
-  virtual std::optional<s32> GetAxisCodeByName(std::string_view axis_name) const;
-
   /// Gets the integer code for a button in the specified controller type.
   virtual std::optional<s32> GetButtonCodeByName(std::string_view button_name) const;
 
@@ -71,9 +68,6 @@ public:
 
   /// Creates a new controller of the specified type.
   static std::unique_ptr<Controller> Create(ControllerType type, u32 index);
-
-  /// Gets the integer code for an axis in the specified controller type.
-  static std::optional<s32> GetAxisCodeByName(ControllerType type, std::string_view axis_name);
 
   /// Gets the integer code for a button in the specified controller type.
   static std::optional<s32> GetButtonCodeByName(ControllerType type, std::string_view button_name);

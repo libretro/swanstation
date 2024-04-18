@@ -17,11 +17,6 @@ ControllerType NeGcon::GetType() const
   return ControllerType::NeGcon;
 }
 
-std::optional<s32> NeGcon::GetAxisCodeByName(std::string_view axis_name) const
-{
-  return StaticGetAxisCodeByName(axis_name);
-}
-
 std::optional<s32> NeGcon::GetButtonCodeByName(std::string_view button_name) const
 {
   return StaticGetButtonCodeByName(button_name);
@@ -213,24 +208,6 @@ bool NeGcon::Transfer(const u8 data_in, u8* data_out)
 std::unique_ptr<NeGcon> NeGcon::Create()
 {
   return std::make_unique<NeGcon>();
-}
-
-std::optional<s32> NeGcon::StaticGetAxisCodeByName(std::string_view axis_name)
-{
-#define AXIS(name)                                                                                                     \
-  if (axis_name == #name)                                                                                              \
-  {                                                                                                                    \
-    return static_cast<s32>(ZeroExtend32(static_cast<u8>(Axis::name)));                                                \
-  }
-
-  AXIS(Steering);
-  AXIS(I);
-  AXIS(II);
-  AXIS(L);
-
-  return std::nullopt;
-
-#undef AXIS
 }
 
 std::optional<s32> NeGcon::StaticGetButtonCodeByName(std::string_view button_name)

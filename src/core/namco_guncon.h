@@ -20,7 +20,6 @@ public:
   ~NamcoGunCon() override;
 
   static std::unique_ptr<NamcoGunCon> Create();
-  static std::optional<s32> StaticGetAxisCodeByName(std::string_view button_name);
   static std::optional<s32> StaticGetButtonCodeByName(std::string_view button_name);
   static AxisList StaticGetAxisNames();
   static ButtonList StaticGetButtonNames();
@@ -28,7 +27,6 @@ public:
   static SettingList StaticGetSettings();
 
   ControllerType GetType() const override;
-  std::optional<s32> GetAxisCodeByName(std::string_view axis_name) const override;
   std::optional<s32> GetButtonCodeByName(std::string_view button_name) const override;
 
   void Reset() override;

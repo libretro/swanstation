@@ -19,11 +19,6 @@ ControllerType PlayStationMouse::GetType() const
   return ControllerType::PlayStationMouse;
 }
 
-std::optional<s32> PlayStationMouse::GetAxisCodeByName(std::string_view axis_name) const
-{
-  return StaticGetAxisCodeByName(axis_name);
-}
-
 std::optional<s32> PlayStationMouse::GetButtonCodeByName(std::string_view button_name) const
 {
   return StaticGetButtonCodeByName(button_name);
@@ -170,11 +165,6 @@ void PlayStationMouse::UpdatePosition()
 std::unique_ptr<PlayStationMouse> PlayStationMouse::Create()
 {
   return std::make_unique<PlayStationMouse>();
-}
-
-std::optional<s32> PlayStationMouse::StaticGetAxisCodeByName(std::string_view button_name)
-{
-  return std::nullopt;
 }
 
 std::optional<s32> PlayStationMouse::StaticGetButtonCodeByName(std::string_view button_name)
