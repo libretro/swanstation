@@ -17,11 +17,6 @@ ControllerType NeGcon::GetType() const
   return ControllerType::NeGcon;
 }
 
-std::optional<s32> NeGcon::GetButtonCodeByName(std::string_view button_name) const
-{
-  return StaticGetButtonCodeByName(button_name);
-}
-
 void NeGcon::Reset()
 {
   m_transfer_state = TransferState::Idle;
@@ -208,28 +203,6 @@ bool NeGcon::Transfer(const u8 data_in, u8* data_out)
 std::unique_ptr<NeGcon> NeGcon::Create()
 {
   return std::make_unique<NeGcon>();
-}
-
-std::optional<s32> NeGcon::StaticGetButtonCodeByName(std::string_view button_name)
-{
-#define BUTTON(name)                                                                                                   \
-  if (button_name == #name)                                                                                            \
-  {                                                                                                                    \
-    return static_cast<s32>(ZeroExtend32(static_cast<u8>(Button::name)));                                              \
-  }
-
-  BUTTON(Up);
-  BUTTON(Down);
-  BUTTON(Left);
-  BUTTON(Right);
-  BUTTON(A);
-  BUTTON(B);
-  BUTTON(R);
-  BUTTON(Start);
-
-  return std::nullopt;
-
-#undef BUTTON
 }
 
 Controller::AxisList NeGcon::StaticGetAxisNames()

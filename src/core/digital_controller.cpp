@@ -12,11 +12,6 @@ ControllerType DigitalController::GetType() const
   return ControllerType::DigitalController;
 }
 
-std::optional<s32> DigitalController::GetButtonCodeByName(std::string_view button_name) const
-{
-  return StaticGetButtonCodeByName(button_name);
-}
-
 void DigitalController::Reset()
 {
   m_transfer_state = TransferState::Idle;
@@ -132,36 +127,6 @@ bool DigitalController::Transfer(const u8 data_in, u8* data_out)
 std::unique_ptr<DigitalController> DigitalController::Create()
 {
   return std::make_unique<DigitalController>();
-}
-
-std::optional<s32> DigitalController::StaticGetButtonCodeByName(std::string_view button_name)
-{
-#define BUTTON(name)                                                                                                   \
-  if (button_name == #name)                                                                                            \
-  {                                                                                                                    \
-    return static_cast<s32>(ZeroExtend32(static_cast<u8>(Button::name)));                                              \
-  }
-
-  BUTTON(Select);
-  BUTTON(L3);
-  BUTTON(R3);
-  BUTTON(Start);
-  BUTTON(Up);
-  BUTTON(Right);
-  BUTTON(Down);
-  BUTTON(Left);
-  BUTTON(L2);
-  BUTTON(R2);
-  BUTTON(L1);
-  BUTTON(R1);
-  BUTTON(Triangle);
-  BUTTON(Circle);
-  BUTTON(Cross);
-  BUTTON(Square);
-
-  return std::nullopt;
-
-#undef BUTTON
 }
 
 Controller::AxisList DigitalController::StaticGetAxisNames()

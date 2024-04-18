@@ -84,11 +84,6 @@ bool AnalogController::DoState(StateWrapper& sw, bool apply_input_state)
   return true;
 }
 
-std::optional<s32> AnalogController::GetButtonCodeByName(std::string_view button_name) const
-{
-  return StaticGetButtonCodeByName(button_name);
-}
-
 void AnalogController::SetAxisState(s32 axis_code, float value)
 {
   if (axis_code < 0 || axis_code >= static_cast<s32>(Axis::Count))
@@ -650,37 +645,6 @@ bool AnalogController::Transfer(const u8 data_in, u8* data_out)
 std::unique_ptr<AnalogController> AnalogController::Create(u32 index)
 {
   return std::make_unique<AnalogController>(index);
-}
-
-std::optional<s32> AnalogController::StaticGetButtonCodeByName(std::string_view button_name)
-{
-#define BUTTON(name)                                                                                                   \
-  if (button_name == #name)                                                                                            \
-  {                                                                                                                    \
-    return static_cast<s32>(ZeroExtend32(static_cast<u8>(Button::name)));                                              \
-  }
-
-  BUTTON(Select);
-  BUTTON(L3);
-  BUTTON(R3);
-  BUTTON(Start);
-  BUTTON(Up);
-  BUTTON(Right);
-  BUTTON(Down);
-  BUTTON(Left);
-  BUTTON(L2);
-  BUTTON(R2);
-  BUTTON(L1);
-  BUTTON(R1);
-  BUTTON(Triangle);
-  BUTTON(Circle);
-  BUTTON(Cross);
-  BUTTON(Square);
-  BUTTON(Analog);
-
-  return std::nullopt;
-
-#undef BUTTON
 }
 
 Controller::AxisList AnalogController::StaticGetAxisNames()

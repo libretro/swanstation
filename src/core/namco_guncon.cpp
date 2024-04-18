@@ -16,11 +16,6 @@ ControllerType NamcoGunCon::GetType() const
   return ControllerType::NamcoGunCon;
 }
 
-std::optional<s32> NamcoGunCon::GetButtonCodeByName(std::string_view button_name) const
-{
-  return StaticGetButtonCodeByName(button_name);
-}
-
 void NamcoGunCon::Reset()
 {
   m_transfer_state = TransferState::Idle;
@@ -196,24 +191,6 @@ void NamcoGunCon::UpdatePosition()
 std::unique_ptr<NamcoGunCon> NamcoGunCon::Create()
 {
   return std::make_unique<NamcoGunCon>();
-}
-
-std::optional<s32> NamcoGunCon::StaticGetButtonCodeByName(std::string_view button_name)
-{
-#define BUTTON(name)                                                                                                   \
-  if (button_name == #name)                                                                                            \
-  {                                                                                                                    \
-    return static_cast<s32>(ZeroExtend32(static_cast<u8>(Button::name)));                                              \
-  }
-
-  BUTTON(Trigger);
-  BUTTON(ShootOffscreen);
-  BUTTON(A);
-  BUTTON(B);
-
-  return std::nullopt;
-
-#undef BUTTON
 }
 
 Controller::AxisList NamcoGunCon::StaticGetAxisNames()

@@ -34,14 +34,12 @@ public:
   ~NeGcon() override;
 
   static std::unique_ptr<NeGcon> Create();
-  static std::optional<s32> StaticGetButtonCodeByName(std::string_view button_name);
   static AxisList StaticGetAxisNames();
   static ButtonList StaticGetButtonNames();
   static u32 StaticGetVibrationMotorCount();
   static SettingList StaticGetSettings();
 
   ControllerType GetType() const override;
-  std::optional<s32> GetButtonCodeByName(std::string_view button_name) const override;
 
   void Reset() override;
   bool DoState(StateWrapper& sw, bool apply_input_state) override;
