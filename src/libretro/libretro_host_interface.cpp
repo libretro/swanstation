@@ -30,7 +30,7 @@
 Log_SetChannel(LibretroHostInterface);
 
 #ifdef WIN32
-#include "libretro_d3d11_host_display.h"
+#include "core/gpu_hw_d3d11.h"
 #endif
 
 RETRO_API unsigned retro_api_version(void)

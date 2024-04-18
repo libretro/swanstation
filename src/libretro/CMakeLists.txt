@@ -15,13 +15,6 @@ add_library(swanstation_libretro SHARED
   libretro_vulkan_host_display.h
 )
 
-if(WIN32)
-  target_sources(swanstation_libretro PRIVATE
-    libretro_d3d11_host_display.cpp
-    libretro_d3d11_host_display.h
-  )
-endif()
-
 target_link_libraries(swanstation_libretro PRIVATE core common glad vulkan-loader libretro-common)
 
 # no lib prefix
