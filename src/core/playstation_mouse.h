@@ -18,8 +18,6 @@ public:
   ~PlayStationMouse() override;
 
   static std::unique_ptr<PlayStationMouse> Create();
-  static AxisList StaticGetAxisNames();
-  static ButtonList StaticGetButtonNames();
   static u32 StaticGetVibrationMotorCount();
 
   ControllerType GetType() const override;

@@ -162,17 +162,6 @@ std::unique_ptr<PlayStationMouse> PlayStationMouse::Create()
   return std::make_unique<PlayStationMouse>();
 }
 
-Controller::AxisList PlayStationMouse::StaticGetAxisNames()
-{
-  return {};
-}
-
-Controller::ButtonList PlayStationMouse::StaticGetButtonNames()
-{
-  return {{TRANSLATABLE("PlayStationMouse", "Left"), static_cast<s32>(Button::Left)},
-          {TRANSLATABLE("PlayStationMouse", "Right"), static_cast<s32>(Button::Right)}};
-}
-
 u32 PlayStationMouse::StaticGetVibrationMotorCount()
 {
   return 0;

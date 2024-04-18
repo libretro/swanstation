@@ -32,8 +32,6 @@ public:
   ~DigitalController() override;
 
   static std::unique_ptr<DigitalController> Create();
-  static AxisList StaticGetAxisNames();
-  static ButtonList StaticGetButtonNames();
   static u32 StaticGetVibrationMotorCount();
 
   ControllerType GetType() const override;

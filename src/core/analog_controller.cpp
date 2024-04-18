@@ -647,35 +647,6 @@ std::unique_ptr<AnalogController> AnalogController::Create(u32 index)
   return std::make_unique<AnalogController>(index);
 }
 
-Controller::AxisList AnalogController::StaticGetAxisNames()
-{
-  return {{TRANSLATABLE("AnalogController", "LeftX"), static_cast<s32>(Axis::LeftX), AxisType::Full},
-          {TRANSLATABLE("AnalogController", "LeftY"), static_cast<s32>(Axis::LeftY), AxisType::Full},
-          {TRANSLATABLE("AnalogController", "RightX"), static_cast<s32>(Axis::RightX), AxisType::Full},
-          {TRANSLATABLE("AnalogController", "RightY"), static_cast<s32>(Axis::RightY), AxisType::Full}};
-}
-
-Controller::ButtonList AnalogController::StaticGetButtonNames()
-{
-  return {{TRANSLATABLE("AnalogController", "Up"), static_cast<s32>(Button::Up)},
-          {TRANSLATABLE("AnalogController", "Down"), static_cast<s32>(Button::Down)},
-          {TRANSLATABLE("AnalogController", "Left"), static_cast<s32>(Button::Left)},
-          {TRANSLATABLE("AnalogController", "Right"), static_cast<s32>(Button::Right)},
-          {TRANSLATABLE("AnalogController", "Select"), static_cast<s32>(Button::Select)},
-          {TRANSLATABLE("AnalogController", "Start"), static_cast<s32>(Button::Start)},
-          {TRANSLATABLE("AnalogController", "Triangle"), static_cast<s32>(Button::Triangle)},
-          {TRANSLATABLE("AnalogController", "Cross"), static_cast<s32>(Button::Cross)},
-          {TRANSLATABLE("AnalogController", "Circle"), static_cast<s32>(Button::Circle)},
-          {TRANSLATABLE("AnalogController", "Square"), static_cast<s32>(Button::Square)},
-          {TRANSLATABLE("AnalogController", "L1"), static_cast<s32>(Button::L1)},
-          {TRANSLATABLE("AnalogController", "L2"), static_cast<s32>(Button::L2)},
-          {TRANSLATABLE("AnalogController", "R1"), static_cast<s32>(Button::R1)},
-          {TRANSLATABLE("AnalogController", "R2"), static_cast<s32>(Button::R2)},
-          {TRANSLATABLE("AnalogController", "L3"), static_cast<s32>(Button::L3)},
-          {TRANSLATABLE("AnalogController", "R3"), static_cast<s32>(Button::R3)},
-          {TRANSLATABLE("AnalogController", "Analog"), static_cast<s32>(Button::Analog)}};
-}
-
 u32 AnalogController::StaticGetVibrationMotorCount()
 {
   return NUM_MOTORS;

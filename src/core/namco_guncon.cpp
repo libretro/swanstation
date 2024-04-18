@@ -193,19 +193,6 @@ std::unique_ptr<NamcoGunCon> NamcoGunCon::Create()
   return std::make_unique<NamcoGunCon>();
 }
 
-Controller::AxisList NamcoGunCon::StaticGetAxisNames()
-{
-  return {};
-}
-
-Controller::ButtonList NamcoGunCon::StaticGetButtonNames()
-{
-  return {{TRANSLATABLE("NamcoGunCon", "Trigger"), static_cast<s32>(Button::Trigger)},
-          {TRANSLATABLE("NamcoGunCon", "ShootOffscreen"), static_cast<s32>(Button::ShootOffscreen)},
-          {TRANSLATABLE("NamcoGunCon", "A"), static_cast<s32>(Button::A)},
-          {TRANSLATABLE("NamcoGunCon", "B"), static_cast<s32>(Button::B)}};
-}
-
 u32 NamcoGunCon::StaticGetVibrationMotorCount()
 {
   return 0;

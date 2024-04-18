@@ -205,26 +205,6 @@ std::unique_ptr<NeGcon> NeGcon::Create()
   return std::make_unique<NeGcon>();
 }
 
-Controller::AxisList NeGcon::StaticGetAxisNames()
-{
-  return {{TRANSLATABLE("NeGcon", "Steering"), static_cast<s32>(Axis::Steering), AxisType::Full},
-          {TRANSLATABLE("NeGcon", "I"), static_cast<s32>(Axis::I), AxisType::Half},
-          {TRANSLATABLE("NeGcon", "II"), static_cast<s32>(Axis::II), AxisType::Half},
-          {TRANSLATABLE("NeGcon", "L"), static_cast<s32>(Axis::L), AxisType::Half}};
-}
-
-Controller::ButtonList NeGcon::StaticGetButtonNames()
-{
-  return {{TRANSLATABLE("NeGcon", "Up"), static_cast<s32>(Button::Up)},
-          {TRANSLATABLE("NeGcon", "Down"), static_cast<s32>(Button::Down)},
-          {TRANSLATABLE("NeGcon", "Left"), static_cast<s32>(Button::Left)},
-          {TRANSLATABLE("NeGcon", "Right"), static_cast<s32>(Button::Right)},
-          {TRANSLATABLE("NeGcon", "A"), static_cast<s32>(Button::A)},
-          {TRANSLATABLE("NeGcon", "B"), static_cast<s32>(Button::B)},
-          {TRANSLATABLE("NeGcon", "R"), static_cast<s32>(Button::R)},
-          {TRANSLATABLE("NeGcon", "Start"), static_cast<s32>(Button::Start)}};
-}
-
 u32 NeGcon::StaticGetVibrationMotorCount()
 {
   return 0;

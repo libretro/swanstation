@@ -45,8 +45,6 @@ public:
   ~AnalogController() override;
 
   static std::unique_ptr<AnalogController> Create(u32 index);
-  static AxisList StaticGetAxisNames();
-  static ButtonList StaticGetButtonNames();
   static u32 StaticGetVibrationMotorCount();
 
   ControllerType GetType() const override;

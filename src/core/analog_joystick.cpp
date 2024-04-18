@@ -240,35 +240,6 @@ std::unique_ptr<AnalogJoystick> AnalogJoystick::Create(u32 index)
   return std::make_unique<AnalogJoystick>(index);
 }
 
-Controller::AxisList AnalogJoystick::StaticGetAxisNames()
-{
-  return {{TRANSLATABLE("AnalogJoystick", "LeftX"), static_cast<s32>(Axis::LeftX), AxisType::Full},
-          {TRANSLATABLE("AnalogJoystick", "LeftY"), static_cast<s32>(Axis::LeftY), AxisType::Full},
-          {TRANSLATABLE("AnalogJoystick", "RightX"), static_cast<s32>(Axis::RightX), AxisType::Full},
-          {TRANSLATABLE("AnalogJoystick", "RightY"), static_cast<s32>(Axis::RightY), AxisType::Full}};
-}
-
-Controller::ButtonList AnalogJoystick::StaticGetButtonNames()
-{
-  return {{TRANSLATABLE("AnalogJoystick", "Up"), static_cast<s32>(Button::Up)},
-          {TRANSLATABLE("AnalogJoystick", "Down"), static_cast<s32>(Button::Down)},
-          {TRANSLATABLE("AnalogJoystick", "Left"), static_cast<s32>(Button::Left)},
-          {TRANSLATABLE("AnalogJoystick", "Right"), static_cast<s32>(Button::Right)},
-          {TRANSLATABLE("AnalogJoystick", "Select"), static_cast<s32>(Button::Select)},
-          {TRANSLATABLE("AnalogJoystick", "Start"), static_cast<s32>(Button::Start)},
-          {TRANSLATABLE("AnalogJoystick", "Triangle"), static_cast<s32>(Button::Triangle)},
-          {TRANSLATABLE("AnalogJoystick", "Cross"), static_cast<s32>(Button::Cross)},
-          {TRANSLATABLE("AnalogJoystick", "Circle"), static_cast<s32>(Button::Circle)},
-          {TRANSLATABLE("AnalogJoystick", "Square"), static_cast<s32>(Button::Square)},
-          {TRANSLATABLE("AnalogJoystick", "L1"), static_cast<s32>(Button::L1)},
-          {TRANSLATABLE("AnalogJoystick", "L2"), static_cast<s32>(Button::L2)},
-          {TRANSLATABLE("AnalogJoystick", "R1"), static_cast<s32>(Button::R1)},
-          {TRANSLATABLE("AnalogJoystick", "R2"), static_cast<s32>(Button::R2)},
-          {TRANSLATABLE("AnalogJoystick", "L3"), static_cast<s32>(Button::L3)},
-          {TRANSLATABLE("AnalogJoystick", "R3"), static_cast<s32>(Button::R3)},
-          {TRANSLATABLE("AnalogJoystick", "Analog"), static_cast<s32>(Button::Mode)}};
-}
-
 u32 AnalogJoystick::StaticGetVibrationMotorCount()
 {
   return 0;

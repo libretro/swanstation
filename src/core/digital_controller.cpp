@@ -129,29 +129,6 @@ std::unique_ptr<DigitalController> DigitalController::Create()
   return std::make_unique<DigitalController>();
 }
 
-Controller::AxisList DigitalController::StaticGetAxisNames()
-{
-  return {};
-}
-
-Controller::ButtonList DigitalController::StaticGetButtonNames()
-{
-  return {{TRANSLATABLE("DigitalController", "Up"), static_cast<s32>(Button::Up)},
-          {TRANSLATABLE("DigitalController", "Down"), static_cast<s32>(Button::Down)},
-          {TRANSLATABLE("DigitalController", "Left"), static_cast<s32>(Button::Left)},
-          {TRANSLATABLE("DigitalController", "Right"), static_cast<s32>(Button::Right)},
-          {TRANSLATABLE("DigitalController", "Select"), static_cast<s32>(Button::Select)},
-          {TRANSLATABLE("DigitalController", "Start"), static_cast<s32>(Button::Start)},
-          {TRANSLATABLE("DigitalController", "Triangle"), static_cast<s32>(Button::Triangle)},
-          {TRANSLATABLE("DigitalController", "Cross"), static_cast<s32>(Button::Cross)},
-          {TRANSLATABLE("DigitalController", "Circle"), static_cast<s32>(Button::Circle)},
-          {TRANSLATABLE("DigitalController", "Square"), static_cast<s32>(Button::Square)},
-          {TRANSLATABLE("DigitalController", "L1"), static_cast<s32>(Button::L1)},
-          {TRANSLATABLE("DigitalController", "L2"), static_cast<s32>(Button::L2)},
-          {TRANSLATABLE("DigitalController", "R1"), static_cast<s32>(Button::R1)},
-          {TRANSLATABLE("DigitalController", "R2"), static_cast<s32>(Button::R2)}};
-}
-
 u32 DigitalController::StaticGetVibrationMotorCount()
 {
   return 0;

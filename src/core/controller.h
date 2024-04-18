@@ -66,12 +66,6 @@ public:
   /// Creates a new controller of the specified type.
   static std::unique_ptr<Controller> Create(ControllerType type, u32 index);
 
-  /// Returns a list of axises for the specified controller type.
-  static AxisList GetAxisNames(ControllerType type);
-
-  /// Returns a list of buttons for the specified controller type.
-  static ButtonList GetButtonNames(ControllerType type);
-
   /// Returns the number of vibration motors.
   static u32 GetVibrationMotorCount(ControllerType type);
 };

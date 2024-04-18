@@ -85,62 +85,6 @@ std::unique_ptr<Controller> Controller::Create(ControllerType type, u32 index)
   }
 }
 
-Controller::AxisList Controller::GetAxisNames(ControllerType type)
-{
-  switch (type)
-  {
-    case ControllerType::DigitalController:
-      return DigitalController::StaticGetAxisNames();
-
-    case ControllerType::AnalogController:
-      return AnalogController::StaticGetAxisNames();
-
-    case ControllerType::AnalogJoystick:
-      return AnalogJoystick::StaticGetAxisNames();
-
-    case ControllerType::NamcoGunCon:
-      return NamcoGunCon::StaticGetAxisNames();
-
-    case ControllerType::PlayStationMouse:
-      return PlayStationMouse::StaticGetAxisNames();
-
-    case ControllerType::NeGcon:
-      return NeGcon::StaticGetAxisNames();
-
-    case ControllerType::None:
-    default:
-      return {};
-  }
-}
-
-Controller::ButtonList Controller::GetButtonNames(ControllerType type)
-{
-  switch (type)
-  {
-    case ControllerType::DigitalController:
-      return DigitalController::StaticGetButtonNames();
-
-    case ControllerType::AnalogController:
-      return AnalogController::StaticGetButtonNames();
-
-    case ControllerType::AnalogJoystick:
-      return AnalogJoystick::StaticGetButtonNames();
-
-    case ControllerType::NamcoGunCon:
-      return NamcoGunCon::StaticGetButtonNames();
-
-    case ControllerType::PlayStationMouse:
-      return PlayStationMouse::StaticGetButtonNames();
-
-    case ControllerType::NeGcon:
-      return NeGcon::StaticGetButtonNames();
-
-    case ControllerType::None:
-    default:
-      return {};
-  }
-}
-
 u32 Controller::GetVibrationMotorCount(ControllerType type)
 {
   switch (type)
