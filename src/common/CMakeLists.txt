@@ -12,8 +12,6 @@ add_library(common
   cd_image_cue.cpp
   cd_image_chd.cpp
   cd_image_ecm.cpp
-  cd_image_hasher.cpp
-  cd_image_hasher.h
   cd_image_m3u.cpp
   cd_image_memory.cpp
   cd_image_mds.cpp
