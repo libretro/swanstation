@@ -330,11 +330,6 @@ void WriteRegister(u32 index, u32 value)
   }
 }
 
-u32* GetRegisterPtr(u32 index)
-{
-  return &REGS.r32[index];
-}
-
 ALWAYS_INLINE static void SetOTZ(s32 value)
 {
   if (value < 0)

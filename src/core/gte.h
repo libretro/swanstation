@@ -14,9 +14,6 @@ void UpdateAspectRatio();
 u32 ReadRegister(u32 index);
 void WriteRegister(u32 index, u32 value);
 
-// use with care, direct register access
-u32* GetRegisterPtr(u32 index);
-
 void ExecuteInstruction(u32 inst_bits);
 
 using InstructionImpl = void (*)(Instruction);

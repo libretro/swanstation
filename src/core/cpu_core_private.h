@@ -83,8 +83,9 @@ ALWAYS_INLINE Segment GetSegmentForAddress(VirtualMemoryAddress address)
     case 0x06: // KSEG2
     case 0x07: // KSEG2
     default:
-      return Segment::KSEG2;
+      break;
   }
+  return Segment::KSEG2;
 }
 
 ALWAYS_INLINE PhysicalMemoryAddress VirtualAddressToPhysical(VirtualMemoryAddress address)

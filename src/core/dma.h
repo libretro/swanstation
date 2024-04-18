@@ -146,7 +146,6 @@ private:
     BitField<u32, u8, 28, 3> priority_offset;
     BitField<u32, bool, 31, 1> unused;
 
-    u8 GetPriority(Channel channel) const { return ((bits >> (static_cast<u8>(channel) * 4)) & u32(3)); }
     bool GetMasterEnable(Channel channel) const
     {
       return ConvertToBoolUnchecked((bits >> (static_cast<u8>(channel) * 4 + 3)) & u32(1));
@@ -182,13 +181,7 @@ private:
       return ConvertToBoolUnchecked((bits >> (static_cast<u8>(channel) + 16)) & u32(1));
     }
 
-    bool GetIRQFlag(Channel channel) const
-    {
-      return ConvertToBoolUnchecked((bits >> (static_cast<u8>(channel) + 24)) & u32(1));
-    }
-
     void SetIRQFlag(Channel channel) { bits |= (u32(1) << (static_cast<u8>(channel) + 24)); }
-    void ClearIRQFlag(Channel channel) { bits &= ~(u32(1) << (static_cast<u8>(channel) + 24)); }
 
     void UpdateMasterFlag()
     {
