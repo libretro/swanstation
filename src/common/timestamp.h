@@ -31,10 +31,6 @@ public:
   // setters
   void SetUnixTimestamp(UnixTimestampValue value);
 
-  // string conversion
-  String ToString(const char* format) const;
-  void ToString(String& destination, const char* format) const;
-
 // windows-specific
 #ifdef _WIN32
   void SetWindowsFileTime(const FILETIME* pFileTime);

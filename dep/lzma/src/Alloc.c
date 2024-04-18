@@ -12,142 +12,15 @@
 
 #include "Alloc.h"
 
-/* #define _SZ_ALLOC_DEBUG */
-
-/* use _SZ_ALLOC_DEBUG to debug alloc/free operations */
-#ifdef _SZ_ALLOC_DEBUG
-
-#include <stdio.h>
-int g_allocCount = 0;
-int g_allocCountMid = 0;
-int g_allocCountBig = 0;
-
-
-#define CONVERT_INT_TO_STR(charType, tempSize) \
-  unsigned char temp[tempSize]; unsigned i = 0; \
-  while (val >= 10) { temp[i++] = (unsigned char)('0' + (unsigned)(val % 10)); val /= 10; } \
-  *s++ = (charType)('0' + (unsigned)val); \
-  while (i != 0) { i--; *s++ = temp[i]; } \
-  *s = 0;
-
-static void ConvertUInt64ToString(UInt64 val, char *s)
-{
-  CONVERT_INT_TO_STR(char, 24);
-}
-
-#define GET_HEX_CHAR(t) ((char)(((t < 10) ? ('0' + t) : ('A' + (t - 10)))))
-
-static void ConvertUInt64ToHex(UInt64 val, char *s)
-{
-  UInt64 v = val;
-  unsigned i;
-  for (i = 1;; i++)
-  {
-    v >>= 4;
-    if (v == 0)
-      break;
-  }
-  s[i] = 0;
-  do
-  {
-    unsigned t = (unsigned)(val & 0xF);
-    val >>= 4;
-    s[--i] = GET_HEX_CHAR(t);
-  }
-  while (i);
-}
-
-#define DEBUG_OUT_STREAM stderr
-
-static void Print(const char *s)
-{
-  fputs(s, DEBUG_OUT_STREAM);
-}
-
-static void PrintAligned(const char *s, size_t align)
-{
-  size_t len = strlen(s);
-  for(;;)
-  {
-    fputc(' ', DEBUG_OUT_STREAM);
-    if (len >= align)
-      break;
-    ++len;
-  }
-  Print(s);
-}
-
-static void PrintLn()
-{
-  Print("\n");
-}
-
-static void PrintHex(UInt64 v, size_t align)
-{
-  char s[32];
-  ConvertUInt64ToHex(v, s);
-  PrintAligned(s, align);
-}
-
-static void PrintDec(UInt64 v, size_t align)
-{
-  char s[32];
-  ConvertUInt64ToString(v, s);
-  PrintAligned(s, align);
-}
-
-static void PrintAddr(void *p)
-{
-  PrintHex((UInt64)(size_t)(ptrdiff_t)p, 12);
-}
-
-
-#define PRINT_ALLOC(name, cnt, size, ptr) \
-    Print(name " "); \
-    PrintDec(cnt++, 10); \
-    PrintHex(size, 10); \
-    PrintAddr(ptr); \
-    PrintLn();
- 
-#define PRINT_FREE(name, cnt, ptr) if (ptr) { \
-    Print(name " "); \
-    PrintDec(--cnt, 10); \
-    PrintAddr(ptr); \
-    PrintLn(); }
- 
-#else
-
-#define PRINT_ALLOC(name, cnt, size, ptr)
-#define PRINT_FREE(name, cnt, ptr)
-#define Print(s)
-#define PrintLn()
-#define PrintHex(v, align)
-#define PrintDec(v, align)
-#define PrintAddr(p)
-
-#endif
-
-
-
 void *MyAlloc(size_t size)
 {
   if (size == 0)
     return NULL;
-  #ifdef _SZ_ALLOC_DEBUG
-  {
-    void *p = malloc(size);
-    PRINT_ALLOC("Alloc    ", g_allocCount, size, p);
-    return p;
-  }
-  #else
   return malloc(size);
-  #endif
 }
 
 void MyFree(void *address)
 {
-  PRINT_FREE("Free    ", g_allocCount, address);
-  
   free(address);
 }
 
@@ -158,15 +31,11 @@ void *MidAlloc(size_t size)
   if (size == 0)
     return NULL;
   
-  PRINT_ALLOC("Alloc-Mid", g_allocCountMid, size, NULL);
-  
   return VirtualAlloc(NULL, size, MEM_COMMIT, PAGE_READWRITE);
 }
 
 void MidFree(void *address)
 {
-  PRINT_FREE("Free-Mid", g_allocCountMid, address);
-
   if (!address)
     return;
   VirtualFree(address, 0, MEM_RELEASE);
@@ -202,8 +71,6 @@ void *BigAlloc(size_t size)
   if (size == 0)
     return NULL;
 
-  PRINT_ALLOC("Alloc-Big", g_allocCountBig, size, NULL);
-  
   #ifdef _7ZIP_LARGE_PAGES
   {
     SIZE_T ps = g_LargePageSize;
@@ -227,13 +94,10 @@ void *BigAlloc(size_t size)
 
 void BigFree(void *address)
 {
-  PRINT_FREE("Free-Big", g_allocCountBig, address);
-  
   if (!address)
     return;
   VirtualFree(address, 0, MEM_RELEASE);
 }
-
 #endif
 
 
@@ -341,12 +205,6 @@ static void *SzAlignedAlloc(ISzAllocPtr pp, size_t size)
     return NULL;
   pAligned = MY_ALIGN_PTR_UP_PLUS(p, ALLOC_ALIGN_SIZE);
 
-  Print(" size="); PrintHex(size, 8);
-  Print(" a_size="); PrintHex(newSize, 8);
-  Print(" ptr="); PrintAddr(p);
-  Print(" a_ptr="); PrintAddr(pAligned);
-  PrintLn();
-
   ((void **)pAligned)[-1] = p;
 
   return pAligned;
@@ -357,9 +215,6 @@ static void *SzAlignedAlloc(ISzAllocPtr pp, size_t size)
   UNUSED_VAR(pp);
   if (posix_memalign(&p, ALLOC_ALIGN_SIZE, size))
     return NULL;
-
-  Print(" posix_memalign="); PrintAddr(p);
-  PrintLn();
 
   return p;
 
@@ -421,14 +276,6 @@ static void *AlignOffsetAlloc_Alloc(ISzAllocPtr pp, size_t size)
   pAligned = (char *)MY_ALIGN_PTR_DOWN((char *)adr +
       alignSize - p->offset + extra + ADJUST_ALLOC_SIZE, alignSize) + p->offset;
 
-  PrintLn();
-  Print("- Aligned: ");
-  Print(" size="); PrintHex(size, 8);
-  Print(" a_size="); PrintHex(newSize, 8);
-  Print(" ptr="); PrintAddr(adr);
-  Print(" a_ptr="); PrintAddr(pAligned);
-  PrintLn();
-
   REAL_BLOCK_PTR_VAR(pAligned) = adr;
 
   return pAligned;
@@ -440,9 +287,6 @@ static void AlignOffsetAlloc_Free(ISzAllocPtr pp, void *address)
   if (address)
   {
     CAlignOffsetAlloc *p = CONTAINER_FROM_VTBL(pp, CAlignOffsetAlloc, vt);
-    PrintLn();
-    Print("- Aligned Free: ");
-    PrintLn();
     ISzAlloc_Free(p->baseAlloc, REAL_BLOCK_PTR_VAR(address));
   }
 }

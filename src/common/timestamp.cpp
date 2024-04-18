@@ -69,31 +69,6 @@ void Timestamp::SetUnixTimestamp(UnixTimestampValue value)
 #endif
 }
 
-String Timestamp::ToString(const char* format) const
-{
-  SmallString destination;
-  ToString(destination, format);
-  return String(destination);
-}
-
-void Timestamp::ToString(String& destination, const char* format) const
-{
-  tm localTime;
-  char buffer[256];
-#if defined(_WIN32)
-  time_t unixTime = (time_t)(UnixTimestampValue)SystemTimeToUnixTime(&m_value);
-  localtime_s(&localTime, &unixTime);
-#else
-  time_t unixTime = (time_t)(UnixTimestampValue)m_value.tv_sec;
-  localtime_r(&unixTime, &localTime);
-#endif
-  strftime(buffer, countof(buffer) - 1, format, &localTime);
-  buffer[countof(buffer) - 1] = 0;
-
-  destination.Clear();
-  destination.AppendString(buffer);
-}
-
 bool Timestamp::operator==(const Timestamp& other) const
 {
   return std::memcmp(&m_value, &other.m_value, sizeof(m_value)) == 0;

@@ -10,7 +10,6 @@ class CDImage;
 namespace CDImageHasher {
 
 using Hash = std::array<u8, 16>;
-std::string HashToString(const Hash& hash);
 std::optional<Hash> HashFromString(const std::string_view& str);
 
 bool GetImageHash(CDImage* image, Hash* out_hash,

@@ -24,15 +24,6 @@ static constexpr Hash MakeHashFromString(const char str[])
   return h;
 }
 
-std::string Hash::ToString() const
-{
-  char str[33];
-  std::snprintf(str, sizeof(str), "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x", bytes[0],
-                bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7], bytes[8], bytes[9], bytes[10],
-                bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]);
-  return str;
-}
-
 static ImageInfo s_image_infos[27] = {
   {"SCPH-1000, DTL-H1000 (v1.0)", ConsoleRegion::NTSC_J, MakeHashFromString("239665b1a3dade1b5a52c06338011044"), true},
    {"SCPH-1001, 5003, DTL-H1201, H3001 (v2.2 12-04-95 A)", ConsoleRegion::NTSC_U,
