@@ -19,9 +19,9 @@
 #include "libretro_audio_stream.h"
 #include "libretro_game_settings.h"
 #include "libretro_host_display.h"
-#include "libretro_opengl_host_display.h"
+#include "core/gpu_hw_opengl.h"
 #include "libretro_settings_interface.h"
-#include "libretro_vulkan_host_display.h"
+#include "core/gpu_hw_vulkan.h"
 #include "version.h"
 #include <array>
 #include <cstring>
