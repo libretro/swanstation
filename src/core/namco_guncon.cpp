@@ -211,16 +211,6 @@ u32 NamcoGunCon::StaticGetVibrationMotorCount()
   return 0;
 }
 
-Controller::SettingList NamcoGunCon::StaticGetSettings()
-{
-  static constexpr std::array<SettingInfo, 1> settings = {
-    {{SettingInfo::Type::Float, "XScale", TRANSLATABLE("NamcoGunCon", "X Scale"),
-      TRANSLATABLE("NamcoGunCon", "Scales X coordinates relative to the center of the screen."), "1.0", "0.01", "2.0",
-      "0.01"}}};
-
-  return SettingList(settings.begin(), settings.end());
-}
-
 void NamcoGunCon::LoadSettings(const char* section)
 {
   Controller::LoadSettings(section);

@@ -274,19 +274,6 @@ u32 AnalogJoystick::StaticGetVibrationMotorCount()
   return 0;
 }
 
-Controller::SettingList AnalogJoystick::StaticGetSettings()
-{
-  static constexpr std::array<SettingInfo, 1> settings = {
-    {{SettingInfo::Type::Float, "AxisScale", TRANSLATABLE("AnalogJoystick", "Analog Axis Scale"),
-      TRANSLATABLE(
-        "AnalogJoystick",
-        "Sets the analog stick axis scaling factor. A value between 1.30 and 1.40 is recommended when using recent "
-        "controllers, e.g. DualShock 4, Xbox One Controller."),
-      "1.00f", "0.01f", "1.50f", "0.01f"}}};
-
-  return SettingList(settings.begin(), settings.end());
-}
-
 void AnalogJoystick::LoadSettings(const char* section)
 {
   Controller::LoadSettings(section);

@@ -168,24 +168,3 @@ u32 Controller::GetVibrationMotorCount(ControllerType type)
       return 0;
   }
 }
-
-Controller::SettingList Controller::GetSettings(ControllerType type)
-{
-  switch (type)
-  {
-    case ControllerType::AnalogController:
-      return AnalogController::StaticGetSettings();
-
-    case ControllerType::AnalogJoystick:
-      return AnalogJoystick::StaticGetSettings();
-
-    case ControllerType::NamcoGunCon:
-      return NamcoGunCon::StaticGetSettings();
-
-    case ControllerType::NeGcon:
-      return NeGcon::StaticGetSettings();
-
-    default:
-      return {};
-  }
-}

@@ -74,7 +74,4 @@ public:
 
   /// Returns the number of vibration motors.
   static u32 GetVibrationMotorCount(ControllerType type);
-
-  /// Returns settings for the controller.
-  static SettingList GetSettings(ControllerType type);
 };

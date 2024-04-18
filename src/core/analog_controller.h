@@ -48,7 +48,6 @@ public:
   static AxisList StaticGetAxisNames();
   static ButtonList StaticGetButtonNames();
   static u32 StaticGetVibrationMotorCount();
-  static SettingList StaticGetSettings();
 
   ControllerType GetType() const override;
 

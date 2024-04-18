@@ -230,17 +230,6 @@ u32 NeGcon::StaticGetVibrationMotorCount()
   return 0;
 }
 
-Controller::SettingList NeGcon::StaticGetSettings()
-{
-  static constexpr std::array<SettingInfo, 2> settings = {
-    {{SettingInfo::Type::Float, "SteeringDeadzone", TRANSLATABLE("NeGcon", "Steering Axis Deadzone"),
-      TRANSLATABLE("NeGcon", "Sets deadzone size for steering axis."), "0.00f", "0.00f", "0.99f", "0.01f"},
-     {SettingInfo::Type::String, "TwistResponse", TRANSLATABLE("NeGcon", "Twist Response"),
-      TRANSLATABLE("NeGcon", "Choose the twist response type of the left analog stick.")}}};
-
-  return SettingList(settings.begin(), settings.end());
-}
-
 void NeGcon::LoadSettings(const char* section)
 {
   Controller::LoadSettings(section);

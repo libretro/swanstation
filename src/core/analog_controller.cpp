@@ -681,32 +681,6 @@ u32 AnalogController::StaticGetVibrationMotorCount()
   return NUM_MOTORS;
 }
 
-Controller::SettingList AnalogController::StaticGetSettings()
-{
-  static constexpr std::array<SettingInfo, 4> settings = {
-    {{SettingInfo::Type::Boolean, "ForceAnalogOnReset", TRANSLATABLE("AnalogController", "Force Analog Mode on Reset"),
-      TRANSLATABLE("AnalogController", "Forces the controller to analog mode when the console is reset/powered on. May "
-                                       "cause issues with games, so it is recommended to leave this option off."),
-      "false"},
-     {SettingInfo::Type::Boolean, "AnalogDPadInDigitalMode",
-      TRANSLATABLE("AnalogController", "Use Analog Sticks for D-Pad in Digital Mode"),
-      TRANSLATABLE("AnalogController",
-                   "Allows you to use the analog sticks to control the d-pad in digital mode, as well as the buttons."),
-      "false"},
-     {SettingInfo::Type::Float, "AxisScale", TRANSLATABLE("AnalogController", "Analog Axis Scale"),
-      TRANSLATABLE(
-        "AnalogController",
-        "Sets the analog stick axis scaling factor. A value between 1.30 and 1.40 is recommended when using recent "
-        "controllers, e.g. DualShock 4, Xbox One Controller."),
-      "1.00f", "0.01f", "1.50f", "0.01f"},
-     {SettingInfo::Type::Integer, "VibrationBias", TRANSLATABLE("AnalogController", "Vibration Bias"),
-      TRANSLATABLE("AnalogController", "Sets the rumble bias value. If rumble in some games is too weak or not "
-                                       "functioning, try increasing this value."),
-      "8", "0", "255", "1"}}};
-
-  return SettingList(settings.begin(), settings.end());
-}
-
 void AnalogController::LoadSettings(const char* section)
 {
   Controller::LoadSettings(section);
