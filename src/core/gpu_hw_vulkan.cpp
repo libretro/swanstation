@@ -1,6 +1,5 @@
 #include "gpu_hw_vulkan.h"
 #include "common/log.h"
-#include "common/scope_guard.h"
 #include "common/state_wrapper.h"
 #include "common/timer.h"
 #include "common/vulkan/builders.h"
@@ -1439,17 +1438,17 @@ bool GPU_HW_Vulkan::CompilePipelines()
   // fragment shaders - [render_mode][texture_mode][dithering][interlacing]
   DimensionalArray<VkShaderModule, 2> batch_vertex_shaders{};
   DimensionalArray<VkShaderModule, 2, 2, 9, 4> batch_fragment_shaders{};
-  Common::ScopeGuard batch_shader_guard([&batch_vertex_shaders, &batch_fragment_shaders]() {
-    batch_vertex_shaders.enumerate(Vulkan::Util::SafeDestroyShaderModule);
-    batch_fragment_shaders.enumerate(Vulkan::Util::SafeDestroyShaderModule);
-  });
 
   for (u8 textured = 0; textured < 2; textured++)
   {
     const std::string vs = shadergen.GenerateBatchVertexShader(ConvertToBoolUnchecked(textured));
     VkShaderModule shader = g_vulkan_shader_cache->GetVertexShader(vs);
     if (shader == VK_NULL_HANDLE)
+    {
+      batch_vertex_shaders.enumerate(Vulkan::Util::SafeDestroyShaderModule);
+      batch_fragment_shaders.enumerate(Vulkan::Util::SafeDestroyShaderModule);
       return false;
+    }
 
     batch_vertex_shaders[textured] = shader;
     progress.Increment();
@@ -1469,7 +1468,11 @@ bool GPU_HW_Vulkan::CompilePipelines()
 
           VkShaderModule shader = g_vulkan_shader_cache->GetFragmentShader(fs);
           if (shader == VK_NULL_HANDLE)
+	  {
+            batch_vertex_shaders.enumerate(Vulkan::Util::SafeDestroyShaderModule);
+            batch_fragment_shaders.enumerate(Vulkan::Util::SafeDestroyShaderModule);
             return false;
+	  }
 
           batch_fragment_shaders[render_mode][texture_mode][dithering][interlacing] = shader;
           progress.Increment();
@@ -1560,7 +1563,11 @@ bool GPU_HW_Vulkan::CompilePipelines()
 
               VkPipeline pipeline = gpbuilder.Create(device, pipeline_cache);
               if (pipeline == VK_NULL_HANDLE)
+	      {
+                batch_vertex_shaders.enumerate(Vulkan::Util::SafeDestroyShaderModule);
+                batch_fragment_shaders.enumerate(Vulkan::Util::SafeDestroyShaderModule);
                 return false;
+	      }
 
               m_batch_pipelines[depth_test][render_mode][texture_mode][transparency_mode][dithering][interlacing] =
                 pipeline;
@@ -1571,8 +1578,6 @@ bool GPU_HW_Vulkan::CompilePipelines()
       }
     }
   }
-
-  batch_shader_guard.Exit();
 
   VkShaderModule fullscreen_quad_vertex_shader =
     g_vulkan_shader_cache->GetVertexShader(shadergen.GenerateScreenQuadVertexShader());
@@ -1586,11 +1591,6 @@ bool GPU_HW_Vulkan::CompilePipelines()
   }
 
   progress.Increment();
-
-  Common::ScopeGuard fullscreen_quad_vertex_shader_guard([&fullscreen_quad_vertex_shader, &uv_quad_vertex_shader]() {
-    vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
-    vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
-  });
 
   // common state
   gpbuilder.SetRenderPass(m_vram_render_pass, 0);
@@ -1610,7 +1610,11 @@ bool GPU_HW_Vulkan::CompilePipelines()
       VkShaderModule fs = g_vulkan_shader_cache->GetFragmentShader(
         shadergen.GenerateVRAMFillFragmentShader(ConvertToBoolUnchecked(wrapped), ConvertToBoolUnchecked(interlaced)));
       if (fs == VK_NULL_HANDLE)
+      {
+        vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+        vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
         return false;
+      }
 
       gpbuilder.SetPipelineLayout(m_no_samplers_pipeline_layout);
       gpbuilder.SetFragmentShader(fs);
@@ -1619,7 +1623,11 @@ bool GPU_HW_Vulkan::CompilePipelines()
       m_vram_fill_pipelines[wrapped][interlaced] = gpbuilder.Create(device, pipeline_cache, false);
       vkDestroyShaderModule(device, fs, nullptr);
       if (m_vram_fill_pipelines[wrapped][interlaced] == VK_NULL_HANDLE)
+      {
+        vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+        vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
         return false;
+      }
 
       progress.Increment();
     }
@@ -1629,7 +1637,11 @@ bool GPU_HW_Vulkan::CompilePipelines()
   {
     VkShaderModule fs = g_vulkan_shader_cache->GetFragmentShader(shadergen.GenerateVRAMCopyFragmentShader());
     if (fs == VK_NULL_HANDLE)
+    {
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
       return false;
+    }
 
     gpbuilder.SetPipelineLayout(m_single_sampler_pipeline_layout);
     gpbuilder.SetFragmentShader(fs);
@@ -1641,6 +1653,8 @@ bool GPU_HW_Vulkan::CompilePipelines()
       m_vram_copy_pipelines[depth_test] = gpbuilder.Create(device, pipeline_cache, false);
       if (m_vram_copy_pipelines[depth_test] == VK_NULL_HANDLE)
       {
+        vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+        vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
         vkDestroyShaderModule(device, fs, nullptr);
         return false;
       }
@@ -1656,7 +1670,11 @@ bool GPU_HW_Vulkan::CompilePipelines()
     VkShaderModule fs =
       g_vulkan_shader_cache->GetFragmentShader(shadergen.GenerateVRAMWriteFragmentShader(m_use_ssbos_for_vram_writes));
     if (fs == VK_NULL_HANDLE)
+    {
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
       return false;
+    }
 
     gpbuilder.SetPipelineLayout(m_vram_write_pipeline_layout);
     gpbuilder.SetFragmentShader(fs);
@@ -1666,6 +1684,8 @@ bool GPU_HW_Vulkan::CompilePipelines()
       m_vram_write_pipelines[depth_test] = gpbuilder.Create(device, pipeline_cache, false);
       if (m_vram_write_pipelines[depth_test] == VK_NULL_HANDLE)
       {
+        vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+        vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
         vkDestroyShaderModule(device, fs, nullptr);
         return false;
       }
@@ -1680,7 +1700,11 @@ bool GPU_HW_Vulkan::CompilePipelines()
   {
     VkShaderModule fs = g_vulkan_shader_cache->GetFragmentShader(shadergen.GenerateVRAMUpdateDepthFragmentShader());
     if (fs == VK_NULL_HANDLE)
+    {
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
       return false;
+    }
 
     gpbuilder.SetRenderPass(m_vram_update_depth_render_pass, 0);
     gpbuilder.SetPipelineLayout(m_single_sampler_pipeline_layout);
@@ -1692,7 +1716,11 @@ bool GPU_HW_Vulkan::CompilePipelines()
     m_vram_update_depth_pipeline = gpbuilder.Create(device, pipeline_cache, false);
     vkDestroyShaderModule(device, fs, nullptr);
     if (m_vram_update_depth_pipeline == VK_NULL_HANDLE)
+    {
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
       return false;
+    }
 
     progress.Increment();
   }
@@ -1703,7 +1731,11 @@ bool GPU_HW_Vulkan::CompilePipelines()
   {
     VkShaderModule fs = g_vulkan_shader_cache->GetFragmentShader(shadergen.GenerateVRAMReadFragmentShader());
     if (fs == VK_NULL_HANDLE)
+    {
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
       return false;
+    }
 
     gpbuilder.SetRenderPass(m_vram_readback_render_pass, 0);
     gpbuilder.SetPipelineLayout(m_single_sampler_pipeline_layout);
@@ -1717,7 +1749,11 @@ bool GPU_HW_Vulkan::CompilePipelines()
     m_vram_readback_pipeline = gpbuilder.Create(device, pipeline_cache, false);
     vkDestroyShaderModule(device, fs, nullptr);
     if (m_vram_readback_pipeline == VK_NULL_HANDLE)
+    {
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
       return false;
+    }
     progress.Increment();
   }
 
@@ -1740,14 +1776,22 @@ bool GPU_HW_Vulkan::CompilePipelines()
         VkShaderModule fs = g_vulkan_shader_cache->GetFragmentShader(shadergen.GenerateDisplayFragmentShader(
           ConvertToBoolUnchecked(depth_24), static_cast<InterlacedRenderMode>(interlace_mode), m_chroma_smoothing));
         if (fs == VK_NULL_HANDLE)
+	{
+          vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+          vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
           return false;
+	}
 
         gpbuilder.SetFragmentShader(fs);
 
         m_display_pipelines[depth_24][interlace_mode] = gpbuilder.Create(device, pipeline_cache, false);
         vkDestroyShaderModule(device, fs, nullptr);
         if (m_display_pipelines[depth_24][interlace_mode] == VK_NULL_HANDLE)
+	{
+          vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+          vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
           return false;
+	}
 
         progress.Increment();
       }
@@ -1768,37 +1812,65 @@ bool GPU_HW_Vulkan::CompilePipelines()
     VkShaderModule fs =
       g_vulkan_shader_cache->GetFragmentShader(shadergen.GenerateAdaptiveDownsampleMipFragmentShader(true));
     if (fs == VK_NULL_HANDLE)
+    {
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
       return false;
+    }
 
     gpbuilder.SetFragmentShader(fs);
     m_downsample_first_pass_pipeline = gpbuilder.Create(device, pipeline_cache, false);
     vkDestroyShaderModule(g_vulkan_context->GetDevice(), fs, nullptr);
     if (m_downsample_first_pass_pipeline == VK_NULL_HANDLE)
+    {
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
       return false;
+    }
     fs = g_vulkan_shader_cache->GetFragmentShader(shadergen.GenerateAdaptiveDownsampleMipFragmentShader(false));
     if (fs == VK_NULL_HANDLE)
+    {
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
       return false;
+    }
 
     gpbuilder.SetFragmentShader(fs);
     m_downsample_mid_pass_pipeline = gpbuilder.Create(device, pipeline_cache, false);
     vkDestroyShaderModule(g_vulkan_context->GetDevice(), fs, nullptr);
     if (m_downsample_mid_pass_pipeline == VK_NULL_HANDLE)
+    {
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
       return false;
+    }
 
     fs = g_vulkan_shader_cache->GetFragmentShader(shadergen.GenerateAdaptiveDownsampleBlurFragmentShader());
     if (fs == VK_NULL_HANDLE)
+    {
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
       return false;
+    }
 
     gpbuilder.SetFragmentShader(fs);
     gpbuilder.SetRenderPass(m_downsample_weight_render_pass, 0);
     m_downsample_blur_pass_pipeline = gpbuilder.Create(device, pipeline_cache, false);
     vkDestroyShaderModule(g_vulkan_context->GetDevice(), fs, nullptr);
     if (m_downsample_blur_pass_pipeline == VK_NULL_HANDLE)
+    {
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
       return false;
+    }
 
     fs = g_vulkan_shader_cache->GetFragmentShader(shadergen.GenerateAdaptiveDownsampleCompositeFragmentShader());
     if (fs == VK_NULL_HANDLE)
+    {
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
       return false;
+    }
 
     gpbuilder.SetFragmentShader(fs);
     gpbuilder.SetPipelineLayout(m_downsample_composite_pipeline_layout);
@@ -1806,7 +1878,11 @@ bool GPU_HW_Vulkan::CompilePipelines()
     m_downsample_composite_pass_pipeline = gpbuilder.Create(device, pipeline_cache, false);
     vkDestroyShaderModule(g_vulkan_context->GetDevice(), fs, nullptr);
     if (m_downsample_composite_pass_pipeline == VK_NULL_HANDLE)
+    {
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
       return false;
+    }
   }
   else if (m_downsample_mode == GPUDownsampleMode::Box)
   {
@@ -1821,16 +1897,26 @@ bool GPU_HW_Vulkan::CompilePipelines()
 
     VkShaderModule fs = g_vulkan_shader_cache->GetFragmentShader(shadergen.GenerateBoxSampleDownsampleFragmentShader());
     if (fs == VK_NULL_HANDLE)
+    {
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
       return false;
+    }
 
     gpbuilder.SetFragmentShader(fs);
     m_downsample_first_pass_pipeline = gpbuilder.Create(device, pipeline_cache, false);
     vkDestroyShaderModule(g_vulkan_context->GetDevice(), fs, nullptr);
     if (m_downsample_first_pass_pipeline == VK_NULL_HANDLE)
+    {
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+      vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
       return false;
+    }
   }
 
   progress.Increment();
+  vkDestroyShaderModule(g_vulkan_context->GetDevice(), fullscreen_quad_vertex_shader, nullptr);
+  vkDestroyShaderModule(g_vulkan_context->GetDevice(), uv_quad_vertex_shader, nullptr);
 
 #undef UPDATE_PROGRESS
 

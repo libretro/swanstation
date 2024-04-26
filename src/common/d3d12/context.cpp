@@ -4,7 +4,6 @@
 
 #include "context.h"
 #include "../log.h"
-#include "../scope_guard.h"
 #include <algorithm>
 #include <array>
 #include <dxgi1_2.h>
@@ -408,7 +407,7 @@ void Context::WaitForFence(u64 fence)
   if (m_completed_fence_value < fence)
   {
     // Fall back to event.
-    HRESULT hr = m_fence->SetEventOnCompletion(fence, m_fence_event);
+    m_fence->SetEventOnCompletion(fence, m_fence_event);
     WaitForSingleObject(m_fence_event, INFINITE);
     m_completed_fence_value = m_fence->GetCompletedValue();
   }
