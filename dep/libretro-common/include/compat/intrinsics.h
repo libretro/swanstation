@@ -38,7 +38,13 @@
 
 RETRO_BEGIN_DECLS
 
-/* Count Leading Zero, unsigned 16bit input value */
+/**
+ * Counts the leading zero bits in a \c uint16_t.
+ * Uses compiler intrinsics if available, or a standard C implementation if not.
+ *
+ * @param val Value to count leading zeroes in.
+ * @return Number of leading zeroes in \c val.
+ */
 static INLINE unsigned compat_clz_u16(uint16_t val)
 {
 #if defined(__GNUC__)
@@ -56,27 +62,47 @@ static INLINE unsigned compat_clz_u16(uint16_t val)
 #endif
 }
 
-/* Count Trailing Zero */
+/**
+ * Counts the trailing zero bits in a \c uint16_t.
+ * Uses compiler intrinsics if available, or a standard C implementation if not.
+ *
+ * @param val Value to count trailing zeroes in.
+ * @return Number of trailing zeroes in \c val.
+ */
 static INLINE int compat_ctz(unsigned x)
 {
 #if defined(__GNUC__) && !defined(RARCH_CONSOLE)
    return __builtin_ctz(x);
 #elif _MSC_VER >= 1400 && !defined(_XBOX) && !defined(__WINRT__)
    unsigned long r = 0;
-   _BitScanReverse((unsigned long*)&r, x);
+   _BitScanForward((unsigned long*)&r, x);
    return (int)r;
 #else
-/* Only checks at nibble granularity,
- * because that's what we need. */
-   if (x & 0x000f)
-      return 0;
-   if (x & 0x00f0)
-      return 4;
-   if (x & 0x0f00)
-      return 8;
-   if (x & 0xf000)
-      return 12;
-   return 16;
+   int count = 0;
+   if (!(x & 0xffff))
+   {
+      x >>= 16;
+      count |= 16;
+   }
+   if (!(x & 0xff))
+   {
+      x >>= 8;
+      count |= 8;
+   }
+   if (!(x & 0xf))
+   {
+      x >>= 4;
+      count |= 4;
+   }
+   if (!(x & 0x3))
+   {
+      x >>= 2;
+      count |= 2;
+   }
+   if (!(x & 0x1))
+      count |= 1;
+
+   return count;
 #endif
 }
 

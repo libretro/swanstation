@@ -25,10 +25,10 @@
 
 #include <stdint.h>
 
-#if defined(__CELLOS_LV2__) && !defined(__PSL1GHT__)
-#include <sys/timer.h>
-#elif defined(XENON)
+#if defined(XENON)
 #include <time/time.h>
+#elif !defined(__PSL1GHT__) && defined(__PS3__)
+#include <sys/timer.h>
 #elif defined(GEKKO) || defined(__PSL1GHT__) || defined(__QNX__)
 #include <unistd.h>
 #elif defined(WIIU)
@@ -39,6 +39,8 @@
 #include <psp2/kernel/threadmgr.h>
 #elif defined(_3DS)
 #include <3ds.h>
+#elif defined(EMSCRIPTEN)
+#include <emscripten/emscripten.h>
 #else
 #include <time.h>
 #endif
@@ -78,14 +80,11 @@ static int nanosleepDOS(const struct timespec *rqtp, struct timespec *rmtp)
 #endif
 
 /**
- * retro_sleep:
- * @msec         : amount in milliseconds to sleep
+ * Briefly suspends the running thread.
  *
- * Sleeps for a specified amount of milliseconds (@msec).
+ * @param msec The time to sleep for, in milliseconds.
  **/
-#if defined(__CELLOS_LV2__) && !defined(__PSL1GHT__)
-#define retro_sleep(msec) (sys_timer_usleep(1000 * (msec)))
-#elif defined(PSP) || defined(VITA)
+#if defined(VITA)
 #define retro_sleep(msec) (sceKernelDelayThread(1000 * (msec)))
 #elif defined(_3DS)
 #define retro_sleep(msec) (svcSleepThread(1000000 * (s64)(msec)))
@@ -95,14 +94,18 @@ static int nanosleepDOS(const struct timespec *rqtp, struct timespec *rmtp)
 #define retro_sleep(msec) (Sleep((msec)))
 #elif defined(XENON)
 #define retro_sleep(msec) (udelay(1000 * (msec)))
+#elif !defined(__PSL1GHT__) && defined(__PS3__)
+#define retro_sleep(msec) (sys_timer_usleep(1000 * (msec)))
 #elif defined(GEKKO) || defined(__PSL1GHT__) || defined(__QNX__)
 #define retro_sleep(msec) (usleep(1000 * (msec)))
 #elif defined(WIIU)
 #define retro_sleep(msec) (OSSleepTicks(ms_to_ticks((msec))))
+#elif defined(EMSCRIPTEN)
+#define retro_sleep(msec) (emscripten_sleep(msec))
 #else
 static INLINE void retro_sleep(unsigned msec)
 {
-   struct timespec tv = {0};
+   struct timespec tv;
    tv.tv_sec          = msec / 1000;
    tv.tv_nsec         = (msec % 1000) * 1000000;
    nanosleep(&tv, NULL);
