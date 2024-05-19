@@ -1,4 +1,5 @@
 #pragma once
+#include "../file_system.h"
 #include "../hash_combine.h"
 #include "../types.h"
 #include "../windows_headers.h"
@@ -70,8 +71,8 @@ private:
 
   ComPtr<ID3DBlob> CompileAndAddShaderBlob(const CacheIndexKey& key, std::string_view shader_code);
 
-  std::FILE* m_index_file = nullptr;
-  std::FILE* m_blob_file = nullptr;
+  RFILE* m_index_file = nullptr;
+  RFILE* m_blob_file = nullptr;
 
   CacheIndex m_index;
 

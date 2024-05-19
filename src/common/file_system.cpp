@@ -954,62 +954,69 @@ s64 FTell64(std::FILE* fp)
 
 std::optional<std::vector<u8>> ReadBinaryFile(const char* filename)
 {
-  ManagedCFilePtr fp = OpenManagedCFile(filename, "rb");
+  RFILE *fp = OpenRFile(filename, "rb");
   if (!fp)
     return std::nullopt;
 
-  return ReadBinaryFile(fp.get());
+  rfseek(fp, 0, SEEK_END);
+  int64_t size = rftell(fp);
+  rfseek(fp, 0, SEEK_SET);
+  if (size < 0)
+  {
+    rfclose(fp);
+    return std::nullopt;
+  }
+
+  std::vector<u8> res(static_cast<size_t>(size));
+  if (size > 0 && rfread(res.data(), 1u, static_cast<size_t>(size), fp) != static_cast<int64_t>(size))
+  {
+    rfclose(fp);
+    return std::nullopt;
+  }
+  rfclose(fp);
+  return res;
 }
 
-std::optional<std::vector<u8>> ReadBinaryFile(std::FILE* fp)
+std::optional<std::vector<u8>> ReadBinaryFile(RFILE* fp)
 {
-  std::fseek(fp, 0, SEEK_END);
-  long size = std::ftell(fp);
-  std::fseek(fp, 0, SEEK_SET);
+  rfseek(fp, 0, SEEK_END);
+  int64_t size = rftell(fp);
+  rfseek(fp, 0, SEEK_SET);
   if (size < 0)
     return std::nullopt;
 
   std::vector<u8> res(static_cast<size_t>(size));
-  if (size > 0 && std::fread(res.data(), 1u, static_cast<size_t>(size), fp) != static_cast<size_t>(size))
+  if (size > 0 && rfread(res.data(), 1u, static_cast<size_t>(size), fp) != static_cast<int64_t>(size))
     return std::nullopt;
 
   return res;
 }
 
-std::optional<std::string> ReadFileToString(const char* filename)
+std::optional<std::string> ReadFileToString(RFILE* fp)
 {
-  ManagedCFilePtr fp = OpenManagedCFile(filename, "rb");
-  if (!fp)
-    return std::nullopt;
-
-  return ReadFileToString(fp.get());
-}
-
-std::optional<std::string> ReadFileToString(std::FILE* fp)
-{
-  std::fseek(fp, 0, SEEK_END);
-  long size = std::ftell(fp);
-  std::fseek(fp, 0, SEEK_SET);
+  rfseek(fp, 0, SEEK_END);
+  int64_t size = rftell(fp);
+  rfseek(fp, 0, SEEK_SET);
   if (size < 0)
     return std::nullopt;
-
   std::string res;
   res.resize(static_cast<size_t>(size));
-  if (size > 0 && std::fread(res.data(), 1u, static_cast<size_t>(size), fp) != static_cast<size_t>(size))
+  if (size > 0 && rfread(res.data(), 1u, static_cast<size_t>(size), fp) != static_cast<int64_t>(size))
     return std::nullopt;
-
   return res;
 }
 
 bool WriteBinaryFile(const char* filename, const void* data, size_t data_length)
 {
-  ManagedCFilePtr fp = OpenManagedCFile(filename, "wb");
+  RFILE *fp = OpenRFile(filename, "wb");
   if (!fp)
     return false;
-
-  if (data_length > 0 && std::fwrite(data, 1u, data_length, fp.get()) != data_length)
+  if (data_length > 0 && rfwrite(data, 1u, data_length, fp) != static_cast<int64_t>(data_length))
+  {
+    rfclose(fp);
     return false;
-
+  }
+  rfclose(fp);
   return true;
 }
 
@@ -1943,7 +1950,7 @@ RFILE* OpenRFile(const char *filename, const char *mode)
    return output;
 }
 
-int RFSeek64(RFILE* fp, s64 offset, int whence)
+s64 RFSeek64(RFILE* fp, s64 offset, int whence)
 {
    int seek_position = -1;
 

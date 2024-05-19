@@ -1,4 +1,5 @@
 #pragma once
+#include "../file_system.h"
 #include "../hash_combine.h"
 #include "../types.h"
 #include "program.h"
@@ -84,8 +85,8 @@ private:
                                               const std::string_view& fragment_shader, const PreLinkCallback& callback);
 
   std::string m_base_path;
-  std::FILE* m_index_file = nullptr;
-  std::FILE* m_blob_file = nullptr;
+  RFILE* m_index_file = nullptr;
+  RFILE* m_blob_file = nullptr;
 
   CacheIndex m_index;
   u32 m_version = 0;

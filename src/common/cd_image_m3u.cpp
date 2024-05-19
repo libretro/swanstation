@@ -48,12 +48,12 @@ CDImageM3u::~CDImageM3u() = default;
 
 bool CDImageM3u::Open(const char* path, Common::Error* error)
 {
-  std::FILE* fp = FileSystem::OpenCFile(path, "rb");
+  RFILE* fp = FileSystem::OpenRFile(path, "rb");
   if (!fp)
     return false;
 
   std::optional<std::string> m3u_file(FileSystem::ReadFileToString(fp));
-  std::fclose(fp);
+  rfclose(fp);
   if (!m3u_file.has_value() || m3u_file->empty())
   {
     if (error)

@@ -31,14 +31,15 @@ static constexpr u32 MSFToLBA(u8 minute_bcd, u8 second_bcd, u8 frame_bcd)
 
 bool CDSubChannelReplacement::LoadSBI(const char* path)
 {
-  auto fp = FileSystem::OpenManagedCFile(path, "rb");
+  RFILE *fp = FileSystem::OpenRFile(path, "rb");
   if (!fp)
     return false;
 
   char header[4];
-  if (std::fread(header, sizeof(header), 1, fp.get()) != 1)
+  if (rfread(header, sizeof(header), 1, fp) != 1)
   {
     Log_ErrorPrintf("Failed to read header for '%s'", path);
+    rfclose(fp);
     return true;
   }
 
@@ -46,23 +47,26 @@ bool CDSubChannelReplacement::LoadSBI(const char* path)
   if (std::memcmp(header, expected_header, sizeof(header)) != 0)
   {
     Log_ErrorPrintf("Invalid header in '%s'", path);
+    rfclose(fp);
     return true;
   }
 
   SBIFileEntry entry;
-  while (std::fread(&entry, sizeof(entry), 1, fp.get()) == 1)
+  while (rfread(&entry, sizeof(entry), 1, fp) == 1)
   {
     if (!IsValidPackedBCD(entry.minute_bcd) || !IsValidPackedBCD(entry.second_bcd) ||
         !IsValidPackedBCD(entry.frame_bcd))
     {
       Log_ErrorPrintf("Invalid position [%02x:%02x:%02x] in '%s'", entry.minute_bcd, entry.second_bcd, entry.frame_bcd,
                       path);
+      rfclose(fp);
       return false;
     }
 
     if (entry.type != 1)
     {
       Log_ErrorPrintf("Invalid type 0x%02X in '%s'", entry.type, path);
+      rfclose(fp);
       return false;
     }
 
@@ -80,6 +84,7 @@ bool CDSubChannelReplacement::LoadSBI(const char* path)
   }
 
   Log_InfoPrintf("Loaded %zu replacement sectors from '%s'", m_replacement_subq.size(), path);
+  rfclose(fp);
   return true;
 }
 

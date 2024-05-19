@@ -1,4 +1,5 @@
 #pragma once
+#include "../file_system.h"
 #include "../hash_combine.h"
 #include "../types.h"
 #include "../windows_headers.h"
@@ -81,10 +82,10 @@ private:
   static CacheIndexKey GetShaderCacheKey(EntryType type, const std::string_view& shader_code);
   static CacheIndexKey GetPipelineCacheKey(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& gpdesc);
 
-  bool CreateNew(const std::string& index_filename, const std::string& blob_filename, std::FILE*& index_file,
-                 std::FILE*& blob_file);
-  bool ReadExisting(const std::string& index_filename, const std::string& blob_filename, std::FILE*& index_file,
-                    std::FILE*& blob_file, CacheIndex& index);
+  bool CreateNew(const std::string& index_filename, const std::string& blob_filename, RFILE*& index_file,
+                 RFILE*& blob_file);
+  bool ReadExisting(const std::string& index_filename, const std::string& blob_filename, RFILE*& index_file,
+                    RFILE*& blob_file, CacheIndex& index);
   void InvalidatePipelineCache();
   void Close();
 
@@ -94,12 +95,12 @@ private:
 
   std::string m_base_path;
 
-  std::FILE* m_shader_index_file = nullptr;
-  std::FILE* m_shader_blob_file = nullptr;
+  RFILE* m_shader_index_file = nullptr;
+  RFILE* m_shader_blob_file = nullptr;
   CacheIndex m_shader_index;
 
-  std::FILE* m_pipeline_index_file = nullptr;
-  std::FILE* m_pipeline_blob_file = nullptr;
+  RFILE* m_pipeline_index_file = nullptr;
+  RFILE* m_pipeline_blob_file = nullptr;
   CacheIndex m_pipeline_index;
 
   D3D_FEATURE_LEVEL m_feature_level = D3D_FEATURE_LEVEL_11_0;

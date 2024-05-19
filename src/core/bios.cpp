@@ -81,20 +81,26 @@ Hash GetHash(const Image& image)
 std::optional<Image> LoadImageFromFile(const char* filename)
 {
   Image ret(BIOS_SIZE);
-  auto fp = FileSystem::OpenManagedCFile(filename, "rb");
+  RFILE *fp = FileSystem::OpenRFile(filename, "rb");
   if (!fp)
     return std::nullopt;
 
-  std::fseek(fp.get(), 0, SEEK_END);
-  const u32 size = static_cast<u32>(std::ftell(fp.get()));
-  std::fseek(fp.get(), 0, SEEK_SET);
+  rfseek(fp, 0, SEEK_END);
+  const u32 size = static_cast<u32>(rftell(fp));
+  rfseek(fp, 0, SEEK_SET);
 
   if (size != BIOS_SIZE && size != BIOS_SIZE_PS2 && size != BIOS_SIZE_PS3)
+  {
+    rfclose(fp);
     return std::nullopt;
+  }
 
-  if (std::fread(ret.data(), 1, ret.size(), fp.get()) != ret.size())
+  if (rfread(ret.data(), 1, ret.size(), fp) != (int64_t)ret.size())
+  {
+    rfclose(fp);
     return std::nullopt;
-
+  }
+  rfclose(fp);
   return ret;
 }
 

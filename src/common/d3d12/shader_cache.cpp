@@ -30,13 +30,13 @@ ShaderCache::ShaderCache() : m_use_pipeline_cache(CanUsePipelineCache()) {}
 ShaderCache::~ShaderCache()
 {
   if (m_pipeline_index_file)
-    std::fclose(m_pipeline_index_file);
+    rfclose(m_pipeline_index_file);
   if (m_pipeline_blob_file)
-    std::fclose(m_pipeline_blob_file);
+    rfclose(m_pipeline_blob_file);
   if (m_shader_index_file)
-    std::fclose(m_shader_index_file);
+    rfclose(m_shader_index_file);
   if (m_shader_blob_file)
-    std::fclose(m_shader_blob_file);
+    rfclose(m_shader_blob_file);
 }
 
 bool ShaderCache::CacheIndexKey::operator==(const CacheIndexKey& key) const
@@ -89,13 +89,13 @@ void ShaderCache::InvalidatePipelineCache()
   m_pipeline_index.clear();
   if (m_pipeline_blob_file)
   {
-    std::fclose(m_pipeline_blob_file);
+    rfclose(m_pipeline_blob_file);
     m_pipeline_blob_file = nullptr;
   }
 
   if (m_pipeline_index_file)
   {
-    std::fclose(m_pipeline_index_file);
+    rfclose(m_pipeline_index_file);
     m_pipeline_index_file = nullptr;
   }
 
@@ -109,8 +109,8 @@ void ShaderCache::InvalidatePipelineCache()
   }
 }
 
-bool ShaderCache::CreateNew(const std::string& index_filename, const std::string& blob_filename, std::FILE*& index_file,
-                            std::FILE*& blob_file)
+bool ShaderCache::CreateNew(const std::string& index_filename, const std::string& blob_filename, RFILE*& index_file,
+                            RFILE*& blob_file)
 {
   if (FileSystem::FileExists(index_filename.c_str()))
   {
@@ -123,7 +123,7 @@ bool ShaderCache::CreateNew(const std::string& index_filename, const std::string
     FileSystem::DeleteFile(blob_filename.c_str());
   }
 
-  index_file = FileSystem::OpenCFile(index_filename.c_str(), "wb");
+  index_file = FileSystem::OpenRFile(index_filename.c_str(), "wb");
   if (!index_file)
   {
     Log_ErrorPrintf("Failed to open index file '%s' for writing", index_filename.c_str());
@@ -131,20 +131,20 @@ bool ShaderCache::CreateNew(const std::string& index_filename, const std::string
   }
 
   const u32 index_version = FILE_VERSION;
-  if (std::fwrite(&index_version, sizeof(index_version), 1, index_file) != 1)
+  if (rfwrite(&index_version, sizeof(index_version), 1, index_file) != 1)
   {
     Log_ErrorPrintf("Failed to write version to index file '%s'", index_filename.c_str());
-    std::fclose(index_file);
+    rfclose(index_file);
     index_file = nullptr;
     FileSystem::DeleteFile(index_filename.c_str());
     return false;
   }
 
-  blob_file = FileSystem::OpenCFile(blob_filename.c_str(), "w+b");
+  blob_file = FileSystem::OpenRFile(blob_filename.c_str(), "w+b");
   if (!blob_file)
   {
     Log_ErrorPrintf("Failed to open blob file '%s' for writing", blob_filename.c_str());
-    std::fclose(blob_file);
+    rfclose(blob_file);
     blob_file = nullptr;
     FileSystem::DeleteFile(index_filename.c_str());
     return false;
@@ -154,46 +154,46 @@ bool ShaderCache::CreateNew(const std::string& index_filename, const std::string
 }
 
 bool ShaderCache::ReadExisting(const std::string& index_filename, const std::string& blob_filename,
-                               std::FILE*& index_file, std::FILE*& blob_file, CacheIndex& index)
+                               RFILE*& index_file, RFILE*& blob_file, CacheIndex& index)
 {
-  index_file = FileSystem::OpenCFile(index_filename.c_str(), "r+b");
+  index_file = FileSystem::OpenRFile(index_filename.c_str(), "r+b");
   if (!index_file)
     return false;
 
   u32 file_version;
-  if (std::fread(&file_version, sizeof(file_version), 1, index_file) != 1 || file_version != FILE_VERSION)
+  if (rfread(&file_version, sizeof(file_version), 1, index_file) != 1 || file_version != FILE_VERSION)
   {
     Log_ErrorPrintf("Bad file version in '%s'", index_filename.c_str());
-    std::fclose(index_file);
+    rfclose(index_file);
     index_file = nullptr;
     return false;
   }
 
-  blob_file = FileSystem::OpenCFile(blob_filename.c_str(), "a+b");
+  blob_file = FileSystem::OpenRFile(blob_filename.c_str(), "a+b");
   if (!blob_file)
   {
     Log_ErrorPrintf("Blob file '%s' is missing", blob_filename.c_str());
-    std::fclose(index_file);
+    rfclose(index_file);
     index_file = nullptr;
     return false;
   }
 
-  std::fseek(blob_file, 0, SEEK_END);
-  const u32 blob_file_size = static_cast<u32>(std::ftell(blob_file));
+  rfseek(blob_file, 0, SEEK_END);
+  const u32 blob_file_size = static_cast<u32>(rftell(blob_file));
 
   for (;;)
   {
     CacheIndexEntry entry;
-    if (std::fread(&entry, sizeof(entry), 1, index_file) != 1 || (entry.file_offset + entry.blob_size) > blob_file_size)
+    if (rfread(&entry, sizeof(entry), 1, index_file) != 1 || (entry.file_offset + entry.blob_size) > blob_file_size)
     {
-      if (std::feof(index_file))
+      if (rfeof(index_file))
         break;
 
       Log_ErrorPrintf("Failed to read entry from '%s', corrupt file?", index_filename.c_str());
       index.clear();
-      std::fclose(blob_file);
+      rfclose(blob_file);
       blob_file = nullptr;
-      std::fclose(index_file);
+      rfclose(index_file);
       index_file = nullptr;
       return false;
     }
@@ -205,7 +205,7 @@ bool ShaderCache::ReadExisting(const std::string& index_filename, const std::str
   }
 
   // ensure we don't write before seeking
-  std::fseek(index_file, 0, SEEK_END);
+  rfseek(index_file, 0, SEEK_END);
 
   Log_InfoPrintf("Read %zu entries from '%s'", index.size(), index_filename.c_str());
   return true;
@@ -323,8 +323,8 @@ ShaderCache::ComPtr<ID3DBlob> ShaderCache::GetShaderBlob(EntryType type, std::st
 
   ComPtr<ID3DBlob> blob;
   HRESULT hr = D3DCreateBlob(iter->second.blob_size, blob.GetAddressOf());
-  if (FAILED(hr) || std::fseek(m_shader_blob_file, iter->second.file_offset, SEEK_SET) != 0 ||
-      std::fread(blob->GetBufferPointer(), 1, iter->second.blob_size, m_shader_blob_file) != iter->second.blob_size)
+  if (FAILED(hr) || rfseek(m_shader_blob_file, iter->second.file_offset, SEEK_SET) != 0 ||
+      rfread(blob->GetBufferPointer(), 1, iter->second.blob_size, m_shader_blob_file) != iter->second.blob_size)
   {
     Log_ErrorPrintf("Read blob from file failed");
     return {};
@@ -344,8 +344,8 @@ ShaderCache::ComPtr<ID3D12PipelineState> ShaderCache::GetPipelineState(ID3D12Dev
 
   ComPtr<ID3DBlob> blob;
   HRESULT hr = D3DCreateBlob(iter->second.blob_size, blob.GetAddressOf());
-  if (FAILED(hr) || std::fseek(m_pipeline_blob_file, iter->second.file_offset, SEEK_SET) != 0 ||
-      std::fread(blob->GetBufferPointer(), 1, iter->second.blob_size, m_pipeline_blob_file) != iter->second.blob_size)
+  if (FAILED(hr) || rfseek(m_pipeline_blob_file, iter->second.file_offset, SEEK_SET) != 0 ||
+      rfread(blob->GetBufferPointer(), 1, iter->second.blob_size, m_pipeline_blob_file) != iter->second.blob_size)
   {
     Log_ErrorPrintf("Read blob from file failed");
     return {};
@@ -393,11 +393,11 @@ ShaderCache::ComPtr<ID3DBlob> ShaderCache::CompileAndAddShaderBlob(const CacheIn
   if (!blob)
     return {};
 
-  if (!m_shader_blob_file || std::fseek(m_shader_blob_file, 0, SEEK_END) != 0)
+  if (!m_shader_blob_file || rfseek(m_shader_blob_file, 0, SEEK_END) != 0)
     return blob;
 
   CacheIndexData data;
-  data.file_offset = static_cast<u32>(std::ftell(m_shader_blob_file));
+  data.file_offset = static_cast<u32>(rftell(m_shader_blob_file));
   data.blob_size = static_cast<u32>(blob->GetBufferSize());
 
   CacheIndexEntry entry = {};
@@ -408,9 +408,9 @@ ShaderCache::ComPtr<ID3DBlob> ShaderCache::CompileAndAddShaderBlob(const CacheIn
   entry.blob_size = data.blob_size;
   entry.file_offset = data.file_offset;
 
-  if (std::fwrite(blob->GetBufferPointer(), 1, entry.blob_size, m_shader_blob_file) != entry.blob_size ||
-      std::fflush(m_shader_blob_file) != 0 || std::fwrite(&entry, sizeof(entry), 1, m_shader_index_file) != 1 ||
-      std::fflush(m_shader_index_file) != 0)
+  if (rfwrite(blob->GetBufferPointer(), 1, entry.blob_size, m_shader_blob_file) != entry.blob_size ||
+      filestream_flush(m_shader_blob_file) != 0 || rfwrite(&entry, sizeof(entry), 1, m_shader_index_file) != 1 ||
+      filestream_flush(m_shader_index_file) != 0)
   {
     Log_ErrorPrintf("Failed to write shader blob to file");
     return blob;
@@ -432,7 +432,7 @@ ShaderCache::CompileAndAddPipeline(ID3D12Device* device, const CacheIndexKey& ke
     return {};
   }
 
-  if (!m_pipeline_blob_file || std::fseek(m_pipeline_blob_file, 0, SEEK_END) != 0)
+  if (!m_pipeline_blob_file || rfseek(m_pipeline_blob_file, 0, SEEK_END) != 0)
     return pso;
 
   ComPtr<ID3DBlob> blob;
@@ -444,7 +444,7 @@ ShaderCache::CompileAndAddPipeline(ID3D12Device* device, const CacheIndexKey& ke
   }
 
   CacheIndexData data;
-  data.file_offset = static_cast<u32>(std::ftell(m_pipeline_blob_file));
+  data.file_offset = static_cast<u32>(rftell(m_pipeline_blob_file));
   data.blob_size = static_cast<u32>(blob->GetBufferSize());
 
   CacheIndexEntry entry = {};
@@ -455,9 +455,9 @@ ShaderCache::CompileAndAddPipeline(ID3D12Device* device, const CacheIndexKey& ke
   entry.blob_size = data.blob_size;
   entry.file_offset = data.file_offset;
 
-  if (std::fwrite(blob->GetBufferPointer(), 1, entry.blob_size, m_pipeline_blob_file) != entry.blob_size ||
-      std::fflush(m_pipeline_blob_file) != 0 || std::fwrite(&entry, sizeof(entry), 1, m_pipeline_index_file) != 1 ||
-      std::fflush(m_pipeline_index_file) != 0)
+  if (rfwrite(blob->GetBufferPointer(), 1, entry.blob_size, m_pipeline_blob_file) != entry.blob_size ||
+      filestream_flush(m_pipeline_blob_file) != 0 || rfwrite(&entry, sizeof(entry), 1, m_pipeline_index_file) != 1 ||
+      filestream_flush(m_pipeline_index_file) != 0)
   {
     Log_ErrorPrintf("Failed to write pipeline blob to file");
     return pso;

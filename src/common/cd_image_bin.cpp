@@ -21,7 +21,7 @@ protected:
   bool ReadSectorFromIndex(void* buffer, const Index& index, LBA lba_in_index) override;
 
 private:
-  std::FILE* m_fp = nullptr;
+  RFILE* m_fp = nullptr;
   u64 m_file_position = 0;
 
   CDSubChannelReplacement m_sbi;
@@ -32,13 +32,13 @@ CDImageBin::CDImageBin(OpenFlags open_flags) : CDImage(open_flags) {}
 CDImageBin::~CDImageBin()
 {
   if (m_fp)
-    std::fclose(m_fp);
+    rfclose(m_fp);
 }
 
 bool CDImageBin::Open(const char* filename, Common::Error* error)
 {
   m_filename = filename;
-  m_fp = FileSystem::OpenCFile(filename, "rb");
+  m_fp = FileSystem::OpenRFile(filename, "rb");
   if (!m_fp)
   {
     Log_ErrorPrintf("Failed to open binfile '%s': errno %d", filename, errno);
@@ -48,9 +48,9 @@ bool CDImageBin::Open(const char* filename, Common::Error* error)
   const u32 track_sector_size = RAW_SECTOR_SIZE;
 
   // determine the length from the file
-  std::fseek(m_fp, 0, SEEK_END);
-  const u32 file_size = static_cast<u32>(std::ftell(m_fp));
-  std::fseek(m_fp, 0, SEEK_SET);
+  rfseek(m_fp, 0, SEEK_END);
+  const u32 file_size = static_cast<u32>(rftell(m_fp));
+  rfseek(m_fp, 0, SEEK_SET);
 
   m_lba_count = file_size / track_sector_size;
 
@@ -115,15 +115,15 @@ bool CDImageBin::ReadSectorFromIndex(void* buffer, const Index& index, LBA lba_i
   const u64 file_position = index.file_offset + (static_cast<u64>(lba_in_index) * index.file_sector_size);
   if (m_file_position != file_position)
   {
-    if (std::fseek(m_fp, static_cast<long>(file_position), SEEK_SET) != 0)
+    if (rfseek(m_fp, static_cast<long>(file_position), SEEK_SET) != 0)
       return false;
 
     m_file_position = file_position;
   }
 
-  if (std::fread(buffer, index.file_sector_size, 1, m_fp) != 1)
+  if (rfread(buffer, index.file_sector_size, 1, m_fp) != 1)
   {
-    std::fseek(m_fp, static_cast<long>(m_file_position), SEEK_SET);
+    rfseek(m_fp, static_cast<long>(m_file_position), SEEK_SET);
     return false;
   }
 

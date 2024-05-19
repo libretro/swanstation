@@ -42,7 +42,7 @@ protected:
   bool ReadSectorFromIndex(void* buffer, const Index& index, LBA lba_in_index) override;
 
 private:
-  std::FILE* m_mdf_file = nullptr;
+  RFILE* m_mdf_file = nullptr;
   u64 m_mdf_file_position = 0;
   CDSubChannelReplacement m_sbi;
 };
@@ -52,12 +52,12 @@ CDImageMds::CDImageMds(OpenFlags open_flags) : CDImage(open_flags) {}
 CDImageMds::~CDImageMds()
 {
   if (m_mdf_file)
-    std::fclose(m_mdf_file);
+    rfclose(m_mdf_file);
 }
 
 bool CDImageMds::OpenAndParse(const char* filename, Common::Error* error)
 {
-  std::FILE* mds_fp = FileSystem::OpenCFile(filename, "rb");
+  RFILE* mds_fp = FileSystem::OpenRFile(filename, "rb");
   if (!mds_fp)
   {
     Log_ErrorPrintf("Failed to open mds '%s': errno %d", filename, errno);
@@ -65,7 +65,7 @@ bool CDImageMds::OpenAndParse(const char* filename, Common::Error* error)
   }
 
   std::optional<std::vector<u8>> mds_data_opt(FileSystem::ReadBinaryFile(mds_fp));
-  std::fclose(mds_fp);
+  rfclose(mds_fp);
   if (!mds_data_opt.has_value() || mds_data_opt->size() < 0x54)
   {
     Log_ErrorPrintf("Failed to read mds file '%s'", filename);
@@ -76,7 +76,7 @@ bool CDImageMds::OpenAndParse(const char* filename, Common::Error* error)
   }
 
   std::string mdf_filename(FileSystem::ReplaceExtension(filename, "mdf"));
-  m_mdf_file = FileSystem::OpenCFile(mdf_filename.c_str(), "rb");
+  m_mdf_file = FileSystem::OpenRFile(mdf_filename.c_str(), "rb");
   if (!m_mdf_file)
   {
     Log_ErrorPrintf("Failed to open mdf file '%s': errno %d", mdf_filename.c_str(), errno);
@@ -270,7 +270,7 @@ bool CDImageMds::ReadSectorFromIndex(void* buffer, const Index& index, LBA lba_i
   const u64 file_position = index.file_offset + (static_cast<u64>(lba_in_index) * index.file_sector_size);
   if (m_mdf_file_position != file_position)
   {
-    if (std::fseek(m_mdf_file, static_cast<long>(file_position), SEEK_SET) != 0)
+    if (rfseek(m_mdf_file, static_cast<long>(file_position), SEEK_SET) != 0)
       return false;
 
     m_mdf_file_position = file_position;
@@ -278,9 +278,9 @@ bool CDImageMds::ReadSectorFromIndex(void* buffer, const Index& index, LBA lba_i
 
   // we don't want the subchannel data
   const u32 read_size = RAW_SECTOR_SIZE;
-  if (std::fread(buffer, read_size, 1, m_mdf_file) != 1)
+  if (rfread(buffer, read_size, 1, m_mdf_file) != 1)
   {
-    std::fseek(m_mdf_file, static_cast<long>(m_mdf_file_position), SEEK_SET);
+    rfseek(m_mdf_file, static_cast<long>(m_mdf_file_position), SEEK_SET);
     return false;
   }
 

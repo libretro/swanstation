@@ -851,7 +851,7 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
     // do we need to copy the existing file into this one?
     if (!(openMode & BYTESTREAM_OPEN_TRUNCATE))
     {
-      FILE* pOriginalFile = FileSystem::OpenCFile(fileName, "rb");
+      RFILE* pOriginalFile = FileSystem::OpenRFile(fileName, "rb");
       if (!pOriginalFile)
       {
         // this will delete the temporary file
@@ -861,22 +861,22 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
 
       static const size_t BUFFERSIZE = 4096;
       u8 buffer[BUFFERSIZE];
-      while (!feof(pOriginalFile))
+      while (!rfeof(pOriginalFile))
       {
-        size_t nBytes = fread(buffer, BUFFERSIZE, sizeof(u8), pOriginalFile);
+        size_t nBytes = rfread(buffer, BUFFERSIZE, sizeof(u8), pOriginalFile);
         if (nBytes == 0)
           break;
 
         if (pStream->Write(buffer, (u32)nBytes) != (u32)nBytes)
         {
           pStream->Discard();
-          fclose(pOriginalFile);
+          rfclose(pOriginalFile);
           return nullptr;
         }
       }
 
       // close original file
-      fclose(pOriginalFile);
+      rfclose(pOriginalFile);
     }
 
     // return pointer
@@ -1030,7 +1030,7 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
     // do we need to copy the existing file into this one?
     if (!(openMode & BYTESTREAM_OPEN_TRUNCATE))
     {
-      std::FILE* pOriginalFile = std::fopen(fileName, "rb");
+      RFILE* pOriginalFile = std::fopen(fileName, "rb");
       if (!pOriginalFile)
       {
         // this will delete the temporary file
@@ -1040,22 +1040,22 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
 
       static const size_t BUFFERSIZE = 4096;
       u8 buffer[BUFFERSIZE];
-      while (!std::feof(pOriginalFile))
+      while (!rfeof(pOriginalFile))
       {
-        size_t nBytes = std::fread(buffer, BUFFERSIZE, sizeof(u8), pOriginalFile);
+        size_t nBytes = rfread(buffer, BUFFERSIZE, sizeof(u8), pOriginalFile);
         if (nBytes == 0)
           break;
 
         if (pStream->Write(buffer, (u32)nBytes) != (u32)nBytes)
         {
           pStream->SetErrorState();
-          std::fclose(pOriginalFile);
+          rfclose(pOriginalFile);
           return nullptr;
         }
       }
 
       // close original file
-      std::fclose(pOriginalFile);
+      rfclose(pOriginalFile);
     }
 
     // return pointer

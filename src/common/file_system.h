@@ -118,9 +118,6 @@ int FSeek64(std::FILE* fp, s64 offset, int whence);
 s64 FTell64(std::FILE* fp);
 
 std::optional<std::vector<u8>> ReadBinaryFile(const char* filename);
-std::optional<std::vector<u8>> ReadBinaryFile(std::FILE* fp);
-std::optional<std::string> ReadFileToString(const char* filename);
-std::optional<std::string> ReadFileToString(std::FILE* fp);
 bool WriteBinaryFile(const char* filename, const void* data, size_t data_length);
 
 // creates a directory in the local filesystem
@@ -133,9 +130,11 @@ bool CreateDirectory(const char* Path, bool Recursive);
 std::string GetProgramPath();
 
 RFILE *OpenRFile(const char* filename, const char* mode);
-int RFSeek64(RFILE* fp, s64 offset, int whence);
+s64 RFSeek64(RFILE* fp, s64 offset, int whence);
 s64 RFTell64(RFILE* fp);
 s64 RFSize64(RFILE* fp);
+std::optional<std::string> ReadFileToString(RFILE* fp);
+std::optional<std::vector<u8>> ReadBinaryFile(RFILE* fp);
 
 }; // namespace FileSystem
 

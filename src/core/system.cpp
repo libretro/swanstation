@@ -471,14 +471,17 @@ DiscRegion GetRegionForImage(CDImage* cdi)
 
 DiscRegion GetRegionForExe(const char* path)
 {
-  auto fp = FileSystem::OpenManagedCFile(path, "rb");
+  BIOS::PSEXEHeader header;
+  RFILE *fp = FileSystem::OpenRFile(path, "rb");
   if (!fp)
     return DiscRegion::Other;
-
-  BIOS::PSEXEHeader header;
-  if (std::fread(&header, sizeof(header), 1, fp.get()) != 1)
+  if (rfread(&header, sizeof(header), 1, fp) != 1)
+  {
+    filestream_close(fp);
     return DiscRegion::Other;
+  }
 
+  filestream_close(fp);
   return BIOS::GetPSExeDiscRegion(header);
 }
 
@@ -1234,22 +1237,22 @@ void SetThrottleFrequency(float frequency)
 
 static bool LoadEXEToRAM(const char* filename, bool patch_bios)
 {
-  std::FILE* fp = FileSystem::OpenCFile(filename, "rb");
+  RFILE* fp = FileSystem::OpenRFile(filename, "rb");
   if (!fp)
   {
     Log_ErrorPrintf("Failed to open exe file '%s'", filename);
     return false;
   }
 
-  std::fseek(fp, 0, SEEK_END);
-  const u32 file_size = static_cast<u32>(std::ftell(fp));
-  std::fseek(fp, 0, SEEK_SET);
+  rfseek(fp, 0, SEEK_END);
+  const u32 file_size = static_cast<u32>(rftell(fp));
+  rfseek(fp, 0, SEEK_SET);
 
   BIOS::PSEXEHeader header;
-  if (std::fread(&header, sizeof(header), 1, fp) != 1 || !BIOS::IsValidPSExeHeader(header, file_size))
+  if (rfread(&header, sizeof(header), 1, fp) != 1 || !BIOS::IsValidPSExeHeader(header, file_size))
   {
     Log_ErrorPrintf("'%s' is not a valid PS-EXE", filename);
-    std::fclose(fp);
+    rfclose(fp);
     return false;
   }
 
@@ -1268,9 +1271,9 @@ static bool LoadEXEToRAM(const char* filename, bool patch_bios)
   if (file_data_size >= 4)
   {
     std::vector<u32> data_words((file_data_size + 3) / 4);
-    if (std::fread(data_words.data(), file_data_size, 1, fp) != 1)
+    if (rfread(data_words.data(), file_data_size, 1, fp) != 1)
     {
-      std::fclose(fp);
+      rfclose(fp);
       return false;
     }
 
@@ -1283,7 +1286,7 @@ static bool LoadEXEToRAM(const char* filename, bool patch_bios)
     }
   }
 
-  std::fclose(fp);
+  rfclose(fp);
 
   // patch the BIOS to jump to the executable directly
   const u32 r_pc = header.initial_pc;
@@ -1369,26 +1372,26 @@ bool InjectEXEFromBuffer(const void* buffer, u32 buffer_size, bool patch_bios)
 
 bool SetExpansionROM(const char* filename)
 {
-  std::FILE* fp = FileSystem::OpenCFile(filename, "rb");
+  RFILE* fp = FileSystem::OpenRFile(filename, "rb");
   if (!fp)
   {
     Log_ErrorPrintf("Failed to open '%s'", filename);
     return false;
   }
 
-  std::fseek(fp, 0, SEEK_END);
-  const u32 size = static_cast<u32>(std::ftell(fp));
-  std::fseek(fp, 0, SEEK_SET);
+  rfseek(fp, 0, SEEK_END);
+  const u32 size = static_cast<u32>(rftell(fp));
+  rfseek(fp, 0, SEEK_SET);
 
   std::vector<u8> data(size);
-  if (std::fread(data.data(), size, 1, fp) != 1)
+  if (rfread(data.data(), size, 1, fp) != 1)
   {
     Log_ErrorPrintf("Failed to read ROM data from '%s'", filename);
-    std::fclose(fp);
+    rfclose(fp);
     return false;
   }
 
-  std::fclose(fp);
+  rfclose(fp);
 
   Log_InfoPrintf("Loaded expansion ROM from '%s': %u bytes", filename, size);
   Bus::SetExpansionROM(std::move(data));

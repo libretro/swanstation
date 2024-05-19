@@ -2,6 +2,8 @@ set(SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/compat/compat_posix_string.c
 	${CMAKE_CURRENT_SOURCE_DIR}/compat/compat_strl.c
 	${CMAKE_CURRENT_SOURCE_DIR}/compat/fopen_utf8.c
+	${CMAKE_CURRENT_SOURCE_DIR}/file/file_path.c
+	${CMAKE_CURRENT_SOURCE_DIR}/file/file_path_io.c
 	${CMAKE_CURRENT_SOURCE_DIR}/encodings/encoding_utf.c
 	${CMAKE_CURRENT_SOURCE_DIR}/streams/file_stream.c
 	${CMAKE_CURRENT_SOURCE_DIR}/string/stdstring.c

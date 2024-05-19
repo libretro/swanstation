@@ -1,4 +1,5 @@
 #pragma once
+#include "../file_system.h"
 #include "../hash_combine.h"
 #include "../types.h"
 #include "shader_compiler.h"
@@ -84,8 +85,8 @@ private:
   std::optional<ShaderCompiler::SPIRVCodeVector> CompileAndAddShaderSPV(const CacheIndexKey& key,
                                                                         std::string_view shader_code);
 
-  std::FILE* m_index_file = nullptr;
-  std::FILE* m_blob_file = nullptr;
+  RFILE* m_index_file = nullptr;
+  RFILE* m_blob_file = nullptr;
   std::string m_pipeline_cache_filename;
 
   CacheIndex m_index;

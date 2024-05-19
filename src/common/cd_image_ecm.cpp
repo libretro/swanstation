@@ -171,7 +171,7 @@ protected:
 private:
   bool ReadChunks(u32 disc_offset, u32 size);
 
-  std::FILE* m_fp = nullptr;
+  RFILE* m_fp = nullptr;
 
   enum class SectorType : u32
   {
@@ -217,13 +217,13 @@ CDImageEcm::CDImageEcm(OpenFlags open_flags) : CDImage(open_flags) {}
 CDImageEcm::~CDImageEcm()
 {
   if (m_fp)
-    std::fclose(m_fp);
+    rfclose(m_fp);
 }
 
 bool CDImageEcm::Open(const char* filename, Common::Error* error)
 {
   m_filename = filename;
-  m_fp = FileSystem::OpenCFile(filename, "rb");
+  m_fp = FileSystem::OpenRFile(filename, "rb");
   if (!m_fp)
   {
     Log_ErrorPrintf("Failed to open binfile '%s': errno %d", filename, errno);
@@ -231,15 +231,15 @@ bool CDImageEcm::Open(const char* filename, Common::Error* error)
   }
 
   s64 file_size;
-  if (FileSystem::FSeek64(m_fp, 0, SEEK_END) != 0 || (file_size = FileSystem::FTell64(m_fp)) <= 0 ||
-      FileSystem::FSeek64(m_fp, 0, SEEK_SET) != 0)
+  if (FileSystem::RFSeek64(m_fp, 0, SEEK_END) != 0 || (file_size = FileSystem::RFTell64(m_fp)) <= 0 ||
+      FileSystem::RFSeek64(m_fp, 0, SEEK_SET) != 0)
   {
     Log_ErrorPrintf("Get file size failed: errno %d", errno);
     return false;
   }
 
   char header[4];
-  if (std::fread(header, sizeof(header), 1, m_fp) != 1 || header[0] != 'E' || header[1] != 'C' || header[2] != 'M' ||
+  if (rfread(header, sizeof(header), 1, m_fp) != 1 || header[0] != 'E' || header[1] != 'C' || header[2] != 'M' ||
       header[3] != 0)
   {
     Log_ErrorPrintf("Failed to read/invalid header");
@@ -250,12 +250,12 @@ bool CDImageEcm::Open(const char* filename, Common::Error* error)
   }
 
   // build sector map
-  u32 file_offset = static_cast<u32>(std::ftell(m_fp));
+  u32 file_offset = static_cast<u32>(rftell(m_fp));
   u32 disc_offset = 0;
 
   for (;;)
   {
-    int bits = std::fgetc(m_fp);
+    int bits = rfgetc(m_fp);
     if (bits == EOF)
     {
       Log_ErrorPrintf("Unexpected EOF after %zu chunks", m_data_map.size());
@@ -271,7 +271,7 @@ bool CDImageEcm::Open(const char* filename, Common::Error* error)
     u32 shift = 5;
     while (bits & 0x80)
     {
-      bits = std::fgetc(m_fp);
+      bits = rfgetc(m_fp);
       if (bits == EOF)
       {
         Log_ErrorPrintf("Unexpected EOF after %zu chunks", m_data_map.size());
@@ -338,7 +338,7 @@ bool CDImageEcm::Open(const char* filename, Common::Error* error)
       }
     }
 
-    if (std::fseek(m_fp, file_offset, SEEK_SET) != 0)
+    if (rfseek(m_fp, file_offset, SEEK_SET) != 0)
     {
       Log_ErrorPrintf("Failed to seek to offset %u after %zu chunks", file_offset, m_data_map.size());
       if (error)
@@ -424,7 +424,7 @@ bool CDImageEcm::ReadChunks(u32 disc_offset, u32 size)
   u32 total_bytes_read = 0;
   while (total_bytes_read < size)
   {
-    if (current == m_data_map.end() || std::fseek(m_fp, current->second.file_offset, SEEK_SET) != 0)
+    if (current == m_data_map.end() || rfseek(m_fp, current->second.file_offset, SEEK_SET) != 0)
       return false;
 
     const u32 chunk_size = current->second.chunk_size;
@@ -433,7 +433,7 @@ bool CDImageEcm::ReadChunks(u32 disc_offset, u32 size)
 
     if (current->second.type == SectorType::Raw)
     {
-      if (std::fread(&m_chunk_buffer[chunk_start], chunk_size, 1, m_fp) != 1)
+      if (rfread(&m_chunk_buffer[chunk_start], chunk_size, 1, m_fp) != 1)
         return false;
 
       total_bytes_read += chunk_size;
@@ -453,7 +453,7 @@ bool CDImageEcm::ReadChunks(u32 disc_offset, u32 size)
         case SectorType::Mode1:
         {
           sector[0x0F] = 0x01;
-          if (std::fread(sector + 0x00C, 0x003, 1, m_fp) != 1 || std::fread(sector + 0x010, 0x800, 1, m_fp) != 1)
+          if (rfread(sector + 0x00C, 0x003, 1, m_fp) != 1 || rfread(sector + 0x010, 0x800, 1, m_fp) != 1)
             return false;
 
           eccedc_generate(sector, 1);
@@ -464,7 +464,7 @@ bool CDImageEcm::ReadChunks(u32 disc_offset, u32 size)
         case SectorType::Mode2Form1:
         {
           sector[0x0F] = 0x02;
-          if (std::fread(sector + 0x014, 0x804, 1, m_fp) != 1)
+          if (rfread(sector + 0x014, 0x804, 1, m_fp) != 1)
             return false;
 
           sector[0x10] = sector[0x14];
@@ -480,7 +480,7 @@ bool CDImageEcm::ReadChunks(u32 disc_offset, u32 size)
         case SectorType::Mode2Form2:
         {
           sector[0x0F] = 0x02;
-          if (std::fread(sector + 0x014, 0x918, 1, m_fp) != 1)
+          if (rfread(sector + 0x014, 0x918, 1, m_fp) != 1)
             return false;
 
           sector[0x10] = sector[0x14];
