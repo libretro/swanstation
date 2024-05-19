@@ -28,7 +28,7 @@ private:
   struct TrackFile
   {
     std::string filename;
-    std::FILE* file;
+    RFILE* file;
     u64 file_position;
   };
 
@@ -40,12 +40,12 @@ CDImageCueSheet::CDImageCueSheet(OpenFlags open_flags) : CDImage(open_flags) {}
 
 CDImageCueSheet::~CDImageCueSheet()
 {
-  std::for_each(m_files.begin(), m_files.end(), [](TrackFile& t) { std::fclose(t.file); });
+  std::for_each(m_files.begin(), m_files.end(), [](TrackFile& t) { rfclose(t.file); });
 }
 
 bool CDImageCueSheet::OpenAndParse(const char* filename, Common::Error* error)
 {
-  std::FILE* fp = FileSystem::OpenCFile(filename, "rb");
+  RFILE* fp = FileSystem::OpenRFile(filename, "rb");
   if (!fp)
   {
     Log_ErrorPrintf("Failed to open cuesheet '%s': errno %d", filename, errno);
@@ -55,11 +55,11 @@ bool CDImageCueSheet::OpenAndParse(const char* filename, Common::Error* error)
   CueParser::File parser;
   if (!parser.Parse(fp, error))
   {
-    std::fclose(fp);
+    rfclose(fp);
     return false;
   }
 
-  std::fclose(fp);
+  rfclose(fp);
 
   m_filename = filename;
 
@@ -87,13 +87,13 @@ bool CDImageCueSheet::OpenAndParse(const char* filename, Common::Error* error)
       const std::string track_full_filename(!FileSystem::IsAbsolutePath(track_filename) ?
                                               FileSystem::BuildRelativePath(m_filename, track_filename) :
                                               track_filename);
-      std::FILE* track_fp = FileSystem::OpenCFile(track_full_filename.c_str(), "rb");
+      RFILE* track_fp = FileSystem::OpenRFile(track_full_filename.c_str(), "rb");
       if (!track_fp && track_file_index == 0)
       {
         // many users have bad cuesheets, or they're renamed the files without updating the cuesheet.
         // so, try searching for a bin with the same name as the cue, but only for the first referenced file.
         const std::string alternative_filename(FileSystem::ReplaceExtension(filename, "bin"));
-        track_fp = FileSystem::OpenCFile(alternative_filename.c_str(), "rb");
+        track_fp = FileSystem::OpenRFile(alternative_filename.c_str(), "rb");
         if (track_fp)
         {
           Log_WarningPrintf("Your cue sheet references an invalid file '%s', but this was found at '%s' instead.",
@@ -132,9 +132,9 @@ bool CDImageCueSheet::OpenAndParse(const char* filename, Common::Error* error)
     LBA track_length;
     if (!track->length.has_value())
     {
-      FileSystem::FSeek64(m_files[track_file_index].file, 0, SEEK_END);
-      u64 file_size = static_cast<u64>(FileSystem::FTell64(m_files[track_file_index].file));
-      FileSystem::FSeek64(m_files[track_file_index].file, 0, SEEK_SET);
+      FileSystem::RFSeek64(m_files[track_file_index].file, 0, SEEK_END);
+      u64 file_size = static_cast<u64>(FileSystem::RFTell64(m_files[track_file_index].file));
+      FileSystem::RFSeek64(m_files[track_file_index].file, 0, SEEK_SET);
 
       file_size /= track_sector_size;
       if (track_start >= file_size)
@@ -307,15 +307,15 @@ bool CDImageCueSheet::ReadSectorFromIndex(void* buffer, const Index& index, LBA 
   const u64 file_position = index.file_offset + (static_cast<u64>(lba_in_index) * index.file_sector_size);
   if (tf.file_position != file_position)
   {
-    if (std::fseek(tf.file, static_cast<long>(file_position), SEEK_SET) != 0)
+    if (rfseek(tf.file, static_cast<long>(file_position), SEEK_SET) != 0)
       return false;
 
     tf.file_position = file_position;
   }
 
-  if (std::fread(buffer, index.file_sector_size, 1, tf.file) != 1)
+  if (rfread(buffer, index.file_sector_size, 1, tf.file) != 1)
   {
-    std::fseek(tf.file, static_cast<long>(tf.file_position), SEEK_SET);
+    rfseek(tf.file, static_cast<long>(tf.file_position), SEEK_SET);
     return false;
   }
 

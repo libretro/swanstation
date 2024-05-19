@@ -42,11 +42,11 @@ Track* File::GetMutableTrack(u32 n)
   return nullptr;
 }
 
-bool File::Parse(std::FILE* fp, Common::Error* error)
+bool File::Parse(RFILE* fp, Common::Error* error)
 {
   char line[1024];
   u32 line_number = 1;
-  while (std::fgets(line, sizeof(line), fp))
+  while (rfgets(line, sizeof(line), fp))
   {
     if (!ParseLine(line, line_number, error))
       return false;

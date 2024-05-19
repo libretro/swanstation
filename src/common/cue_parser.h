@@ -1,5 +1,6 @@
 #pragma once
 #include "types.h"
+#include "file_system.h"
 #include "cd_image.h"
 #include <optional>
 #include <string_view>
@@ -51,7 +52,7 @@ public:
 
   const Track* GetTrack(u32 n) const;
 
-  bool Parse(std::FILE* fp, Common::Error* error);
+  bool Parse(RFILE* fp, Common::Error* error);
 
 private:
   Track* GetMutableTrack(u32 n);
