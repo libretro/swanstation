@@ -927,31 +927,6 @@ std::FILE* OpenCFile(const char* filename, const char* mode)
 #endif
 }
 
-int FSeek64(std::FILE* fp, s64 offset, int whence)
-{
-#ifdef _WIN32
-  return _fseeki64(fp, offset, whence);
-#else
-  // Prevent truncation on platforms which don't have a 64-bit off_t (Android 32-bit).
-  if constexpr (sizeof(off_t) != sizeof(s64))
-  {
-    if (offset < std::numeric_limits<off_t>::min() || offset > std::numeric_limits<off_t>::max())
-      return -1;
-  }
-
-  return fseeko(fp, static_cast<off_t>(offset), whence);
-#endif
-}
-
-s64 FTell64(std::FILE* fp)
-{
-#ifdef _WIN32
-  return static_cast<s64>(_ftelli64(fp));
-#else
-  return static_cast<s64>(ftello(fp));
-#endif
-}
-
 std::optional<std::vector<u8>> ReadBinaryFile(const char* filename)
 {
   RFILE *fp = OpenRFile(filename, "rb");
@@ -1243,33 +1218,6 @@ bool FileSystem::StatFile(const char* path, FILESYSTEM_STAT_DATA* pStatData)
   pStatData->Attributes = TranslateWin32Attributes(bhfi.dwFileAttributes);
   pStatData->ModificationTime.SetWindowsFileTime(&bhfi.ftLastWriteTime);
   pStatData->Size = ((u64)bhfi.nFileSizeHigh) << 32 | (u64)bhfi.nFileSizeLow;
-  return true;
-}
-
-bool FileSystem::StatFile(std::FILE* fp, FILESYSTEM_STAT_DATA* pStatData)
-{
-  const int fd = _fileno(fp);
-  if (fd < 0)
-    return false;
-
-  struct _stat64 st;
-  if (_fstati64(fd, &st) != 0)
-    return false;
-
-  // parse attributes
-  pStatData->Attributes = 0;
-  if ((st.st_mode & _S_IFMT) == _S_IFDIR)
-    pStatData->Attributes |= FILESYSTEM_FILE_ATTRIBUTE_DIRECTORY;
-
-  // parse times
-  pStatData->ModificationTime.SetUnixTimestamp((Timestamp::UnixTimestampValue)st.st_mtime);
-
-  // parse size
-  if ((st.st_mode & _S_IFMT) == _S_IFREG)
-    pStatData->Size = static_cast<u64>(st.st_size);
-  else
-    pStatData->Size = 0;
-
   return true;
 }
 
@@ -1650,40 +1598,6 @@ bool StatFile(const char* Path, FILESYSTEM_STAT_DATA* pStatData)
   return true;
 }
 
-bool StatFile(std::FILE* fp, FILESYSTEM_STAT_DATA* pStatData)
-{
-  int fd = fileno(fp);
-  if (fd < 0)
-    return false;
-
-    // stat file
-#if defined(__HAIKU__) || defined(__APPLE__) || defined(__FreeBSD__)
-  struct stat sysStatData;
-  if (fstat(fd, &sysStatData) < 0)
-#else
-  struct stat64 sysStatData;
-  if (fstat64(fd, &sysStatData) < 0)
-#endif
-    return false;
-
-  // parse attributes
-  pStatData->Attributes = 0;
-  if (S_ISDIR(sysStatData.st_mode))
-    pStatData->Attributes |= FILESYSTEM_FILE_ATTRIBUTE_DIRECTORY;
-
-  // parse times
-  pStatData->ModificationTime.SetUnixTimestamp((Timestamp::UnixTimestampValue)sysStatData.st_mtime);
-
-  // parse size
-  if (S_ISREG(sysStatData.st_mode))
-    pStatData->Size = static_cast<u64>(sysStatData.st_size);
-  else
-    pStatData->Size = 0;
-
-  // ok
-  return true;
-}
-
 bool FileExists(const char* Path)
 {
   // has a path
@@ -1950,7 +1864,7 @@ RFILE* OpenRFile(const char *filename, const char *mode)
    return output;
 }
 
-s64 RFSeek64(RFILE* fp, s64 offset, int whence)
+s64 FSeek64(RFILE* fp, s64 offset, int whence)
 {
    int seek_position = -1;
 
@@ -1973,12 +1887,12 @@ s64 RFSeek64(RFILE* fp, s64 offset, int whence)
    return filestream_seek(fp, offset, seek_position);
 }
 
-s64 RFTell64(RFILE* fp)
+s64 FTell64(RFILE* fp)
 {
 	return filestream_tell(fp);
 }
 
-s64 RFSize64(RFILE* fp)
+s64 FSize64(RFILE* fp)
 {
 	const s64 pos = filestream_tell(fp);
 	if (pos >= 0)

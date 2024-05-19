@@ -231,8 +231,8 @@ bool CDImageEcm::Open(const char* filename, Common::Error* error)
   }
 
   s64 file_size;
-  if (FileSystem::RFSeek64(m_fp, 0, SEEK_END) != 0 || (file_size = FileSystem::RFTell64(m_fp)) <= 0 ||
-      FileSystem::RFSeek64(m_fp, 0, SEEK_SET) != 0)
+  if (FileSystem::FSeek64(m_fp, 0, SEEK_END) != 0 || (file_size = FileSystem::FTell64(m_fp)) <= 0 ||
+      FileSystem::FSeek64(m_fp, 0, SEEK_SET) != 0)
   {
     Log_ErrorPrintf("Get file size failed: errno %d", errno);
     return false;

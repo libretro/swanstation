@@ -132,9 +132,9 @@ bool CDImageCueSheet::OpenAndParse(const char* filename, Common::Error* error)
     LBA track_length;
     if (!track->length.has_value())
     {
-      FileSystem::RFSeek64(m_files[track_file_index].file, 0, SEEK_END);
-      u64 file_size = static_cast<u64>(FileSystem::RFTell64(m_files[track_file_index].file));
-      FileSystem::RFSeek64(m_files[track_file_index].file, 0, SEEK_SET);
+      FileSystem::FSeek64(m_files[track_file_index].file, 0, SEEK_END);
+      u64 file_size = static_cast<u64>(FileSystem::FTell64(m_files[track_file_index].file));
+      FileSystem::FSeek64(m_files[track_file_index].file, 0, SEEK_SET);
 
       file_size /= track_sector_size;
       if (track_start >= file_size)
