@@ -97,6 +97,7 @@ add_library(common
 
 target_include_directories(common PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/..")
 target_include_directories(common PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/..")
+target_include_directories(common PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../../dep/libretro-common/include")
 target_link_libraries(common PRIVATE glad stb Threads::Threads libchdr glslang vulkan-loader zlib)
 
 if(WIN32)

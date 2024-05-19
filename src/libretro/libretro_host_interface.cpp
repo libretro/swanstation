@@ -27,6 +27,8 @@
 #include <cstring>
 #include <tuple>
 #include <utility>
+#include <streams/file_stream.h>
+
 Log_SetChannel(LibretroHostInterface);
 
 #ifdef WIN32
@@ -147,8 +149,15 @@ RETRO_API size_t retro_get_memory_size(unsigned id)
 
 RETRO_API void retro_set_environment(retro_environment_t f)
 {
+  struct retro_vfs_interface_info vfs_iface_info;
   g_retro_environment_callback = f;
   g_libretro_host_interface.retro_set_environment();
+
+  vfs_iface_info.required_interface_version = 1;
+  vfs_iface_info.iface                      = NULL;
+  if (g_retro_environment_callback(RETRO_ENVIRONMENT_GET_VFS_INTERFACE,
+			  &vfs_iface_info))
+	  filestream_vfs_init(&vfs_iface_info);
 }
 
 RETRO_API void retro_set_video_refresh(retro_video_refresh_t f)
