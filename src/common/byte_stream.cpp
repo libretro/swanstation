@@ -1030,7 +1030,7 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
     // do we need to copy the existing file into this one?
     if (!(openMode & BYTESTREAM_OPEN_TRUNCATE))
     {
-      RFILE* pOriginalFile = std::fopen(fileName, "rb");
+      RFILE* pOriginalFile = rfopen(fileName, "rb");
       if (!pOriginalFile)
       {
         // this will delete the temporary file
