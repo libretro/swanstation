@@ -212,10 +212,21 @@ static bool RetroCreateVulkanDevice(struct retro_vulkan_context* context, VkInst
   return true;
 }
 
+static const VkApplicationInfo *get_application_info_vulkan(void)
+{
+	static VkApplicationInfo app_info{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
+	app_info.pApplicationName   = "SwanStation";
+	app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+	app_info.pEngineName        = "SwanStation";
+	app_info.engineVersion      = VK_MAKE_VERSION(1, 0, 0);
+	app_info.apiVersion         = VK_API_VERSION_1_0;
+	return &app_info;
+}
+
 static retro_hw_render_context_negotiation_interface_vulkan s_vulkan_context_negotiation_interface = {
   RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN,         // interface_type
   RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN_VERSION, // interface_version
-  nullptr,                                                      // get_application_info
+  get_application_info_vulkan,                                  // get_application_info
   RetroCreateVulkanDevice,                                      // create_device
   nullptr                                                       // destroy_device
 };
