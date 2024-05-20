@@ -474,11 +474,6 @@ std::unique_ptr<ByteStream> OpenFile(const char* FileName, u32 Flags)
   return ByteStream_OpenFileStream(FileName, Flags);
 }
 
-FileSystem::ManagedCFilePtr OpenManagedCFile(const char* filename, const char* mode)
-{
-  return ManagedCFilePtr(OpenCFile(filename, mode), [](std::FILE* fp) { std::fclose(fp); });
-}
-
 std::FILE* OpenCFile(const char* filename, const char* mode)
 {
 #ifdef _WIN32

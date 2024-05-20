@@ -24,6 +24,8 @@
 #include <alloca.h>
 #endif
 
+#include <file/file_path.h>
+
 class FileByteStream : public ByteStream
 {
 public:
@@ -692,7 +694,7 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
   if ((openMode & (BYTESTREAM_OPEN_CREATE | BYTESTREAM_OPEN_WRITE)) == BYTESTREAM_OPEN_WRITE)
   {
     // if opening with write but not create, the path must exist.
-    if (!FileSystem::FileExists(fileName))
+    if (!path_is_valid(fileName))
       return nullptr;
   }
 
@@ -769,17 +771,13 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
         tempStr[i] = '\0';
 
         // check if it exists
-        struct stat s;
-        if (stat(tempStr, &s) < 0)
+	if (!path_is_valid(tempStr))
         {
           if (errno == ENOENT)
           {
             // try creating it
-            if (_mkdir(tempStr) < 0)
-            {
-              // no point trying any further down the chain
+	    if (!path_mkdir(tempStr)) // no point trying any further down the chain
               break;
-            }
           }
           else // if (errno == ENOTDIR)
           {
@@ -900,8 +898,7 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
   if ((openMode & (BYTESTREAM_OPEN_CREATE | BYTESTREAM_OPEN_WRITE)) == BYTESTREAM_OPEN_WRITE)
   {
     // if opening with write but not create, the path must exist.
-    struct stat s;
-    if (stat(fileName, &s) < 0)
+    if (!path_is_valid(fileName))
       return nullptr;
   }
 
@@ -965,21 +962,13 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
         tempStr[i] = '\0';
 
         // check if it exists
-        struct stat s;
-        if (stat(tempStr, &s) < 0)
+	if (!path_is_valid(tempStr))
         {
           if (errno == ENOENT)
           {
             // try creating it
-#if defined(_WIN32)
-            if (mkdir(tempStr) < 0)
-#else
-            if (mkdir(tempStr, 0777) < 0)
-#endif
-            {
-              // no point trying any further down the chain
+	    if (!path_mkdir(tempStr)) // no point trying any further down the chain
               break;
-            }
           }
           else // if (errno == ENOTDIR)
           {
