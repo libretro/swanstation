@@ -822,7 +822,9 @@ static u32 RecursiveFindFiles(const char* OriginPath, const char* ParentPath, co
     FILESYSTEM_FIND_DATA outData;
     outData.Attributes = 0;
 
-    if (path_get_size(full_path) == -1)
+    int32_t sdir_size = path_get_size(full_path);
+
+    if (sdir_size == -1)
       continue;
 
     if (path_is_directory(full_path))
@@ -852,7 +854,7 @@ static u32 RecursiveFindFiles(const char* OriginPath, const char* ParentPath, co
         continue;
     }
 
-    outData.Size = static_cast<u64>(sDir.st_size);
+    outData.Size = static_cast<u64>(sdir_size);
 
     // match the filename
     if (hasWildCards)
