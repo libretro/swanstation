@@ -42,13 +42,6 @@ private:
     u16 size;
   };
 
-#if _DEBUG
-  static void PrintPBPHeaderInfo(const PBPHeader& pbp_header);
-  static void PrintSFOHeaderInfo(const SFOHeader& sfo_header);
-  static void PrintSFOIndexTableEntry(const SFOIndexTableEntry& sfo_index_table_entry, size_t i);
-  static void PrintSFOTable(const SFOTable& sfo_table);
-#endif
-
   bool LoadPBPHeader();
   bool LoadSFOHeader();
   bool LoadSFOIndexTable();
@@ -149,10 +142,6 @@ bool CDImagePBP::LoadPBPHeader()
     return false;
   }
 
-#if _DEBUG
-  PrintPBPHeaderInfo(m_pbp_header);
-#endif
-
   return true;
 }
 
@@ -170,10 +159,6 @@ bool CDImagePBP::LoadSFOHeader()
     return false;
   }
 
-#if _DEBUG
-  PrintSFOHeaderInfo(m_sfo_header);
-#endif
-
   return true;
 }
 
@@ -188,11 +173,6 @@ bool CDImagePBP::LoadSFOIndexTable()
   if (rfread(m_sfo_index_table.data(), sizeof(SFOIndexTableEntry), m_sfo_header.num_table_entries, m_file) !=
       m_sfo_header.num_table_entries)
     return false;
-
-#if _DEBUG
-  for (size_t i = 0; i < static_cast<size_t>(m_sfo_header.num_table_entries); ++i)
-    PrintSFOIndexTableEntry(m_sfo_index_table[i], i);
-#endif
 
   return true;
 }
@@ -262,10 +242,6 @@ bool CDImagePBP::LoadSFOTable()
       return false;
     }
   }
-
-#if _DEBUG
-  PrintSFOTable(m_sfo_table);
-#endif
 
   return true;
 }
@@ -803,59 +779,6 @@ bool CDImagePBP::ReadSectorFromIndex(void* buffer, const Index& index, LBA lba_i
   std::memcpy(buffer, &m_decompressed_block[offset_in_block], RAW_SECTOR_SIZE);
   return true;
 }
-
-#if _DEBUG
-void CDImagePBP::PrintPBPHeaderInfo(const PBPHeader& pbp_header)
-{
-  printf("PBP header info\n");
-  printf("PBP format version 0x%08X\n", pbp_header.version);
-  printf("File offsets\n");
-  printf("PARAM.SFO 0x%08X PARSE\n", pbp_header.param_sfo_offset);
-  printf("ICON0.PNG 0x%08X IGNORE\n", pbp_header.icon0_png_offset);
-  printf("ICON1.PNG 0x%08X IGNORE\n", pbp_header.icon1_png_offset);
-  printf("PIC0.PNG  0x%08X IGNORE\n", pbp_header.pic0_png_offset);
-  printf("PIC1.PNG  0x%08X IGNORE\n", pbp_header.pic1_png_offset);
-  printf("SND0.AT3  0x%08X IGNORE\n", pbp_header.snd0_at3_offset);
-  printf("DATA.PSP  0x%08X IGNORE\n", pbp_header.data_psp_offset);
-  printf("DATA.PSAR 0x%08X PARSE\n", pbp_header.data_psar_offset);
-  printf("\n");
-}
-
-void CDImagePBP::PrintSFOHeaderInfo(const SFOHeader& sfo_header)
-{
-  printf("SFO header info\n");
-  printf("SFO format version    0x%08X\n", sfo_header.version);
-  printf("SFO key table offset  0x%08X\n", sfo_header.key_table_offset);
-  printf("SFO data table offset 0x%08X\n", sfo_header.data_table_offset);
-  printf("SFO table entry count 0x%08X\n", sfo_header.num_table_entries);
-  printf("\n");
-}
-
-void CDImagePBP::PrintSFOIndexTableEntry(const SFOIndexTableEntry& sfo_index_table_entry, size_t i)
-{
-  printf("SFO index table entry %zu\n", i);
-  printf("Key offset      0x%08X\n", sfo_index_table_entry.key_offset);
-  printf("Data type       0x%08X\n", sfo_index_table_entry.data_type);
-  printf("Data size       0x%08X\n", sfo_index_table_entry.data_size);
-  printf("Total data size 0x%08X\n", sfo_index_table_entry.data_total_size);
-  printf("Data offset     0x%08X\n", sfo_index_table_entry.data_offset);
-  printf("\n");
-}
-
-void CDImagePBP::PrintSFOTable(const SFOTable& sfo_table)
-{
-  for (auto it = sfo_table.begin(); it != sfo_table.end(); ++it)
-  {
-    std::string key_value = it->first;
-    SFOTableDataValue data_value = it->second;
-
-    if (std::holds_alternative<std::string>(data_value))
-      printf("Key: %s, Data: %s\n", key_value.c_str(), std::get<std::string>(data_value).c_str());
-    else if (std::holds_alternative<u32>(data_value))
-      printf("Key: %s, Data: %u\n", key_value.c_str(), std::get<u32>(data_value));
-  }
-}
-#endif
 
 bool CDImagePBP::HasSubImages() const
 {
