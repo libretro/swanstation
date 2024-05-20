@@ -9,6 +9,8 @@
 #include <cstdio>
 #include <optional>
 
+#include <file/file_path.h>
+
 namespace MemoryCardImage {
 
 static u8 GetChecksum(const u8* frame)
@@ -33,8 +35,8 @@ const T* GetFramePtr(const DataArray& data, u32 block, u32 frame)
 
 bool LoadFromFile(DataArray* data, const char* filename)
 {
-  FILESYSTEM_STAT_DATA sd;
-  if (!FileSystem::StatFile(filename, &sd) || sd.Size != DATA_SIZE)
+  int32_t sd_size = path_get_size(filename);
+  if (sd_size == -1 || sd_size != DATA_SIZE)
     return false;
 
   std::unique_ptr<ByteStream> stream = FileSystem::OpenFile(filename, BYTESTREAM_OPEN_READ | BYTESTREAM_OPEN_STREAMED);

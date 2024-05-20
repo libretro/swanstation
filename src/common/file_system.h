@@ -26,13 +26,6 @@ inline constexpr u32 FILESYSTEM_FIND_RECURSIVE = (1 << 0), FILESYSTEM_FIND_RELAT
                      FILESYSTEM_FIND_HIDDEN_FILES = (1 << 2), FILESYSTEM_FIND_FOLDERS = (1 << 3),
                      FILESYSTEM_FIND_FILES = (1 << 4), FILESYSTEM_FIND_KEEP_ARRAY = (1 << 5);
 
-struct FILESYSTEM_STAT_DATA
-{
-  u32 Attributes;
-  Timestamp ModificationTime;
-  u64 Size;
-};
-
 struct FILESYSTEM_FIND_DATA
 {
   std::string FileName;
@@ -44,12 +37,6 @@ struct FILESYSTEM_FIND_DATA
 namespace FileSystem {
 
 using FindResultsArray = std::vector<FILESYSTEM_FIND_DATA>;
-
-#ifdef __ANDROID__
-/// Sets the instance for the FileHelpers Java class, used for storage access framework
-/// file access on Android.
-void SetAndroidFileHelper(void* jvm, void* env, void* object);
-#endif
 
 // canonicalize a path string (i.e. replace .. with actual folder name, etc), if OS path is used, on windows, the
 // separators will be \, otherwise /
@@ -91,9 +78,6 @@ std::string_view GetFileTitleFromPath(const std::string_view& path);
 
 // search for files
 bool FindFiles(const char* Path, const char* Pattern, u32 Flags, FindResultsArray* pResults);
-
-// stat file
-bool StatFile(const char* Path, FILESYSTEM_STAT_DATA* pStatData);
 
 // file exists?
 bool FileExists(const char* Path);
