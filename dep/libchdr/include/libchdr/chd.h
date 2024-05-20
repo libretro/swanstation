@@ -49,6 +49,8 @@ extern "C" {
 #include <libchdr/coretypes.h>
 #include <libchdr/chdconfig.h>
 
+#include <streams/file_stream.h>
+
 /***************************************************************************
 
     Compressed Hunks of Data header format. All numbers are stored in

@@ -117,6 +117,10 @@ std::optional<std::vector<u8>> ReadBinaryFile(RFILE* fp);
 
 }; // namespace FileSystem
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 char *rfgets(char *buffer, int maxCount, RFILE* stream);
 int rfeof(RFILE* stream);
 int rferror(RFILE* stream);
@@ -129,3 +133,7 @@ int64_t rfwrite(void const* buffer,
 int64_t rfread(void* buffer,
    size_t elem_size, size_t elem_count, RFILE* stream);
 int rfgetc(RFILE* stream);
+
+#ifdef __cplusplus
+}
+#endif

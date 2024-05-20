@@ -59,7 +59,7 @@ private:
 
   bool ReadHunk(u32 hunk_index);
 
-  std::FILE* m_fp = nullptr;
+  RFILE* m_fp = nullptr;
   chd_file* m_chd = nullptr;
   u32 m_hunk_size = 0;
   u32 m_sectors_per_hunk = 0;
@@ -77,12 +77,12 @@ CDImageCHD::~CDImageCHD()
   if (m_chd)
     chd_close(m_chd);
   if (m_fp)
-    std::fclose(m_fp);
+    rfclose(m_fp);
 }
 
 bool CDImageCHD::Open(const char* filename, Common::Error* error)
 {
-  m_fp = FileSystem::OpenCFile(filename, "rb");
+  m_fp = FileSystem::OpenRFile(filename, "rb");
   if (!m_fp)
   {
     Log_ErrorPrintf("Failed to open CHD '%s': errno %d", filename, errno);
