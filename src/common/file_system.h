@@ -103,9 +103,7 @@ bool WriteBinaryFile(const char* filename, const void* data, size_t data_length)
 
 // creates a directory in the local filesystem
 // if the directory already exists, the return value will be true.
-// if Recursive is specified, all parent directories will be created
-// if they do not exist.
-bool CreateDirectory(const char* Path, bool Recursive);
+bool CreateDirectory(const char* Path);
 
 /// Returns the path to the current executable.
 std::string GetProgramPath();

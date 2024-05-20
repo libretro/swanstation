@@ -142,7 +142,7 @@ std::string TextureReplacements::GetVRAMWriteDumpFilename(u32 width, u32 height,
   const std::string dump_directory =
     g_host_interface->GetUserDirectoryRelativePath("dump/textures/%s", m_game_id.c_str());
   if (!FileSystem::DirectoryExists(dump_directory.c_str()) &&
-      !FileSystem::CreateDirectory(dump_directory.c_str(), false))
+      !FileSystem::CreateDirectory(dump_directory.c_str()))
   {
     return {};
   }

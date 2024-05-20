@@ -736,75 +736,6 @@ bool FileSystem::FindFiles(const char* Path, const char* Pattern, u32 Flags, Fin
   return (RecursiveFindFiles(Path, nullptr, nullptr, Pattern, Flags, pResults) > 0);
 }
 
-bool FileSystem::CreateDirectory(const char* Path, bool Recursive)
-{
-  std::wstring wpath(StringUtil::UTF8StringToWideString(Path));
-
-  // has a path
-  if (wpath[0] == L'\0')
-    return false;
-
-    // try just flat-out, might work if there's no other segments that have to be made
-  if (CreateDirectoryW(wpath.c_str(), nullptr))
-    return true;
-
-  // check error
-  DWORD lastError = GetLastError();
-  if (lastError == ERROR_ALREADY_EXISTS)
-  {
-    // check the attributes
-    u32 Attributes = WrapGetFileAttributes(wpath.c_str());
-    if (Attributes != INVALID_FILE_ATTRIBUTES && Attributes & FILE_ATTRIBUTE_DIRECTORY)
-      return true;
-    return false;
-  }
-  else if (lastError == ERROR_PATH_NOT_FOUND)
-  {
-    // part of the path does not exist, so we'll create the parent folders, then
-    // the full path again. allocate another buffer with the same length
-    u32 pathLength = static_cast<u32>(wpath.size());
-    wchar_t* tempStr = (wchar_t*)alloca(sizeof(wchar_t) * (pathLength + 1));
-
-    // create directories along the path
-    for (u32 i = 0; i < pathLength; i++)
-    {
-      if (wpath[i] == L'\\' || wpath[i] == L'/')
-      {
-        tempStr[i] = L'\0';
-
-        const BOOL result = CreateDirectoryW(tempStr, nullptr);
-
-        if (!result)
-        {
-          lastError = GetLastError();
-          if (lastError != ERROR_ALREADY_EXISTS) // fine, continue to next path segment
-            return false;
-        }
-      }
-
-      tempStr[i] = wpath[i];
-    }
-
-    // re-create the end if it's not a separator, check / as well because windows can interpret them
-    if (wpath[pathLength - 1] != L'\\' && wpath[pathLength - 1] != L'/')
-    {
-      const BOOL result = CreateDirectoryW(wpath.c_str(), nullptr);
-
-      if (!result)
-      {
-        lastError = GetLastError();
-        if (lastError != ERROR_ALREADY_EXISTS)
-          return false;
-      }
-    }
-
-    // ok
-    return true;
-  }
-  // unhandled error
-  return false;
-}
-
 bool FileSystem::DeleteFile(const char* Path)
 {
   if (Path[0] == '\0')
@@ -1002,75 +933,6 @@ bool FindFiles(const char* Path, const char* Pattern, u32 Flags, FindResultsArra
 }
 
 
-bool CreateDirectory(const char* Path, bool Recursive)
-{
-  u32 i;
-  int lastError;
-
-  // has a path
-  if (Path[0] == '\0')
-    return false;
-
-  // try just flat-out, might work if there's no other segments that have to be made
-  if (mkdir(Path, 0777) == 0)
-    return true;
-
-  // check error
-  lastError = errno;
-  if (lastError == EEXIST)
-  {
-    // check the attributes
-    struct stat sysStatData;
-    if (stat(Path, &sysStatData) == 0 && S_ISDIR(sysStatData.st_mode))
-      return true;
-    else
-      return false;
-  }
-  else if (lastError == ENOENT)
-  {
-    // part of the path does not exist, so we'll create the parent folders, then
-    // the full path again. allocate another buffer with the same length
-    u32 pathLength = static_cast<u32>(std::strlen(Path));
-    char* tempStr = (char*)alloca(pathLength + 1);
-
-    // create directories along the path
-    for (i = 0; i < pathLength; i++)
-    {
-      if (Path[i] == '/')
-      {
-        tempStr[i] = '\0';
-        if (mkdir(tempStr, 0777) < 0)
-        {
-          lastError = errno;
-          if (lastError != EEXIST) // fine, continue to next path segment
-            return false;
-        }
-      }
-
-      tempStr[i] = Path[i];
-    }
-
-    // re-create the end if it's not a separator, check / as well because windows can interpret them
-    if (Path[pathLength - 1] != '/')
-    {
-      if (mkdir(Path, 0777) < 0)
-      {
-        lastError = errno;
-        if (lastError != EEXIST)
-          return false;
-      }
-    }
-
-    // ok
-    return true;
-  }
-  else
-  {
-    // unhandled error
-    return false;
-  }
-}
-
 bool DeleteFile(const char* Path)
 {
   if (Path[0] == '\0')
@@ -1167,6 +1029,11 @@ std::string GetProgramPath()
 #endif
 }
 #endif
+
+bool CreateDirectory(const char* Path)
+{
+  return path_mkdir(Path);
+}
 
 bool DirectoryExists(const char* Path)
 {
