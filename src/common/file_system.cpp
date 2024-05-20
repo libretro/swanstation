@@ -722,19 +722,6 @@ bool FileSystem::FindFiles(const char* Path, const char* Pattern, u32 Flags, Fin
   return (RecursiveFindFiles(Path, nullptr, nullptr, Pattern, Flags, pResults) > 0);
 }
 
-bool FileSystem::RenamePath(const char* OldPath, const char* NewPath)
-{
-  const std::wstring old_wpath(StringUtil::UTF8StringToWideString(OldPath));
-  const std::wstring new_wpath(StringUtil::UTF8StringToWideString(NewPath));
-
-  if (!MoveFileExW(old_wpath.c_str(), new_wpath.c_str(), MOVEFILE_REPLACE_EXISTING))
-  {
-    Log_ErrorPrintf("MoveFileEx('%s', '%s') failed: %08X", OldPath, NewPath, GetLastError());
-    return false;
-  }
-  return true;
-}
-
 std::string GetProgramPath()
 {
   std::wstring buffer;
@@ -904,20 +891,6 @@ bool FindFiles(const char* Path, const char* Pattern, u32 Flags, FindResultsArra
 
   // enter the recursive function
   return (RecursiveFindFiles(Path, nullptr, nullptr, Pattern, Flags, pResults) > 0);
-}
-
-bool RenamePath(const char* OldPath, const char* NewPath)
-{
-  if (OldPath[0] == '\0' || NewPath[0] == '\0')
-    return false;
-
-  if (rename(OldPath, NewPath) != 0)
-  {
-    Log_ErrorPrintf("rename('%s', '%s') failed: %d", OldPath, NewPath, errno);
-    return false;
-  }
-
-  return true;
 }
 
 std::string GetProgramPath()
