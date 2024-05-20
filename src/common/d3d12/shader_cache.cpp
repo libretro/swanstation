@@ -115,12 +115,12 @@ bool ShaderCache::CreateNew(const std::string& index_filename, const std::string
   if (FileSystem::FileExists(index_filename.c_str()))
   {
     Log_WarningPrintf("Removing existing index file '%s'", index_filename.c_str());
-    FileSystem::DeleteFile(index_filename.c_str());
+    filestream_delete(index_filename.c_str());
   }
   if (FileSystem::FileExists(blob_filename.c_str()))
   {
     Log_WarningPrintf("Removing existing blob file '%s'", blob_filename.c_str());
-    FileSystem::DeleteFile(blob_filename.c_str());
+    filestream_delete(blob_filename.c_str());
   }
 
   index_file = FileSystem::OpenRFile(index_filename.c_str(), "wb");
@@ -136,7 +136,7 @@ bool ShaderCache::CreateNew(const std::string& index_filename, const std::string
     Log_ErrorPrintf("Failed to write version to index file '%s'", index_filename.c_str());
     rfclose(index_file);
     index_file = nullptr;
-    FileSystem::DeleteFile(index_filename.c_str());
+    filestream_delete(index_filename.c_str());
     return false;
   }
 
@@ -146,7 +146,7 @@ bool ShaderCache::CreateNew(const std::string& index_filename, const std::string
     Log_ErrorPrintf("Failed to open blob file '%s' for writing", blob_filename.c_str());
     rfclose(blob_file);
     blob_file = nullptr;
-    FileSystem::DeleteFile(index_filename.c_str());
+    filestream_delete(index_filename.c_str());
     return false;
   }
 

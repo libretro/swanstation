@@ -20,6 +20,7 @@
 
 #if defined(_WIN32)
 #include <shlobj.h>
+#include "windows_headers.h"
 #else
 #include <dirent.h>
 #include <errno.h>
@@ -579,15 +580,6 @@ bool WriteBinaryFile(const char* filename, const void* data, size_t data_length)
 }
 
 #ifdef _WIN32
-static DWORD WrapGetFileAttributes(const wchar_t* path)
-{
-  return GetFileAttributesW(path);
-}
-
-static const u32 READ_DIRECTORY_CHANGES_NOTIFY_FILTER = FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME |
-                                                        FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE |
-                                                        FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_CREATION;
-
 static u32 RecursiveFindFiles(const char* OriginPath, const char* ParentPath, const char* Path, const char* Pattern,
                               u32 Flags, FileSystem::FindResultsArray* pResults)
 {
@@ -706,7 +698,6 @@ static u32 RecursiveFindFiles(const char* OriginPath, const char* ParentPath, co
         outData.FileName = utf8_filename;
     }
 
-    outData.ModificationTime.SetWindowsFileTime(&wfd.ftLastWriteTime);
     outData.Size = (u64)wfd.nFileSizeHigh << 32 | (u64)wfd.nFileSizeLow;
 
     nFiles++;
@@ -729,19 +720,6 @@ bool FileSystem::FindFiles(const char* Path, const char* Pattern, u32 Flags, Fin
 
   // enter the recursive function
   return (RecursiveFindFiles(Path, nullptr, nullptr, Pattern, Flags, pResults) > 0);
-}
-
-bool FileSystem::DeleteFile(const char* Path)
-{
-  if (Path[0] == '\0')
-    return false;
-
-  const std::wstring wpath(StringUtil::UTF8StringToWideString(Path));
-  const DWORD fileAttributes = WrapGetFileAttributes(wpath.c_str());
-  if (fileAttributes == INVALID_FILE_ATTRIBUTES || fileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-    return false;
-
-  return (DeleteFileW(wpath.c_str()) == TRUE);
 }
 
 bool FileSystem::RenamePath(const char* OldPath, const char* NewPath)
@@ -875,7 +853,6 @@ static u32 RecursiveFindFiles(const char* OriginPath, const char* ParentPath, co
     }
 
     outData.Size = static_cast<u64>(sDir.st_size);
-    outData.ModificationTime.SetUnixTimestamp(static_cast<Timestamp::UnixTimestampValue>(sDir.st_mtime));
 
     // match the filename
     if (hasWildCards)
@@ -925,19 +902,6 @@ bool FindFiles(const char* Path, const char* Pattern, u32 Flags, FindResultsArra
 
   // enter the recursive function
   return (RecursiveFindFiles(Path, nullptr, nullptr, Pattern, Flags, pResults) > 0);
-}
-
-
-bool DeleteFile(const char* Path)
-{
-  if (Path[0] == '\0')
-    return false;
-
-  struct stat sysStatData;
-  if (stat(Path, &sysStatData) != 0 || S_ISDIR(sysStatData.st_mode))
-    return false;
-
-  return (unlink(Path) == 0);
 }
 
 bool RenamePath(const char* OldPath, const char* NewPath)
@@ -1024,11 +988,6 @@ std::string GetProgramPath()
 #endif
 }
 #endif
-
-bool CreateDirectory(const char* Path)
-{
-  return path_mkdir(Path);
-}
 
 bool DirectoryExists(const char* Path)
 {

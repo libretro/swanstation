@@ -11,7 +11,6 @@
 #include "common/make_array.h"
 #include "common/state_wrapper.h"
 #include "common/string_util.h"
-#include "common/timestamp.h"
 #include "controller.h"
 #include "cpu_code_cache.h"
 #include "cpu_core.h"

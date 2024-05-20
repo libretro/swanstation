@@ -11,6 +11,7 @@
 #include "xxh_x86dispatch.h"
 #endif
 #include <cinttypes>
+#include <file/file_path.h>
 Log_SetChannel(TextureReplacements);
 
 TextureReplacements g_texture_replacements;
@@ -142,7 +143,7 @@ std::string TextureReplacements::GetVRAMWriteDumpFilename(u32 width, u32 height,
   const std::string dump_directory =
     g_host_interface->GetUserDirectoryRelativePath("dump/textures/%s", m_game_id.c_str());
   if (!FileSystem::DirectoryExists(dump_directory.c_str()) &&
-      !FileSystem::CreateDirectory(dump_directory.c_str()))
+      !path_mkdir(dump_directory.c_str()))
   {
     return {};
   }

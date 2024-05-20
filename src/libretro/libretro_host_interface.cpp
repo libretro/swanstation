@@ -27,6 +27,7 @@
 #include <cstring>
 #include <tuple>
 #include <utility>
+#include <file/file_path.h>
 #include <streams/file_stream.h>
 
 Log_SetChannel(LibretroHostInterface);
@@ -426,7 +427,7 @@ std::string LibretroHostInterface::GetShaderCacheBasePath() const
   std::string shader_cache_path = StringUtil::StdStringFromFormat(
     "%s" FS_OSPATH_SEPARATOR_STR "swanstation" FS_OSPATH_SEPARATOR_STR, cache_directory_ptr);
   if (!FileSystem::DirectoryExists(shader_cache_path.c_str()) &&
-      !FileSystem::CreateDirectory(shader_cache_path.c_str()))
+      !path_mkdir(shader_cache_path.c_str()))
   {
     Log_ErrorPrintf("Failed to create shader cache directory: '%s'", shader_cache_path.c_str());
     return std::string();
@@ -1408,7 +1409,7 @@ void LibretroHostInterface::UpdateControllersAnalogController(u32 index)
 
   // Check if all possible combo buttons are released and the index matches the player slot.
   // Also make sure having another DualShock plugged in doesn't prematurely clear the button block.
-  if ((analog_index == index) && analog_pressed && 
+  if (((u32)analog_index == index) && analog_pressed && 
        !PadCombo_L1 && !PadCombo_R1 && !PadCombo_L2 && !PadCombo_R2 && !PadCombo_L3 && !PadCombo_R3 && !PadCombo_Start && !PadCombo_Select)
   {
     analog_pressed = false;

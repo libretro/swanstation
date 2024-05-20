@@ -157,12 +157,12 @@ bool ShaderCache::CreateNewShaderCache(const std::string& index_filename, const 
   if (FileSystem::FileExists(index_filename.c_str()))
   {
     Log_WarningPrintf("Removing existing index file '%s'", index_filename.c_str());
-    FileSystem::DeleteFile(index_filename.c_str());
+    filestream_delete(index_filename.c_str());
   }
   if (FileSystem::FileExists(blob_filename.c_str()))
   {
     Log_WarningPrintf("Removing existing blob file '%s'", blob_filename.c_str());
-    FileSystem::DeleteFile(blob_filename.c_str());
+    filestream_delete(blob_filename.c_str());
   }
 
   m_index_file = FileSystem::OpenRFile(index_filename.c_str(), "wb");
@@ -183,7 +183,7 @@ bool ShaderCache::CreateNewShaderCache(const std::string& index_filename, const 
     Log_ErrorPrintf("Failed to write header to index file '%s'", index_filename.c_str());
     rfclose(m_index_file);
     m_index_file = nullptr;
-    FileSystem::DeleteFile(index_filename.c_str());
+    filestream_delete(index_filename.c_str());
     return false;
   }
 
@@ -193,7 +193,7 @@ bool ShaderCache::CreateNewShaderCache(const std::string& index_filename, const 
     Log_ErrorPrintf("Failed to open blob file '%s' for writing", blob_filename.c_str());
     rfclose(m_index_file);
     m_index_file = nullptr;
-    FileSystem::DeleteFile(index_filename.c_str());
+    filestream_delete(index_filename.c_str());
     return false;
   }
 
@@ -288,7 +288,7 @@ bool ShaderCache::CreateNewPipelineCache()
   if (!m_pipeline_cache_filename.empty() && FileSystem::FileExists(m_pipeline_cache_filename.c_str()))
   {
     Log_WarningPrintf("Removing existing pipeline cache '%s'", m_pipeline_cache_filename.c_str());
-    FileSystem::DeleteFile(m_pipeline_cache_filename.c_str());
+    filestream_delete(m_pipeline_cache_filename.c_str());
   }
 
   const VkPipelineCacheCreateInfo ci{VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO, nullptr, 0, 0, nullptr};

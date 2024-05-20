@@ -1,5 +1,4 @@
 #pragma once
-#include "timestamp.h"
 #include "types.h"
 #include <cstdio>
 #include <memory>
@@ -8,6 +7,8 @@
 #include <vector>
 
 #include <streams/file_stream.h>
+
+#include "string.h"
 
 class ByteStream;
 
@@ -29,7 +30,6 @@ inline constexpr u32 FILESYSTEM_FIND_RECURSIVE = (1 << 0), FILESYSTEM_FIND_RELAT
 struct FILESYSTEM_FIND_DATA
 {
   std::string FileName;
-  Timestamp ModificationTime;
   u32 Attributes;
   u64 Size;
 };
@@ -85,9 +85,6 @@ bool FileExists(const char* Path);
 // directory exists?
 bool DirectoryExists(const char* Path);
 
-// delete file
-bool DeleteFile(const char* Path);
-
 // rename file
 bool RenamePath(const char* OldPath, const char* NewPath);
 
@@ -98,10 +95,6 @@ std::FILE* OpenCFile(const char* filename, const char* mode);
 
 std::optional<std::vector<u8>> ReadBinaryFile(const char* filename);
 bool WriteBinaryFile(const char* filename, const void* data, size_t data_length);
-
-// creates a directory in the local filesystem
-// if the directory already exists, the return value will be true.
-bool CreateDirectory(const char* Path);
 
 /// Returns the path to the current executable.
 std::string GetProgramPath();

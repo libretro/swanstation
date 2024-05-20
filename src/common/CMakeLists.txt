@@ -71,8 +71,6 @@ add_library(common
   string_util.h
   timer.cpp
   timer.h
-  timestamp.cpp
-  timestamp.h
   types.h
   vulkan/builders.cpp
   vulkan/builders.h
