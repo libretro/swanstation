@@ -75,18 +75,27 @@ bool CDImagePPF::Open(const char* filename, std::unique_ptr<CDImage> parent_imag
 
   if (magic == 0x33465050) // PPF3
   {
-    rfclose(fp);
-    return ReadV3Patch(fp);
+    if (ReadV3Patch(fp))
+    {
+	    rfclose(fp);
+	    return true;
+    }
   }
   else if (magic == 0x32465050) // PPF2
   {
-    rfclose(fp);
-    return ReadV2Patch(fp);
+   if (ReadV2Patch(fp))
+   {
+	    rfclose(fp);
+	    return true;
+   }
   }
   else if (magic == 0x31465050) // PPF1
   {
-    rfclose(fp);
-    return ReadV1Patch(fp);
+    if (ReadV1Patch(fp))
+    {
+	    rfclose(fp);
+	    return true;
+    }
   }
 
   Log_ErrorPrintf("Unknown PPF magic %08X", magic);
