@@ -337,6 +337,13 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
       || game_code == "SLES-00147" /* Defcon 5 (PAL)  */
       || game_code == "SLUS-00009" /* Defcon 5 (NTSC-U)  */
       || game_code == "SLUS-00297" /* Star Wars - Dark Forces (NTSC-U)  */
+      || game_code == "SLES-00585" /* Star Wars - Dark Forces (PAL)  */
+      || game_code == "SLES-00640" /* Star Wars - Dark Forces (Italy) (En,It)  */
+      || game_code == "SLPS-00685" /* Star Wars - Dark Forces (NTSC-J)  */
+      || game_code == "SLES-00646" /* Star Wars - Dark Forces (Spain)  */
+      || game_code == "SLES-00555" /* Hexen (Europe)  */
+      || game_code == "SLUS-00348" /* Hexen (USA)  */
+      || game_code == "SLPS-00972" /* Hexen - Beyond Heretic (Japan)  */
      ) 
   {
     gs->AddTrait(GameSettings::Trait::DisableUpscaling);
@@ -357,11 +364,9 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
       || game_code == "SLPS-03336" /* Mr. Driller G (NTSC-J)    */
       || game_code == "SLUS-00952" /* Arcade Party Pak (NTSC-U) */
       || game_code == "SCES-01312" /* Devil Dice (PAL)          */
-      || game_code == "SLUS-00337" /* True Pinball (NTSC-U)     */
       || game_code == "SLPS-03553" /* Naruto - Shinobi no Sato no Jintori Kassen (NTSC-J)     */
       || game_code == "SLPS-01211" /* Time Bokan Series - Bokandesuyo (NTSC-J)     */
       || game_code == "SLUS-00656" /* Rat Attack (NTSC-U)       */
-      || game_code == "SLES-00483" /* Worms Pinball (PAL)       */
       || game_code == "SLUS-00912" /* Destruction Derby Raw (NTSC-U) */
       || game_code == "SLPS-01434" /* 3D Kakutou Tsukuru    (NTSC-J) */
       || game_code == "SLPM-86750" /* Shiritsu Justice Gakuen - Nekketsu Seishun Nikki 2 [Capkore] (NTSC-J) */
@@ -369,6 +374,14 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
      )
   {
     gs->AddTrait(GameSettings::Trait::ForceInterlacing);
+    return gs;
+  }
+
+  if (game_code == "SLES-00483") /* Worms Pinball (PAL)       */
+  {
+    gs->AddTrait(GameSettings::Trait::ForceInterlacing);
+    gs->AddTrait(GameSettings::Trait::DisableUpscaling);
+    gs->AddTrait(GameSettings::Trait::DisablePGXP);
     return gs;
   }
 
@@ -422,6 +435,27 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
     return gs;
   }
 
+  if (   game_code == "SCES-01705" /* Dragon Valor (Europe) (Disc 1) */
+      || game_code == "SCES-11705" /* Dragon Valor (Europe) (Disc 2) */
+      || game_code == "SCES-02565" /* Dragon Valor (France) (Disc 1) */
+      || game_code == "SCES-12565" /* Dragon Valor (France) (Disc 2) */
+      || game_code == "SCES-02566" /* Dragon Valor (Germany) (Disc 1) */
+      || game_code == "SCES-12566" /* Dragon Valor (Germany) (Disc 2) */
+      || game_code == "SCES-02567" /* Dragon Valor (Italy) (Disc 1) */
+      || game_code == "SCES-12567" /* Dragon Valor (Italy) (Disc 2) */
+      || game_code == "SLPS-02190" /* Dragon Valor (Japan) (Disc 1) */
+      || game_code == "SLPS-02191" /* Dragon Valor (Japan) (Disc 2) */
+      || game_code == "SCES-02568" /* Dragon Valor (Spain) (Disc 1) */
+      || game_code == "SCES-12568" /* Dragon Valor (Spain) (Disc 2) */
+      || game_code == "SLUS-01092" /* Dragon Valor (USA) (Disc 1) */
+      || game_code == "SLUS-01164" /* Dragon Valor (USA) (Disc 2) */
+     )
+  {
+    gs->AddTrait(GameSettings::Trait::ForcePGXPCPUMode);
+    gs->AddTrait(GameSettings::Trait::DisableTrueColor);
+    return gs;
+  }
+
   if (   game_code == "SCED-01979" /* Formula One '99 (PAL) */
       || game_code == "SCES-02222" /* Formula One '99 (PAL) */
       || game_code == "SCES-01979" /* Formula One '99 (PAL) */
@@ -454,27 +488,49 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
   if (   game_code == "SLES-03868" /* Marcel Desailly Pro Football (PAL) */
       || game_code == "SLED-02439" /* Compilation 03 */
       || game_code == "SLPS-01762" /* Pepsiman (NTSC-J) */
-      || game_code == "SLPS-00935" /* Choukousoku GranDoll (NTSC-J) */
-      || game_code == "SLPS-00870" /* Choukousoku GranDoll (NTSC-J) */
-      || game_code == "SLPS-00869" /* Choukousoku GranDoll (NTSC-J) */
+      || game_code == "SCES-01659" /* Kingsley's Adventure (Europe) (En,Fr,De,Es,It,Nl,Sv,No,Da,Fi) */
+      || game_code == "SLUS-00801" /* Kingsley's Adventure (USA) */
      )
   {
     gs->AddTrait(GameSettings::Trait::DisablePGXPCulling);
     return gs;
   }
 
+  if (   game_code == "SLPS-00935" /* Choukousoku GranDoll (NTSC-J) */
+      || game_code == "SLPS-00870" /* Choukousoku GranDoll (NTSC-J) */
+      || game_code == "SLPS-00869" /* Choukousoku GranDoll (NTSC-J) */
+     )
+  {
+    gs->AddTrait(GameSettings::Trait::DisablePGXP);
+    return gs;
+  }
+
   if (   game_code == "SCES-02835" /* Spyro - Year Of The Dragon (PAL) */
       || game_code == "SCES-02104" /* Spyro 2 - Gateway To Glimmer (PAL) */
-      || game_code == "SCUS-94467"
-      || game_code == "SCUS-94425"
+      || game_code == "SCUS-94467" /* Spyro - Year of the Dragon (USA) */
+      || game_code == "SCUS-94425" /* Spyro 2 - Ripto's Rage! (USA) */
       || game_code == "SCPS-10085" /* Spyro The Dragon (NTSC-J) */
-      || game_code == "SCUS-94290"
-      || game_code == "SLES-02397"
-      || game_code == "SLES-12397"
-      || game_code == "SLES-02398"
-      || game_code == "SLES-12398"
-      || game_code == "SLES-02399"
-      || game_code == "SLES-12399" /* Grandia (PAL) */
+      || game_code == "SCUS-94290" /* Spyro the Dragon (USA) (Demo 1) */
+      || game_code == "SLES-00933" /* Newman Haas Racing (Europe) (En,Fr,De,It) */
+      || game_code == "SLUS-00602" /* Newman Haas Racing (USA) */
+      || game_code == "SLPM-86967" /* Persona 2 - Batsu - Eternal Punishment (Japan) (Disc 1) */
+      || game_code == "SLPS-02826" /* Persona 2 - Batsu - Eternal Punishment (Japan) (Disc 2) */
+      || game_code == "SLPS-02785" /* Persona 2 - Batsu - Eternal Punishment (Japan) (Disc 1) (Deluxe Pack) */
+      || game_code == "SLPS-02786" /* Persona 2 - Batsu - Eternal Punishment (Japan) (Disc 2) (Deluxe Pack) */
+      || game_code == "SCPS-45495" /* Persona 2 - Eternal Punishment */
+      || game_code == "SCPS-45496" /* Persona 2 - Eternal Punishment */
+      || game_code == "SLUS-01158" /* Persona 2 - Eternal Punishment (USA) */
+      || game_code == "SLUS-01339" /* Persona 2 - Eternal Punishment (USA) (Bonus Disc) */
+      || game_code == "SCPS-45410" /* Persona 2 - Innocent Sin (aka Persona 2 - Innocent Sin / Persona 2 - Tsumi) */
+      || game_code == "SLPS-02100" /* Persona 2 - Tsumi - Innocent Sin (Japan) */
+      || game_code == "SLPS-01923" /* Persona 2 - Tsumi - Innocent Sin (Japan) (Demo) */
+      || game_code == "SLPS-91211" /* Persona 2 - Tsumi - Innocent Sin (Japan) (Rev 1) */
+      || game_code == "SLES-02397" /* Grandia (Europe) (Disc 1) */
+      || game_code == "SLES-12397" /* Grandia (Europe) (Disc 2) */
+      || game_code == "SLES-02398" /* Grandia (France) (Disc 1) */
+      || game_code == "SLES-12398" /* Grandia (France) (Disc 2) */
+      || game_code == "SLES-02399" /* Grandia (Germany) (Disc 1) */
+      || game_code == "SLES-12399" /* Grandia (Germany) (Disc 2) */
       || game_code == "SLPS-02124" /* Grandia (NTSC-J) */
       || game_code == "SLPS-91205" /* Grandia [PlayStation The Best] (NTSC-J) */
       || game_code == "SLPS-02125" /* Grandia (NTSC-J) */
@@ -485,29 +541,34 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
       || game_code == "SLES-00593" /* Croc - Legend of the Gobbos (PAL) */
       || game_code == "SLED-00038" /* Croc - Legend of the Gobbos [Demo] (PAL) */
       || game_code == "SLUS-00530" /* Croc - Legend of the Gobbos (NTSC-U) */
-      || game_code == "SLED-02119"
-      || game_code == "SLES-02088"
-      || game_code == "SLUS-00634"
-      || game_code == "SLUS-90056"
-      || game_code == "SLPM-86310"
-      || game_code == "SLPM-80473"
-      || game_code == "SLPS-01055"
-      || game_code == "SLPM-80173"
-      || game_code == "SLES-02600"
-      || game_code == "SLUS-01017"
-      || game_code == "SLES-02602"
-      || game_code == "SCPS-10115"
-      || game_code == "PAPX-90097"
-      || game_code == "SLES-02601"
-      || game_code == "SCES-03000"
-      || game_code == "SCUS-94569"
-      || game_code == "SLES-03972"
-      || game_code == "SLES-03974"
-      || game_code == "SLES-03973"
-      || game_code == "SLES-03975"
-      || game_code == "SLUS-01503"
-      || game_code == "SLUS-01417"
-      || game_code == "SLES-03662"
+      || game_code == "SLED-02119" /* Croc 2 (Europe) (Demo) */
+      || game_code == "SLES-02088" /* Croc 2 (Europe) (En,Fr,De,Es,It,Nl,Sv) */
+      || game_code == "SLUS-00634" /* Croc 2 (USA) */
+      || game_code == "SLUS-90056" /* Croc 2 (USA) (Demo) */
+      || game_code == "SLPM-86310" /* Croc Adventure (Japan) */
+      || game_code == "SLPM-80473" /* Croc Adventure (Japan) (Demo) */
+      || game_code == "SLPS-01055" /* Croc! Pau-Pau Island (Japan) */
+      || game_code == "SLPM-80173" /* Croc! Pau-Pau Island (Japan) (Demo) */
+      || game_code == "SLES-02600" /* Alundra 2 - A New Legend Begins (Europe) */
+      || game_code == "SLUS-01017" /* Alundra 2 - A New Legend Begins (USA) */
+      || game_code == "SLES-02602" /* Alundra 2 - Der Beginn einer neuen Legende (Germany) */
+      || game_code == "SCPS-10115" /* Alundra 2 - Mashinka no Nazo (Japan) */
+      || game_code == "PAPX-90097" /* Alundra 2 - Mashinka no Nazo (Japan) (Demo) */
+      || game_code == "SLES-02601" /* Alundra 2 - Une Legende Est Nee (France) */
+      || game_code == "SCUS-94409" /* Codename - Tenka (USA) */
+      || game_code == "SCES-03000" /* Disney's Aladdin in Nasira's Revenge (Europe) */
+      || game_code == "SCUS-94569" /* Disney's Aladdin in Nasira's Revenge (USA) */
+      || game_code == "SLES-03972" /* Harry Potter and the Chamber of Secrets (Europe) (En,Fr,De) */
+      || game_code == "SLES-03974" /* Harry Potter and the Chamber of Secrets (Europe) (En,Nl,Da) */
+      || game_code == "SLES-03973" /* Harry Potter and the Chamber of Secrets (Europe) (Es,It,Pt) */
+      || game_code == "SLES-03975" /* Harry Potter and the Chamber of Secrets (Scandinavia) (En,Sv,No) */
+      || game_code == "SLUS-01503" /* Harry Potter and the Chamber of Secrets (USA) (En,Fr,Es) */
+      || game_code == "SLUS-01417" /* Harry Potter and the Philosopher's Stone (Canada) (En,Fr,De) */
+      || game_code == "SLES-03662" /* Harry Potter and the Philosopher's Stone (Europe) (En,Fr,De) */
+      || game_code == "SCPS-45077" /* Formula 1 */
+      || game_code == "SLES-00298" /* Formula 1 (Europe) (En,Fr,De,Es,It) */
+      || game_code == "SIPS-60011" /* Formula 1 (Japan) */
+      || game_code == "SCUS-94353" /* Formula 1 (USA) */
       || game_code == "SLES-03665" /* Harry Potter and the Philosopher's Stone (PAL) */
       || game_code == "SLES-03663" /* Harry Potter and the Philosopher's Stone (PAL) */
       || game_code == "SLES-03664" /* Harry Potter & The Philosopher's Stone (PAL) */
@@ -516,6 +577,54 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
       || game_code == "SLPS-03492" /* Harry Potter to Himitsu no Heya (NTSC-J) */
       || game_code == "SLPS-03355" /* Harry Potter to Kenja no Ishi (NTSC-J) */
       || game_code == "SLPM-84013" /* Harry Potter to Kenja no Ishi Coca-Cola Version (NTSC-J) */
+      || game_code == "SCUS-94309" /* Jet Moto (USA) */
+      || game_code == "SLES-00613" /* Lifeforce Tenka (Europe) */
+      || game_code == "SLED-00690" /* Lifeforce Tenka (Europe) (Demo) */
+      || game_code == "SLES-00614" /* Lifeforce Tenka (France) */
+      || game_code == "SLES-00615" /* Lifeforce Tenka (Germany) */
+      || game_code == "SLES-00616" /* Lifeforce Tenka (Italy) */
+      || game_code == "SLES-00617" /* Lifeforce Tenka (Spain) */
+      || game_code == "SCPS-45320" /* Metal Gear Solid */
+      || game_code == "SCPS-45321" /* Metal Gear Solid */
+      || game_code == "SCPS-45322" /* Metal Gear Solid */
+      || game_code == "PAPX-90044" /* Metal Gear Solid (Asia) (Demo) */
+      || game_code == "SCPS-45317" /* Metal Gear Solid (Asia) (Disc 1) */
+      || game_code == "SCPS-45318" /* Metal Gear Solid (Asia) (Disc 2) */
+      || game_code == "SLED-01400" /* Metal Gear Solid (Europe) (Demo 1) */
+      || game_code == "SLED-01775" /* Metal Gear Solid (Europe) (Demo 2) */
+      || game_code == "SLES-01370" /* Metal Gear Solid (Europe) (Disc 1) */
+      || game_code == "SLES-11370" /* Metal Gear Solid (Europe) (Disc 2) */
+      || game_code == "SLES-01506" /* Metal Gear Solid (France) (Disc 1) */
+      || game_code == "SLES-11506" /* Metal Gear Solid (France) (Disc 2) */
+      || game_code == "SLES-01507" /* Metal Gear Solid (Germany) (Disc 1) */
+      || game_code == "SLES-11507" /* Metal Gear Solid (Germany) (Disc 2) */
+      || game_code == "SLES-01508" /* Metal Gear Solid (Italy) (Disc 1) */
+      || game_code == "SLES-11508" /* Metal Gear Solid (Italy) (Disc 2) */
+      || game_code == "SLPM-86098" /* Metal Gear Solid (Japan) (Demo) */
+      || game_code == "SLPM-86114" /* Metal Gear Solid (Japan) (Disc 1) */
+      || game_code == "SLPM-86115" /* Metal Gear Solid (Japan) (Disc 2) */
+      || game_code == "SLPM-87411" /* Metal Gear Solid [Premium Package Sai Hakkou Kinen] */
+      || game_code == "SLPM-87412" /* Metal Gear Solid [Premium Package Sai Hakkou Kinen] */
+      || game_code == "SLPM-87413" /* Metal Gear Solid [Premium Package Sai Hakkou Kinen] */
+      || game_code == "SLES-01734" /* Metal Gear Solid (Spain) (Disc 1) */
+      || game_code == "SLES-11734" /* Metal Gear Solid (Spain) (Disc 2) */
+      || game_code == "SLUS-90035" /* Metal Gear Solid (USA) (Demo) */
+      || game_code == "SLUS-00594" /* Metal Gear Solid (USA) (Disc 1) */
+      || game_code == "SLUS-00776" /* Metal Gear Solid (USA) (Disc 2) */
+      || game_code == "SLPM-86485" /* Metal Gear Solid [Konami the Best] */
+      || game_code == "SLPM-86486" /* Metal Gear Solid [Konami the Best] */
+      || game_code == "SLPM-87030" /* Metal Gear Solid [PSOne Books] */
+      || game_code == "SLPM-87031" /* Metal Gear Solid [PSOne Books] */
+      || game_code == "SLPS-00417" /* Racingroovy VS (Japan) */
+      || game_code == "SLUS-00818" /* Street Sk8er (USA) */
+      || game_code == "SLUS-01083" /* Street Sk8er 2 (USA) */
+      || game_code == "SLES-01759" /* Street Skater (Europe) (En,Fr,De) */
+      || game_code == "SLES-02703" /* Street Skater 2 (Europe) (En,Fr,De) */
+
+      || game_code == "SCUS-94484" /* Wild Arms 2 (USA) (Disc 1) */
+      || game_code == "SCUS-94498" /* Wild Arms 2 (USA) (Disc 2) */
+      || game_code == "SCPS-45429" /* Wild Arms 2nd Ignition */
+      || game_code == "SCPS-45430" /* Wild Arms 2nd Ignition */
      )
   {
     gs->AddTrait(GameSettings::Trait::ForcePGXPCPUMode);
@@ -541,6 +650,7 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
   if (game_code == "SLPS-02376") /* Little Princess - Maru Oukoko No Ningyou Hime 2 (NTSC-J) */
   {
     gs->dma_max_slice_ticks = 100;
+    gs->dma_halt_ticks = 200;
     gs->gpu_max_run_ahead = 1;
     return gs;
   }
@@ -571,9 +681,37 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
 
   if (   game_code == "SLUS-00022" /* Slam'n'Jam '96 Featuring Magic & Kareem */
       || game_code == "SLUS-00348" /* Hexen (NTSC-U) */
+      || game_code == "SLPS-00365" /* Tekkyuu - True Pinball (Japan) */
+      || game_code == "SLES-00052" /* True Pinball (Europe) */
      )
   {
     gs->AddTrait(GameSettings::Trait::DisableUpscaling);
+    return gs;
+  }
+
+  if (game_code == "SLUS-00337") /* True Pinball (NTSC-U)     */
+  {
+    gs->AddTrait(GameSettings::Trait::ForceInterlacing);
+    gs->AddTrait(GameSettings::Trait::DisableUpscaling);
+    return gs;
+  }
+
+  if (   game_code == "SLPS-02832" /* Lagnacure Legend (Japan) */
+      || game_code == "SLES-02510" /* Sesame Street - Elmo's Letter Adventure (Europe) */
+      || game_code == "SLUS-00621" /* Sesame Street - Elmo's Letter Adventure (USA) */
+     )
+  {
+    gs->dma_max_slice_ticks = 100;
+    gs->dma_halt_ticks = 150;
+    return gs;
+  }
+
+  if (game_code == "SCPS-10001") /* Motor Toon Grand Prix (Japan) */
+  {
+    gs->AddTrait(GameSettings::Trait::ForceInterpreter);
+    gs->AddTrait(GameSettings::Trait::ForcePGXPCPUMode);
+    gs->dma_max_slice_ticks = 400;
+    gs->dma_halt_ticks = 155;
     return gs;
   }
 
@@ -594,6 +732,13 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
       || game_code == "SLES-00910" /* Road Rash 3D (PAL) */
       || game_code == "SLES-01157" /* Road Rash 3D (PAL) */
       || game_code == "SLES-01158" /* Road Rash 3D (PAL) */
+      || game_code == "SLES-01182" /* Castrol Honda Superbike Racing (Europe) (En,Fr,De,It) */
+      || game_code == "SLUS-00882" /* Castrol Honda Superbike Racing (USA) */
+      || game_code == "SLES-02731" /* Vampire Hunter D (Europe) (En,Fr,De) */
+      || game_code == "SLPS-02477" /* Vampire Hunter D (Japan) */
+      || game_code == "SLPS-03198" /* Vampire Hunter D (Japan) (Rev 1) */
+      || game_code == "SLUS-01138" /* Vampire Hunter D (USA) */
+      || game_code == "SLPS-91523" /* Vampire Hunter D [PSOne Books] */
 ) 
   {
     gs->dma_max_slice_ticks = 100;
@@ -669,6 +814,9 @@ std::unique_ptr<GameSettings::Entry> GetSettingsForGame(const std::string& game_
       || game_code == "SLES-02889" /* Spiderman                                   (PAL)    */
       || game_code == "SLES-02890" /* Spiderman                                   (PAL)    */
       || game_code == "SLUS-00183" /* Zero Divide                                 (NTSC-U) */
+      || game_code == "SLES-03224" /* Dino Crisis 2 (Italy) */
+      || game_code == "SLES-03225" /* Dino Crisis 2 (Spain) */
+      || game_code == "SLPS-02507" /* Next Tetris DLX, The (Japan) */
      )
   {
     gs->AddTrait(GameSettings::Trait::ForceRecompilerICache);
