@@ -150,32 +150,4 @@ std::optional<std::vector<u8>> DecodeHex(const std::string_view& in)
   return {data};
 }
 
-#ifdef _WIN32
-std::string WideStringToUTF8String(const std::wstring_view& str)
-{
-  std::string ret;
-  if (!WideStringToUTF8String(ret, str))
-    return {};
-
-  return ret;
-}
-
-bool WideStringToUTF8String(std::string& dest, const std::wstring_view& str)
-{
-  int mblen = WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.length()), nullptr, 0, nullptr, nullptr);
-  if (mblen < 0)
-    return false;
-
-  dest.resize(mblen);
-  if (mblen > 0 && WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.length()), dest.data(), mblen,
-                                       nullptr, nullptr) < 0)
-  {
-    return false;
-  }
-
-  return true;
-}
-
-#endif
-
 } // namespace StringUtil

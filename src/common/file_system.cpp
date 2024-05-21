@@ -600,8 +600,6 @@ static u32 RecursiveFindFiles(const char* OriginPath, const char* ParentPath, co
 
   // holder for utf-8 conversion
   WIN32_FIND_DATAW wfd;
-  std::string utf8_filename;
-  utf8_filename.reserve(countof(wfd.cFileName) * 2);
 
   wchar_t *a   = utf8_to_utf16_string_alloc(tempStr.c_str());
   HANDLE hFind = FindFirstFileW(a, &wfd);
@@ -631,7 +629,8 @@ static u32 RecursiveFindFiles(const char* OriginPath, const char* ParentPath, co
         continue;
     }
 
-    if (!StringUtil::WideStringToUTF8String(utf8_filename, wfd.cFileName))
+    char *utf8_filename = utf16_to_utf8_string_alloc(wfd.cFileName);
+    if (!utf8_filename)
       continue;
 
     FILESYSTEM_FIND_DATA outData;
@@ -644,24 +643,28 @@ static u32 RecursiveFindFiles(const char* OriginPath, const char* ParentPath, co
         // recurse into this directory
         if (ParentPath != nullptr)
         {
-          const std::string recurseDir = StringUtil::StdStringFromFormat("%s\\%s", ParentPath, Path);
-          nFiles += RecursiveFindFiles(OriginPath, recurseDir.c_str(), utf8_filename.c_str(), Pattern, Flags, pResults);
+          const char *recurseDir = StringUtil::StdStringFromFormat("%s\\%s", ParentPath, Path).c_str();
+          nFiles += RecursiveFindFiles(OriginPath, recurseDir, utf8_filename, Pattern, Flags, pResults);
         }
         else
-        {
-          nFiles += RecursiveFindFiles(OriginPath, Path, utf8_filename.c_str(), Pattern, Flags, pResults);
-        }
+          nFiles += RecursiveFindFiles(OriginPath, Path, utf8_filename, Pattern, Flags, pResults);
       }
 
       if (!(Flags & FILESYSTEM_FIND_FOLDERS))
+      {
+	free(utf8_filename);
         continue;
+      }
 
       outData.Attributes |= FILESYSTEM_FILE_ATTRIBUTE_DIRECTORY;
     }
     else
     {
       if (!(Flags & FILESYSTEM_FIND_FILES))
+      {
+	free(utf8_filename);
         continue;
+      }
     }
 
     if (wfd.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
@@ -670,13 +673,19 @@ static u32 RecursiveFindFiles(const char* OriginPath, const char* ParentPath, co
     // match the filename
     if (hasWildCards)
     {
-      if (!wildCardMatchAll && !StringUtil::WildcardMatch(utf8_filename.c_str(), Pattern))
+      if (!wildCardMatchAll && !StringUtil::WildcardMatch(utf8_filename, Pattern))
+      {
+	free(utf8_filename);
         continue;
+      }
     }
     else
     {
-      if (std::strcmp(utf8_filename.c_str(), Pattern) != 0)
+      if (std::strcmp(utf8_filename, Pattern) != 0)
+      {
+	free(utf8_filename);
         continue;
+      }
     }
 
     // add file to list
@@ -685,26 +694,27 @@ static u32 RecursiveFindFiles(const char* OriginPath, const char* ParentPath, co
     {
       if (ParentPath != nullptr)
         outData.FileName =
-          StringUtil::StdStringFromFormat("%s\\%s\\%s\\%s", OriginPath, ParentPath, Path, utf8_filename.c_str());
+          StringUtil::StdStringFromFormat("%s\\%s\\%s\\%s", OriginPath, ParentPath, Path, utf8_filename);
       else if (Path != nullptr)
-        outData.FileName = StringUtil::StdStringFromFormat("%s\\%s\\%s", OriginPath, Path, utf8_filename.c_str());
+        outData.FileName = StringUtil::StdStringFromFormat("%s\\%s\\%s", OriginPath, Path, utf8_filename);
       else
-        outData.FileName = StringUtil::StdStringFromFormat("%s\\%s", OriginPath, utf8_filename.c_str());
+        outData.FileName = StringUtil::StdStringFromFormat("%s\\%s", OriginPath, utf8_filename);
     }
     else
     {
       if (ParentPath != nullptr)
-        outData.FileName = StringUtil::StdStringFromFormat("%s\\%s\\%s", ParentPath, Path, utf8_filename.c_str());
+        outData.FileName = StringUtil::StdStringFromFormat("%s\\%s\\%s", ParentPath, Path, utf8_filename);
       else if (Path != nullptr)
-        outData.FileName = StringUtil::StdStringFromFormat("%s\\%s", Path, utf8_filename.c_str());
+        outData.FileName = StringUtil::StdStringFromFormat("%s\\%s", Path, utf8_filename);
       else
-        outData.FileName = utf8_filename;
+        outData.FileName = std::string(utf8_filename);
     }
 
     outData.Size = (u64)wfd.nFileSizeHigh << 32 | (u64)wfd.nFileSizeLow;
 
     nFiles++;
     pResults->push_back(std::move(outData));
+    free(utf8_filename);
   } while (FindNextFileW(hFind, &wfd) == TRUE);
   FindClose(hFind);
 
@@ -749,8 +759,10 @@ std::string GetProgramPath()
     break;
   }
 
-  std::string utf8_path(StringUtil::WideStringToUTF8String(buffer));
+  char *a = utf16_to_utf8_string_alloc(buffer.c_str());
+  std::string utf8_path(a);
   CanonicalizePath(utf8_path);
+  free(a);
   return utf8_path;
 }
 

@@ -122,10 +122,4 @@ ALWAYS_INLINE static bool EndsWith(const std::string_view& str, const char* suff
   return (str.length() >= suffix_length && str.compare(str.length() - suffix_length, suffix_length, suffix) == 0);
 }
 
-#ifdef _WIN32
-/// Converts the specified wide string to a UTF-8 string.
-std::string WideStringToUTF8String(const std::wstring_view& str);
-bool WideStringToUTF8String(std::string& dest, const std::wstring_view& str);
-#endif
-
 } // namespace StringUtil
