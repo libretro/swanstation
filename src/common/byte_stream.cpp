@@ -25,6 +25,7 @@
 #endif
 
 #include <file/file_path.h>
+#include <encodings/utf.h>
 
 class FileByteStream : public ByteStream
 {
@@ -240,7 +241,9 @@ public:
     {
 #if defined(_WIN32)
       // delete the temporary file
-      if (!DeleteFileW(StringUtil::UTF8StringToWideString(m_temporaryFileName).c_str())) { }
+      wchar_t *a = utf8_to_utf16_string_alloc(m_temporaryFileName.c_str());
+      if (!DeleteFileW(a)) { }
+      free(a);
 #else
       // delete the temporary file
       if (remove(m_temporaryFileName.c_str()) < 0) { }
@@ -263,11 +266,14 @@ public:
 
 #if defined(_WIN32)
     // move the atomic file name to the original file name
-    if (!MoveFileExW(StringUtil::UTF8StringToWideString(m_temporaryFileName).c_str(),
-                     StringUtil::UTF8StringToWideString(m_originalFileName).c_str(), MOVEFILE_REPLACE_EXISTING))
+    wchar_t *a = utf8_to_utf16_string_alloc(m_temporaryFileName.c_str());
+    wchar_t *b = utf8_to_utf16_string_alloc(m_originalFileName.c_str());
+    if (!MoveFileExW(a, b, MOVEFILE_REPLACE_EXISTING))
       m_discarded = true;
     else
       m_committed = true;
+    free(a);
+    free(b);
 #else
     // move the atomic file name to the original file name
     if (rename(m_temporaryFileName.c_str(), m_originalFileName.c_str()) < 0)
@@ -811,7 +817,7 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
 
     // fill in random characters
     _mktemp_s(temporaryFileName, fileNameLength + 8);
-    const std::wstring wideTemporaryFileName(StringUtil::UTF8StringToWideString(temporaryFileName));
+    wchar_t *wideTemporaryFileName = utf8_to_utf16_string_alloc(temporaryFileName);
 
     // massive hack here
     DWORD desiredAccess = GENERIC_WRITE;
@@ -819,17 +825,21 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
       desiredAccess |= GENERIC_READ;
 
     HANDLE hFile =
-      CreateFileW(wideTemporaryFileName.c_str(), desiredAccess, FILE_SHARE_DELETE, NULL, CREATE_NEW, 0, NULL);
+      CreateFileW(wideTemporaryFileName, desiredAccess, FILE_SHARE_DELETE, NULL, CREATE_NEW, 0, NULL);
 
     if (hFile == INVALID_HANDLE_VALUE)
+    {
+      free(wideTemporaryFileName);
       return nullptr;
+    }
 
     // get fd from this
     int fd = _open_osfhandle(reinterpret_cast<intptr_t>(hFile), 0);
     if (fd < 0)
     {
       CloseHandle(hFile);
-      DeleteFileW(wideTemporaryFileName.c_str());
+      DeleteFileW(wideTemporaryFileName);
+      free(wideTemporaryFileName);
       return nullptr;
     }
 
@@ -838,7 +848,8 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
     if (!pTemporaryFile)
     {
       _close(fd);
-      DeleteFileW(wideTemporaryFileName.c_str());
+      DeleteFileW(wideTemporaryFileName);
+      free(wideTemporaryFileName);
       return nullptr;
     }
 
@@ -854,6 +865,7 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
       {
         // this will delete the temporary file
         pStream->Discard();
+	free(wideTemporaryFileName);
         return nullptr;
       }
 
@@ -869,6 +881,7 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
         {
           pStream->Discard();
           rfclose(pOriginalFile);
+	  free(wideTemporaryFileName);
           return nullptr;
         }
       }
@@ -877,6 +890,7 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
       rfclose(pOriginalFile);
     }
 
+    free(wideTemporaryFileName);
     // return pointer
     return pStream;
   }

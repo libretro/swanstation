@@ -49,10 +49,13 @@ void SetDefaultSampler(D3D12_SAMPLER_DESC* desc)
 }
 
 #ifdef _DEBUG
+#include <encodings/utf.h>
 
 void SetObjectName(ID3D12Object* object, const char* name)
 {
-  object->SetName(StringUtil::UTF8StringToWideString(name).c_str());
+  wchar_t *a = utf8_to_utf16_string_alloc(name);
+  object->SetName(a);
+  free(a);
 }
 
 void SetObjectNameFormatted(ID3D12Object* object, const char* format, ...)

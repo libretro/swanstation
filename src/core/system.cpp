@@ -42,6 +42,9 @@
 #include <fstream>
 #include <limits>
 #include <thread>
+
+#include <compat/strl.h>
+
 Log_SetChannel(System);
 
 SystemBootParameters::SystemBootParameters() = default;
@@ -1130,8 +1133,8 @@ bool SaveState(ByteStream* state)
   // fill in header
   header.magic = SAVE_STATE_MAGIC;
   header.version = SAVE_STATE_VERSION;
-  StringUtil::Strlcpy(header.title, s_running_game_title.c_str(), sizeof(header.title));
-  StringUtil::Strlcpy(header.game_code, s_running_game_code.c_str(), sizeof(header.game_code));
+  strlcpy(header.title, s_running_game_title.c_str(), sizeof(header.title));
+  strlcpy(header.game_code, s_running_game_code.c_str(), sizeof(header.game_code));
 
   if (g_cdrom.HasMedia())
   {

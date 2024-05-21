@@ -29,6 +29,8 @@
 #include <unistd.h>
 #endif
 
+#include <compat/strl.h>
+#include <encodings/utf.h>
 #include <file/file_path.h>
 #include <streams/file_stream.h>
 
@@ -170,7 +172,7 @@ void CanonicalizePath(char* Destination, u32 cbDestination, const char* Path, bo
   if (Destination == Path)
   {
     char* pathClone = (char*)alloca(pathLength + 1);
-    StringUtil::Strlcpy(pathClone, Path, pathLength + 1);
+    strlcpy(pathClone, Path, pathLength + 1);
     Path = pathClone;
   }
 
@@ -601,8 +603,9 @@ static u32 RecursiveFindFiles(const char* OriginPath, const char* ParentPath, co
   std::string utf8_filename;
   utf8_filename.reserve(countof(wfd.cFileName) * 2);
 
-  HANDLE hFind = FindFirstFileW(StringUtil::UTF8StringToWideString(tempStr).c_str(), &wfd);
-
+  wchar_t *a   = utf8_to_utf16_string_alloc(tempStr.c_str());
+  HANDLE hFind = FindFirstFileW(a, &wfd);
+  free(a);
   if (hFind == INVALID_HANDLE_VALUE)
     return 0;
 

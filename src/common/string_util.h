@@ -27,9 +27,6 @@ std::string StdStringFromFormatV(const char* format, std::va_list ap);
 /// Checks if a wildcard matches a search string.
 bool WildcardMatch(const char* subject, const char* mask, bool case_sensitive = true);
 
-/// Safe version of strlcpy.
-std::size_t Strlcpy(char* dst, const char* src, std::size_t size);
-
 /// Platform-independent strcasecmp
 static inline int Strcasecmp(const char* s1, const char* s2)
 {
@@ -126,9 +123,6 @@ ALWAYS_INLINE static bool EndsWith(const std::string_view& str, const char* suff
 }
 
 #ifdef _WIN32
-/// Converts the specified UTF-8 string to a wide string.
-std::wstring UTF8StringToWideString(const std::string_view& str);
-bool UTF8StringToWideString(std::wstring& dest, const std::string_view& str);
 /// Converts the specified wide string to a UTF-8 string.
 std::string WideStringToUTF8String(const std::wstring_view& str);
 bool WideStringToUTF8String(std::string& dest, const std::wstring_view& str);

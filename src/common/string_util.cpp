@@ -133,21 +133,6 @@ bool WildcardMatch(const char* subject, const char* mask, bool case_sensitive /*
   }
 }
 
-std::size_t Strlcpy(char* dst, const char* src, std::size_t size)
-{
-  std::size_t len = std::strlen(src);
-  if (len < size)
-  {
-    std::memcpy(dst, src, len + 1);
-  }
-  else
-  {
-    std::memcpy(dst, src, size - 1);
-    dst[size - 1] = '\0';
-  }
-  return len;
-}
-
 std::optional<std::vector<u8>> DecodeHex(const std::string_view& in)
 {
   std::vector<u8> data;
@@ -166,29 +151,6 @@ std::optional<std::vector<u8>> DecodeHex(const std::string_view& in)
 }
 
 #ifdef _WIN32
-
-std::wstring UTF8StringToWideString(const std::string_view& str)
-{
-  std::wstring ret;
-  if (!UTF8StringToWideString(ret, str))
-    return {};
-
-  return ret;
-}
-
-bool UTF8StringToWideString(std::wstring& dest, const std::string_view& str)
-{
-  int wlen = MultiByteToWideChar(CP_UTF8, 0, str.data(), static_cast<int>(str.length()), nullptr, 0);
-  if (wlen < 0)
-    return false;
-
-  dest.resize(wlen);
-  if (wlen > 0 && MultiByteToWideChar(CP_UTF8, 0, str.data(), static_cast<int>(str.length()), dest.data(), wlen) < 0)
-    return false;
-
-  return true;
-}
-
 std::string WideStringToUTF8String(const std::wstring_view& str)
 {
   std::string ret;

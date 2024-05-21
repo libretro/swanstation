@@ -3,7 +3,6 @@
 #include <array>
 #include <memory>
 #include <optional>
-#include <string_view>
 
 class AnalogJoystick final : public Controller
 {

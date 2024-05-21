@@ -27,6 +27,8 @@
 #include <cstring>
 #include <tuple>
 #include <utility>
+
+#include <compat/strl.h>
 #include <file/file_path.h>
 #include <streams/file_stream.h>
 
@@ -1951,7 +1953,7 @@ bool LibretroHostInterface::DiskControlGetImagePath(unsigned index, char* path, 
       P_THIS->m_disk_control_info.image_paths[index].empty())
     return false;
 
-  StringUtil::Strlcpy(path, P_THIS->m_disk_control_info.image_paths[index].c_str(), len);
+  strlcpy(path, P_THIS->m_disk_control_info.image_paths[index].c_str(), len);
   return true;
 }
 
@@ -1962,7 +1964,7 @@ bool LibretroHostInterface::DiskControlGetImageLabel(unsigned index, char* label
       P_THIS->m_disk_control_info.image_labels[index].empty())
     return false;
 
-  StringUtil::Strlcpy(label, P_THIS->m_disk_control_info.image_labels[index].c_str(), len);
+  strlcpy(label, P_THIS->m_disk_control_info.image_labels[index].c_str(), len);
   return true;
 }
 
