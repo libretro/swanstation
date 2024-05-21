@@ -918,14 +918,6 @@ bool DirectoryExists(const char* Path)
   return path_is_directory(Path);
 }
 
-bool FileExists(const char* Path)
-{
-  // has a path
-  if (Path[0] == '\0')
-    return false;
-  return path_is_valid(Path);
-}
-
 RFILE* OpenRFile(const char *filename, const char *mode)
 {
    RFILE          *output  = NULL;

@@ -44,6 +44,7 @@
 #include <thread>
 
 #include <compat/strl.h>
+#include <file/file_path.h>
 
 Log_SetChannel(System);
 
@@ -566,7 +567,7 @@ std::unique_ptr<CDImage> OpenCDImage(const char* path, Common::Error* error, boo
   {
     const std::string ppf_filename(FileSystem::BuildRelativePath(
       path, FileSystem::ReplaceExtension(FileSystem::GetDisplayNameFromPath(path), "ppf")));
-    if (FileSystem::FileExists(ppf_filename.c_str()))
+    if (!ppf_filename.empty() && path_is_valid(ppf_filename.c_str()))
     {
       media = CDImage::OverlayPPFPatch(ppf_filename.c_str(), CDImage::OpenFlags::None, std::move(media));
       if (!media)
@@ -1301,7 +1302,7 @@ static bool LoadEXEToRAM(const char* filename, bool patch_bios)
 bool LoadEXE(const char* filename)
 {
   const std::string libps_path(FileSystem::BuildRelativePath(filename, "libps.exe"));
-  if (!libps_path.empty() && FileSystem::FileExists(libps_path.c_str()) && !LoadEXEToRAM(libps_path.c_str(), false))
+  if (!libps_path.empty() && path_is_valid(libps_path.c_str()) && !LoadEXEToRAM(libps_path.c_str(), false))
   {
     Log_ErrorPrintf("Failed to load libps.exe from '%s'", libps_path.c_str());
     return false;

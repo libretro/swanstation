@@ -711,7 +711,7 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
   {
     // if the file exists, use r+, otherwise w+
     // HACK: if we're not truncating, and the file exists (we want to only update it), we still have to use r+
-    if (!FileSystem::FileExists(fileName))
+    if (!path_is_valid(fileName))
     {
       modeString[modeStringLength++] = 'w';
       if (openMode & BYTESTREAM_OPEN_READ)

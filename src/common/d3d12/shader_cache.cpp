@@ -4,6 +4,9 @@
 #include "../log.h"
 #include "../md5_digest.h"
 #include <d3dcompiler.h>
+
+#include <file/file_path.h>
+
 Log_SetChannel(D3D12::ShaderCache);
 
 namespace D3D12 {
@@ -112,12 +115,12 @@ void ShaderCache::InvalidatePipelineCache()
 bool ShaderCache::CreateNew(const std::string& index_filename, const std::string& blob_filename, RFILE*& index_file,
                             RFILE*& blob_file)
 {
-  if (FileSystem::FileExists(index_filename.c_str()))
+  if (path_is_valid(index_filename.c_str()))
   {
     Log_WarningPrintf("Removing existing index file '%s'", index_filename.c_str());
     filestream_delete(index_filename.c_str());
   }
-  if (FileSystem::FileExists(blob_filename.c_str()))
+  if (path_is_valid(blob_filename.c_str()))
   {
     Log_WarningPrintf("Removing existing blob file '%s'", blob_filename.c_str());
     filestream_delete(blob_filename.c_str());

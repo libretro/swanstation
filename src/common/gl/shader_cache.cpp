@@ -3,6 +3,9 @@
 #include "../log.h"
 #include "../md5_digest.h"
 #include "../string_util.h"
+
+#include <file/file_path.h>
+
 Log_SetChannel(GL::ShaderCache);
 
 namespace GL {
@@ -85,12 +88,12 @@ void ShaderCache::Open(bool is_gles, std::string_view base_path, u32 version)
 
 bool ShaderCache::CreateNew(const std::string& index_filename, const std::string& blob_filename)
 {
-  if (FileSystem::FileExists(index_filename.c_str()))
+  if (path_is_valid(index_filename.c_str()))
   {
     Log_WarningPrintf("Removing existing index file '%s'", index_filename.c_str());
     filestream_delete(index_filename.c_str());
   }
-  if (FileSystem::FileExists(blob_filename.c_str()))
+  if (path_is_valid(blob_filename.c_str()))
   {
     Log_WarningPrintf("Removing existing blob file '%s'", blob_filename.c_str());
     filestream_delete(blob_filename.c_str());

@@ -137,7 +137,7 @@ std::string TextureReplacements::GetVRAMWriteDumpFilename(u32 width, u32 height,
   std::string filename = g_host_interface->GetUserDirectoryRelativePath("dump/textures/%s/vram-write-%s.png",
                                                                         m_game_id.c_str(), hash.ToString().c_str());
 
-  if (FileSystem::FileExists(filename.c_str()))
+  if (!filename.empty() && path_is_valid(filename.c_str()))
     return {};
 
   const std::string dump_directory =
