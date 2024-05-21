@@ -48,12 +48,6 @@ void CanonicalizePath(std::string& path, bool OSPath = true);
 // builds a path relative to the specified file
 std::string BuildRelativePath(const std::string_view& filename, const std::string_view& new_filename);
 
-// sanitizes a filename for use in a filesystem.
-void SanitizeFileName(char* Destination, u32 cbDestination, const char* FileName, bool StripSlashes = true);
-void SanitizeFileName(String& Destination, const char* FileName, bool StripSlashes = true);
-void SanitizeFileName(String& Destination, bool StripSlashes = true);
-void SanitizeFileName(std::string& Destination, bool StripSlashes = true);
-
 /// Returns true if the specified path is an absolute path (C:\Path on Windows or /path on Unix).
 bool IsAbsolutePath(const std::string_view& path);
 
