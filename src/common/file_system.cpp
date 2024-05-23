@@ -652,20 +652,6 @@ static u32 RecursiveFindFiles(const char* OriginPath, const char* ParentPath, co
   return nFiles;
 }
 
-bool FileSystem::FindFiles(const char* Path, const char* Pattern, u32 Flags, FindResultsArray* pResults)
-{
-  // has a path
-  if (Path[0] == '\0')
-    return false;
-
-  // clear result array
-  if (!(Flags & FILESYSTEM_FIND_KEEP_ARRAY))
-    pResults->clear();
-
-  // enter the recursive function
-  return (RecursiveFindFiles(Path, nullptr, nullptr, Pattern, Flags, pResults) > 0);
-}
-
 std::string GetProgramPath()
 {
   std::wstring buffer;
@@ -825,20 +811,6 @@ static u32 RecursiveFindFiles(const char* OriginPath, const char* ParentPath, co
   return nFiles;
 }
 
-bool FindFiles(const char* Path, const char* Pattern, u32 Flags, FindResultsArray* pResults)
-{
-  // has a path
-  if (Path[0] == '\0')
-    return false;
-
-  // clear result array
-  if (!(Flags & FILESYSTEM_FIND_KEEP_ARRAY))
-    pResults->clear();
-
-  // enter the recursive function
-  return (RecursiveFindFiles(Path, nullptr, nullptr, Pattern, Flags, pResults) > 0);
-}
-
 std::string GetProgramPath()
 {
 #if defined(__linux__)
@@ -909,6 +881,20 @@ std::string GetProgramPath()
 #endif
 }
 #endif
+
+bool FindFiles(const char* Path, const char* Pattern, u32 Flags, FindResultsArray* pResults)
+{
+  // has a path
+  if (Path[0] == '\0')
+    return false;
+
+  // clear result array
+  if (!(Flags & FILESYSTEM_FIND_KEEP_ARRAY))
+    pResults->clear();
+
+  // enter the recursive function
+  return (RecursiveFindFiles(Path, nullptr, nullptr, Pattern, Flags, pResults) > 0);
+}
 
 bool DirectoryExists(const char* Path)
 {
