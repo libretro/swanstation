@@ -73,9 +73,6 @@ std::string_view GetFileTitleFromPath(const std::string_view& path);
 // search for files
 bool FindFiles(const char* Path, const char* Pattern, u32 Flags, FindResultsArray* pResults);
 
-// directory exists?
-bool DirectoryExists(const char* Path);
-
 // open files
 std::unique_ptr<ByteStream> OpenFile(const char* FileName, u32 Flags);
 

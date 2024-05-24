@@ -428,8 +428,8 @@ std::string LibretroHostInterface::GetShaderCacheBasePath() const
   // Use a directory named "swanstation" in the system/downloads directory.
   std::string shader_cache_path = StringUtil::StdStringFromFormat(
     "%s" FS_OSPATH_SEPARATOR_STR "swanstation" FS_OSPATH_SEPARATOR_STR, cache_directory_ptr);
-  if (!FileSystem::DirectoryExists(shader_cache_path.c_str()) &&
-      !path_mkdir(shader_cache_path.c_str()))
+  if (   !path_is_directory(shader_cache_path.c_str())
+      && !path_mkdir(shader_cache_path.c_str()))
   {
     Log_ErrorPrintf("Failed to create shader cache directory: '%s'", shader_cache_path.c_str());
     return std::string();

@@ -896,14 +896,6 @@ bool FindFiles(const char* Path, const char* Pattern, u32 Flags, FindResultsArra
   return (RecursiveFindFiles(Path, nullptr, nullptr, Pattern, Flags, pResults) > 0);
 }
 
-bool DirectoryExists(const char* Path)
-{
-  // has a path
-  if (Path[0] == '\0')
-    return false;
-  return path_is_directory(Path);
-}
-
 RFILE* OpenRFile(const char *filename, const char *mode)
 {
    RFILE          *output  = NULL;
