@@ -4,7 +4,9 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#ifdef __LIBRETRO__
 #include <streams/file_stream.h>
+#endif
 
 #define ARRAY_LENGTH(x) (sizeof(x)/sizeof(x[0]))
 
@@ -27,6 +29,7 @@ typedef int32_t INT32;
 typedef int16_t INT16;
 typedef int8_t INT8;
 
+#ifdef __LIBRETRO__
 #define core_file RFILE
 #define core_fopen(file) rfopen(file, "rb")
 #define core_fseek rfseek
@@ -58,5 +61,6 @@ static INLINE UINT64 core_fsize(core_file *f)
     core_fseek(f, p, SEEK_SET);
     return rv;
 }
+#endif
 
 #endif
