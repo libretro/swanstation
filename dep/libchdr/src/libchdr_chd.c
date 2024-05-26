@@ -2070,6 +2070,8 @@ static chd_error header_read(chd_file *chd, chd_header *header)
 		header->logicalbytes = (UINT64)header->obsolete_cylinders * (UINT64)header->obsolete_heads * (UINT64)header->obsolete_sectors * (UINT64)seclen;
 		header->hunkbytes = seclen * header->obsolete_hunksize;
 		header->unitbytes          = header_guess_unitbytes(chd);
+		if (header->unitbytes == 0)
+			return CHDERR_INVALID_DATA;
 		header->unitcount          = (header->logicalbytes + header->unitbytes - 1) / header->unitbytes;
 		header->metaoffset = 0;
 	}
@@ -2084,6 +2086,8 @@ static chd_error header_read(chd_file *chd, chd_header *header)
 		memcpy(header->parentmd5, &rawheader[60], CHD_MD5_BYTES);
 		header->hunkbytes    = get_bigendian_uint32(&rawheader[76]);
 		header->unitbytes    = header_guess_unitbytes(chd);
+		if (header->unitbytes == 0)
+			return CHDERR_INVALID_DATA;
 		header->unitcount    = (header->logicalbytes + header->unitbytes - 1) / header->unitbytes;
 		memcpy(header->sha1, &rawheader[80], CHD_SHA1_BYTES);
 		memcpy(header->parentsha1, &rawheader[100], CHD_SHA1_BYTES);
@@ -2097,6 +2101,8 @@ static chd_error header_read(chd_file *chd, chd_header *header)
 		header->metaoffset   = get_bigendian_uint64(&rawheader[36]);
 		header->hunkbytes    = get_bigendian_uint32(&rawheader[44]);
 		header->unitbytes    = header_guess_unitbytes(chd);
+		if (header->unitbytes == 0)
+			return CHDERR_INVALID_DATA;
 		header->unitcount    = (header->logicalbytes + header->unitbytes - 1) / header->unitbytes;
 		memcpy(header->sha1, &rawheader[48], CHD_SHA1_BYTES);
 		memcpy(header->parentsha1, &rawheader[68], CHD_SHA1_BYTES);
@@ -2115,8 +2121,12 @@ static chd_error header_read(chd_file *chd, chd_header *header)
 		header->mapoffset       = get_bigendian_uint64(&rawheader[40]);
 		header->metaoffset      = get_bigendian_uint64(&rawheader[48]);
 		header->hunkbytes       = get_bigendian_uint32(&rawheader[56]);
+		if (header->hunkbytes == 0)
+			return CHDERR_INVALID_DATA;
 		header->hunkcount       = (header->logicalbytes + header->hunkbytes - 1) / header->hunkbytes;
 		header->unitbytes       = get_bigendian_uint32(&rawheader[60]);
+		if (header->unitbytes == 0)
+			return CHDERR_INVALID_DATA;
 		header->unitcount       = (header->logicalbytes + header->unitbytes - 1) / header->unitbytes;
 		memcpy(header->sha1, &rawheader[84], CHD_SHA1_BYTES);
 		memcpy(header->parentsha1, &rawheader[104], CHD_SHA1_BYTES);
