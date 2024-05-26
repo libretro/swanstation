@@ -1185,6 +1185,8 @@ static chd_error decompress_v5_map(chd_file* chd, chd_header* header)
 	if (!chd_compressed(header))
 	{
 		header->rawmap = (uint8_t*)malloc(rawmapsize);
+		if (header->rawmap == NULL)
+			return CHDERR_OUT_OF_MEMORY;
 		core_fseek(chd->file, header->mapoffset, SEEK_SET);
 		result = core_fread(chd->file, header->rawmap, rawmapsize);
 		return CHDERR_NONE;
@@ -1202,10 +1204,18 @@ static chd_error decompress_v5_map(chd_file* chd, chd_header* header)
 
 	/* now read the map */
 	compressed_ptr = (uint8_t*)malloc(sizeof(uint8_t) * mapbytes);
+	if (compressed_ptr == NULL)
+		return CHDERR_OUT_OF_MEMORY;
 	core_fseek(chd->file, header->mapoffset + 16, SEEK_SET);
 	result = core_fread(chd->file, compressed_ptr, mapbytes);
 	bitbuf = create_bitstream(compressed_ptr, sizeof(uint8_t) * mapbytes);
 	header->rawmap = (uint8_t*)malloc(rawmapsize);
+	if (header->rawmap == NULL)
+	{
+		free(compressed_ptr);
+		free(bitbuf);
+		return CHDERR_OUT_OF_MEMORY;
+	}
 
 	/* first decode the compression types */
 	decoder = create_huffman_decoder(16, 8);
