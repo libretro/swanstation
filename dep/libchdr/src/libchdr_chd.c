@@ -1752,9 +1752,7 @@ CHD_EXPORT chd_error chd_open(const char *filename, int mode, chd_file *parent, 
 	}
 
 	/* now open the CHD */
-	err = chd_open_core_file(file, mode, parent, chd);
-	if (err != CHDERR_NONE)
-		goto cleanup;
+	return chd_open_core_file(file, mode, parent, chd);
 
 cleanup:
 	if ((err != CHDERR_NONE) && (file != NULL))
