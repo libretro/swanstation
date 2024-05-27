@@ -55,6 +55,26 @@
 #endif
 #include "zlib.h"
 
+#ifdef __LIBRETRO__
+#include <streams/file_stream.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+RFILE* rfopen(const char *path, const char *mode);
+extern int64_t rfseek(RFILE* stream, int64_t offset, int origin);
+extern int64_t rftell(RFILE* stream);
+extern int64_t rfread(void* buffer,
+   size_t elem_size, size_t elem_count, RFILE* stream);
+extern int rfclose(RFILE* stream);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
 #undef TRUE
 #undef FALSE
 #define TRUE 1
@@ -275,7 +295,6 @@ struct _chd_file
 	UINT32					cookie;			/* cookie, should equal COOKIE_VALUE */
 
 	core_file *				file;			/* handle to the open core file */
-	UINT8					owns_file;		/* flag indicating if this file should be closed on chd_close() */
 	chd_header				header;			/* header, extracted from file */
 
 	chd_file *				parent;			/* pointer to parent file, or NULL */
@@ -318,6 +337,14 @@ static const UINT8 nullsha1[CHD_SHA1_BYTES] = { 0 };
 /***************************************************************************
     PROTOTYPES
 ***************************************************************************/
+
+/* core_file wrappers over stdio */
+static core_file *core_stdio_fopen(char const *path);
+static UINT64 core_stdio_fsize(core_file *file);
+static size_t core_stdio_fread(void *ptr, size_t size, size_t nmemb, core_file *file);
+static int core_stdio_fclose(core_file *file);
+static int core_stdio_fclose_nonowner(core_file *file); // alternate fclose used by chd_open_file
+static int core_stdio_fseek(core_file* file, long offset, int whence);
 
 /* internal header operations */
 static chd_error header_validate(const chd_header *header);
@@ -1446,7 +1473,29 @@ static inline void map_extract_old(const UINT8 *base, map_entry *entry, UINT32 h
     chd_open_file - open a CHD file for access
 -------------------------------------------------*/
 
-CHD_EXPORT chd_error chd_open_file(core_file *file, int mode, chd_file *parent, chd_file **chd)
+CHD_EXPORT chd_error chd_open_file(void *data, int mode, chd_file *parent, chd_file **chd) {
+#ifdef __LIBRETRO__
+	RFILE *file    = (RFILE*)data;
+#else
+	FILE *file     = (FILE*)data;
+#endif
+	core_file *stream = malloc(sizeof(core_file));
+	if (!stream)
+		return CHDERR_OUT_OF_MEMORY;
+	stream->argp   = file;
+	stream->fsize  = core_stdio_fsize;
+	stream->fread  = core_stdio_fread;
+	stream->fclose = core_stdio_fclose_nonowner;
+	stream->fseek  = core_stdio_fseek;
+
+	return chd_open_core_file(stream, mode, parent, chd);
+}
+
+/*-------------------------------------------------
+    chd_open_core_file - open a CHD file for access
+-------------------------------------------------*/
+
+CHD_EXPORT chd_error chd_open_core_file(core_file *file, int mode, chd_file *parent, chd_file **chd)
 {
 	chd_file *newchd = NULL;
 	chd_error err;
@@ -1643,17 +1692,13 @@ cleanup:
 
 CHD_EXPORT chd_error chd_precache(chd_file *chd)
 {
-#ifdef _MSC_VER
-	size_t size, count;
-#else
-	ssize_t size, count;
-#endif
+	INT64 count;
+	UINT64 size;
 
 	if (chd->file_cache == NULL)
 	{
-		core_fseek(chd->file, 0, SEEK_END);
-		size = core_ftell(chd->file);
-		if (size <= 0)
+		size = core_fsize(chd->file);
+		if ((INT64)size <= 0)
 			return CHDERR_INVALID_DATA;
 		chd->file_cache = malloc(size);
 		if (chd->file_cache == NULL)
@@ -1699,7 +1744,7 @@ CHD_EXPORT chd_error chd_open(const char *filename, int mode, chd_file *parent, 
 	}
 
 	/* open the file */
-	file = core_fopen(filename);
+	file = core_stdio_fopen(filename);
 	if (file == 0)
 	{
 		err = CHDERR_FILE_NOT_FOUND;
@@ -1707,12 +1752,9 @@ CHD_EXPORT chd_error chd_open(const char *filename, int mode, chd_file *parent, 
 	}
 
 	/* now open the CHD */
-	err = chd_open_file(file, mode, parent, chd);
+	err = chd_open_core_file(file, mode, parent, chd);
 	if (err != CHDERR_NONE)
 		goto cleanup;
-
-	/* we now own this file */
-	(*chd)->owns_file = TRUE;
 
 cleanup:
 	if ((err != CHDERR_NONE) && (file != NULL))
@@ -1803,7 +1845,7 @@ CHD_EXPORT void chd_close(chd_file *chd)
 		free(chd->map);
 
 	/* close the file */
-	if (chd->owns_file && chd->file != NULL)
+	if (chd->file != NULL)
 		core_fclose(chd->file);
 
 #ifdef NEED_CACHE_HUNK
@@ -1902,7 +1944,7 @@ CHD_EXPORT chd_error chd_read_header(const char *filename, chd_header *header)
 		EARLY_EXIT(err = CHDERR_INVALID_PARAMETER);
 
 	/* open the file */
-	chd.file = core_fopen(filename);
+	chd.file = core_stdio_fopen(filename);
 	if (chd.file == NULL)
 		EARLY_EXIT(err = CHDERR_FILE_NOT_FOUND);
 
@@ -2876,4 +2918,102 @@ static void zlib_allocator_free(voidpf opaque)
 	for (i = 0; i < MAX_ZLIB_ALLOCS; i++)
 		if (alloc->allocptr[i])
 			free(alloc->allocptr[i]);
+}
+
+/*-------------------------------------------------
+	core_stdio_fopen - core_file wrapper over fopen
+-------------------------------------------------*/
+static core_file *core_stdio_fopen(char const *path) {
+	core_file *file = malloc(sizeof(core_file));
+	if (!file)
+		return NULL;
+	if (!(file->argp = fopen(path, "rb"))) {
+		free(file);
+		return NULL;
+	}
+	file->fsize = core_stdio_fsize;
+	file->fread = core_stdio_fread;
+	file->fclose = core_stdio_fclose;
+	file->fseek = core_stdio_fseek;
+	return file;
+}
+
+/*-------------------------------------------------
+	core_stdio_fsize - core_file function for
+	getting file size with stdio
+-------------------------------------------------*/
+static UINT64 core_stdio_fsize(core_file *file) {
+#if defined(__LIBRETRO__)
+	#define core_stdio_fseek_impl rfseek
+	#define core_stdio_ftell_impl rftell
+#elif defined(__WIN32__) || defined(_WIN32) || defined(WIN32) || defined(__WIN64__)
+	#define core_stdio_fseek_impl _fseeki64
+	#define core_stdio_ftell_impl _ftelli64
+#elif defined(_LARGEFILE_SOURCE) && defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
+	#define core_stdio_fseek_impl fseeko64
+	#define core_stdio_ftell_impl ftello64
+#elif defined(__PS3__) && !defined(__PSL1GHT__) || defined(__SWITCH__) || defined(__vita__)
+	#define core_stdio_fseek_impl(x,y,z) fseek(x,(off_t)y,z)
+	#define core_stdio_ftell_impl(x) (off_t)ftell(x)
+#else
+	#define core_stdio_fseek_impl fseeko
+	#define core_stdio_ftell_impl ftello
+#endif
+	UINT64 rv;
+#ifdef __LIBRETRO__
+	RFILE *fp = (RFILE*)file->argp;
+#else
+	FILE *fp = (FILE*)file->argp;
+#endif
+	UINT64 p = core_stdio_ftell_impl(fp);
+	core_stdio_fseek_impl(fp, 0, SEEK_END);
+	rv = core_stdio_ftell_impl(fp);
+	core_stdio_fseek_impl(fp, p, SEEK_SET);
+	return rv;
+}
+
+/*-------------------------------------------------
+	core_stdio_fread - core_file wrapper over fread
+-------------------------------------------------*/
+static size_t core_stdio_fread(void *ptr, size_t size, size_t nmemb, core_file *file) {
+#ifdef __LIBRETRO__
+	return rfread(ptr, size, nmemb, (RFILE*)file->argp);
+#else
+	return fread(ptr, size, nmemb, (FILE*)file->argp);
+#endif
+}
+
+/*-------------------------------------------------
+	core_stdio_fclose - core_file wrapper over fclose
+-------------------------------------------------*/
+static int core_stdio_fclose(core_file *file) {
+#ifdef __LIBRETRO__
+	int err = rfclose((RFILE*)file->argp);
+#else
+	int err = fclose((FILE*)file->argp);
+#endif
+	if (err == 0)
+		free(file);
+	return err;
+}
+
+/*-------------------------------------------------
+	core_stdio_fclose_nonowner - don't call fclose because
+		we don't own the underlying file, but do free the
+		core_file because libchdr did allocate that itself.
+-------------------------------------------------*/
+static int core_stdio_fclose_nonowner(core_file *file) {
+	free(file);
+	return 0;
+}
+
+/*-------------------------------------------------
+	core_stdio_fseek - core_file wrapper over fclose
+-------------------------------------------------*/
+static int core_stdio_fseek(core_file* file, long offset, int whence) {
+#ifdef __LIBRETRO__
+	return core_stdio_fseek_impl((RFILE*)file->argp, offset, whence);
+#else
+	return core_stdio_fseek_impl((FILE*)file->argp, offset, whence);
+#endif
 }
