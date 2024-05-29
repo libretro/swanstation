@@ -4,7 +4,7 @@
 #include <cstring>
 #include <type_traits>
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <malloc.h> // _aligned_malloc
 #else
 #include <stdlib.h> // posix_memalign
@@ -182,7 +182,7 @@ public:
   {
     if constexpr (ALIGNMENT > 0)
     {
-#ifdef _MSC_VER
+#ifdef _WIN32
       this->m_ptr = static_cast<T*>(_aligned_malloc(sizeof(T) * CAPACITY, ALIGNMENT));
 #else
       if (posix_memalign(reinterpret_cast<void**>(&this->m_ptr), ALIGNMENT, sizeof(T) * CAPACITY) != 0)
@@ -199,7 +199,7 @@ public:
   {
     if constexpr (ALIGNMENT > 0)
     {
-#ifdef _MSC_VER
+#ifdef _WIN32
       _aligned_free(this->m_ptr);
 #else
       free(this->m_ptr);

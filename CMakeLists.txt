@@ -48,7 +48,7 @@ endif()
 string(TIMESTAMP BUILD_TIMESTAMP UTC)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/libretro/version.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/src/libretro/version.h" @ONLY)
 
-# Release build optimizations for MSVC.
+# MSVC specific tweaks.
 if(MSVC)
   add_definitions("/D_CRT_SECURE_NO_WARNINGS")
   foreach(config CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
@@ -58,19 +58,10 @@ if(MSVC)
     # Enable intrinsic functions, disable minimal rebuild, UTF-8 source, set __cplusplus version.
     set(${config} "${${config}} /Oi /Gm- /utf-8 /Zc:__cplusplus")
   endforeach()
-
-# RelWithDebInfo is set to Ob1 instead of Ob2.   
-string(REPLACE "/Ob1" "/Ob2" CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
-string(REPLACE "/Ob1" "/Ob2" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
-
-# Disable incremental linking in RelWithDebInfo.
-string(REPLACE "/INCREMENTAL" "/INCREMENTAL:NO" CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO}")
+endif()
 
 # COMDAT folding/remove unused functions.
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /OPT:REF /OPT:ICF")
-set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO} /OPT:REF /OPT:ICF")
-
-endif()
 
 # Enable LTO/LTCG on Release builds.
 if(${CMAKE_BUILD_TYPE} STREQUAL "Release")

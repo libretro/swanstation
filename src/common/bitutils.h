@@ -1,7 +1,7 @@
 #pragma once
 #include "types.h"
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <intrin.h>
 #endif
 
@@ -9,7 +9,7 @@
 template<typename T>
 ALWAYS_INLINE unsigned CountLeadingZeros(T value)
 {
-#ifdef _MSC_VER
+#ifdef _WIN32
   unsigned long index;
   if constexpr (sizeof(value) >= sizeof(u64))
     _BitScanReverse64(&index, ZeroExtend64(value));
@@ -29,7 +29,7 @@ ALWAYS_INLINE unsigned CountLeadingZeros(T value)
 template<typename T>
 ALWAYS_INLINE unsigned CountTrailingZeros(T value)
 {
-#ifdef _MSC_VER
+#ifdef _WIN32
   unsigned long index;
   if constexpr (sizeof(value) >= sizeof(u64))
     _BitScanForward64(&index, ZeroExtend64(value));

@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <cstring>
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #define CASE_COMPARE _stricmp
 #define CASE_N_COMPARE _strnicmp
 #else

@@ -202,7 +202,7 @@ ShaderCache::CacheIndexKey ShaderCache::GetCacheKey(ShaderCompiler::Type type, c
     {
       u64 hash_low;
       u64 hash_high;
-    };
+    } s;
     u8 hash[16];
   };
 
@@ -210,7 +210,7 @@ ShaderCache::CacheIndexKey ShaderCache::GetCacheKey(ShaderCompiler::Type type, c
   digest.Update(shader_code.data(), static_cast<u32>(shader_code.length()));
   digest.Final(hash);
 
-  return CacheIndexKey{hash_low, hash_high, static_cast<u32>(shader_code.length()), type};
+  return CacheIndexKey{s.hash_low, s.hash_high, static_cast<u32>(shader_code.length()), type};
 }
 
 ShaderCache::ComPtr<ID3DBlob> ShaderCache::GetShaderBlob(ShaderCompiler::Type type, std::string_view shader_code)

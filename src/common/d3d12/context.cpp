@@ -118,7 +118,7 @@ D3D12::Context::ComPtr<ID3D12RootSignature> Context::CreateRootSignature(const D
 
 bool Context::SupportsTextureFormat(DXGI_FORMAT format)
 {
-  constexpr u32 required = D3D12_FORMAT_SUPPORT1_TEXTURE2D | D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE;
+  const u32 required = D3D12_FORMAT_SUPPORT1_TEXTURE2D | D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE;
 
   D3D12_FEATURE_DATA_FORMAT_SUPPORT support = {format};
   return SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_FORMAT_SUPPORT, &support, sizeof(support))) &&

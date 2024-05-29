@@ -1,4 +1,5 @@
 #include "staging_texture.h"
+#include <utility>
 
 namespace D3D11 {
 
@@ -49,8 +50,13 @@ void StagingTexture::Unmap(ID3D11DeviceContext* context)
 void StagingTexture::CopyFromTexture(ID3D11DeviceContext* context, ID3D11Resource* src_texture, u32 src_subresource,
                                      u32 src_x, u32 src_y, u32 dst_x, u32 dst_y, u32 width, u32 height)
 {
-  const CD3D11_BOX box(static_cast<LONG>(src_x), static_cast<LONG>(src_y), 0, static_cast<LONG>(src_x + width),
-                       static_cast<LONG>(src_y + height), 1);
+  D3D11_BOX box;
+  box.left = static_cast<LONG>(src_x);
+  box.top = static_cast<LONG>(src_y);
+  box.front = 0;
+  box.right = static_cast<LONG>(src_x + width);
+  box.bottom = static_cast<LONG>(src_y + height);
+  box.back = 1;
   context->CopySubresourceRegion(m_texture.Get(), 0, dst_x, dst_y, 0, src_texture, src_subresource, &box);
 }
 

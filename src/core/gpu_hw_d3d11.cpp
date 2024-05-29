@@ -315,8 +315,13 @@ void LibretroD3D11HostDisplay::RenderSoftwareCursor(s32 left, s32 top, s32 width
   m_display_uniform_buffer.Unmap(m_context.Get(), sizeof(uniforms));
   m_context->VSSetConstantBuffers(0, 1, m_display_uniform_buffer.GetD3DBufferArray());
 
-  const CD3D11_VIEWPORT vp(static_cast<float>(left), static_cast<float>(top), static_cast<float>(width),
-                           static_cast<float>(height));
+  D3D11_VIEWPORT vp;
+  vp.TopLeftX = static_cast<float>(left);
+  vp.TopLeftY = static_cast<float>(top);
+  vp.Width = static_cast<float>(width);
+  vp.Height = static_cast<float>(height);
+  vp.MinDepth = 0;
+  vp.MaxDepth = 1;
   m_context->RSSetViewports(1, &vp);
   m_context->RSSetState(m_display_rasterizer_state.Get());
   m_context->OMSetDepthStencilState(m_display_depth_stencil_state.Get(), 0);
@@ -392,8 +397,13 @@ void LibretroD3D11HostDisplay::RenderDisplay(s32 left, s32 top, s32 width, s32 h
   m_display_uniform_buffer.Unmap(m_context.Get(), sizeof(uniforms));
   m_context->VSSetConstantBuffers(0, 1, m_display_uniform_buffer.GetD3DBufferArray());
 
-  const CD3D11_VIEWPORT vp(static_cast<float>(left), static_cast<float>(top), static_cast<float>(width),
-                           static_cast<float>(height));
+  D3D11_VIEWPORT vp;
+  vp.TopLeftX = static_cast<float>(left);
+  vp.TopLeftY = static_cast<float>(top);
+  vp.Width = static_cast<float>(width);
+  vp.Height = static_cast<float>(height);
+  vp.MinDepth = 0;
+  vp.MaxDepth = 1;
   m_context->RSSetViewports(1, &vp);
   m_context->RSSetState(m_display_rasterizer_state.Get());
   m_context->OMSetDepthStencilState(m_display_depth_stencil_state.Get(), 0);
@@ -671,8 +681,12 @@ bool GPU_HW_D3D11::CreateFramebuffer()
     return false;
   }
 
-  const CD3D11_DEPTH_STENCIL_VIEW_DESC depth_view_desc(
-    samples > 1 ? D3D11_DSV_DIMENSION_TEXTURE2DMS : D3D11_DSV_DIMENSION_TEXTURE2D, depth_format);
+  D3D11_DEPTH_STENCIL_VIEW_DESC depth_view_desc;
+
+  depth_view_desc.Format = depth_format;
+  depth_view_desc.ViewDimension = (samples > 1) ? D3D11_DSV_DIMENSION_TEXTURE2DMS : D3D11_DSV_DIMENSION_TEXTURE2D;
+  depth_view_desc.Flags = 0;
+  depth_view_desc.Texture2D.MipSlice = 0;
   HRESULT hr =
     m_device->CreateDepthStencilView(m_vram_depth_texture, &depth_view_desc, m_vram_depth_view.GetAddressOf());
   if (FAILED(hr))
@@ -694,10 +708,16 @@ bool GPU_HW_D3D11::CreateFramebuffer()
     m_downsample_mip_views.resize(levels);
     for (u32 i = 0; i < levels; i++)
     {
-      const CD3D11_SHADER_RESOURCE_VIEW_DESC srv_desc(m_downsample_texture, D3D11_SRV_DIMENSION_TEXTURE2D,
-                                                      texture_format, i, 1);
-      const CD3D11_RENDER_TARGET_VIEW_DESC rtv_desc(m_downsample_texture, D3D11_RTV_DIMENSION_TEXTURE2D, texture_format,
-                                                    i, 1);
+      D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc;
+      srv_desc.Format = texture_format;
+      srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+      srv_desc.Texture2D.MostDetailedMip = i;
+      srv_desc.Texture2D.MipLevels = 1;
+
+      D3D11_RENDER_TARGET_VIEW_DESC rtv_desc;
+      rtv_desc.Format = texture_format;
+      rtv_desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+      rtv_desc.Texture2D.MipSlice = i;
 
       hr = m_device->CreateShaderResourceView(m_downsample_texture, &srv_desc,
                                               m_downsample_mip_views[i].first.GetAddressOf());
@@ -1102,14 +1122,23 @@ void GPU_HW_D3D11::UploadUniformBuffer(const void* data, u32 data_size)
 
 void GPU_HW_D3D11::SetViewport(u32 x, u32 y, u32 width, u32 height)
 {
-  const CD3D11_VIEWPORT vp(static_cast<float>(x), static_cast<float>(y), static_cast<float>(width),
-                           static_cast<float>(height));
+  D3D11_VIEWPORT vp;
+  vp.TopLeftX = static_cast<float>(x);
+  vp.TopLeftY = static_cast<float>(y);
+  vp.Width = static_cast<float>(width);
+  vp.Height = static_cast<float>(height);
+  vp.MinDepth = 0;
+  vp.MaxDepth = 1;
   m_context->RSSetViewports(1, &vp);
 }
 
 void GPU_HW_D3D11::SetScissor(u32 x, u32 y, u32 width, u32 height)
 {
-  const CD3D11_RECT rc(x, y, x + width, y + height);
+  D3D11_RECT rc;
+  rc.left = x;
+  rc.top = y;
+  rc.right = (x + width);
+  rc.bottom = (y + height);
   m_context->RSSetScissorRects(1, &rc);
 }
 
@@ -1211,7 +1240,11 @@ void GPU_HW_D3D11::SetScissorFromDrawingArea()
   int left, top, right, bottom;
   CalcScissorRect(&left, &top, &right, &bottom);
 
-  CD3D11_RECT rc(left, top, right, bottom);
+  D3D11_RECT rc;
+  rc.left = left;
+  rc.top = top;
+  rc.right = right;
+  rc.bottom = bottom;
   m_context->RSSetScissorRects(1, &rc);
 }
 
@@ -1449,14 +1482,26 @@ void GPU_HW_D3D11::CopyVRAM(u32 src_x, u32 src_y, u32 dst_x, u32 dst_y, u32 widt
   width *= m_resolution_scale;
   height *= m_resolution_scale;
 
-  const CD3D11_BOX src_box(src_x, src_y, 0, src_x + width, src_y + height, 1);
+  D3D11_BOX src_box;
+  src_box.left = src_x;
+  src_box.top = src_y;
+  src_box.front = 0;
+  src_box.right = (src_x + width);
+  src_box.bottom = (src_y + height);
+  src_box.back = 1;
   m_context->CopySubresourceRegion(m_vram_texture, 0, dst_x, dst_y, 0, m_vram_read_texture, 0, &src_box);
 }
 
 void GPU_HW_D3D11::UpdateVRAMReadTexture()
 {
   const auto scaled_rect = m_vram_dirty_rect * m_resolution_scale;
-  const CD3D11_BOX src_box(scaled_rect.left, scaled_rect.top, 0, scaled_rect.right, scaled_rect.bottom, 1);
+  D3D11_BOX src_box;
+  src_box.left = scaled_rect.left;
+  src_box.top = scaled_rect.top;
+  src_box.front = 0;
+  src_box.right = scaled_rect.right;
+  src_box.bottom = scaled_rect.bottom;
+  src_box.back = 1;
 
   if (m_vram_texture.IsMultisampled())
   {
@@ -1506,7 +1551,13 @@ void GPU_HW_D3D11::DownsampleFramebuffer(D3D11::Texture& source, u32 left, u32 t
 
 void GPU_HW_D3D11::DownsampleFramebufferAdaptive(D3D11::Texture& source, u32 left, u32 top, u32 width, u32 height)
 {
-  CD3D11_BOX src_box(left, top, 0, left + width, top + height, 1);
+  D3D11_BOX src_box;
+  src_box.left = left;
+  src_box.top = top;
+  src_box.front = 0;
+  src_box.right = (left + width);
+  src_box.bottom = (top + height);
+  src_box.back = 1;
   m_context->OMSetDepthStencilState(m_depth_disabled_state.Get(), 0);
   m_context->OMSetBlendState(m_blend_disabled_state.Get(), nullptr, 0xFFFFFFFFu);
   m_context->CopySubresourceRegion(m_downsample_texture, 0, left, top, 0, source, 0, &src_box);

@@ -13,14 +13,10 @@
 #include <direct.h>
 #include <io.h>
 #include <share.h>
+#include <malloc.h>
 #else
 #include <sys/stat.h>
 #include <sys/types.h>
-#endif
-
-#ifdef _MSC_VER
-#include <malloc.h>
-#else
 #include <alloca.h>
 #endif
 
@@ -693,7 +689,7 @@ void GrowableMemoryByteStream::Grow(u32 MinimumGrowth)
   ResizeMemory(NewSize);
 }
 
-#if defined(_MSC_VER)
+#if defined(_WIN32)
 
 std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 openMode)
 {

@@ -11,7 +11,7 @@
 
 #if defined(__has_include) && __has_include(<charconv>)
 #include <charconv>
-#ifndef _MSC_VER
+#ifndef _WIN32
 #include <sstream>
 #endif
 #else
@@ -30,7 +30,7 @@ bool WildcardMatch(const char* subject, const char* mask, bool case_sensitive = 
 /// Platform-independent strcasecmp
 static inline int Strcasecmp(const char* s1, const char* s2)
 {
-#ifdef _MSC_VER
+#ifdef _WIN32
   return _stricmp(s1, s2);
 #else
   return strcasecmp(s1, s2);
@@ -40,7 +40,7 @@ static inline int Strcasecmp(const char* s1, const char* s2)
 /// Platform-independent strcasecmp
 static inline int Strncasecmp(const char* s1, const char* s2, std::size_t n)
 {
-#ifdef _MSC_VER
+#ifdef _WIN32
   return _strnicmp(s1, s2, n);
 #else
   return strncasecmp(s1, s2, n);
@@ -73,7 +73,7 @@ inline std::optional<T> FromChars(const std::string_view& str)
 {
   T value;
 
-#if defined(__has_include) && __has_include(<charconv>) && defined(_MSC_VER)
+#if defined(__has_include) && __has_include(<charconv>) && defined(_WIN32)
   const std::from_chars_result result = std::from_chars(str.data(), str.data() + str.length(), value);
   if (result.ec != std::errc())
     return std::nullopt;

@@ -6,7 +6,7 @@
 
 // Force inline helper
 #ifndef ALWAYS_INLINE
-#if defined(_MSC_VER)
+#if defined(_WIN32)
 #define ALWAYS_INLINE __forceinline
 #elif defined(__GNUC__) || defined(__clang__)
 #define ALWAYS_INLINE __attribute__((always_inline)) inline
@@ -26,6 +26,8 @@
 #ifndef UNREFERENCED_VARIABLE
 #if defined(_MSC_VER)
 #define UNREFERENCED_VARIABLE(P) (P)
+#elif defined(_WIN32)
+#define UNREFERENCED_VARIABLE(P)
 #elif defined(__GNUC__) || defined(__clang__) || defined(__EMSCRIPTEN__)
 #define UNREFERENCED_VARIABLE(P) (void)(P)
 #else
@@ -50,7 +52,11 @@ char (&__countof_ArraySizeHelper(T (&array)[N]))[N];
 #endif
 
 #ifdef __GNUC__
+#ifndef _WIN32
 #define printflike(n,m) __attribute__((format(printf,n,m)))
+#else
+#define printflike(n,m)
+#endif
 #else
 #define printflike(n,m)
 #endif

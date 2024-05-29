@@ -842,6 +842,7 @@ bool CreateGPU(GPURenderer renderer)
     case GPURenderer::HardwareD3D12:
       g_gpu = GPU::CreateHardwareD3D12Renderer();
       break;
+
 #endif
 
     case GPURenderer::Software:
