@@ -6,7 +6,7 @@
 
 // Force inline helper
 #ifndef ALWAYS_INLINE
-#if defined(_WIN32)
+#if defined(_MSC_VER)
 #define ALWAYS_INLINE __forceinline
 #elif defined(__GNUC__) || defined(__clang__)
 #define ALWAYS_INLINE __attribute__((always_inline)) inline
@@ -26,8 +26,6 @@
 #ifndef UNREFERENCED_VARIABLE
 #if defined(_MSC_VER)
 #define UNREFERENCED_VARIABLE(P) (P)
-#elif defined(_WIN32)
-#define UNREFERENCED_VARIABLE(P)
 #elif defined(__GNUC__) || defined(__clang__) || defined(__EMSCRIPTEN__)
 #define UNREFERENCED_VARIABLE(P) (void)(P)
 #else
