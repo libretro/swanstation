@@ -16,7 +16,7 @@ include:
   ################################## DESKTOPS ################################
   # Windows
   - project: 'libretro-infrastructure/ci-templates'
-    file: '/windows-cmake-msvc19.yml'
+    file: '/windows-cmake-mingw.yml'
 
   # MacOS
   - project: 'libretro-infrastructure/ci-templates'
@@ -48,13 +48,13 @@ stages:
 # Windows 64-bit
 libretro-build-windows-x64:
   extends:
-    - .libretro-windows-msvc19-cmake-x86_64
+    - .libretro-windows-cmake-x86_64
     - .core-defs
 
 # Windows 32-bit
 libretro-build-windows-i686:
   extends:
-    - .libretro-windows-msvc19-cmake-x86
+    - .libretro-windows-cmake-x86
     - .core-defs
 
 # Linux 64-bit
