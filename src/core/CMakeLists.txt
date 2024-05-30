@@ -119,9 +119,13 @@ if(WIN32)
   target_sources(core PRIVATE
     gpu_hw_d3d11.cpp
     gpu_hw_d3d11.h
-    gpu_hw_d3d12.cpp
-    gpu_hw_d3d12.h
   )
+  if(USE_D3D12)
+    target_sources(core PRIVATE
+      gpu_hw_d3d12.cpp
+      gpu_hw_d3d12.h
+    )
+  endif()
   target_link_libraries(core PRIVATE winmm.lib)
 endif()
 
