@@ -111,22 +111,27 @@ if(WIN32)
     d3d11/stream_buffer.h
     d3d11/texture.cpp
     d3d11/texture.h
-    d3d12/context.cpp
-    d3d12/context.h
-    d3d12/descriptor_heap_manager.cpp
-    d3d12/descriptor_heap_manager.h
-    d3d12/shader_cache.cpp
-    d3d12/shader_cache.h
-    d3d12/staging_texture.cpp
-    d3d12/staging_texture.h
-    d3d12/stream_buffer.cpp
-    d3d12/stream_buffer.h
-    d3d12/texture.cpp
-    d3d12/texture.h
-    d3d12/util.cpp
-    d3d12/util.h
     windows_headers.h
   )
+  if(USE_D3D12)
+    target_sources(common PRIVATE
+      d3d12/context.cpp
+      d3d12/context.h
+      d3d12/descriptor_heap_manager.cpp
+      d3d12/descriptor_heap_manager.h
+      d3d12/shader_cache.cpp
+      d3d12/shader_cache.h
+      d3d12/staging_texture.cpp
+      d3d12/staging_texture.h
+      d3d12/stream_buffer.cpp
+      d3d12/stream_buffer.h
+      d3d12/texture.cpp
+      d3d12/texture.h
+      d3d12/util.cpp
+      d3d12/util.h
+    )
+  endif()
+
   target_link_libraries(common PRIVATE d3dcompiler.lib)
 endif()
 
