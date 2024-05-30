@@ -73,7 +73,7 @@ inline std::optional<T> FromChars(const std::string_view& str)
 {
   T value;
 
-#if defined(__has_include) && __has_include(<charconv>) && defined(_WIN32)
+#if defined(__has_include) && __has_include(<charconv>) && defined(_MSC_VER)
   const std::from_chars_result result = std::from_chars(str.data(), str.data() + str.length(), value);
   if (result.ec != std::errc())
     return std::nullopt;
