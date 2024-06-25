@@ -1,6 +1,7 @@
 #include "byte_stream.h"
 #include "file_system.h"
 #include "string_util.h"
+#include <config.h>
 #include <algorithm>
 #include <cerrno>
 #include <cstdio>
@@ -1010,15 +1011,18 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
     char* temporaryFileName = (char*)alloca(fileNameLength + 8);
     std::snprintf(temporaryFileName, fileNameLength + 8, "%s.XXXXXX", fileName);
 
+    std::FILE* pTemporaryFile;
     // fill in random characters
-#if defined(__linux__) || defined(__ANDROID__) || defined(__APPLE__)
-    mkstemp(temporaryFileName);
+#ifdef HAVE_MKSTEMP
+    int fd = mkstemp(temporaryFileName);
+    if (fd == -1)
+      return nullptr;
+    pTemporaryFile = std::fdopen(fd, modeString);
 #else
-    mktemp(temporaryFileName);
+    if (mktemp(temporaryFileName) == nullptr)
+      return nullptr;
+    pTemporaryFile = std::fopen(temporaryFileName, modeString);
 #endif
-
-    // open the file
-    std::FILE* pTemporaryFile = std::fopen(temporaryFileName, modeString);
     if (pTemporaryFile == nullptr)
       return nullptr;
 
