@@ -398,10 +398,6 @@ std::string BuildRelativePath(const std::string_view& filename, const std::strin
 
 std::unique_ptr<ByteStream> OpenFile(const char* FileName, u32 Flags)
 {
-  // has a path
-  if (FileName[0] == '\0')
-    return nullptr;
-
   // TODO: Handle Android content URIs here.
 
   // forward to local file wrapper
