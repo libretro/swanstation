@@ -10,8 +10,6 @@
 #include <mach-o/dyld.h>
 #include <stdlib.h>
 #include <sys/param.h>
-#else
-#include <malloc.h>
 #endif
 
 #ifdef __FreeBSD__
