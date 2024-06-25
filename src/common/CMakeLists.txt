@@ -1,3 +1,5 @@
+include(CheckSymbolExists)
+
 add_library(common
   align.h
   audio_stream.cpp
@@ -148,3 +150,5 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
   # We need -lrt for shm_unlink
   target_link_libraries(common PRIVATE rt)
 endif()
+
+check_symbol_exists(mkstemp "stdlib.h" HAVE_MKSTEMP)
