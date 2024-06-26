@@ -790,11 +790,7 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
         }
 
 // append platform path seperator
-#if defined(_WIN32)
         tempStr[i] = '\\';
-#else
-        tempStr[i] = '/';
-#endif
       }
       else
       {
@@ -941,28 +937,6 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
     const u32 fileNameLength = static_cast<u32>(std::strlen(fileName));
     char* tempStr = (char*)alloca(fileNameLength + 1);
 
-#if defined(_WIN32)
-    // check if it starts with a drive letter. if so, skip ahead
-    if (fileNameLength >= 2 && fileName[1] == ':')
-    {
-      if (fileNameLength <= 3)
-      {
-        // create a file called driveletter: or driveletter:\ ? you must be crazy
-        i = fileNameLength;
-      }
-      else
-      {
-        std::memcpy(tempStr, fileName, 3);
-        i = 3;
-      }
-    }
-    else
-    {
-      // start at beginning
-      i = 0;
-    }
-#endif
-
     // step through each path component, create folders as necessary
     for (i = 0; i < fileNameLength; i++)
     {
@@ -989,11 +963,7 @@ std::unique_ptr<ByteStream> ByteStream_OpenFileStream(const char* fileName, u32 
         }
 
 // append platform path seperator
-#if defined(_WIN32)
-        tempStr[i] = '\\';
-#else
         tempStr[i] = '/';
-#endif
       }
       else
       {
