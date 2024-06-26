@@ -7,13 +7,6 @@ message("CMake System Name: ${CMAKE_SYSTEM_NAME}")
 # Pull in modules.
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules/")
 
-# Platform detection.
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-  set(LINUX TRUE)
-elseif(${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD")
-  set(FREEBSD TRUE)
-endif()
-
 # Set minimum OS version for macOS. 10.14 should work.
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14.0" CACHE STRING "")
 
@@ -145,7 +138,7 @@ find_package(Threads REQUIRED)
 
 # Enable large file support on Linux 32-bit platforms.
 # Android is deliberately ommitted here as it didn't support 64-bit ops on files until Android 7/N.
-if((LINUX OR FREEBSD) AND (${CPU_ARCH} STREQUAL "x86" OR ${CPU_ARCH} STREQUAL "aarch32"))
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND (${CPU_ARCH} STREQUAL "x86" OR ${CPU_ARCH} STREQUAL "aarch32"))
   add_definitions("-D_FILE_OFFSET_BITS=64")
 endif()
 
