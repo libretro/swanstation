@@ -16,7 +16,6 @@
 Log_SetChannel(TextureReplacements);
 
 TextureReplacements g_texture_replacements;
-retro_environment_t g_retro_environment_callback_texture;
 
 static constexpr u32 VRAMRGBA5551ToRGBA8888(u16 color)
 {
