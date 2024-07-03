@@ -1933,15 +1933,11 @@ struct retro_core_option_v2_definition option_defs_us[] = {
      {"Disabled", "Disabled (Slower)"},
      {"LUT", "LUT (Faster)"},
 #if defined(CPU_X64) || defined(CPU_AARCH64)
-     {"MMap", "MMap (Hardware, Fastest, 64-Bit Only)"},
+     {"MMap", "MMap (Hardware, Faster, 64-Bit Only)"},
 #endif
      {NULL, NULL},
    },
-#if defined(CPU_X64) || defined(CPU_AARCH64)
-   "MMap"
-#else
     "LUT"
-#endif
   },
   {"swanstation_CPU_FastmemRewrite",
    "CPU Recompiler Fast Memory Access Rewrite",
