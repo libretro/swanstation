@@ -1960,10 +1960,10 @@ struct retro_core_option_v2_definition option_defs_us[] = {
    "Enable VRAM Write Texture Replacement",
    NULL,
 #ifdef WIN32
-   "Replace WRAM write textures with DuckStation formatted texture packs from the swanstation\textures folder inside "
+   "Replace VRAM write textures with DuckStation formatted texture packs from the swanstation\textures folder inside "
    "the RetroArch system directory. Currently only works with the D3D11 & Vulkan renderers.",
 #else
-   "Replace WRAM write textures with DuckStation formatted texture packs from the swanstation/textures folder inside "
+   "Replace VRAM write textures with DuckStation formatted texture packs from the swanstation/textures folder inside "
    "the RetroArch system directory. Currently only works with the Vulkan renderer.",
 #endif
    NULL,
@@ -2022,10 +2022,12 @@ struct retro_core_option_v2_definition option_defs_us[] = {
      {NULL, NULL},
    },
    "false"},
-  {"swanstation_Hacks_UseOldMDECRoutines",
+  {"swanstation_Hacks_OldMDECRoutines",
    "Use Old MDEC Routines",
    NULL,
-   "Use old routines for MDEC content.",
+   "Use old routines for MDEC content. The newer routines may look better with some games, worse with others. "
+   "As VRAM write texture replacements require either the old or new routines to function, it's adviced to toggle "
+   "this setting to the routines required.",
    NULL,
    "advanced",
    {
@@ -2033,7 +2035,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
      {"false", "Disabled"},
      {NULL, NULL},
    },
-   "false"},
+   "true"},
   {"swanstation_Audio_FastHook",
    "Use Alternative Audio Hook (Restart)",
    NULL,
