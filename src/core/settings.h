@@ -125,7 +125,7 @@ struct Settings
 
   u32 audio_buffer_size = 2048;
 
-  bool use_old_mdec_routines = false;
+  bool use_old_mdec_routines = true;
 
   // timing hacks section
   TickCount dma_max_slice_ticks = 1000;
