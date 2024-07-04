@@ -69,6 +69,8 @@ add_library(core
     namco_guncon.h
     negcon.cpp
     negcon.h
+    negcon_rumble.cpp
+    negcon_rumble.h
     pad.cpp
     pad.h
     pgxp.cpp

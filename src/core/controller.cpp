@@ -5,6 +5,7 @@
 #include "digital_controller.h"
 #include "namco_guncon.h"
 #include "negcon.h"
+#include "negcon_rumble.h"
 #include "playstation_mouse.h"
 
 Controller::Controller() = default;
@@ -79,6 +80,9 @@ std::unique_ptr<Controller> Controller::Create(ControllerType type, u32 index)
     case ControllerType::NeGcon:
       return NeGcon::Create();
 
+    case ControllerType::NeGconRumble:
+      return NeGconRumble::Create(index);
+
     case ControllerType::None:
     default:
       return {};
@@ -106,6 +110,9 @@ u32 Controller::GetVibrationMotorCount(ControllerType type)
 
     case ControllerType::NeGcon:
       return NeGcon::StaticGetVibrationMotorCount();
+
+    case ControllerType::NeGconRumble:
+      return NeGconRumble::StaticGetVibrationMotorCount();
 
     case ControllerType::None:
     default:

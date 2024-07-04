@@ -13,6 +13,7 @@
 #include "core/gpu.h"
 #include "core/namco_guncon.h"
 #include "core/negcon.h"
+#include "core/negcon_rumble.h"
 #include "core/pad.h"
 #include "core/playstation_mouse.h"
 #include "core/system.h"
@@ -195,6 +196,7 @@ LibretroHostInterface g_libretro_host_interface;
 #define RETRO_DEVICE_PS_DUALSHOCK RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_ANALOG, 0)
 #define RETRO_DEVICE_PS_ANALOG_JOYSTICK RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_ANALOG, 1)
 #define RETRO_DEVICE_PS_NEGCON RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_ANALOG, 2)
+#define RETRO_DEVICE_PS_NEGCON_RUMBLE RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_ANALOG, 3)
 #define RETRO_DEVICE_PS_GUNCON RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_LIGHTGUN, 0)
 #define RETRO_DEVICE_PS_MOUSE RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_MOUSE, 0)
 
@@ -257,6 +259,7 @@ void LibretroHostInterface::retro_set_environment()
       { "Analog Controller (DualShock)", RETRO_DEVICE_PS_DUALSHOCK },
       { "Analog Joystick", RETRO_DEVICE_PS_ANALOG_JOYSTICK },
       { "NeGcon", RETRO_DEVICE_PS_NEGCON },
+      { "NeGcon Rumble", RETRO_DEVICE_PS_NEGCON_RUMBLE },
       { "Namco GunCon", RETRO_DEVICE_PS_GUNCON },
       { "PlayStation Mouse", RETRO_DEVICE_PS_MOUSE },
       { NULL, 0 },
@@ -267,6 +270,7 @@ void LibretroHostInterface::retro_set_environment()
       { "Analog Controller (DualShock)", RETRO_DEVICE_PS_DUALSHOCK },
       { "Analog Joystick", RETRO_DEVICE_PS_ANALOG_JOYSTICK },
       { "NeGcon", RETRO_DEVICE_PS_NEGCON },
+      { "NeGcon Rumble", RETRO_DEVICE_PS_NEGCON_RUMBLE },
       { "PlayStation Mouse", RETRO_DEVICE_PS_MOUSE },
       { NULL, 0 },
   };
@@ -997,21 +1001,21 @@ bool LibretroHostInterface::UpdateCoreOptionsDisplay(bool controller)
 
     const u32 active_controller = retropad_device[i];
     const bool analog_active = (port_allowed && (active_controller == RETRO_DEVICE_PS_DUALSHOCK || active_controller == RETRO_DEVICE_PS_ANALOG_JOYSTICK ||
-                                active_controller == RETRO_DEVICE_PS_NEGCON));
+                                active_controller == RETRO_DEVICE_PS_NEGCON || active_controller == RETRO_DEVICE_PS_NEGCON_RUMBLE));
     const bool dualshock_active = (port_allowed && active_controller == RETRO_DEVICE_PS_DUALSHOCK);
-    const bool negcon_active = (port_allowed && active_controller == RETRO_DEVICE_PS_NEGCON);
+    const bool negcon_active = (port_allowed && (active_controller == RETRO_DEVICE_PS_NEGCON || active_controller == RETRO_DEVICE_PS_NEGCON_RUMBLE));
     const bool guncon_active = (port_allowed && active_controller == RETRO_DEVICE_PS_GUNCON);
 
     option_display.visible = analog_active;
     option_display.key = (TinyString::FromFormat("swanstation_Controller%u_AxisScale", (i + 1)));
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+    option_display.key = (TinyString::FromFormat("swanstation_Controller%u_VibrationBias", (i + 1)));
+    g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
     option_display.visible = dualshock_active;
-    option_display.key = (TinyString::FromFormat("swanstation_Controller%u_ForceAnalog", (i + 1)));
-    g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
     option_display.key = (TinyString::FromFormat("swanstation_Controller%u_AnalogDPadInDigitalMode", (i + 1)));
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
-    option_display.key = (TinyString::FromFormat("swanstation_Controller%u_VibrationBias", (i + 1)));
+    option_display.key = (TinyString::FromFormat("swanstation_Controller%u_ForceAnalog", (i + 1)));
     g_retro_environment_callback(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
 
     option_display.visible = negcon_active;
@@ -1098,6 +1102,10 @@ void LibretroHostInterface::LoadSettings()
 
       case RETRO_DEVICE_PS_NEGCON:
         g_settings.controller_types[i] = ControllerType::NeGcon;
+        break;
+
+      case RETRO_DEVICE_PS_NEGCON_RUMBLE:
+        g_settings.controller_types[i] = ControllerType::NeGconRumble;
         break;
 
       case RETRO_DEVICE_PS_GUNCON:
@@ -1230,6 +1238,10 @@ void LibretroHostInterface::UpdateControllers()
 
       case ControllerType::NeGcon:
         UpdateControllersNeGcon(i);
+        break;
+
+      case ControllerType::NeGconRumble:
+        UpdateControllersNeGconRumble(i);
         break;
 
       case ControllerType::NamcoGunCon:
@@ -1517,6 +1529,145 @@ void LibretroHostInterface::UpdateControllersNeGcon(u32 index)
     }
 
     controller->SetAxisState(static_cast<s32>(it.first), std::clamp(static_cast<float>(state) / 32767.0f, -1.0f, 1.0f));
+  }
+
+}
+
+void LibretroHostInterface::UpdateControllersNeGconRumble(u32 index)
+{
+  NeGconRumble* controller = static_cast<NeGconRumble*>(System::GetController(index));
+
+  static constexpr std::array<std::pair<NeGconRumble::Button, u32>, 8> button_mapping = {
+    {{NeGconRumble::Button::Left, RETRO_DEVICE_ID_JOYPAD_LEFT},
+     {NeGconRumble::Button::Right, RETRO_DEVICE_ID_JOYPAD_RIGHT},
+     {NeGconRumble::Button::Up, RETRO_DEVICE_ID_JOYPAD_UP},
+     {NeGconRumble::Button::Down, RETRO_DEVICE_ID_JOYPAD_DOWN},
+     {NeGconRumble::Button::A, RETRO_DEVICE_ID_JOYPAD_A},
+     {NeGconRumble::Button::B, RETRO_DEVICE_ID_JOYPAD_X},
+     {NeGconRumble::Button::Start, RETRO_DEVICE_ID_JOYPAD_START},
+     {NeGconRumble::Button::R, RETRO_DEVICE_ID_JOYPAD_R}}};
+
+  static constexpr std::array<std::pair<NeGconRumble::Axis, std::pair<u32, u32>>, 4> axis_mapping = {
+    {{NeGconRumble::Axis::Steering, {RETRO_DEVICE_INDEX_ANALOG_LEFT, RETRO_DEVICE_ID_ANALOG_X}},
+     {NeGconRumble::Axis::I, {RETRO_DEVICE_INDEX_ANALOG_BUTTON, RETRO_DEVICE_ID_JOYPAD_B}},
+     {NeGconRumble::Axis::II, {RETRO_DEVICE_INDEX_ANALOG_BUTTON, RETRO_DEVICE_ID_JOYPAD_Y}},
+     {NeGconRumble::Axis::L, {RETRO_DEVICE_INDEX_ANALOG_BUTTON, RETRO_DEVICE_ID_JOYPAD_L}}}};
+
+  if (m_supports_input_bitmasks)
+  {
+    const u16 active = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_MASK);
+    for (const auto& it : button_mapping)
+      controller->SetButtonState(it.first, (active & (static_cast<u16>(1u) << it.second)) != 0u);
+  }
+  else
+  {
+    for (const auto& it : button_mapping)
+    {
+      const int16_t state = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, it.second);
+      controller->SetButtonState(it.first, state != 0);
+    }
+  }
+
+  for (const auto& it : axis_mapping)
+  {
+    int16_t state = g_retro_input_state_callback(index, RETRO_DEVICE_ANALOG, it.second.first, it.second.second);
+    if (state == 0 && it.second.second == RETRO_DEVICE_ID_JOYPAD_B)
+    {
+        state = g_retro_input_state_callback(index, RETRO_DEVICE_ANALOG, it.second.first, RETRO_DEVICE_ID_JOYPAD_R2);
+    }
+    else if (state == 0 && it.second.second == RETRO_DEVICE_ID_JOYPAD_Y)
+    {
+        state = g_retro_input_state_callback(index, RETRO_DEVICE_ANALOG, it.second.first, RETRO_DEVICE_ID_JOYPAD_L2);
+    }
+
+    controller->SetAxisState(static_cast<s32>(it.first), std::clamp(static_cast<float>(state) / 32767.0f, -1.0f, 1.0f));
+  }
+
+  if (m_rumble_interface_valid && g_settings.controller_enable_rumble)
+  {
+    const u16 strong = static_cast<u16>(static_cast<u32>(controller->GetVibrationMotorStrength(0) * 65535.0f));
+    const u16 weak = static_cast<u16>(static_cast<u32>(controller->GetVibrationMotorStrength(1) * 65535.0f));
+    m_rumble_interface.set_rumble_state(index, RETRO_RUMBLE_STRONG, strong);
+    m_rumble_interface.set_rumble_state(index, RETRO_RUMBLE_WEAK, weak);
+  }
+
+  const u16 PadCombo_L1 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L);
+  const u16 PadCombo_R1 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R);
+  const u16 PadCombo_L2 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2);
+  const u16 PadCombo_R2 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2);
+  const u16 PadCombo_L3 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3);
+  const u16 PadCombo_R3 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3);
+  const u16 PadCombo_Start = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START);
+  const u16 PadCombo_Select = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT);
+  int analog_press_status = 0;
+
+  // Check if we're allowed to press the analog button, and then set the selected combo.
+  if (!analog_pressed)
+  {
+    switch (g_settings.controller_analog_combo)
+    {
+      case 1:
+        analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_L3 && PadCombo_R3);
+        break;
+
+      case 2:
+        analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_L2 && PadCombo_R2 && PadCombo_Start && PadCombo_Select);
+        break;
+
+      case 3:
+        analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_Select);
+        break;
+
+      case 4:
+        analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_Start);
+        break;
+
+      case 5:
+        analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_L3);
+        break;
+
+      case 6:
+        analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_R3);
+        break;
+
+      case 7:
+        analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_Select);
+        break;
+
+      case 8:
+        analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_Start);
+        break;
+
+      case 9:
+        analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_L3);
+        break;
+
+      case 10:
+        analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_R3);
+        break;
+
+      case 11:
+        analog_press_status = (PadCombo_L3 && PadCombo_R3);
+        break;
+    }	
+  }
+
+  // Workaround for the fact it will otherwise spam the analog button.
+  if (analog_press_status)
+  {
+    analog_index = index;
+    analog_pressed = true;
+    controller->SetButtonState(NeGconRumble::Button::Analog, (analog_press_status));
+    analog_press_status = 0;
+  }
+
+  // Check if all possible combo buttons are released and the index matches the player slot.
+  // Also make sure having another DualShock plugged in doesn't prematurely clear the button block.
+  if (((u32)analog_index == index) && analog_pressed && 
+       !PadCombo_L1 && !PadCombo_R1 && !PadCombo_L2 && !PadCombo_R2 && !PadCombo_L3 && !PadCombo_R3 && !PadCombo_Start && !PadCombo_Select)
+  {
+    analog_pressed = false;
+    analog_index = -1;
   }
 
 }

@@ -560,8 +560,8 @@ float Settings::GetDisplayAspectRatioValue() const
   }
 }
 
-static std::array<const char*, 7> s_controller_type_names = {
-  {"None", "DigitalController", "AnalogController", "AnalogJoystick", "NamcoGunCon", "PlayStationMouse", "NeGcon"}};
+static std::array<const char*, 8> s_controller_type_names = {
+  {"None", "DigitalController", "AnalogController", "AnalogJoystick", "NamcoGunCon", "PlayStationMouse", "NeGcon", "NeGconRumble"}};
 
 std::optional<ControllerType> Settings::ParseControllerTypeName(const char* str)
 {
