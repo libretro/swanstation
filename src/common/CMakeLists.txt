@@ -151,4 +151,4 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
   target_link_libraries(common PRIVATE rt)
 endif()
 
-check_symbol_exists(mkstemp "stdlib.h" HAVE_MKSTEMP)
+check_symbol_exists(alloca "alloca.h" HAVE_ALLOCA_H)
