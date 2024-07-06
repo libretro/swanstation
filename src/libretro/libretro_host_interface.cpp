@@ -284,8 +284,8 @@ void LibretroHostInterface::retro_set_environment()
   };
 
   static const struct retro_controller_info ports[] = {
-   	  { pads, 7 },
-   	  { pads, 7 },
+   	  { pads, 8 },
+   	  { pads, 8 },
    	  { pads_mt, 6 },
    	  { pads_mt, 6 },
    	  { pads_mt2, 5 },
