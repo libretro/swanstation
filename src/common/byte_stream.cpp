@@ -18,7 +18,9 @@
 #else
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <alloca.h>
+#  if defined(HAVE_ALLOCA_H)
+#    include <alloca.h>
+#  endif
 #endif
 
 #include <file/file_path.h>
