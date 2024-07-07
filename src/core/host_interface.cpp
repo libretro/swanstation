@@ -30,9 +30,6 @@ HostInterface* g_host_interface;
 HostInterface::HostInterface()
 {
   g_host_interface = this;
-
-  // we can get the program directory at construction time
-  m_program_directory = FileSystem::GetPathDirectory(FileSystem::GetProgramPath());
 }
 
 HostInterface::~HostInterface()
@@ -483,19 +480,6 @@ std::string HostInterface::GetUserDirectoryRelativePath(const char* format, ...)
     return formatted_path;
   return StringUtil::StdStringFromFormat("%s" FS_OSPATH_SEPARATOR_STR "%s", m_user_directory.c_str(),
                                            formatted_path.c_str());
-}
-
-std::string HostInterface::GetProgramDirectoryRelativePath(const char* format, ...) const
-{
-  std::va_list ap;
-  va_start(ap, format);
-  std::string formatted_path = StringUtil::StdStringFromFormatV(format, ap);
-  va_end(ap);
-
-  if (m_program_directory.empty())
-    return formatted_path;
-  return StringUtil::StdStringFromFormat("%s" FS_OSPATH_SEPARATOR_STR "%s", m_program_directory.c_str(),
-		  formatted_path.c_str());
 }
 
 std::string HostInterface::GetSharedMemoryCardPath(u32 slot) const

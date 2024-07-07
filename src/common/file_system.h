@@ -81,9 +81,6 @@ std::FILE* OpenCFile(const char* filename, const char* mode);
 std::optional<std::vector<u8>> ReadBinaryFile(const char* filename);
 bool WriteBinaryFile(const char* filename, const void* data, size_t data_length);
 
-/// Returns the path to the current executable.
-std::string GetProgramPath();
-
 RFILE *OpenRFile(const char* filename, const char* mode);
 s64 FSeek64(RFILE* fp, s64 offset, int whence);
 s64 FTell64(RFILE* fp);
