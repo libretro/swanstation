@@ -163,9 +163,9 @@ bool MemoryArena::Create(size_t size, bool writable, bool executable)
   shm_unlink(file_mapping_name.c_str());
 
   // ensure it's the correct size
-  if (ftruncate64(m_shmem_fd, static_cast<off64_t>(size)) < 0)
+  if (ftruncate(m_shmem_fd, static_cast<off_t>(size)) < 0)
   {
-    Log_ErrorPrintf("ftruncate64(%zu) failed: %d", size, errno);
+    Log_ErrorPrintf("ftruncate(%zu) failed: %d", size, errno);
     return false;
   }
 
