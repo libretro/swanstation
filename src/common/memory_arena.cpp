@@ -5,7 +5,7 @@ Log_SetChannel(Common::MemoryArena);
 
 #if defined(_WIN32)
 #include "common/windows_headers.h"
-#elif defined(ANDROID)
+#elif defined(__ANDROID__)
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <linux/ashmem.h>
@@ -22,7 +22,7 @@ Log_SetChannel(Common::MemoryArena);
 namespace Common {
 
 // Borrowed from Dolphin
-#ifdef ANDROID
+#ifdef __ANDROID__
 #define ASHMEM_DEVICE "/dev/ashmem"
 
 static int AshmemCreateFileMapping(const char* name, size_t size)
