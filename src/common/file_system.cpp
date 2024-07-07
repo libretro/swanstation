@@ -1,6 +1,5 @@
 #include "file_system.h"
 #include "byte_stream.h"
-#include "log.h"
 #include "string_util.h"
 #include <algorithm>
 #include <cstdlib>
@@ -157,8 +156,6 @@ extern "C" int64_t rfwrite(void const* buffer,
 
    return (filestream_write(stream, buffer, elem_size * elem_count) / elem_size);
 }
-
-Log_SetChannel(FileSystem);
 
 namespace FileSystem {
 
