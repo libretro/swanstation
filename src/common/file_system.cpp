@@ -1,3 +1,5 @@
+#include <config.h>
+
 #include "file_system.h"
 #include "byte_stream.h"
 #include "string_util.h"
@@ -10,7 +12,11 @@
 #include <stdlib.h>
 #include <sys/param.h>
 #else
-#include <malloc.h>
+// alloca() on Microsoft Windows. Be careful because the header differs wildly
+// between operating systems.
+#  ifdef HAVE_MALLOC_H
+#    include <malloc.h>
+#  endif
 #endif
 
 #ifdef __FreeBSD__
