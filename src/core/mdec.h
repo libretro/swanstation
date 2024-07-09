@@ -113,14 +113,17 @@ private:
   void ScheduleBlockCopyOut(TickCount ticks);
   void CopyOutBlock();
 
-  // from nocash spec
-  bool rl_decode_block(s16* blk, const u8* qt);
-  void IDCT(s16* blk);
-  void IDCT_New(s16* blk);
+  bool DecodeRLE_Old(s16* blk, const u8* qt);
   void IDCT_Old(s16* blk);
-  void yuv_to_rgb(u32 xx, u32 yy, const std::array<s16, 64>& Crblk, const std::array<s16, 64>& Cbblk,
-                  const std::array<s16, 64>& Yblk);
-  void y_to_mono(const std::array<s16, 64>& Yblk);
+  void YUVToRGB_Old(u32 xx, u32 yy, const std::array<s16, 64>& Crblk, const std::array<s16, 64>& Cbblk,
+                         const std::array<s16, 64>& Yblk);
+
+  bool DecodeRLE_New(s16* blk, const u8* qt);
+  void IDCT_New(s16* blk);
+  void YUVToRGB_New(u32 xx, u32 yy, const std::array<s16, 64>& Crblk, const std::array<s16, 64>& Cbblk,
+                         const std::array<s16, 64>& Yblk);
+
+  void YUVToMono(const std::array<s16, 64>& Yblk);
 
   StatusRegister m_status = {};
   bool m_enable_dma_in = false;

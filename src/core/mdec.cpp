@@ -330,15 +330,25 @@ bool MDEC::DecodeMonoMacroblock()
   if (!m_data_out_fifo.IsEmpty())
     return false;
 
-  if (!rl_decode_block(m_blocks[0].data(), m_iq_y.data()))
-    return false;
+  if (g_settings.use_old_mdec_routines)
+  {
+    if (!DecodeRLE_Old(m_blocks[0].data(), m_iq_y.data()))
+      return false;
 
-  IDCT(m_blocks[0].data());
+    IDCT_Old(m_blocks[0].data());
+  }
+  else
+  {
+    if (!DecodeRLE_New(m_blocks[0].data(), m_iq_y.data()))
+      return false;
+
+    IDCT_New(m_blocks[0].data());
+  }
 
   ResetDecoder();
   m_state = State::WritingMacroblock;
 
-  y_to_mono(m_blocks[0]);
+  YUVToMono(m_blocks[0]);
 
   ScheduleBlockCopyOut(TICKS_PER_BLOCK * 6);
 
@@ -348,25 +358,51 @@ bool MDEC::DecodeMonoMacroblock()
 
 bool MDEC::DecodeColoredMacroblock()
 {
-  for (; m_current_block < NUM_BLOCKS; m_current_block++)
+  if (g_settings.use_old_mdec_routines)
   {
-    if (!rl_decode_block(m_blocks[m_current_block].data(), (m_current_block >= 2) ? m_iq_y.data() : m_iq_uv.data()))
+    for (; m_current_block < NUM_BLOCKS; m_current_block++)
+    {
+      if (!DecodeRLE_Old(m_blocks[m_current_block].data(), (m_current_block >= 2) ? m_iq_y.data() : m_iq_uv.data()))
+        return false;
+
+      IDCT_Old(m_blocks[m_current_block].data());
+    }
+
+    if (!m_data_out_fifo.IsEmpty())
       return false;
 
-    IDCT(m_blocks[m_current_block].data());
+    // done decoding
+    ResetDecoder();
+    m_state = State::WritingMacroblock;
+
+    YUVToRGB_Old(0, 0, m_blocks[0], m_blocks[1], m_blocks[2]);
+    YUVToRGB_Old(8, 0, m_blocks[0], m_blocks[1], m_blocks[3]);
+    YUVToRGB_Old(0, 8, m_blocks[0], m_blocks[1], m_blocks[4]);
+    YUVToRGB_Old(8, 8, m_blocks[0], m_blocks[1], m_blocks[5]);
+  }
+  else
+  {
+    for (; m_current_block < NUM_BLOCKS; m_current_block++)
+    {
+      if (!DecodeRLE_New(m_blocks[m_current_block].data(), (m_current_block >= 2) ? m_iq_y.data() : m_iq_uv.data()))
+        return false;
+
+      IDCT_New(m_blocks[m_current_block].data());
+    }
+
+    if (!m_data_out_fifo.IsEmpty())
+      return false;
+
+    // done decoding
+    ResetDecoder();
+    m_state = State::WritingMacroblock;
+
+    YUVToRGB_New(0, 0, m_blocks[0], m_blocks[1], m_blocks[2]);
+    YUVToRGB_New(8, 0, m_blocks[0], m_blocks[1], m_blocks[3]);
+    YUVToRGB_New(0, 8, m_blocks[0], m_blocks[1], m_blocks[4]);
+    YUVToRGB_New(8, 8, m_blocks[0], m_blocks[1], m_blocks[5]);
   }
 
-  if (!m_data_out_fifo.IsEmpty())
-    return false;
-
-  // done decoding
-  ResetDecoder();
-  m_state = State::WritingMacroblock;
-
-  yuv_to_rgb(0, 0, m_blocks[0], m_blocks[1], m_blocks[2]);
-  yuv_to_rgb(8, 0, m_blocks[0], m_blocks[1], m_blocks[3]);
-  yuv_to_rgb(0, 8, m_blocks[0], m_blocks[1], m_blocks[4]);
-  yuv_to_rgb(8, 8, m_blocks[0], m_blocks[1], m_blocks[5]);
   m_total_blocks_decoded += 4;
 
   ScheduleBlockCopyOut(TICKS_PER_BLOCK * 6);
@@ -511,13 +547,13 @@ void MDEC::CopyOutBlock()
   Execute();
 }
 
-static u8 zagzig[64] = {0,  1,  8,  16, 9,  2,  3,  10, 17, 24, 32, 25, 18, 11, 4,  5,
+bool MDEC::DecodeRLE_Old(s16* blk, const u8* qt)
+{
+  static u8 zagzig[64] = {0,  1,  8,  16, 9,  2,  3,  10, 17, 24, 32, 25, 18, 11, 4,  5,
                                                12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6,  7,  14, 21, 28,
                                                35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51,
                                                58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63};
-
-bool MDEC::rl_decode_block(s16* blk, const u8* qt)
-{
+  
   if (m_current_coefficient == 64)
   {
     std::fill_n(blk, 64, s16(0));
@@ -586,42 +622,6 @@ bool MDEC::rl_decode_block(s16* blk, const u8* qt)
   return false;
 }
 
-void MDEC::IDCT(s16* blk)
-{
-  // people have made texture packs using the old conversion routines.. best to just leave them be.
-  if (!g_settings.use_old_mdec_routines)
-    IDCT_New(blk);
-  else
-    IDCT_Old(blk);
-}
-
-void MDEC::IDCT_New(s16* blk)
-{
-  s32 temp[64];
-  for (u32 x = 0; x < 8; x++)
-  {
-    for (u32 y = 0; y < 8; y++)
-    {
-      // TODO: We could alter zigzag and invert scale_table to get these in row-major order,
-      // in which case we could do optimize this to a vector multiply.
-      s32 sum = 0;
-      for (u32 z = 0; z < 8; z++)
-        sum += s32(blk[y + z * 8]) * s32(m_scale_table[x + z * 8] / 8);
-      temp[x + y * 8] = static_cast<s32>((sum + 0xfff) / 0x2000);
-    }
-  }
-  for (u32 x = 0; x < 8; x++)
-  {
-    for (u32 y = 0; y < 8; y++)
-    {
-      s32 sum = 0;
-      for (u32 z = 0; z < 8; z++)
-        sum += temp[y + z * 8] * s32(m_scale_table[x + z * 8] / 8);
-      blk[x + y * 8] = static_cast<s16>(std::clamp<s32>((sum + 0xfff) / 0x2000, -128, 127));
-    }
-  }
-}
-
 void MDEC::IDCT_Old(s16* blk)
 {
   s64 temp_buffer[64];
@@ -649,7 +649,7 @@ void MDEC::IDCT_Old(s16* blk)
   }
 }
 
-void MDEC::yuv_to_rgb(u32 xx, u32 yy, const std::array<s16, 64>& Crblk, const std::array<s16, 64>& Cbblk,
+void MDEC::YUVToRGB_Old(u32 xx, u32 yy, const std::array<s16, 64>& Crblk, const std::array<s16, 64>& Cbblk,
                       const std::array<s16, 64>& Yblk)
 {
   const s16 addval = m_status.data_output_signed ? 0 : 0x80;
@@ -676,16 +676,124 @@ void MDEC::yuv_to_rgb(u32 xx, u32 yy, const std::array<s16, 64>& Crblk, const st
   }
 }
 
-void MDEC::y_to_mono(const std::array<s16, 64>& Yblk)
+bool MDEC::DecodeRLE_New(s16* blk, const u8* qt)
 {
-  for (u32 i = 0; i < 64; i++)
+  // Swapped to row-major so we can vectorize the IDCT.
+  static constexpr u8 zigzag[64] ={0,  8,  1,  2,  9,  16, 24, 17, 10, 3,  4,  11, 18, 25, 32, 40,
+                                   33, 26, 19, 12, 5,  6,  13, 20, 27, 34, 41, 48, 56, 49, 42, 35,
+                                   28, 21, 14, 7,  15, 22, 29, 36, 43, 50, 57, 58, 51, 44, 37, 30,
+                                   23, 31, 38, 45, 52, 59, 60, 53, 46, 39, 47, 54, 61, 62, 55, 63};
+
+  if (m_current_coefficient == 64)
   {
-    s16 Y = Yblk[i];
-    Y = SignExtendN<10, s16>(Y);
-    Y = std::clamp<s16>(Y, -128, 127);
-    Y += 128;
-    m_block_rgb[i] = static_cast<u32>(Y) & 0xFF;
+    std::fill_n(blk, 64, s16(0));
+
+    // skip padding at start
+    u16 n;
+    for (;;)
+    {
+      if (m_data_in_fifo.IsEmpty() || m_remaining_halfwords == 0)
+        return false;
+
+      n = m_data_in_fifo.Pop();
+      m_remaining_halfwords--;
+
+      if (n == 0xFE00)
+        continue;
+      else
+        break;
+    }
+
+    m_current_coefficient = 0;
+    m_current_q_scale = n >> 10;
+
+    // Store the DCT blocks with an additional 4 bits of precision.
+    const s32 val = SignExtendN<10, s32>(static_cast<s32>(n));
+    const s32 coeff = (m_current_q_scale == 0) ? (val << 5) : (((val * qt[0]) << 4) + (val ? ((val < 0) ? 8 : -8) : 0));
+    blk[zigzag[0]] = static_cast<s16>(std::clamp(coeff, -0x4000, 0x3FFF));
   }
+
+  while (!m_data_in_fifo.IsEmpty() && m_remaining_halfwords > 0)
+  {
+    u16 n = m_data_in_fifo.Pop();
+    m_remaining_halfwords--;
+
+    m_current_coefficient += ((n >> 10) + 1);
+    if (m_current_coefficient < 64)
+    {
+      const s32 val = SignExtendN<10, s32>(n);
+      const s32 scq = static_cast<s32>(m_current_q_scale * qt[m_current_coefficient]);
+      const s32 coeff = (scq == 0) ? (val << 5) : ((((val * scq) >> 3) << 4) + (val ? ((val < 0) ? 8 : -8) : 0));
+      blk[zigzag[m_current_coefficient]] = static_cast<s16>(std::clamp(coeff, -0x4000, 0x3FFF));
+    }
+
+    if (m_current_coefficient >= 63)
+    {
+      m_current_coefficient = 64;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void MDEC::IDCT_New(s16* blk)
+{
+  s32 temp[64];
+  for (u32 x = 0; x < 8; x++)
+  {
+    for (u32 y = 0; y < 8; y++)
+    {
+      // TODO: We could invert scale_table to get these in row-major order,
+      // in which case we could do optimize this to a vector multiply.
+      s32 sum = 0;
+      for (u32 z = 0; z < 8; z++)
+        sum += (s32(blk[x * 8 + z]) * s32(m_scale_table[z * 8 + y])) / 8;
+      temp[y * 8 + x] = static_cast<s32>((sum + 0x4000) >> 15);
+    }
+  }
+  for (u32 x = 0; x < 8; x++)
+  {
+    for (u32 y = 0; y < 8; y++)
+    {
+      s32 sum = 0;
+      for (u32 z = 0; z < 8; z++)
+        sum += (temp[x * 8 + z] * s32(m_scale_table[z * 8 + y])) / 8;
+      blk[x * 8 + y] = static_cast<s16>(std::clamp(SignExtendN<9, s32>((sum + 0x4000) >> 15), -128, 127));
+    }
+  }
+}
+
+void MDEC::YUVToRGB_New(u32 xx, u32 yy, const std::array<s16, 64>& Crblk, const std::array<s16, 64>& Cbblk,
+                        const std::array<s16, 64>& Yblk)
+{
+  const s32 addval = m_status.data_output_signed ? 0 : 0x80;
+  for (u32 y = 0; y < 8; y++)
+  {
+    for (u32 x = 0; x < 8; x++)
+    {
+      const s32 Cr = Crblk[((x + xx) / 2) + ((y + yy) / 2) * 8];
+      const s32 Cb = Cbblk[((x + xx) / 2) + ((y + yy) / 2) * 8];
+      const s32 Y = Yblk[x + y * 8];
+
+      // BT.601 YUV->RGB coefficients, rounding from Mednafen.
+      const s32 r = std::clamp(SignExtendN<9, s32>(Y + (((359 * Cr) + 0x80) >> 8)), -128, 127) + addval;
+      const s32 g =
+        std::clamp(SignExtendN<9, s32>(Y + ((((-88 * Cb) & ~0x1F) + ((-183 * Cr) & ~0x07) + 0x80) >> 8)), -128, 127) +
+        addval;
+      const s32 b = std::clamp(SignExtendN<9, s32>(Y + (((454 * Cb) + 0x80) >> 8)), -128, 127) + addval;
+
+      m_block_rgb[(x + xx) + ((y + yy) * 16)] =
+        static_cast<u32>(r) | (static_cast<u32>(g) << 8) | (static_cast<u32>(b) << 16);
+    }
+  }
+}
+
+void MDEC::YUVToMono(const std::array<s16, 64>& Yblk)
+{
+  const s32 addval = m_status.data_output_signed ? 0 : 0x80;
+  for (u32 i = 0; i < 64; i++)
+    m_block_rgb[i] = static_cast<u32>(std::clamp(SignExtendN<9, s32>(Yblk[i]), -128, 127) + addval);
 }
 
 void MDEC::HandleSetQuantTableCommand()
