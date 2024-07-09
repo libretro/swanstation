@@ -1,5 +1,6 @@
 #include "gpu_hw_d3d11.h"
 #include "common/d3d11/shader_compiler.h"
+#include "common/display.hlsl.h"
 #include "common/log.h"
 #include "common/state_wrapper.h"
 #include "common/timer.h"
@@ -8,9 +9,6 @@
 #include "host_display.h"
 #include "host_interface.h"
 #include "libretro/libretro_host_interface.h"
-#include "libretro/display_vs.hlsl.h"
-#include "libretro/display_ps.hlsl.h"
-#include "libretro/display_ps_alpha.hlsl.h"
 #include "shader_cache_version.h"
 #include "system.h"
 Log_SetChannel(GPU_HW_D3D11);
