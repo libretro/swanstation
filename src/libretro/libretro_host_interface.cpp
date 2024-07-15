@@ -1591,66 +1591,13 @@ void LibretroHostInterface::UpdateControllersNeGconRumble(u32 index)
     m_rumble_interface.set_rumble_state(index, RETRO_RUMBLE_WEAK, weak);
   }
 
-  const u16 PadCombo_L1 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L);
-  const u16 PadCombo_R1 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R);
-  const u16 PadCombo_L2 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2);
-  const u16 PadCombo_R2 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2);
-  const u16 PadCombo_L3 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3);
-  const u16 PadCombo_R3 = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3);
-  const u16 PadCombo_Start = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START);
-  const u16 PadCombo_Select = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT);
+  // All this is retained from UpdateControllersAnalogController because we can't map the Analog button normally due to input spam...
+  const u16 Analog_Select = g_retro_input_state_callback(index, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT);
   int analog_press_status = 0;
 
   // Check if we're allowed to press the analog button, and then set the selected combo.
   if (!analog_pressed)
-  {
-    switch (g_settings.controller_analog_combo)
-    {
-      case 1:
-        analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_L3 && PadCombo_R3);
-        break;
-
-      case 2:
-        analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_L2 && PadCombo_R2 && PadCombo_Start && PadCombo_Select);
-        break;
-
-      case 3:
-        analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_Select);
-        break;
-
-      case 4:
-        analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_Start);
-        break;
-
-      case 5:
-        analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_L3);
-        break;
-
-      case 6:
-        analog_press_status = (PadCombo_L1 && PadCombo_R1 && PadCombo_R3);
-        break;
-
-      case 7:
-        analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_Select);
-        break;
-
-      case 8:
-        analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_Start);
-        break;
-
-      case 9:
-        analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_L3);
-        break;
-
-      case 10:
-        analog_press_status = (PadCombo_L2 && PadCombo_R2 && PadCombo_R3);
-        break;
-
-      case 11:
-        analog_press_status = (PadCombo_L3 && PadCombo_R3);
-        break;
-    }	
-  }
+    analog_press_status = Analog_Select;
 
   // Workaround for the fact it will otherwise spam the analog button.
   if (analog_press_status)
@@ -1663,8 +1610,7 @@ void LibretroHostInterface::UpdateControllersNeGconRumble(u32 index)
 
   // Check if all possible combo buttons are released and the index matches the player slot.
   // Also make sure having another DualShock plugged in doesn't prematurely clear the button block.
-  if (((u32)analog_index == index) && analog_pressed && 
-       !PadCombo_L1 && !PadCombo_R1 && !PadCombo_L2 && !PadCombo_R2 && !PadCombo_L3 && !PadCombo_R3 && !PadCombo_Start && !PadCombo_Select)
+  if (((u32)analog_index == index) && analog_pressed && !Analog_Select)
   {
     analog_pressed = false;
     analog_index = -1;
