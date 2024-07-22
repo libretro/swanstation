@@ -2889,8 +2889,7 @@ bool CodeGenerator::Compile_cop2(const CodeBlockInstruction& cbi)
       if (g_settings.gpu_pgxp_enable)
         EmitFunctionCall(nullptr, PGXP::CPU_SWC2, Value::FromConstantU32(cbi.instruction.bits), value, address);
 
-      SpeculativeValue spec_base = SpeculativeReadReg(cbi.instruction.i.rs);
-      if (spec_base)
+      if (spec_address)
         SpeculativeWriteMemory(*spec_address, std::nullopt);
     }
 
