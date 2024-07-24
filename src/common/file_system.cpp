@@ -651,37 +651,6 @@ static u32 RecursiveFindFiles(const char* OriginPath, const char* ParentPath, co
   return nFiles;
 }
 
-std::string GetProgramPath()
-{
-  std::wstring buffer;
-  buffer.resize(MAX_PATH);
-
-  // Fall back to the main module if this fails.
-  HMODULE module = nullptr;
-  GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                     reinterpret_cast<LPCWSTR>(&GetProgramPath), &module);
-
-
-  for (;;)
-  {
-    DWORD nChars = GetModuleFileNameW(module, buffer.data(), static_cast<DWORD>(buffer.size()));
-    if (nChars == static_cast<DWORD>(buffer.size()) && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-    {
-      buffer.resize(buffer.size() * 2);
-      continue;
-    }
-
-    buffer.resize(nChars);
-    break;
-  }
-
-  char *a = utf16_to_utf8_string_alloc(buffer.c_str());
-  std::string utf8_path(a);
-  CanonicalizePath(utf8_path);
-  free(a);
-  return utf8_path;
-}
-
 #else
 static u32 RecursiveFindFiles(const char* OriginPath, const char* ParentPath, const char* Path, const char* Pattern,
                               u32 Flags, FindResultsArray* pResults)
@@ -808,76 +777,6 @@ static u32 RecursiveFindFiles(const char* OriginPath, const char* ParentPath, co
 
   closedir(pDir);
   return nFiles;
-}
-
-std::string GetProgramPath()
-{
-#if defined(__linux__)
-  static const char* exeFileName = "/proc/self/exe";
-
-  int curSize = PATH_MAX;
-  char* buffer = static_cast<char*>(std::realloc(nullptr, curSize));
-  for (;;)
-  {
-    int len = readlink(exeFileName, buffer, curSize);
-    if (len < 0)
-    {
-      std::free(buffer);
-      return {};
-    }
-    else if (len < curSize)
-    {
-      buffer[len] = '\0';
-      std::string ret(buffer, len);
-      std::free(buffer);
-      return ret;
-    }
-
-    curSize *= 2;
-    buffer = static_cast<char*>(std::realloc(buffer, curSize));
-  }
-
-#elif defined(__APPLE__)
-
-  int curSize = PATH_MAX;
-  char* buffer = static_cast<char*>(std::realloc(nullptr, curSize));
-  for (;;)
-  {
-    u32 nChars = curSize - 1;
-    int res = _NSGetExecutablePath(buffer, &nChars);
-    if (res == 0)
-    {
-      buffer[nChars] = 0;
-
-      char* resolvedBuffer = realpath(buffer, nullptr);
-      if (resolvedBuffer == nullptr)
-      {
-        std::free(buffer);
-        return {};
-      }
-
-      std::string ret(buffer);
-      std::free(buffer);
-      return ret;
-    }
-
-    curSize *= 2;
-    buffer = static_cast<char*>(std::realloc(buffer, curSize + 1));
-  }
-
-#elif defined(__FreeBSD__)
-  int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
-  char buffer[PATH_MAX];
-  size_t cb = sizeof(buffer) - 1;
-  int res = sysctl(mib, countof(mib), buffer, &cb, nullptr, 0);
-  if (res != 0)
-    return {};
-
-  buffer[cb] = '\0';
-  return buffer;
-#else
-  return {};
-#endif
 }
 #endif
 

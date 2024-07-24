@@ -64,9 +64,6 @@ public:
   /// Returns a path relative to the user directory.
   std::string GetUserDirectoryRelativePath(const char* format, ...) const printflike(2, 3);
 
-  /// Returns a path relative to the application directory (for system files).
-  std::string GetProgramDirectoryRelativePath(const char* format, ...) const printflike(2, 3);
-
   /// Displays a loading screen with the logo, rendered with ImGui. Use when executing possibly-time-consuming tasks
   /// such as compiling shaders when starting up.
   virtual void DisplayLoadingScreen(const char* message, int progress_min = -1, int progress_max = -1,
@@ -141,7 +138,6 @@ protected:
 
   std::unique_ptr<HostDisplay> m_display;
   std::unique_ptr<AudioStream> m_audio_stream;
-  std::string m_program_directory;
   std::string m_user_directory;
 };
 

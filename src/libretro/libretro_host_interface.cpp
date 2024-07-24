@@ -1060,8 +1060,8 @@ std::string LibretroHostInterface::GetBIOSDirectory()
 {
   // Assume BIOS files are located in system directory.
   const char* system_directory = nullptr;
-  if (!g_retro_environment_callback(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_directory) || !system_directory)
-    return GetProgramDirectoryRelativePath("system");
+  if (!g_retro_environment_callback(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_directory))
+    return nullptr;
   return system_directory;
 }
 
@@ -1409,7 +1409,7 @@ void LibretroHostInterface::UpdateControllersAnalogController(u32 index)
       case 11:
         analog_press_status = (PadCombo_L3 && PadCombo_R3);
         break;
-    }	
+    }
   }
 
   // Workaround for the fact it will otherwise spam the analog button.
@@ -1423,7 +1423,7 @@ void LibretroHostInterface::UpdateControllersAnalogController(u32 index)
 
   // Check if all possible combo buttons are released and the index matches the player slot.
   // Also make sure having another DualShock plugged in doesn't prematurely clear the button block.
-  if (((u32)analog_index == index) && analog_pressed && 
+  if (((u32)analog_index == index) && analog_pressed &&
        !PadCombo_L1 && !PadCombo_R1 && !PadCombo_L2 && !PadCombo_R2 && !PadCombo_L3 && !PadCombo_R3 && !PadCombo_Start && !PadCombo_Select)
   {
     analog_pressed = false;
