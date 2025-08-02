@@ -1955,13 +1955,8 @@ struct retro_core_option_v2_definition option_defs_us[] = {
   {"swanstation_TextureReplacements_EnableVRAMWriteReplacements",
    "Enable VRAM Write Texture Replacement",
    NULL,
-#ifdef WIN32
-   "Replace VRAM write textures with DuckStation formatted texture packs from the swanstation\textures folder inside "
-   "the RetroArch system directory. Currently only works with the D3D11 & Vulkan renderers.",
-#else
-   "Replace VRAM write textures with DuckStation formatted texture packs from the swanstation/textures folder inside "
-   "the RetroArch system directory. Currently only works with the Vulkan renderer.",
-#endif
+   "Replace 'VRAM write textures' with DuckStation-formatted texture packs from the 'swanstation/textures' folder inside "
+   "the frontend's system directory. This only works with the Vulkan and D3D11 (where available) renderers.",
    NULL,
    "advanced",
    {
