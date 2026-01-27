@@ -14,10 +14,10 @@ add_library(libchdr
   src/libchdr_huffman.c
 )
 
-target_include_directories(libchdr PUBLIC 
+target_include_directories(libchdr PUBLIC
 	"${CMAKE_CURRENT_SOURCE_DIR}/include"
 	"${CMAKE_CURRENT_SOURCE_DIR}/../libretro-common/include"
 	)
 target_compile_definitions(libchdr PRIVATE -D__LIBRETRO__)
-target_link_libraries(libchdr PRIVATE zlib lzma)
+target_link_libraries(libchdr PRIVATE zlib lzma zstd)
 

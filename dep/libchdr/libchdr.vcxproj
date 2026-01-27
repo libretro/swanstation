@@ -12,6 +12,9 @@
     <ProjectReference Include="..\zlib\zlib.vcxproj">
       <Project>{7ff9fdb9-d504-47db-a16a-b08071999620}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\zstd\zstd.vcxproj">
+      <Project>{73EE0C55-6FFE-44E7-9C12-BAA52434A797}</Project>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -41,7 +44,7 @@
     <ClCompile>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <PreprocessorDefinitions>FLAC__NO_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)dep\zlib\include;$(SolutionDir)dep\lzma\include;$(SolutionDir)dep\libFLAC\include;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dep\zlib\include;$(SolutionDir)dep\lzma\include;$(SolutionDir)dep\libFLAC\include;$(ProjectDir)include;$(SolutionDir)dep\zstd\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
 
