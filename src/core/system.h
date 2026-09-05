@@ -91,7 +91,8 @@ bool Boot(const SystemBootParameters& params);
 void Reset();
 void Shutdown();
 
-bool LoadState(ByteStream* state, bool is_memory_state = false);
+bool LoadState(ByteStream* state, bool is_memory_state = false, const char* media_path = nullptr,
+               uint32_t media_subimage_index = 0);
 bool SaveState(ByteStream* state);
 
 /// Recreates the GPU component, saving/loading the state so it is preserved. Call when the GPU renderer changes.
