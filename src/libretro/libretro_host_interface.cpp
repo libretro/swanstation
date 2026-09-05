@@ -410,6 +410,11 @@ void HostInterface::GetGameInfo(const char* path, CDImage* image, std::string* c
 {
   // Just use the filename for now... we don't have the game list. Unless we can pull this from the frontend somehow?
   *title = FileSystem::GetFileTitleFromPath(path);
+  if (g_settings.memory_card_use_playlist_title && !m_disk_control_info.has_sub_images &&
+      !m_disk_control_info.sub_images_parent_path.empty())
+  {
+    *title = FileSystem::GetFileTitleFromPath(m_disk_control_info.sub_images_parent_path);
+  }
 
   if (image)
     *code = System::GetGameCodeForImage(image, true);
@@ -759,7 +764,8 @@ bool HostInterface::retro_load_game(const struct retro_game_info* game)
         return false;
       }
 
-      P_THIS->m_disk_control_info.has_sub_images         = true;
+      const char* extension = std::strrchr(parent_path.c_str(), '.');
+      P_THIS->m_disk_control_info.has_sub_images = !extension || StringUtil::Strcasecmp(extension, ".m3u") != 0;
       P_THIS->m_disk_control_info.image_index            = System::GetMediaSubImageIndex();
       P_THIS->m_disk_control_info.image_count            = System::GetMediaSubImageCount();
       P_THIS->m_disk_control_info.sub_images_parent_path = parent_path;
