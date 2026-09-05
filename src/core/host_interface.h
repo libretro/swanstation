@@ -49,6 +49,7 @@ public:
   struct DiskControlInfo
   {
     bool has_sub_images;
+    bool ejected;
     uint32_t initial_image_index;
     uint32_t image_index;
     uint32_t image_count;

@@ -32,6 +32,7 @@ public:
 
   void InsertMedia(std::unique_ptr<CDImage> media);
   std::unique_ptr<CDImage> RemoveMedia(bool for_disc_swap);
+  void SetShellOpen(bool opened) { m_shell_open = opened; }
 
   void CPUClockChanged();
 
@@ -373,6 +374,8 @@ private:
   std::array<SectorBuffer, NUM_SECTOR_BUFFERS> m_sector_buffers;
 
   CDROMAsyncReader m_reader;
+  // The status bit stays latched until Getstat acknowledges a closed shell.
+  bool m_shell_open = false;
 
   // two 16-bit samples packed in 32-bits
   HeapFIFOQueue<uint32_t, AUDIO_FIFO_SIZE> m_audio_fifo;

@@ -354,6 +354,7 @@ bool HostInterface::Initialize()
 {
   /* Reset disk control info struct */
   P_THIS->m_disk_control_info.has_sub_images      = false;
+  P_THIS->m_disk_control_info.ejected             = false;
   P_THIS->m_disk_control_info.initial_image_index = 0;
   P_THIS->m_disk_control_info.image_index         = 0;
   P_THIS->m_disk_control_info.image_count         = 0;
@@ -380,6 +381,7 @@ void HostInterface::Shutdown()
 
   /* Reset disk control info struct */
   P_THIS->m_disk_control_info.has_sub_images      = false;
+  P_THIS->m_disk_control_info.ejected             = false;
   P_THIS->m_disk_control_info.initial_image_index = 0;
   P_THIS->m_disk_control_info.image_index         = 0;
   P_THIS->m_disk_control_info.image_count         = 0;
@@ -704,6 +706,7 @@ bool HostInterface::retro_load_game(const struct retro_game_info* game)
   if (game && game->path)
     bp->filename = game->path;
   bp->media_playlist_index = P_THIS->m_disk_control_info.initial_image_index;
+  m_disk_control_info = {};
   bp->force_software_renderer = !m_hw_render_callback_valid;
 
   struct retro_input_descriptor desc[] = {
@@ -952,7 +955,12 @@ bool HostInterface::retro_unserialize(const void* data, size_t size)
   }
 
   std::unique_ptr<ByteStream> stream = ByteStream_CreateReadOnlyMemoryStream(data, static_cast<uint32_t>(size));
-  return System::LoadState(stream.get(), is_memory_state);
+  if (!System::LoadState(stream.get(), is_memory_state))
+    return false;
+
+  m_disk_control_info.ejected = !System::HasMedia();
+  System::SetMediaTrayOpen(m_disk_control_info.ejected);
+  return true;
 }
 
 void* HostInterface::retro_get_memory_data(unsigned id)
@@ -2202,54 +2210,52 @@ bool HostInterface::DiskControlSetEjectState(bool ejected)
   if (System::IsShutdown())
     return false;
 
+  DiskControlInfo& info = P_THIS->m_disk_control_info;
+  if (info.ejected == ejected)
+    return true;
+
   if (ejected)
   {
-    if (!System::HasMedia())
-      return false;
-
     System::RemoveMedia();
   }
-  else
+  else if (info.image_index < info.image_count)
   {
-    if (System::HasMedia())
-      return false;
-
-    if (P_THIS->m_disk_control_info.has_sub_images)
+    if (info.has_sub_images)
     {
-      if (!System::InsertMedia(P_THIS->m_disk_control_info.sub_images_parent_path.c_str()))
+      if (!System::InsertMedia(info.sub_images_parent_path.c_str()))
         return false;
-
-      if (!System::SwitchMediaSubImage(P_THIS->m_disk_control_info.image_index))
+      if (!System::SwitchMediaSubImage(info.image_index))
+      {
+        System::RemoveMedia();
         return false;
+      }
     }
-    else if (!System::InsertMedia(P_THIS->m_disk_control_info.image_paths[P_THIS->m_disk_control_info.image_index].c_str()))
+    else if (!System::InsertMedia(info.image_paths[info.image_index].c_str()))
       return false;
   }
 
+  info.ejected = ejected;
+  System::SetMediaTrayOpen(ejected);
   return true;
 }
 
 bool HostInterface::DiskControlGetEjectState()
 {
-  if (System::IsShutdown())
-    return false;
-
-  return !System::HasMedia();
+  return !System::IsShutdown() && P_THIS->m_disk_control_info.ejected;
 }
 
 unsigned HostInterface::DiskControlGetImageIndex()
 {
-  return (unsigned)P_THIS->m_disk_control_info.image_index;
+  return P_THIS->m_disk_control_info.image_index;
 }
 
 bool HostInterface::DiskControlSetImageIndex(unsigned index)
 {
-  if (System::IsShutdown() ||
-      System::HasMedia() ||
-      (index >= P_THIS->m_disk_control_info.image_count))
+  DiskControlInfo& info = P_THIS->m_disk_control_info;
+  if (System::IsShutdown() || !info.ejected || (index < info.image_count && info.image_paths[index].empty()))
     return false;
 
-  P_THIS->m_disk_control_info.image_index = (uint32_t)index;
+  info.image_index = std::min(index, info.image_count);
   return true;
 }
 
@@ -2266,8 +2272,7 @@ bool HostInterface::DiskControlReplaceImageIndex(unsigned index, const retro_gam
 #define CASE_COMPARE strcasecmp
 #endif
 
-  if (System::IsShutdown() ||
-      System::HasMedia() ||
+  if (System::IsShutdown() || !P_THIS->m_disk_control_info.ejected ||
       (index >= P_THIS->m_disk_control_info.image_count))
     return false;
 
@@ -2280,7 +2285,9 @@ bool HostInterface::DiskControlReplaceImageIndex(unsigned index, const retro_gam
     /* Remove specified image */
     P_THIS->m_disk_control_info.image_count--;
 
-    if (index < P_THIS->m_disk_control_info.image_index)
+    if (index == P_THIS->m_disk_control_info.image_index)
+      P_THIS->m_disk_control_info.image_index = P_THIS->m_disk_control_info.image_count;
+    else if (index < P_THIS->m_disk_control_info.image_index)
       P_THIS->m_disk_control_info.image_index--;
 
     P_THIS->m_disk_control_info.image_paths.erase(
@@ -2320,6 +2327,8 @@ bool HostInterface::DiskControlAddImageIndex()
   if (P_THIS->m_disk_control_info.has_sub_images)
     return false;
 
+  if (P_THIS->m_disk_control_info.image_index == P_THIS->m_disk_control_info.image_count)
+    P_THIS->m_disk_control_info.image_index++;
   P_THIS->m_disk_control_info.image_count++;
   P_THIS->m_disk_control_info.image_paths.push_back("");
   P_THIS->m_disk_control_info.image_labels.push_back("");
