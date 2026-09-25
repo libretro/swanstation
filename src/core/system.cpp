@@ -79,7 +79,8 @@ static std::string GetGameHashCodeForImage(CDImage* cdi);
 static std::string GetExecutableNameForImage(CDImage* cdi);
 static void UpdatePerGameMemoryCards();
 
-static bool DoLoadState(ByteStream* stream, bool force_software_renderer, bool update_display, bool is_memory_state);
+static bool DoLoadState(ByteStream* stream, bool force_software_renderer, bool update_display, bool is_memory_state,
+                        const char* media_path = nullptr, uint32_t media_subimage_index = 0);
 static bool DoState(StateWrapper& sw, HostDisplayTexture** host_texture, bool update_display, bool is_memory_state);
 static void DoRunFrame();
 static bool CreateGPU(GPURenderer renderer);
@@ -954,15 +955,16 @@ void Reset()
   g_gpu->ResetGraphicsAPIState();
 }
 
-bool LoadState(ByteStream* state, bool is_memory_state)
+bool LoadState(ByteStream* state, bool is_memory_state, const char* media_path, uint32_t media_subimage_index)
 {
   if (IsShutdown())
     return false;
 
-  return DoLoadState(state, false, false, is_memory_state);
+  return DoLoadState(state, false, false, is_memory_state, media_path, media_subimage_index);
 }
 
-bool DoLoadState(ByteStream* state, bool force_software_renderer, bool update_display, bool is_memory_state)
+bool DoLoadState(ByteStream* state, bool force_software_renderer, bool update_display, bool is_memory_state,
+                 const char* media_path, uint32_t media_subimage_index)
 {
   SAVE_STATE_HEADER header;
   if (!state->Read2(&header, sizeof(header)))
@@ -992,39 +994,40 @@ bool DoLoadState(ByteStream* state, bool force_software_renderer, bool update_di
   Common::Error error;
   std::string media_filename;
   std::unique_ptr<CDImage> media;
+  if (media_path)
+  {
+    media_filename = media_path;
+    header.media_filename_length = static_cast<uint32_t>(media_filename.size());
+    header.media_subimage_index = media_subimage_index;
+  }
   if (header.media_filename_length > 0)
   {
-    media_filename.resize(header.media_filename_length);
-    if (!state->SeekAbsolute(header.offset_to_media_filename) ||
-        !state->Read2(media_filename.data(), header.media_filename_length))
+    if (!media_path)
     {
-      return false;
+      if (header.media_filename_length > state->GetSize())
+        return false;
+      media_filename.resize(header.media_filename_length);
+      if (!state->SeekAbsolute(header.offset_to_media_filename) ||
+          !state->Read2(media_filename.data(), header.media_filename_length))
+      {
+        return false;
+      }
     }
 
-    std::unique_ptr<CDImage> old_media = g_cdrom.RemoveMedia(false);
-    if (old_media && old_media->GetFileName() == media_filename)
+    if (g_cdrom.HasMedia() && g_cdrom.GetMediaFileName() == media_filename)
     {
       Log_InfoPrintf("Re-using same media '%s'", media_filename.c_str());
-      media = std::move(old_media);
+      media = g_cdrom.RemoveMedia(false);
     }
     else
     {
       media = OpenCDImage(media_filename.c_str(), &error, false, ShouldCheckForImagePatches());
       if (!media)
       {
-        if (old_media)
-        {
-          Log_InfoPrintf("Failed to open CD image from save state '%s': %s. Using existing image '%s', this may result in instability.",
-                         media_filename.c_str(), error.GetCodeAndMessage().GetCharArray(), old_media->GetFileName().c_str());
-          media = std::move(old_media);
-        }
-        else
-        {
-          g_host_interface->ReportFormattedError(
-            g_host_interface->TranslateString("System", "Failed to open CD image '%s' used by save state: %s."),
-            media_filename.c_str(), error.GetCodeAndMessage().GetCharArray());
-          return false;
-        }
+        g_host_interface->ReportFormattedError(
+          g_host_interface->TranslateString("System", "Failed to open CD image '%s' used by save state: %s."),
+          media_filename.c_str(), error.GetCodeAndMessage().GetCharArray());
+        return false;
       }
     }
   }
