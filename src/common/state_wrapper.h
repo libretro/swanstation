@@ -150,6 +150,13 @@ public:
 
     if (m_mode == Mode::Read)
     {
+      if (m_error || size > CAPACITY)
+      {
+        m_error = true;
+        data->Clear();
+        return;
+      }
+
       T* temp = new T[size];
       DoArray(temp, size);
       data->Clear();
