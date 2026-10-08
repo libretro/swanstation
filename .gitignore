@@ -50,3 +50,6 @@ Generated Files
 *.o
 *.d
 /swanstation_libretro.so
+
+# test harness
+__pycache__/

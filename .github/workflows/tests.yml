@@ -1,0 +1,90 @@
+name: Tests
+
+# Runs the core headless with test ROMs in place of the BIOS (see tests/run_tests.sh):
+# MDEC decode and long poly-line results against expected values, a fuzzer that
+# pokes the hardware registers from the emulated CPU, and corrupted save states.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  release:
+    name: Release build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install test ROM toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang lld llvm
+
+      - name: Build
+        run: make -f Makefile.libretro -j$(nproc)
+
+      - name: MDEC decode and poly-lines
+        run: |
+          for cpu in Recompiler CachedInterpreter Interpreter; do
+            FE_CPU=$cpu tests/run_tests.sh swanstation_libretro.so mdec
+            FE_CPU=$cpu tests/run_tests.sh swanstation_libretro.so polyline
+          done
+
+      - name: Register fuzzer
+        run: tests/run_tests.sh swanstation_libretro.so regfuzz 1 100 300
+
+      - name: Save state fuzzer
+        run: tests/run_tests.sh swanstation_libretro.so statefuzz 1 4 150
+
+  sanitizers:
+    name: ASan and UBSan
+    runs-on: ubuntu-24.04
+    env:
+      FRONTEND_CFLAGS: -fsanitize=address,undefined
+      # The fastmem fault handler and ASan both want SIGSEGV.
+      FE_FASTMEM: Disabled
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install test ROM toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang lld llvm
+
+      - name: Build
+        run: make -f Makefile.libretro -j$(nproc) SANITIZER=address,undefined
+
+      - name: MDEC decode and poly-lines
+        run: |
+          for cpu in Recompiler Interpreter; do
+            FE_CPU=$cpu tests/run_tests.sh swanstation_libretro.so mdec
+            FE_CPU=$cpu tests/run_tests.sh swanstation_libretro.so polyline
+          done
+
+      - name: Register fuzzer
+        run: |
+          FE_CPU=Recompiler tests/run_tests.sh swanstation_libretro.so regfuzz 1 40 300
+          FE_CPU=Interpreter tests/run_tests.sh swanstation_libretro.so regfuzz 41 60 300
+
+      - name: Save state fuzzer
+        run: |
+          FE_CPU=Recompiler tests/run_tests.sh swanstation_libretro.so statefuzz 1 4 150
+          FE_CPU=Interpreter tests/run_tests.sh swanstation_libretro.so statefuzz 5 8 150
+
+  thread-sanitizer:
+    name: TSan
+    runs-on: ubuntu-24.04
+    env:
+      FRONTEND_CFLAGS: -fsanitize=thread
+      TSAN_OPTIONS: halt_on_error=1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install test ROM toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang lld llvm
+
+      - name: Build
+        run: make -f Makefile.libretro -j$(nproc) SANITIZER=thread
+
+      - name: GPU and CD-ROM threads under the fuzzers
+        run: |
+          tests/run_tests.sh swanstation_libretro.so mdec
+          tests/run_tests.sh swanstation_libretro.so regfuzz 1 10 200
+          tests/run_tests.sh swanstation_libretro.so statefuzz 1 2 100
