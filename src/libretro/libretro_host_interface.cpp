@@ -2337,6 +2337,21 @@ bool HostInterface::DiskControlSetInitialImage(unsigned index, const char* path)
   return true;
 }
 
+bool HostInterface::IsKnownMediaPath(const std::string& path) const
+{
+  size_t i;
+  if (path.empty())
+    return false;
+  if (m_disk_control_info.has_sub_images && path == m_disk_control_info.sub_images_parent_path)
+    return true;
+  for (i = 0; i < m_disk_control_info.image_paths.size(); i++)
+  {
+    if (path == m_disk_control_info.image_paths[i])
+      return true;
+  }
+  return false;
+}
+
 bool HostInterface::DiskControlGetImagePath(unsigned index, char* path, size_t len)
 {
   if ((index >= P_THIS->m_disk_control_info.image_count) ||

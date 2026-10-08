@@ -81,6 +81,9 @@ public:
   void ResetSystem();
   void DestroySystem();
 
+  /* Whether path is content the frontend handed us (the loaded game or a disk control entry). */
+  bool IsKnownMediaPath(const std::string& path) const;
+
   void ReportError(const char* message);
   void ReportMessage(const char* message);
   bool ConfirmMessage(const char* message);

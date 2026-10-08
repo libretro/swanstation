@@ -1011,7 +1011,11 @@ bool DoLoadState(ByteStream* state, bool force_software_renderer, bool update_di
     }
     else
     {
-      media = OpenCDImage(media_filename.c_str(), &error, false, ShouldCheckForImagePatches());
+      /* The path comes from the state file; only open content the frontend gave us. */
+      if (media_filename.find('\0') == std::string::npos && g_host_interface->IsKnownMediaPath(media_filename))
+        media = OpenCDImage(media_filename.c_str(), &error, false, ShouldCheckForImagePatches());
+      else
+        error.SetMessage("not part of the loaded content");
       if (!media)
       {
         if (old_media)
