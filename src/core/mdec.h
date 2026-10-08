@@ -103,7 +103,6 @@ private:
   uint32_t ReadDataRegister();
   void WriteCommandRegister(uint32_t value);
   void Execute();
-  void ExecuteCommands();
 
   bool HandleDecodeMacroblockCommand();
   void HandleSetQuantTableCommand();
@@ -134,10 +133,6 @@ private:
   InlineFIFOQueue<uint16_t, DATA_IN_FIFO_SIZE / sizeof(uint16_t)> m_data_in_fifo;
   InlineFIFOQueue<uint32_t, DATA_OUT_FIFO_SIZE / sizeof(uint32_t)> m_data_out_fifo;
   State m_state = State::Idle;
-
-  /* UpdateStatus() can start a DMA that writes more data while a command is being processed. */
-  bool m_executing = false;
-  bool m_execute_pending = false;
   uint32_t m_remaining_halfwords = 0;
 
   std::array<uint8_t, 64> m_iq_uv{};

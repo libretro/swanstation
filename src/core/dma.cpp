@@ -265,17 +265,16 @@ bool DMA::TransferChannel(Channel channel)
   bool result = DoTransferChannel(channel);
   m_transfer_in_progress = false;
 
-  /* Each channel runs at most once here; a channel's own transfer loop already follows its request line. */
-  uint32_t channels_run = 1u << static_cast<uint32_t>(channel);
+  /* A request raised during a transfer has no later edge, so every transferable channel runs again,
+   * including this one (MDEC in resumes once MDEC out has drained the decoder). */
   while (result && m_transfer_deferred)
   {
     m_transfer_deferred = false;
     for (uint32_t i = 0; i < NUM_CHANNELS && result; i++)
     {
-      if ((channels_run & (1u << i)) || !CanTransferChannel(static_cast<Channel>(i), false))
+      if (!CanTransferChannel(static_cast<Channel>(i), false))
         continue;
 
-      channels_run |= 1u << i;
       m_transfer_in_progress = true;
       result = DoTransferChannel(static_cast<Channel>(i));
       m_transfer_in_progress = false;

@@ -204,23 +204,6 @@ void MDEC::WriteCommandRegister(uint32_t value)
 
 void MDEC::Execute()
 {
-  if (m_executing)
-  {
-    m_execute_pending = true;
-    return;
-  }
-
-  m_executing = true;
-  do
-  {
-    m_execute_pending = false;
-    ExecuteCommands();
-  } while (m_execute_pending);
-  m_executing = false;
-}
-
-void MDEC::ExecuteCommands()
-{
   for (;;)
   {
     switch (m_state)
