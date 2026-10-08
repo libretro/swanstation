@@ -662,15 +662,14 @@ void GPU_HW_D3D11::UpdateSettings()
       // the D3D12 chroma partial-clear path.
       if (g_settings.gpu_shader_precompile_mode == GPUShaderPrecompileMode::Lazy)
       {
-        m_shader_compile_thread_quit.store(false, std::memory_order_relaxed);
-        m_shader_compile_thread = std::thread(&GPU_HW_D3D11::ShaderCompileThreadEntryPoint, this);
+        StartShaderCompileThread();
       }
     }
     else if (only_dim_changed)
     {
       // Filter changed but nothing in non_dim_diff (and the cbuffer-
       // only members in dim_diff don't move HLSL, so this is
-      // effectively "only filter changed"). m_batch_pixel_shaders is
+      // effectively "only filter changed"). m_batch_pixel_shader_fastpath is
       // filter-dimensioned: the previous filter's sub-cube remains
       // populated and reachable, so DestroyShaders would just throw
       // away valid pixel shaders.
@@ -1161,7 +1160,7 @@ bool GPU_HW_D3D11::CompileShaders()
     return false;
   // Lazy worker launch lives inside PrecompileBatchShaders now -
   // safe to start before the non-batch builds below because the
-  // worker only walks m_batch_pixel_shaders.
+  // worker only walks m_batch_pixel_shader_fastpath.
 
   {
     const auto bc = D3DCommon::EmbeddedShaders::PickCopyFS();
@@ -1309,14 +1308,22 @@ bool GPU_HW_D3D11::CompileDownsampleShaders()
   return true;
 }
 
+void GPU_HW_D3D11::StartShaderCompileThread()
+{
+  retro_atomic_store_release_int(&m_shader_compile_thread_quit, 0);
+  m_shader_compile_thread = sthread_create(
+    [](void* self) { static_cast<GPU_HW_D3D11*>(self)->ShaderCompileThreadEntryPoint(); }, this);
+}
+
 void GPU_HW_D3D11::StopShaderCompileThread()
 {
-  if (!m_shader_compile_thread.joinable())
+  if (!m_shader_compile_thread)
     return;
 
-  m_shader_compile_thread_quit.store(true, std::memory_order_relaxed);
-  m_shader_compile_thread.join();
-  m_shader_compile_thread_quit.store(false, std::memory_order_relaxed);
+  retro_atomic_store_release_int(&m_shader_compile_thread_quit, 1);
+  sthread_join(m_shader_compile_thread);
+  m_shader_compile_thread = nullptr;
+  retro_atomic_store_release_int(&m_shader_compile_thread_quit, 0);
 }
 
 void GPU_HW_D3D11::ShaderCompileThreadEntryPoint()
@@ -1331,8 +1338,8 @@ void GPU_HW_D3D11::ShaderCompileThreadEntryPoint()
   // Walk the matrix in (render, texture, dither, interlace) order
   // and call GetBatchPixelShader on each cell. Each call wraps the
   // pre-baked DXBC blob into an ID3D11PixelShader via
-  // CreatePixelShader lock-free and takes m_batch_shader_mutex only
-  // for the publish step (microsecond window). No D3DCompile runs -
+  // CreatePixelShader and publishes it with a compare-exchange on
+  // the slot. No D3DCompile runs -
   // the batch FS set is fully pre-baked (f2620c1), so per-cell cost
   // is just the CreatePixelShader wrap. The main thread can race
   // ahead and pre-fill any slot it actually needs at draw time
@@ -1375,7 +1382,7 @@ void GPU_HW_D3D11::ShaderCompileThreadEntryPoint()
       {
         for (uint8_t interlacing = 0; interlacing < 2; interlacing++)
         {
-          if (m_shader_compile_thread_quit.load(std::memory_order_relaxed))
+          if (retro_atomic_load_acquire_int(&m_shader_compile_thread_quit))
             return;
 
           GetBatchPixelShader(cur_filter, render_mode, texture_mode, static_cast<bool>(dithering),
@@ -1390,10 +1397,7 @@ ID3D11PixelShader* GPU_HW_D3D11::GetBatchPixelShader(GPUTextureFilter filter, ui
 {
   // Apply the Reserved_*Direct16Bit dedup at the matrix level. The
   // shader source for texture_mode 3 / 7 is byte-for-byte identical
-  // to 2 / 6 after macro expansion; storing the same ComPtr in both
-  // slots is safe (refcounted), and storing the same raw pointer in
-  // both atomic fast-path slots is safe because the ComPtr keeps the
-  // shader alive for the lifetime of the GPU backend.
+  // to 2 / 6 after macro expansion, so they share the canonical slot.
   const uint8_t lookup_mode = (texture_mode == static_cast<uint8_t>(GPUTextureMode::Reserved_Direct16Bit))    ? 2u :
                          (texture_mode == static_cast<uint8_t>(GPUTextureMode::Reserved_RawDirect16Bit)) ? 6u :
                                                                                                       texture_mode;
@@ -1403,16 +1407,13 @@ ID3D11PixelShader* GPU_HW_D3D11::GetBatchPixelShader(GPUTextureFilter filter, ui
   // If it's filled (the worker reached it first, or an earlier
   // main-thread fault-in did), we're done with no mutex / kernel
   // call / contention against the worker.
-  std::atomic<ID3D11PixelShader*>& fast_slot =
-    m_batch_pixel_shader_fastpath[filter_idx][render_mode][texture_mode][static_cast<uint8_t>(dithering)][static_cast<uint8_t>(interlacing)];
-  ID3D11PixelShader* existing = fast_slot.load(std::memory_order_acquire);
+  AtomicSlot<ID3D11PixelShader*>& fast_slot =
+    m_batch_pixel_shader_fastpath[filter_idx][render_mode][lookup_mode][static_cast<uint8_t>(dithering)][static_cast<uint8_t>(interlacing)];
+  ID3D11PixelShader* existing = fast_slot.Load();
   if (existing)
     return existing;
 
-  // Slow path. Build the ID3D11PixelShader WITHOUT
-  // m_batch_shader_mutex held - that mutex was the head-of-line
-  // blocking culprit in the pre-fix design.
-  // ID3D11Device::CreatePixelShader is documented free-threaded by
+  // Slow path. ID3D11Device::CreatePixelShader is documented free-threaded by
   // Microsoft, so multiple threads can wrap different pre-baked DXBC
   // blobs into ID3D11PixelShader objects here in parallel. Two
   // threads racing to wrap the SAME slot both produce equivalent
@@ -1533,45 +1534,9 @@ ID3D11PixelShader* GPU_HW_D3D11::GetBatchPixelShader(GPUTextureFilter filter, ui
     return nullptr;
   }
 
-  // Publish step. Take the mutex briefly to coordinate writes into
-  // m_batch_pixel_shaders (ComPtr ownership) and the fastpath
-  // raw-pointer mirror. Double-check the fast slot under the lock
-  // so a race winner doesn't get displaced.
-  std::lock_guard<std::mutex> lock(m_batch_shader_mutex);
-
-  existing = fast_slot.load(std::memory_order_relaxed);
-  if (existing)
-    return existing;
-
-  ComPtr<ID3D11PixelShader>& canonical_slot =
-    m_batch_pixel_shaders[filter_idx][render_mode][lookup_mode][static_cast<uint8_t>(dithering)][static_cast<uint8_t>(interlacing)];
-
-  if (!canonical_slot)
-  {
-    // We won the race on the canonical slot - take ownership of
-    // our freshly-compiled shader.
-    canonical_slot = fresh;
-    m_batch_pixel_shader_fastpath[filter_idx][render_mode][lookup_mode][static_cast<uint8_t>(dithering)][static_cast<uint8_t>(interlacing)].store(
-      canonical_slot.Get(), std::memory_order_release);
-  }
-  // Else: canonical_slot was already filled by another racing
-  // thread. Our `fresh` ComPtr releases its ID3D11PixelShader when
-  // it falls out of scope below, and we use the already-published
-  // canonical_slot.
-
-  if (lookup_mode != texture_mode)
-  {
-    ComPtr<ID3D11PixelShader>& dup_slot =
-      m_batch_pixel_shaders[filter_idx][render_mode][texture_mode][static_cast<uint8_t>(dithering)][static_cast<uint8_t>(interlacing)];
-    if (!dup_slot)
-      dup_slot = canonical_slot;
-  }
-
-  // Publish the caller's slot. For the canonical case this is a
-  // redundant store relative to the one above; for the dup case
-  // this is what makes the dup slot fast-path-reachable.
-  fast_slot.store(canonical_slot.Get(), std::memory_order_release);
-  return canonical_slot.Get();
+  // Publish step. The loser of a race gets the winner's shader and
+  // drops its own.
+  return PublishComSlot(fast_slot, fresh);
 }
 
 void GPU_HW_D3D11::DestroyShaders()
@@ -1595,24 +1560,15 @@ void GPU_HW_D3D11::DestroyShaders()
   m_uv_quad_vertex_shader.Reset();
   m_screen_quad_vertex_shader.Reset();
 
-  // Clear the atomic fast-path array BEFORE dropping the ComPtr
-  // ownership so a hypothetical concurrent reader couldn't see a
-  // raw pointer pointing to a just-freed shader. By this point the
-  // worker is stopped (StopShaderCompileThread above) and the
-  // runloop isn't drawing (UpdateSettings is the only call site that
-  // goes through DestroyShaders, and it's on the runloop thread
-  // itself), so memory_order_relaxed is sufficient.
-  //
-  // 5-level nesting matches the [filter][render][texture][dither][interlace]
-  // shape of m_batch_pixel_shader_fastpath added in the dim cache port.
+  // The worker is stopped (StopShaderCompileThread above) and the
+  // runloop isn't drawing, so the slots can be released in place.
   for (auto& a : m_batch_pixel_shader_fastpath)
     for (auto& b : a)
       for (auto& c : b)
         for (auto& d : c)
           for (auto& slot : d)
-            slot.store(nullptr, std::memory_order_relaxed);
+            ReleaseComSlot(slot);
 
-  m_batch_pixel_shaders = {};
   m_batch_vertex_shaders = {};
   m_batch_input_layout.Reset();
 }
@@ -1656,7 +1612,7 @@ bool GPU_HW_D3D11::RebuildDisplayPixelShaders()
 bool GPU_HW_D3D11::PrecompileBatchShaders(ShaderCompileProgressTracker& progress)
 {
   // Walk the current m_texture_filtering sub-cube of
-  // m_batch_pixel_shaders synchronously in Enabled mode; launch the
+  // m_batch_pixel_shader_fastpath synchronously in Enabled mode; launch the
   // background-thread batch-fragment-shader fill in Lazy mode; do
   // nothing in Disabled. Caller is responsible for joining any
   // previous worker (StopShaderCompileThread). There is no shader
@@ -1688,7 +1644,7 @@ bool GPU_HW_D3D11::PrecompileBatchShaders(ShaderCompileProgressTracker& progress
   if (precompile_sync)
   {
     const bool dual_source = m_supports_dual_source_blend;
-    // The dim cache makes m_batch_pixel_shaders filter-dimensioned.
+    // The dim cache makes m_batch_pixel_shader_fastpath filter-dimensioned.
     // precompile_sync walks ONLY the current m_texture_filtering
     // sub-cube, not the full 7-filter matrix - pre-filling six
     // unused sub-cubes would multiply the cold-cache D3DCompile
@@ -1728,11 +1684,10 @@ bool GPU_HW_D3D11::PrecompileBatchShaders(ShaderCompileProgressTracker& progress
     // worker just walks the (render, texture, dither, interlace)
     // matrix in order, calling the same GetBatchPixelShader helper
     // the draw path uses, so any slot the game touches in the
-    // meantime is just skipped here (the recheck under the mutex
-    // sees it's already filled). DestroyShaders signals
+    // meantime is just skipped here (the slot's compare-exchange
+    // finds it already filled). DestroyShaders signals
     // m_shader_compile_thread_quit and joins.
-    m_shader_compile_thread_quit.store(false, std::memory_order_relaxed);
-    m_shader_compile_thread = std::thread(&GPU_HW_D3D11::ShaderCompileThreadEntryPoint, this);
+    StartShaderCompileThread();
   }
 
   return true;
@@ -1847,12 +1802,11 @@ void GPU_HW_D3D11::DrawBatchVertices(BatchRenderMode render_mode, uint32_t base_
 
   // Fetch the batch pixel shader via the lazy helper. In 'Enabled'
   // precompile mode every slot was already filled at CompileShaders
-  // time so this is a fast mutex-protected pointer load. In 'Lazy'
-  // mode this either gets the already-compiled shader (background
-  // thread reached it first) or compiles it now on the main thread
-  // (game raced ahead of the worker). In 'Disabled' mode it always
-  // compiles on miss. The mutex guards both the cache and the
-  // matrix; cost is ~20 ns uncontended per modern std::mutex impl.
+  // time so this is a single acquire load. In 'Lazy' mode this
+  // either gets the already-compiled shader (background thread
+  // reached it first) or compiles it now on the main thread (game
+  // raced ahead of the worker). In 'Disabled' mode it always
+  // compiles on miss.
   //
   // m_texture_filtering selects the active filter's sub-cube. Filter
   // is the outermost dim so a filter toggle in UpdateSettings can

@@ -1,17 +1,6 @@
 #pragma once
-#include "common/event.h"
-#include "common/heap_array.h"
 #include "gpu_types.h"
-#include <atomic>
-#include <condition_variable>
 #include <memory>
-#include <mutex>
-#include <thread>
-
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4324) // warning C4324: 'GPUBackend': structure was padded due to alignment specifier
-#endif
 
 class GPUBackend
 {
@@ -54,33 +43,21 @@ protected:
 
   Common::Rectangle<uint32_t> m_drawing_area{};
 
-  Common::Event m_sync_event;
-  std::atomic_bool m_gpu_thread_sleeping{false};
-  std::atomic_bool m_gpu_loop_done{false};
-  std::thread m_gpu_thread;
   bool m_use_gpu_thread = false;
-
-  std::mutex m_sync_mutex;
-  std::condition_variable m_wake_gpu_thread_cv;
 
   static constexpr uint32_t COMMAND_QUEUE_SIZE = 4 * 1024 * 1024, THRESHOLD_TO_WAKE_GPU = 256;
 
-  HeapArray<uint8_t, COMMAND_QUEUE_SIZE> m_command_fifo_data;
-  alignas(64) std::atomic<uint32_t> m_command_fifo_read_ptr{0};
-  alignas(64) std::atomic<uint32_t> m_command_fifo_write_ptr{0};
-
 private:
-  /// Thread entry point for the GPU worker. Drains the command FIFO until
-  /// m_gpu_loop_done is set.
+  struct ThreadState;
+
+  static void GPUThreadEntryPoint(void* userdata);
   void RunGPULoop();
 
   void* AllocateCommand(GPUBackendCommandType command, uint32_t size);
-  uint32_t GetPendingCommandSize() const;
+  void WaitForSpace(size_t bytes);
   void WakeGPUThread();
   void StartGPUThread();
   void StopGPUThread();
-};
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
+  std::unique_ptr<ThreadState> m_thread;
+};

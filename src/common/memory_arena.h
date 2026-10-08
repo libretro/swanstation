@@ -1,6 +1,5 @@
 #pragma once
 #include "types.h"
-#include <atomic>
 #include <limits>
 #include <optional>
 
@@ -60,7 +59,6 @@ private:
   int m_shmem_fd = -1;
 #endif
 
-  std::atomic_size_t m_num_views{0};
   size_t m_size = 0;
   bool m_writable = false;
   bool m_executable = false;

@@ -1,7 +1,6 @@
 #pragma once
 #include "vulkan_loader.h"
 #include <memory>
-#include <mutex>
 #include <string>
 #include <string_view>
 
@@ -35,6 +34,15 @@ public:
   /// Writes pipeline cache to file, saving all newly compiled pipelines.
   bool FlushPipelineCache();
 
+  /// Creates a private pipeline cache seeded with the current contents, for a thread that
+  /// compiles pipelines concurrently; VK_NULL_HANDLE on failure. Same thread as the
+  /// main cache's users.
+  VkPipelineCache CreateWorkerPipelineCache();
+
+  /// Merges a cache from CreateWorkerPipelineCache() back in and destroys it, once no
+  /// other thread uses it.
+  void MergeWorkerPipelineCache(VkPipelineCache cache);
+
 private:
   ShaderCache();
 
@@ -49,28 +57,6 @@ private:
 
   std::string m_pipeline_cache_filename;
 
-  // Serialises external access to m_pipeline_cache. Per the Vulkan
-  // spec, the pipelineCache parameter to vkCreateGraphicsPipelines /
-  // vkCreateComputePipelines / vkMergePipelineCaches is in the host-
-  // synchronisation parameter list - the application must guarantee
-  // no concurrent use of the same VkPipelineCache. (The
-  // VK_PIPELINE_CACHE_CREATE_EXTERNALLY_SYNCHRONIZED_BIT flag from
-  // Vulkan 1.3 / VK_EXT_pipeline_creation_cache_control would
-  // confirm the contract to the driver; without it the driver is
-  // permitted to assume serial access.)
-  //
-  // Lazy-fault PSO compile helpers in GPU_HW_Vulkan acquire this via
-  // PipelineCacheMutex() around their gpbuilder.Create(...) call.
-  std::mutex m_pipeline_cache_mutex;
-
-public:
-  // Exposed so lazy-fault PSO compile helpers can synchronise their
-  // vkCreateGraphicsPipelines call against any other thread also
-  // creating pipelines with the same VkPipelineCache. Returned
-  // by-reference; lifetime tied to the ShaderCache singleton.
-  std::mutex& PipelineCacheMutex() { return m_pipeline_cache_mutex; }
-
-private:
   VkPipelineCache m_pipeline_cache = VK_NULL_HANDLE;
   bool m_pipeline_cache_dirty = false;
 };

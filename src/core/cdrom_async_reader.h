@@ -2,9 +2,8 @@
 #include "common/cd_image.h"
 #include "types.h"
 #include <array>
-#include <atomic>
-#include <condition_variable>
-#include <thread>
+#include <memory>
+#include <vector>
 
 class CDROMAsyncReader
 {
@@ -22,16 +21,16 @@ public:
   CDROMAsyncReader();
   ~CDROMAsyncReader();
 
-  CDImage::LBA GetLastReadSector() const { return m_buffers[m_buffer_front.load()].lba; }
-  const SectorBuffer& GetSectorBuffer() const { return m_buffers[m_buffer_front.load()].data; }
-  const CDImage::SubChannelQ& GetSectorSubQ() const { return m_buffers[m_buffer_front.load()].subq; }
+  CDImage::LBA GetLastReadSector() const { return m_buffers[m_buffer_front].lba; }
+  const SectorBuffer& GetSectorBuffer() const { return m_buffers[m_buffer_front].data; }
+  const CDImage::SubChannelQ& GetSectorSubQ() const { return m_buffers[m_buffer_front].subq; }
   uint32_t GetReadaheadCount() const { return static_cast<uint32_t>(m_buffers.size()); }
 
   bool HasMedia() const { return static_cast<bool>(m_media); }
   const CDImage* GetMedia() const { return m_media.get(); }
   const std::string& GetMediaFileName() const { return m_media->GetFileName(); }
 
-  bool IsUsingThread() const { return m_read_thread.joinable(); }
+  bool IsUsingThread() const { return static_cast<bool>(m_thread); }
   void StartThread(uint32_t readahead_count = 8);
   void StopThread();
 
@@ -46,31 +45,23 @@ public:
   bool ReadSectorUncached(CDImage::LBA lba, CDImage::SubChannelQ* subq, SectorBuffer* data);
 
 private:
-  void EmptyBuffers();
-  bool ReadSectorIntoBuffer(std::unique_lock<std::mutex>& lock);
+  struct ThreadState;
+  enum class Op : uint8_t;
+
+  static void WorkerThreadEntryPoint(void* userdata);
+  void WorkerThread(ThreadState* t);
+  void RunOnWorker(Op op, CDImage::LBA lba, CDImage::SubChannelQ* subq, SectorBuffer* data,
+                   std::unique_ptr<CDImage>* media);
   void ReadSectorNonThreaded(CDImage::LBA lba);
   bool InternalReadSectorUncached(CDImage::LBA lba, CDImage::SubChannelQ* subq, SectorBuffer* data);
-  void CancelReadahead();
-
-  void WorkerThreadEntryPoint();
 
   std::unique_ptr<CDImage> m_media;
 
-  std::mutex m_mutex;
-  std::thread m_read_thread;
-  std::condition_variable m_do_read_cv;
-  std::condition_variable m_notify_read_complete_cv;
-
-  std::atomic<CDImage::LBA> m_next_position{};
-  std::atomic_bool m_next_position_set{false};
-  std::atomic_bool m_shutdown_flag{true};
-
-  std::atomic_bool m_is_reading{false};
-  std::atomic_bool m_can_readahead{false};
-  std::atomic_bool m_seek_error{false};
-
   std::vector<BufferSlot> m_buffers;
-  std::atomic<uint32_t> m_buffer_front{0};
-  std::atomic<uint32_t> m_buffer_back{0};
-  std::atomic<uint32_t> m_buffer_count{0};
+  uint32_t m_buffer_front = 0;
+
+  /* Without the thread: whether m_buffers holds a sector. */
+  bool m_sector_valid = false;
+
+  std::unique_ptr<ThreadState> m_thread;
 };

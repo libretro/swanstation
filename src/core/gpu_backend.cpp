@@ -1,10 +1,52 @@
+#include "common/lockfree.h"
 #include "gpu_backend.h"
 #include "common/align.h"
+#include "common/log.h"
 #include "common/state_wrapper.h"
-#include "common/timer.h"
 #include "settings.h"
+#include <new>
+#include <retro_spsc.h>
+#include <rthreads/retro_eventcount.h>
+#include <rthreads/rthreads.h>
+Log_SetChannel(GPUBackend);
 
-GPUBackend::GPUBackend() = default;
+struct GPUBackend::ThreadState
+{
+  ThreadState()
+  {
+    retro_atomic_int_init(&quit, 0);
+    retro_atomic_int_init(&syncs_done, 0);
+    if (!retro_spsc_init(&ring, COMMAND_QUEUE_SIZE))
+      throw std::bad_alloc();
+    events_ok = retro_eventcount_init(&work_ec);
+    events_ok = retro_eventcount_init(&space_ec) && events_ok;
+    events_ok = retro_eventcount_init(&sync_ec) && events_ok;
+  }
+
+  ~ThreadState()
+  {
+    retro_eventcount_free(&sync_ec);
+    retro_eventcount_free(&space_ec);
+    retro_eventcount_free(&work_ec);
+    retro_spsc_free(&ring);
+  }
+
+  /* Commands are built in place; one never straddles the end. */
+  retro_spsc_t ring;
+  retro_eventcount_t work_ec;
+  retro_eventcount_t space_ec;
+  retro_eventcount_t sync_ec;
+  retro_atomic_int_t quit;
+  retro_atomic_int_t syncs_done;
+  sthread_t* thread = nullptr;
+
+  /* Producer-only. */
+  size_t notified_head = 0;
+  int syncs_queued = 0;
+  bool events_ok = false;
+};
+
+GPUBackend::GPUBackend() : m_thread(std::make_unique<ThreadState>()) {}
 
 GPUBackend::~GPUBackend() = default;
 
@@ -95,47 +137,71 @@ void* GPUBackend::AllocateCommand(GPUBackendCommandType command, uint32_t size)
   // Ensure size is a multiple of 4 so we don't end up with an unaligned command.
   size = Common::AlignUpPow2(size, 4);
 
-  for (;;)
+  retro_spsc_t* q = &m_thread->ring;
+  GPUBackendCommand* cmd;
+  if (!m_use_gpu_thread)
   {
-    uint32_t read_ptr = m_command_fifo_read_ptr.load();
-    uint32_t write_ptr = m_command_fifo_write_ptr.load();
-    if (read_ptr > write_ptr)
-    {
-      uint32_t available_size = read_ptr - write_ptr;
-      while (available_size < (size + sizeof(GPUBackendCommandType)))
-      {
-        WakeGPUThread();
-        read_ptr = m_command_fifo_read_ptr.load();
-        available_size = (read_ptr > write_ptr) ? (read_ptr - write_ptr) : (COMMAND_QUEUE_SIZE - write_ptr);
-      }
-    }
-    else
-    {
-      const uint32_t available_size = COMMAND_QUEUE_SIZE - write_ptr;
-      if ((size + sizeof(GPUBackendCommand)) > available_size)
-      {
-        // allocate a dummy command to wrap the buffer around
-        GPUBackendCommand* dummy_cmd = reinterpret_cast<GPUBackendCommand*>(&m_command_fifo_data[write_ptr]);
-        dummy_cmd->type = GPUBackendCommandType::Wraparound;
-        dummy_cmd->size = available_size;
-        dummy_cmd->params.bits = 0;
-        m_command_fifo_write_ptr.store(0);
-        continue;
-      }
-    }
-
-    GPUBackendCommand* cmd = reinterpret_cast<GPUBackendCommand*>(&m_command_fifo_data[write_ptr]);
-    cmd->type = command;
-    cmd->size = size;
-    return cmd;
+    cmd = reinterpret_cast<GPUBackendCommand*>(q->buffer);
   }
+  else
+  {
+    for (;;)
+    {
+      const size_t head = retro_atomic_load_relaxed_size(&q->head);
+      const size_t offset = head & (q->capacity - 1);
+      const size_t to_end = q->capacity - offset;
+
+      /* Always leave room for a wraparound marker before the end. */
+      const bool wrap = (size + sizeof(GPUBackendCommand)) > to_end;
+      const size_t needed = wrap ? to_end : size;
+      if (q->capacity - (head - q->cached_tail) < needed)
+      {
+        q->cached_tail = retro_atomic_load_acquire_size(&q->tail);
+        if (q->capacity - (head - q->cached_tail) < needed)
+        {
+          WaitForSpace(needed);
+          continue;
+        }
+      }
+
+      cmd = reinterpret_cast<GPUBackendCommand*>(q->buffer + offset);
+      if (!wrap)
+        break;
+
+      cmd->type = GPUBackendCommandType::Wraparound;
+      cmd->size = static_cast<uint32_t>(to_end);
+      cmd->params.bits = 0;
+      retro_spsc_write_end(q, to_end);
+    }
+  }
+
+  cmd->type = command;
+  cmd->size = size;
+  return cmd;
 }
 
-uint32_t GPUBackend::GetPendingCommandSize() const
+void GPUBackend::WaitForSpace(size_t bytes)
 {
-  const uint32_t read_ptr = m_command_fifo_read_ptr.load();
-  const uint32_t write_ptr = m_command_fifo_write_ptr.load();
-  return (write_ptr >= read_ptr) ? (write_ptr - read_ptr) : (COMMAND_QUEUE_SIZE - read_ptr + write_ptr);
+  ThreadState* t = m_thread.get();
+  retro_spsc_t* q = &t->ring;
+  const size_t head = retro_atomic_load_relaxed_size(&q->head);
+
+  WakeGPUThread();
+  for (;;)
+  {
+    q->cached_tail = retro_atomic_load_acquire_size(&q->tail);
+    if (q->capacity - (head - q->cached_tail) >= bytes)
+      return;
+
+    const int key = retro_eventcount_prepare_wait(&t->space_ec);
+    q->cached_tail = retro_atomic_load_acquire_size(&q->tail);
+    if (q->capacity - (head - q->cached_tail) >= bytes)
+    {
+      retro_eventcount_cancel_wait(&t->space_ec);
+      return;
+    }
+    retro_eventcount_commit_wait(&t->space_ec, key);
+  }
 }
 
 void GPUBackend::PushCommand(GPUBackendCommand* cmd)
@@ -148,27 +214,40 @@ void GPUBackend::PushCommand(GPUBackendCommand* cmd)
   }
   else
   {
-    const uint32_t new_write_ptr = m_command_fifo_write_ptr.fetch_add(cmd->size) + cmd->size;
-    (void)new_write_ptr;
-    if (GetPendingCommandSize() >= THRESHOLD_TO_WAKE_GPU)
+    retro_spsc_write_end(&m_thread->ring, cmd->size);
+    if ((retro_atomic_load_relaxed_size(&m_thread->ring.head) - m_thread->notified_head) >= THRESHOLD_TO_WAKE_GPU)
       WakeGPUThread();
   }
 }
 
 void GPUBackend::WakeGPUThread()
 {
-  std::unique_lock<std::mutex> lock(m_sync_mutex);
-  if (!m_gpu_thread_sleeping.load())
-    return;
-
-  m_wake_gpu_thread_cv.notify_one();
+  m_thread->notified_head = retro_atomic_load_relaxed_size(&m_thread->ring.head);
+  retro_eventcount_notify(&m_thread->work_ec);
 }
 
 void GPUBackend::StartGPUThread()
 {
-  m_gpu_loop_done.store(false);
+  ThreadState* t = m_thread.get();
+  if (!t->events_ok)
+  {
+    Log_ErrorPrint("GPU thread unavailable, rendering on the CPU thread");
+    return;
+  }
+
+  retro_spsc_clear(&t->ring);
+  t->notified_head = 0;
+  t->syncs_queued = 0;
+  retro_atomic_store_relaxed_int(&t->syncs_done, 0);
+  retro_atomic_store_release_int(&t->quit, 0);
+
   m_use_gpu_thread = true;
-  m_gpu_thread = std::thread(&GPUBackend::RunGPULoop, this);
+  t->thread = sthread_create(&GPUBackend::GPUThreadEntryPoint, this);
+  if (!t->thread)
+  {
+    Log_ErrorPrint("Failed to create GPU thread, rendering on the CPU thread");
+    m_use_gpu_thread = false;
+  }
 }
 
 void GPUBackend::StopGPUThread()
@@ -176,9 +255,10 @@ void GPUBackend::StopGPUThread()
   if (!m_use_gpu_thread)
     return;
 
-  m_gpu_loop_done.store(true);
+  retro_atomic_store_release_int(&m_thread->quit, 1);
   WakeGPUThread();
-  m_gpu_thread.join();
+  sthread_join(m_thread->thread);
+  m_thread->thread = nullptr;
   m_use_gpu_thread = false;
 }
 
@@ -187,67 +267,86 @@ void GPUBackend::Sync(bool allow_sleep)
   if (!m_use_gpu_thread)
     return;
 
+  ThreadState* t = m_thread.get();
   GPUBackendSyncCommand* cmd =
     static_cast<GPUBackendSyncCommand*>(AllocateCommand(GPUBackendCommandType::Sync, sizeof(GPUBackendSyncCommand)));
   cmd->allow_sleep = allow_sleep;
   PushCommand(cmd);
+  const int ticket = t->syncs_queued = NextSequence(t->syncs_queued);
   WakeGPUThread();
 
-  m_sync_event.Wait();
-  m_sync_event.Reset();
+  for (;;)
+  {
+    if (retro_atomic_load_acquire_int(&t->syncs_done) == ticket)
+      return;
+
+    const int key = retro_eventcount_prepare_wait(&t->sync_ec);
+    if (retro_atomic_load_acquire_int(&t->syncs_done) == ticket)
+    {
+      retro_eventcount_cancel_wait(&t->sync_ec);
+      return;
+    }
+    retro_eventcount_commit_wait(&t->sync_ec, key);
+  }
+}
+
+void GPUBackend::GPUThreadEntryPoint(void* userdata)
+{
+  static_cast<GPUBackend*>(userdata)->RunGPULoop();
 }
 
 void GPUBackend::RunGPULoop()
 {
-  // 1ms spin window before the GPU thread sleeps, expressed in the timer's
-  // native integer units (handles the Windows QPC tick scale via the same
-  // conversion). Comparing Values directly avoids a per-iteration trip
-  // through floating-point nanoseconds.
-  const Common::Timer::Value spin_time = Common::Timer::ConvertSecondsToValue(0.001);
-  Common::Timer::Value last_command_time = 0;
+  /* Spin this long for more work after a batch, unless a Sync allowed
+   * sleeping, before parking. */
+  static constexpr unsigned SPIN_ITERATIONS = 16384;
+
+  ThreadState* t = m_thread.get();
+  retro_spsc_t* q = &t->ring;
+  bool allow_sleep = true;
 
   for (;;)
   {
-    uint32_t write_ptr = m_command_fifo_write_ptr.load();
-    uint32_t read_ptr = m_command_fifo_read_ptr.load();
-    if (read_ptr == write_ptr)
+    const void* data;
+    const size_t avail = retro_spsc_read_begin(q, &data);
+    if (avail == 0)
     {
-      const Common::Timer::Value current_time = Common::Timer::GetValue();
-      if ((current_time - last_command_time) < spin_time)
+      if (!allow_sleep)
+      {
+        for (unsigned i = 0; i < SPIN_ITERATIONS && retro_spsc_read_avail(q) == 0; i++)
+          retro_cpu_relax();
+        allow_sleep = true;
         continue;
+      }
 
-      std::unique_lock<std::mutex> lock(m_sync_mutex);
-      m_gpu_thread_sleeping.store(true);
-      m_wake_gpu_thread_cv.wait(lock, [this]() { return m_gpu_loop_done.load() || GetPendingCommandSize() > 0; });
-      m_gpu_thread_sleeping.store(false);
+      if (retro_atomic_load_acquire_int(&t->quit))
+        break;
 
-      if (!m_gpu_loop_done.load())
-        continue;
-      break;
+      const int key = retro_eventcount_prepare_wait(&t->work_ec);
+      if (retro_spsc_read_avail(q) != 0 || retro_atomic_load_acquire_int(&t->quit))
+        retro_eventcount_cancel_wait(&t->work_ec);
+      else
+        retro_eventcount_commit_wait(&t->work_ec, key);
+      continue;
     }
 
-    if (write_ptr < read_ptr)
-      write_ptr = COMMAND_QUEUE_SIZE;
-
-    bool allow_sleep = false;
-    while (read_ptr < write_ptr)
+    allow_sleep = false;
+    const uint8_t* const base = static_cast<const uint8_t*>(data);
+    for (size_t offset = 0; offset < avail;)
     {
-      const GPUBackendCommand* cmd = reinterpret_cast<const GPUBackendCommand*>(&m_command_fifo_data[read_ptr]);
-      read_ptr += cmd->size;
+      const GPUBackendCommand* cmd = reinterpret_cast<const GPUBackendCommand*>(base + offset);
+      offset += cmd->size;
 
       switch (cmd->type)
       {
         case GPUBackendCommandType::Wraparound:
-        {
-          write_ptr = m_command_fifo_write_ptr.load();
-          read_ptr = 0;
-        }
-        break;
+          break;
 
         case GPUBackendCommandType::Sync:
         {
-          m_sync_event.Signal();
           allow_sleep = static_cast<const GPUBackendSyncCommand*>(cmd)->allow_sleep;
+          retro_atomic_fetch_add_int(&t->syncs_done, 1);
+          retro_eventcount_notify(&t->sync_ec);
         }
         break;
 
@@ -257,8 +356,8 @@ void GPUBackend::RunGPULoop()
       }
     }
 
-    last_command_time = allow_sleep ? 0 : Common::Timer::GetValue();
-    m_command_fifo_read_ptr.store(read_ptr);
+    retro_spsc_read_end(q, avail);
+    retro_eventcount_notify(&t->space_ec);
   }
 }
 

@@ -1,10 +1,9 @@
 #include "page_fault_handler.h"
+#include "lockfree.h"
 #include "log.h"
 #include "platform.h"
-#include <algorithm>
+#include <cerrno>
 #include <cstring>
-#include <mutex>
-#include <vector>
 Log_SetChannel(Common::PageFaultHandler);
 
 #if defined(_WIN32)
@@ -22,16 +21,24 @@ Log_SetChannel(Common::PageFaultHandler);
 
 namespace Common::PageFaultHandler {
 
-struct RegisteredHandler
-{
-  Callback callback;
-  const void* owner;
-  void* start_pc;
-  uint32_t code_size;
-};
-static std::vector<RegisteredHandler> m_handlers;
-static std::mutex m_handler_lock;
+/* (callback, owner) pairs; walked lock-free from the fault handler. */
+static AtomicPairTable<8> m_handlers;
 static thread_local bool s_in_handler;
+
+#if (defined(_WIN32) && (defined(CPU_X64) || defined(CPU_AARCH64))) || defined(USE_SIGSEGV)
+static bool DispatchFault(void* exception_pc, void* exception_address, bool is_write)
+{
+  return m_handlers.ForEach([&](void* callback, void*) {
+    return reinterpret_cast<Callback>(callback)(exception_pc, exception_address, is_write) ==
+           HandlerResult::ContinueExecution;
+  });
+}
+#endif
+
+static bool HasHandlers()
+{
+  return m_handlers.ForEach([](void*, void*) { return true; });
+}
 
 #if defined(CPU_AARCH32)
 static bool IsStoreInstruction(const void* ptr)
@@ -101,14 +108,10 @@ static LONG ExceptionHandler(PEXCEPTION_POINTERS exi)
   void* const exception_address = reinterpret_cast<void*>(exi->ExceptionRecord->ExceptionInformation[1]);
   bool const is_write = exi->ExceptionRecord->ExceptionInformation[0] == 1;
 
-  std::lock_guard<std::mutex> guard(m_handler_lock);
-  for (const RegisteredHandler& rh : m_handlers)
+  if (DispatchFault(exception_pc, exception_address, is_write))
   {
-    if (rh.callback(exception_pc, exception_address, is_write) == HandlerResult::ContinueExecution)
-    {
-      s_in_handler = false;
-      return EXCEPTION_CONTINUE_EXECUTION;
-    }
+    s_in_handler = false;
+    return EXCEPTION_CONTINUE_EXECUTION;
   }
 
   s_in_handler = false;
@@ -185,14 +188,10 @@ static void SIGSEGVHandler(int sig, siginfo_t* info, void* ctx)
 
 #endif
 
-  std::lock_guard<std::mutex> guard(m_handler_lock);
-  for (const RegisteredHandler& rh : m_handlers)
+  if (DispatchFault(exception_pc, exception_address, is_write))
   {
-    if (rh.callback(exception_pc, exception_address, is_write) == HandlerResult::ContinueExecution)
-    {
-      s_in_handler = false;
-      return;
-    }
+    s_in_handler = false;
+    return;
   }
 
   // call old signal handler
@@ -227,17 +226,10 @@ uint32_t GetHandlerCodeSize()
 
 bool InstallHandler(const void* owner, void* start_pc, uint32_t code_size, Callback callback)
 {
-  bool was_empty;
-  {
-    std::lock_guard<std::mutex> guard(m_handler_lock);
-    if (std::find_if(m_handlers.begin(), m_handlers.end(),
-                     [owner](const RegisteredHandler& rh) { return rh.owner == owner; }) != m_handlers.end())
-    {
-      return false;
-    }
+  if (m_handlers.ForEach([owner](void*, void* b) { return b == owner; }))
+    return false;
 
-    was_empty = m_handlers.empty();
-  }
+  const bool was_empty = !HasHandlers();
 
   if (was_empty)
   {
@@ -271,21 +263,20 @@ bool InstallHandler(const void* owner, void* start_pc, uint32_t code_size, Callb
 #endif
   }
 
-  m_handlers.push_back(RegisteredHandler{callback, owner, start_pc, code_size});
+  if (!m_handlers.Insert(reinterpret_cast<void*>(callback), const_cast<void*>(owner)))
+  {
+    Log_ErrorPrint("Too many page fault handlers");
+    return false;
+  }
   return true;
 }
 
 bool RemoveHandler(const void* owner)
 {
-  std::lock_guard<std::mutex> guard(m_handler_lock);
-  auto it = std::find_if(m_handlers.begin(), m_handlers.end(),
-                         [owner](const RegisteredHandler& rh) { return rh.owner == owner; });
-  if (it == m_handlers.end())
+  if (!m_handlers.Remove([owner](void*, void* b) { return b == owner; }))
     return false;
 
-  m_handlers.erase(it);
-
-  if (m_handlers.empty())
+  if (!HasHandlers())
   {
 #if defined(_WIN32) && (defined(CPU_X64) || defined(CPU_AARCH64))
     RemoveVectoredExceptionHandler(s_veh_handle);

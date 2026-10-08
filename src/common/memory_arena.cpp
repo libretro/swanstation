@@ -263,7 +263,6 @@ void* MemoryArena::CreateViewPtr(size_t offset, size_t size, bool writable, bool
   return nullptr;
 #endif
 
-  m_num_views.fetch_add(1);
   return base_pointer;
 }
 
@@ -295,7 +294,6 @@ bool MemoryArena::ReleaseViewPtr(void* address, size_t size)
     return false;
   }
 
-  m_num_views.fetch_sub(1);
   return true;
 }
 
@@ -314,7 +312,6 @@ void* MemoryArena::CreateReservedPtr(size_t size, void* fixed_address /*= nullpt
   return nullptr;
 #endif
 
-  m_num_views.fetch_add(1);
   return base_pointer;
 }
 
@@ -335,7 +332,6 @@ bool MemoryArena::ReleaseReservedPtr(void* address, size_t size)
     return false;
   }
 
-  m_num_views.fetch_sub(1);
   return true;
 }
 

@@ -8,7 +8,6 @@
 #include <cerrno>
 #include <cmath>
 #include <cstring>
-#include <thread>
 #include <vector>
 
 HostDisplayTexture::~HostDisplayTexture() = default;

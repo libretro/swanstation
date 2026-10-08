@@ -1,7 +1,6 @@
 #pragma once
 #include "types.h"
 #include <cstdarg>
-#include <mutex>
 
 enum class LogLevel : uint8_t
 {

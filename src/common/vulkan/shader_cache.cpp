@@ -221,6 +221,54 @@ bool ShaderCache::FlushPipelineCache()
   return true;
 }
 
+VkPipelineCache ShaderCache::CreateWorkerPipelineCache()
+{
+  const VkDevice device = g_vulkan_context->GetDevice();
+  std::vector<uint8_t> data;
+  if (m_pipeline_cache != VK_NULL_HANDLE)
+  {
+    size_t data_size = 0;
+    if (vkGetPipelineCacheData(device, m_pipeline_cache, &data_size, nullptr) == VK_SUCCESS && data_size > 0)
+    {
+      data.resize(data_size);
+      if (vkGetPipelineCacheData(device, m_pipeline_cache, &data_size, data.data()) == VK_SUCCESS)
+        data.resize(data_size);
+      else
+        data.clear();
+    }
+  }
+
+  const VkPipelineCacheCreateInfo ci{VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO, nullptr, 0, data.size(),
+                                     data.empty() ? nullptr : data.data()};
+  VkPipelineCache cache = VK_NULL_HANDLE;
+  const VkResult res = vkCreatePipelineCache(device, &ci, nullptr, &cache);
+  if (res != VK_SUCCESS)
+  {
+    LOG_VULKAN_ERROR(res, "vkCreatePipelineCache() (worker) failed: ");
+    return VK_NULL_HANDLE;
+  }
+
+  return cache;
+}
+
+void ShaderCache::MergeWorkerPipelineCache(VkPipelineCache cache)
+{
+  if (cache == VK_NULL_HANDLE)
+    return;
+
+  const VkDevice device = g_vulkan_context->GetDevice();
+  if (m_pipeline_cache != VK_NULL_HANDLE)
+  {
+    const VkResult res = vkMergePipelineCaches(device, m_pipeline_cache, 1, &cache);
+    if (res == VK_SUCCESS)
+      m_pipeline_cache_dirty = true;
+    else
+      LOG_VULKAN_ERROR(res, "vkMergePipelineCaches() failed: ");
+  }
+
+  vkDestroyPipelineCache(device, cache, nullptr);
+}
+
 void ShaderCache::ClosePipelineCache()
 {
   if (m_pipeline_cache == VK_NULL_HANDLE)

@@ -1,50 +1,30 @@
 #include "log.h"
+#include "lockfree.h"
 #include <cstdio>
-#include <mutex>
-#include <vector>
 
 namespace Log {
 
-struct RegisteredCallback
-{
-  CallbackFunctionType Function;
-  void* Parameter;
-};
-
-std::vector<RegisteredCallback> s_callbacks;
-static std::mutex s_callback_mutex;
+static AtomicPairTable<8> s_callbacks;
 
 static LogLevel s_filter_level = LogLevel::Trace;
 
 void RegisterCallback(CallbackFunctionType callbackFunction, void* pUserParam)
 {
-  RegisteredCallback Callback;
-  Callback.Function = callbackFunction;
-  Callback.Parameter = pUserParam;
-
-  std::lock_guard<std::mutex> guard(s_callback_mutex);
-  s_callbacks.push_back(std::move(Callback));
+  s_callbacks.Insert(reinterpret_cast<void*>(callbackFunction), pUserParam);
 }
 
 void UnregisterCallback(CallbackFunctionType callbackFunction, void* pUserParam)
 {
-  std::lock_guard<std::mutex> guard(s_callback_mutex);
-
-  for (auto iter = s_callbacks.begin(); iter != s_callbacks.end(); ++iter)
-  {
-    if (iter->Function == callbackFunction && iter->Parameter == pUserParam)
-    {
-      s_callbacks.erase(iter);
-      break;
-    }
-  }
+  void* const fn = reinterpret_cast<void*>(callbackFunction);
+  s_callbacks.Remove([fn, pUserParam](void* a, void* b) { return a == fn && b == pUserParam; });
 }
 
 static void ExecuteCallbacks(const char* channelName, const char* functionName, LogLevel level, const char* message)
 {
-  std::lock_guard<std::mutex> guard(s_callback_mutex);
-  for (RegisteredCallback& callback : s_callbacks)
-    callback.Function(callback.Parameter, channelName, functionName, level, message);
+  s_callbacks.ForEach([&](void* fn, void* param) {
+    reinterpret_cast<CallbackFunctionType>(fn)(param, channelName, functionName, level, message);
+    return false;
+  });
 }
 
 void SetFilterLevel(LogLevel level)

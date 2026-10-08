@@ -1,5 +1,6 @@
 #pragma once
 #include "common/dimensional_array.h"
+#include "common/lockfree.h"
 #include "common/vulkan/staging_texture.h"
 #include "common/vulkan/stream_buffer.h"
 #include "common/vulkan/texture.h"
@@ -7,10 +8,8 @@
 #include "gpu_hw.h"
 #include "texture_replacements.h"
 #include <array>
-#include <atomic>
 #include <memory>
-#include <mutex>
-#include <thread>
+#include <rthreads/rthreads.h>
 #include <tuple>
 #include <libretro.h>
 
@@ -184,12 +183,16 @@ private:
   // background warm-up worker passes the filter it is currently
   // warming alongside its captured (m_true_color, m_scaled_dithering)
   // snapshot. Both helpers are reentrant under the same tuple - the
-  // slot publish under m_batch_shader_mutex handles the race winner.
+  // slot's compare-exchange picks the race winner.
+  //
+  // on_worker selects the pipeline cache: m_worker_pipeline_cache on
+  // the worker, the main cache on the main thread.
   VkShaderModule GetBatchFragmentShader(GPUTextureFilter filter, uint8_t render_mode, uint8_t texture_mode,
                                         bool dithering, bool interlacing);
   VkPipeline GetBatchPipeline(GPUTextureFilter filter, bool true_color, bool scaled_dithering,
                               uint8_t depth_test, uint8_t render_mode, uint8_t texture_mode,
-                              uint8_t transparency_mode, bool dithering, bool interlacing);
+                              uint8_t transparency_mode, bool dithering, bool interlacing,
+                              bool on_worker);
 
   // Lazy non-batch PSO compile path. Mirrors the D3D12 backend's
   // GetVRAMFillPipeline / GetVRAMCopyPipeline / GetDisplayPipeline
@@ -222,10 +225,11 @@ private:
   // Background-thread worker for 'Lazy' mode: walks the full PSO
   // matrix and calls GetBatchPipeline on each cell. Main thread
   // can race ahead and fault in any slot it actually needs at draw
-  // time; the worker observes the filled slot under the lock and
-  // moves on. Quit flag checked between cells so DestroyPipelines
-  // can stop the worker within at most one PSO compile of latency.
+  // time; the worker observes the filled slot and moves on. Quit
+  // flag checked between cells so DestroyPipelines can stop the
+  // worker within at most one PSO compile of latency.
   void ShaderCompileThreadEntryPoint();
+  void StartShaderCompileThread();
   void StopShaderCompileThread();
 
   bool CreateTextureReplacementStreamBuffer();
@@ -324,16 +328,16 @@ private:
   // in the background as before. Cycling back is instant in all
   // modes thanks to the dimensioned cache.
   //
-  // std::atomic<VkPipeline> rather than a plain VkPipeline so the
+  // AtomicSlot<VkPipeline> rather than a plain VkPipeline so the
   // draw path can sample a slot without taking any lock. The slow
-  // path (slot still null after the atomic load) compiles the PSO
-  // lock-free, then takes m_batch_shader_mutex briefly to publish
-  // into the slot under a double-check. The fast path - which is
-  // what DrawBatchVertices hits once a slot has been filled either
-  // by the precompile worker or by an earlier main-thread fault-in
-  // - is a single memory_order_acquire load with no kernel calls
-  // and no serialisation against the worker.
-  DimensionalArray<std::atomic<VkPipeline>, 2, 2, 5, 9, 4, 3, 2, 2, 7> m_batch_pipelines{};
+  // path (slot still null after the atomic load) compiles the PSO,
+  // then publishes it with a compare-exchange; the loser of a race
+  // destroys its own. The fast path - which is what
+  // DrawBatchVertices hits once a slot has been filled either by
+  // the precompile worker or by an earlier main-thread fault-in - is
+  // a single acquire load with no kernel calls and no serialisation
+  // against the worker.
+  DimensionalArray<AtomicSlot<VkPipeline>, 2, 2, 5, 9, 4, 3, 2, 2, 7> m_batch_pipelines;
 
   // Persistent vertex / fragment shader modules and shadergen for
   // the lazy and background-thread compile paths. These used to be
@@ -346,29 +350,17 @@ private:
   // helper-entry remap (see GetBatchFragmentShader) routes all
   // accesses through the canonical slots 2 / 6.
   //
-  // m_batch_shader_mutex serialises only the PUBLISH step of the
-  // lazy batch helpers - writing a freshly-compiled VkPipeline /
-  // VkShaderModule back into the matrix slot, under a double-check
-  // for "did another thread win the race". The slow operations
-  // themselves (glslang -> SPIR-V, vkCreateShaderModule,
-  // vkCreateGraphicsPipelines) all run WITHOUT this mutex held:
-  //   - g_vulkan_shader_cache has its own internal mutex (covers
-  //     SPIR-V index + cache file I/O; does NOT span the glslang
-  //     compile).
-  //   - g_vulkan_shader_cache->PipelineCacheMutex() (Vulkan 1.0
-  //     spec: the pipelineCache parameter to
-  //     vkCreateGraphicsPipelines is host-synchronised) is taken
-  //     just around the gpbuilder.Create() call.
-  // The FAST path - draw-time lookup of an already-filled slot -
-  // does NOT take this mutex; it uses an atomic load on the slot
-  // itself. See the comment on m_batch_pipelines above for why
-  // this matters.
-  std::mutex m_batch_shader_mutex;
-  std::thread m_shader_compile_thread;
-  std::atomic<bool> m_shader_compile_thread_quit{false};
+  // Slots are published the same way as m_batch_pipelines. The
+  // worker creates pipelines against its own m_worker_pipeline_cache
+  // (vkCreateGraphicsPipelines requires external synchronisation of
+  // the cache), which StopShaderCompileThread merges back into the
+  // main cache after joining it.
+  sthread_t* m_shader_compile_thread = nullptr;
+  retro_atomic_int_t m_shader_compile_thread_quit = {};
+  VkPipelineCache m_worker_pipeline_cache = VK_NULL_HANDLE;
 
-  DimensionalArray<std::atomic<VkShaderModule>, 2> m_batch_vertex_shaders{};              // [textured]
-  DimensionalArray<std::atomic<VkShaderModule>, 2, 2, 9, 4, 7> m_batch_fragment_shaders{};   // [filter][render][texture][dither][interlace]
+  DimensionalArray<AtomicSlot<VkShaderModule>, 2> m_batch_vertex_shaders;              // [textured]
+  DimensionalArray<AtomicSlot<VkShaderModule>, 2, 2, 9, 4, 7> m_batch_fragment_shaders;   // [filter][render][texture][dither][interlace]
 
   // Shared vertex shaders used by all non-batch pipelines. Cached
   // here so the lazy non-batch helpers don't run glslang +

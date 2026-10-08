@@ -24,8 +24,6 @@ add_library(common
   dimensional_array.h
   error.cpp
   error.h
-  event.cpp
-  event.h
   fifo_queue.h
   file_system.cpp
   file_system.h
@@ -46,6 +44,7 @@ add_library(common
   jit_code_buffer.cpp
   jit_code_buffer.h
   log.cpp
+  lockfree.h
   log.h
   make_array.h
   md5_digest.cpp

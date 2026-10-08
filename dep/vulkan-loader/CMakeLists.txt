@@ -25,7 +25,7 @@ set(SRCS
 
 add_library(vulkan-loader ${SRCS})
 target_include_directories(vulkan-loader PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_link_libraries(vulkan-loader PRIVATE ${CMAKE_DL_LIBS})
+target_link_libraries(vulkan-loader PRIVATE ${CMAKE_DL_LIBS} libretro-common)
 
 if(USE_X11)
   target_compile_definitions(vulkan-loader PUBLIC "VULKAN_USE_X11=1")

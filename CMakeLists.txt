@@ -136,6 +136,13 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
+# One retro_atomic backend for C and C++ alike, never std::atomic.
+if(MSVC)
+  add_definitions("-DRETRO_ATOMIC_FORCE_MSVC")
+else()
+  add_definitions("-DRETRO_ATOMIC_FORCE_GCC_NEW")
+endif()
+
 # Enable large file support on Linux 32-bit platforms.
 # Android is deliberately ommitted here as it didn't support 64-bit ops on files until Android 7/N.
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND (${CPU_ARCH} STREQUAL "x86" OR ${CPU_ARCH} STREQUAL "aarch32"))

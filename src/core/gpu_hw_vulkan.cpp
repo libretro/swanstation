@@ -901,8 +901,7 @@ void GPU_HW_Vulkan::UpdateSettings()
       if (precompile_mode == GPUShaderPrecompileMode::Lazy ||
           precompile_mode == GPUShaderPrecompileMode::Enabled)
       {
-        m_shader_compile_thread_quit.store(false, std::memory_order_relaxed);
-        m_shader_compile_thread = std::thread(&GPU_HW_Vulkan::ShaderCompileThreadEntryPoint, this);
+        StartShaderCompileThread();
       }
     }
     else if (only_dim_changed)
@@ -1656,7 +1655,7 @@ bool GPU_HW_Vulkan::CompilePipelines()
   const bool noperspective_col  = m_disable_color_perspective;
   for (uint8_t textured = 0; textured < 2; textured++)
   {
-    if (m_batch_vertex_shaders[textured].load(std::memory_order_acquire) != VK_NULL_HANDLE)
+    if (m_batch_vertex_shaders[textured].Load() != VK_NULL_HANDLE)
     {
       progress.Increment();
       continue;
@@ -1674,7 +1673,7 @@ bool GPU_HW_Vulkan::CompilePipelines()
       return false;
     }
 
-    m_batch_vertex_shaders[textured].store(shader, std::memory_order_release);
+    m_batch_vertex_shaders[textured].Store(shader);
     progress.Increment();
   }
 
@@ -1742,7 +1741,7 @@ bool GPU_HW_Vulkan::CompilePipelines()
                 VkPipeline pipeline =
                   GetBatchPipeline(m_texture_filtering, m_true_color, m_scaled_dithering,
                                    depth_test, render_mode, texture_mode, transparency_mode,
-                                   static_cast<bool>(dithering), static_cast<bool>(interlacing));
+                                   static_cast<bool>(dithering), static_cast<bool>(interlacing), false);
                 if (pipeline == VK_NULL_HANDLE)
                   return false;
                 progress.Increment();
@@ -1841,16 +1840,9 @@ bool GPU_HW_Vulkan::CompilePipelines()
   if (precompile_mode == GPUShaderPrecompileMode::Lazy)
   {
     // Pre-fill the non-batch pipelines on the main thread BEFORE
-    // launching the worker. This is mandatory, not an optimisation,
-    // for the same reason as the D3D12 backend: the worker takes
-    // PipelineCacheMutex (Vulkan 1.0 spec: pipelineCache parameter
-    // to vkCreateGraphicsPipelines is host-synchronised) for the
-    // duration of each PSO driver-side compile, and std::mutex on
-    // Windows is not FIFO. Without the pre-fill, the runloop's
-    // first FillVRAM / UpdateDisplay / etc. (which goes to the
-    // corresponding GetXxxPipeline helper, also taking
-    // PipelineCacheMutex) can starve for the entire batch matrix
-    // walk.
+    // launching the worker, as the D3D12 backend does, so the
+    // runloop's first FillVRAM / UpdateDisplay / etc. doesn't fault
+    // them in mid-frame.
     //
     // Pre-filling the non-batch pipelines here costs Lazy the same
     // sub-second upfront pause 'Enabled' pays for its non-batch
@@ -1973,8 +1965,8 @@ bool GPU_HW_Vulkan::CompilePipelines()
   // In Lazy mode the worker is also responsible for the current
   // filter's sub-cube; nothing has populated it yet. The main
   // thread can race ahead and lazy-fault any slot it actually
-  // needs at draw time - the worker's recheck-under-lock pattern
-  // observes the filled slot and moves on.
+  // needs at draw time - the worker observes the filled slot and
+  // moves on.
   //
   // DestroyPipelines (or the UpdateSettings-level
   // StopShaderCompileThread we added in Option B) signals
@@ -1983,21 +1975,37 @@ bool GPU_HW_Vulkan::CompilePipelines()
   if (precompile_mode == GPUShaderPrecompileMode::Lazy ||
       precompile_mode == GPUShaderPrecompileMode::Enabled)
   {
-    m_shader_compile_thread_quit.store(false, std::memory_order_relaxed);
-    m_shader_compile_thread = std::thread(&GPU_HW_Vulkan::ShaderCompileThreadEntryPoint, this);
+    StartShaderCompileThread();
   }
 
   return true;
 }
 
+void GPU_HW_Vulkan::StartShaderCompileThread()
+{
+  retro_atomic_store_release_int(&m_shader_compile_thread_quit, 0);
+  m_worker_pipeline_cache = g_vulkan_shader_cache->CreateWorkerPipelineCache();
+  m_shader_compile_thread = sthread_create(
+    [](void* self) { static_cast<GPU_HW_Vulkan*>(self)->ShaderCompileThreadEntryPoint(); }, this);
+  if (!m_shader_compile_thread)
+  {
+    g_vulkan_shader_cache->MergeWorkerPipelineCache(m_worker_pipeline_cache);
+    m_worker_pipeline_cache = VK_NULL_HANDLE;
+  }
+}
+
 void GPU_HW_Vulkan::StopShaderCompileThread()
 {
-  if (!m_shader_compile_thread.joinable())
+  if (!m_shader_compile_thread)
     return;
 
-  m_shader_compile_thread_quit.store(true, std::memory_order_relaxed);
-  m_shader_compile_thread.join();
-  m_shader_compile_thread_quit.store(false, std::memory_order_relaxed);
+  retro_atomic_store_release_int(&m_shader_compile_thread_quit, 1);
+  sthread_join(m_shader_compile_thread);
+  m_shader_compile_thread = nullptr;
+  retro_atomic_store_release_int(&m_shader_compile_thread_quit, 0);
+
+  g_vulkan_shader_cache->MergeWorkerPipelineCache(m_worker_pipeline_cache);
+  m_worker_pipeline_cache = VK_NULL_HANDLE;
 }
 
 void GPU_HW_Vulkan::ShaderCompileThreadEntryPoint()
@@ -2076,12 +2084,12 @@ void GPU_HW_Vulkan::ShaderCompileThreadEntryPoint()
             {
               for (uint8_t interlacing = 0; interlacing < 2; interlacing++)
               {
-                if (m_shader_compile_thread_quit.load(std::memory_order_relaxed))
+                if (retro_atomic_load_acquire_int(&m_shader_compile_thread_quit))
                   return;
 
                 GetBatchPipeline(filter, true_color, scaled_dithering, depth_test, render_mode,
                                  texture_mode, transparency_mode,
-                                 static_cast<bool>(dithering), static_cast<bool>(interlacing));
+                                 static_cast<bool>(dithering), static_cast<bool>(interlacing), true);
               }
             }
           }
@@ -2110,10 +2118,10 @@ VkShaderModule GPU_HW_Vulkan::GetBatchFragmentShader(GPUTextureFilter filter, ui
   // passes m_texture_filtering. Other filter sub-cubes are populated
   // independently and stay valid across a filter-only setting
   // change (UpdateSettings skips DestroyPipelines in that case).
-  std::atomic<VkShaderModule>& slot =
+  AtomicSlot<VkShaderModule>& slot =
     m_batch_fragment_shaders[static_cast<uint8_t>(filter)][render_mode][lookup_mode]
                             [static_cast<uint8_t>(dithering)][static_cast<uint8_t>(interlacing)];
-  VkShaderModule existing = slot.load(std::memory_order_acquire);
+  VkShaderModule existing = slot.Load();
   if (existing != VK_NULL_HANDLE)
     return existing;
 
@@ -2182,25 +2190,21 @@ VkShaderModule GPU_HW_Vulkan::GetBatchFragmentShader(GPUTextureFilter filter, ui
     return VK_NULL_HANDLE;
   }
 
-  // Publish step: take the helper mutex briefly to write the slot.
-  // Double-check for race winner; if we lost, destroy our fresh
+  // Publish step: if another thread won the race, destroy our fresh
   // module and return the winner's.
-  std::lock_guard<std::mutex> lock(m_batch_shader_mutex);
-  existing = slot.load(std::memory_order_relaxed);
-  if (existing != VK_NULL_HANDLE)
+  if (!slot.CompareExchange(VK_NULL_HANDLE, fresh))
   {
     vkDestroyShaderModule(g_vulkan_context->GetDevice(), fresh, nullptr);
-    return existing;
+    return slot.Load();
   }
 
-  slot.store(fresh, std::memory_order_release);
   return fresh;
 }
 
 VkPipeline GPU_HW_Vulkan::GetBatchPipeline(GPUTextureFilter filter, bool true_color, bool scaled_dithering,
                                            uint8_t depth_test, uint8_t render_mode,
                                            uint8_t texture_mode, uint8_t transparency_mode,
-                                           bool dithering, bool interlacing)
+                                           bool dithering, bool interlacing, bool on_worker)
 {
   // Reserved_*Direct16Bit PSO dedup, applied at the helper entry.
   // Slots for texture_mode 3 / 7 are never written; all accesses
@@ -2209,7 +2213,7 @@ VkPipeline GPU_HW_Vulkan::GetBatchPipeline(GPUTextureFilter filter, bool true_co
                          (texture_mode == static_cast<uint8_t>(GPUTextureMode::Reserved_RawDirect16Bit)) ? 6u :
                                                                                                       texture_mode;
 
-  std::atomic<VkPipeline>& slot =
+  AtomicSlot<VkPipeline>& slot =
     m_batch_pipelines[static_cast<uint8_t>(filter)][static_cast<uint8_t>(true_color)]
                      [static_cast<uint8_t>(scaled_dithering)][depth_test][render_mode][lookup_mode]
                      [transparency_mode][static_cast<uint8_t>(dithering)][static_cast<uint8_t>(interlacing)];
@@ -2218,20 +2222,15 @@ VkPipeline GPU_HW_Vulkan::GetBatchPipeline(GPUTextureFilter filter, bool true_co
   // hits once a slot is filled (either by the precompile worker or
   // by an earlier main-thread fault-in). No kernel call, no
   // serialisation against the worker.
-  VkPipeline existing = slot.load(std::memory_order_acquire);
+  VkPipeline existing = slot.Load();
   if (existing != VK_NULL_HANDLE)
     return existing;
 
-  // Slow path. Compile the PSO WITHOUT m_batch_shader_mutex held -
-  // that mutex was the head-of-line blocking culprit in the pre-
-  // fix design. GetBatchFragmentShader is internally thread-safe
-  // (it instantiates a pre-baked VkShaderModule lock-free, takes
-  // m_batch_shader_mutex only for the slot publish).
-  // vkCreateGraphicsPipelines is the remaining slow operation; per
-  // Vulkan 1.0 spec the pipelineCache parameter is host-synchronised,
-  // so we serialise on g_vulkan_shader_cache->PipelineCacheMutex()
-  // around that one call (window is one driver-side PSO compile,
-  // typically tens of ms for these simple PSOs).
+  // Slow path. GetBatchFragmentShader is thread-safe (it
+  // instantiates a pre-baked VkShaderModule and publishes it with a
+  // compare-exchange). vkCreateGraphicsPipelines is the remaining
+  // slow operation; per Vulkan 1.0 spec the pipelineCache parameter
+  // is host-synchronised, so the worker passes its own cache.
   //
   // Two threads racing to compile the SAME slot both compile and
   // both reach the publish step; the loser destroys its pipeline
@@ -2285,7 +2284,7 @@ VkPipeline GPU_HW_Vulkan::GetBatchPipeline(GPUTextureFilter filter, bool true_co
   Vulkan::SpecConstants vs_spec;
   vs_spec.AddUInt(0, static_cast<uint32_t>(m_resolution_scale));    // RESOLUTION_SCALE
   gpbuilder.SetVertexShader(
-    m_batch_vertex_shaders[static_cast<uint8_t>(textured)].load(std::memory_order_relaxed), vs_spec.GetInfo());
+    m_batch_vertex_shaders[static_cast<uint8_t>(textured)].Load(), vs_spec.GetInfo());
 
   // Spec constants on the pre-baked batch FS (untextured slice and
   // textured-Nearest slice; textured non-Nearest slices still go
@@ -2394,20 +2393,13 @@ VkPipeline GPU_HW_Vulkan::GetBatchPipeline(GPUTextureFilter filter, bool true_co
 
   gpbuilder.SetDynamicViewportAndScissorState();
 
-  // Take the pipeline-cache mutex only around the actual
-  // vkCreateGraphicsPipelines call. Per Vulkan 1.0 spec section
-  // "Threading Behavior", the pipelineCache parameter to this
-  // function is in the externally-synchronised parameter list -
-  // the application must guarantee no concurrent use of the same
-  // VkPipelineCache. (The
-  // VK_PIPELINE_CACHE_CREATE_EXTERNALLY_SYNCHRONIZED_BIT flag from
-  // Vulkan 1.3 would make this a one-line spec opt-in but is not
-  // available here; SwanStation targets VK_API_VERSION_1_0.)
-  VkPipeline fresh;
-  {
-    std::lock_guard<std::mutex> pc_lock(g_vulkan_shader_cache->PipelineCacheMutex());
-    fresh = gpbuilder.Create(g_vulkan_context->GetDevice(), g_vulkan_shader_cache->GetPipelineCache());
-  }
+  // Per Vulkan 1.0 spec section "Threading Behavior", the
+  // pipelineCache parameter to vkCreateGraphicsPipelines is in the
+  // externally-synchronised parameter list, so the worker uses a
+  // cache of its own.
+  const VkPipelineCache pipeline_cache =
+    on_worker ? m_worker_pipeline_cache : g_vulkan_shader_cache->GetPipelineCache();
+  const VkPipeline fresh = gpbuilder.Create(g_vulkan_context->GetDevice(), pipeline_cache);
   if (fresh == VK_NULL_HANDLE)
   {
     Log_ErrorPrintf("Lazy batch PSO compile failed for (dt=%u, rm=%u, tm=%u, tr=%u, d=%u, i=%u)", depth_test,
@@ -2415,18 +2407,14 @@ VkPipeline GPU_HW_Vulkan::GetBatchPipeline(GPUTextureFilter filter, bool true_co
     return VK_NULL_HANDLE;
   }
 
-  // Publish step: take the helper mutex briefly to write the slot.
-  // Double-check for race winner; if we lost, destroy our fresh
+  // Publish step: if another thread won the race, destroy our fresh
   // pipeline and return the winner's.
-  std::lock_guard<std::mutex> lock(m_batch_shader_mutex);
-  existing = slot.load(std::memory_order_relaxed);
-  if (existing != VK_NULL_HANDLE)
+  if (!slot.CompareExchange(VK_NULL_HANDLE, fresh))
   {
     vkDestroyPipeline(g_vulkan_context->GetDevice(), fresh, nullptr);
-    return existing;
+    return slot.Load();
   }
 
-  slot.store(fresh, std::memory_order_release);
   return fresh;
 }
 
@@ -2436,8 +2424,8 @@ VkPipeline GPU_HW_Vulkan::GetBatchPipeline(GPUTextureFilter filter, bool true_co
 // batch worker is spawned), at the 'Enabled' synchronous compile
 // pass in CompilePipelines, or as fault-ins on the first draw that
 // needs them in 'Disabled' mode. The batch worker never touches
-// these helpers, so they need no mutex or atomic slots - each just
-// returns a cached handle or builds and caches one.
+// these helpers or the main pipeline cache, so they need no atomic
+// slots - each just returns a cached handle or builds and caches one.
 //
 // The shared fullscreen-quad / UV-quad vertex shader modules are
 // kept as members so each helper can reach them without re-running
@@ -2515,10 +2503,7 @@ VkPipeline GPU_HW_Vulkan::GetVRAMFillPipeline(uint8_t wrapped, uint8_t interlace
   gpbuilder.SetMultisamples(m_multisamples, false);
   gpbuilder.SetDepthState(true, true, VK_COMPARE_OP_ALWAYS);
 
-  {
-    std::lock_guard<std::mutex> pc_lock(g_vulkan_shader_cache->PipelineCacheMutex());
-    slot = gpbuilder.Create(device, pipeline_cache, false);
-  }
+  slot = gpbuilder.Create(device, pipeline_cache, false);
   vkDestroyShaderModule(device, fs, nullptr);
   return slot;
 }
@@ -2560,10 +2545,7 @@ VkPipeline GPU_HW_Vulkan::GetVRAMCopyPipeline(uint8_t depth_test)
   gpbuilder.SetDepthState((depth_test != 0), true,
                           (depth_test != 0) ? VK_COMPARE_OP_GREATER_OR_EQUAL : VK_COMPARE_OP_ALWAYS);
 
-  {
-    std::lock_guard<std::mutex> pc_lock(g_vulkan_shader_cache->PipelineCacheMutex());
-    slot = gpbuilder.Create(device, pipeline_cache, false);
-  }
+  slot = gpbuilder.Create(device, pipeline_cache, false);
   vkDestroyShaderModule(device, fs, nullptr);
   return slot;
 }
@@ -2617,10 +2599,7 @@ VkPipeline GPU_HW_Vulkan::GetVRAMWritePipeline(uint8_t depth_test)
   gpbuilder.SetMultisamples(m_multisamples, false);
   gpbuilder.SetDepthState(true, true, (depth_test != 0) ? VK_COMPARE_OP_GREATER_OR_EQUAL : VK_COMPARE_OP_ALWAYS);
 
-  {
-    std::lock_guard<std::mutex> pc_lock(g_vulkan_shader_cache->PipelineCacheMutex());
-    slot = gpbuilder.Create(device, pipeline_cache, false);
-  }
+  slot = gpbuilder.Create(device, pipeline_cache, false);
   vkDestroyShaderModule(device, fs, nullptr);
   return slot;
 }
@@ -2666,10 +2645,7 @@ VkPipeline GPU_HW_Vulkan::GetVRAMUpdateDepthPipeline()
   gpbuilder.SetBlendAttachment(0, false, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_BLEND_OP_ADD,
                                VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_BLEND_OP_ADD, 0);
 
-  {
-    std::lock_guard<std::mutex> pc_lock(g_vulkan_shader_cache->PipelineCacheMutex());
-    m_vram_update_depth_pipeline = gpbuilder.Create(device, pipeline_cache, false);
-  }
+  m_vram_update_depth_pipeline = gpbuilder.Create(device, pipeline_cache, false);
   vkDestroyShaderModule(device, fs, nullptr);
   return m_vram_update_depth_pipeline;
 }
@@ -2715,10 +2691,7 @@ VkPipeline GPU_HW_Vulkan::GetVRAMReadbackPipeline()
   gpbuilder.SetNoBlendingState();
   gpbuilder.SetDynamicViewportAndScissorState();
 
-  {
-    std::lock_guard<std::mutex> pc_lock(g_vulkan_shader_cache->PipelineCacheMutex());
-    m_vram_readback_pipeline = gpbuilder.Create(device, pipeline_cache, false);
-  }
+  m_vram_readback_pipeline = gpbuilder.Create(device, pipeline_cache, false);
   vkDestroyShaderModule(device, fs, nullptr);
   return m_vram_readback_pipeline;
 }
@@ -2775,10 +2748,7 @@ VkPipeline GPU_HW_Vulkan::GetDisplayPipeline(uint8_t depth_24, uint8_t interlace
   gpbuilder.SetNoBlendingState();
   gpbuilder.SetDynamicViewportAndScissorState();
 
-  {
-    std::lock_guard<std::mutex> pc_lock(g_vulkan_shader_cache->PipelineCacheMutex());
-    slot = gpbuilder.Create(device, pipeline_cache, false);
-  }
+  slot = gpbuilder.Create(device, pipeline_cache, false);
   vkDestroyShaderModule(device, fs, nullptr);
   return slot;
 }
@@ -2826,10 +2796,7 @@ VkPipeline GPU_HW_Vulkan::GetDownsampleFirstPassPipeline()
     gpbuilder.SetNoBlendingState();
     gpbuilder.SetDynamicViewportAndScissorState();
 
-    {
-      std::lock_guard<std::mutex> pc_lock(g_vulkan_shader_cache->PipelineCacheMutex());
-      m_downsample_first_pass_pipeline = gpbuilder.Create(device, pipeline_cache, false);
-    }
+    m_downsample_first_pass_pipeline = gpbuilder.Create(device, pipeline_cache, false);
     vkDestroyShaderModule(device, fs, nullptr);
   }
   else if (m_downsample_mode == GPUDownsampleMode::Box)
@@ -2859,10 +2826,7 @@ VkPipeline GPU_HW_Vulkan::GetDownsampleFirstPassPipeline()
     gpbuilder.SetNoBlendingState();
     gpbuilder.SetDynamicViewportAndScissorState();
 
-    {
-      std::lock_guard<std::mutex> pc_lock(g_vulkan_shader_cache->PipelineCacheMutex());
-      m_downsample_first_pass_pipeline = gpbuilder.Create(device, pipeline_cache, false);
-    }
+    m_downsample_first_pass_pipeline = gpbuilder.Create(device, pipeline_cache, false);
     vkDestroyShaderModule(device, fs, nullptr);
   }
 
@@ -2905,10 +2869,7 @@ VkPipeline GPU_HW_Vulkan::GetDownsampleMidPassPipeline()
   gpbuilder.SetNoBlendingState();
   gpbuilder.SetDynamicViewportAndScissorState();
 
-  {
-    std::lock_guard<std::mutex> pc_lock(g_vulkan_shader_cache->PipelineCacheMutex());
-    m_downsample_mid_pass_pipeline = gpbuilder.Create(device, pipeline_cache, false);
-  }
+  m_downsample_mid_pass_pipeline = gpbuilder.Create(device, pipeline_cache, false);
   vkDestroyShaderModule(device, fs, nullptr);
   return m_downsample_mid_pass_pipeline;
 }
@@ -2944,10 +2905,7 @@ VkPipeline GPU_HW_Vulkan::GetDownsampleBlurPassPipeline()
   gpbuilder.SetNoBlendingState();
   gpbuilder.SetDynamicViewportAndScissorState();
 
-  {
-    std::lock_guard<std::mutex> pc_lock(g_vulkan_shader_cache->PipelineCacheMutex());
-    m_downsample_blur_pass_pipeline = gpbuilder.Create(device, pipeline_cache, false);
-  }
+  m_downsample_blur_pass_pipeline = gpbuilder.Create(device, pipeline_cache, false);
   vkDestroyShaderModule(device, fs, nullptr);
   return m_downsample_blur_pass_pipeline;
 }
@@ -2987,10 +2945,7 @@ VkPipeline GPU_HW_Vulkan::GetDownsampleCompositePassPipeline()
   gpbuilder.SetNoBlendingState();
   gpbuilder.SetDynamicViewportAndScissorState();
 
-  {
-    std::lock_guard<std::mutex> pc_lock(g_vulkan_shader_cache->PipelineCacheMutex());
-    m_downsample_composite_pass_pipeline = gpbuilder.Create(device, pipeline_cache, false);
-  }
+  m_downsample_composite_pass_pipeline = gpbuilder.Create(device, pipeline_cache, false);
   vkDestroyShaderModule(device, fs, nullptr);
   return m_downsample_composite_pass_pipeline;
 }
@@ -3003,33 +2958,20 @@ void GPU_HW_Vulkan::DestroyPipelines()
   StopShaderCompileThread();
 
   // Atomic slot teardown. By this point the worker is stopped and
-  // no other thread is touching the arrays, so memory_order_relaxed
-  // is sufficient.
+  // no other thread is touching the arrays.
   VkDevice device = g_vulkan_context->GetDevice();
-  m_batch_pipelines.enumerate([device](std::atomic<VkPipeline>& slot) {
-    VkPipeline p = slot.load(std::memory_order_relaxed);
+  m_batch_pipelines.enumerate([device](AtomicSlot<VkPipeline>& slot) {
+    const VkPipeline p = slot.Exchange(VK_NULL_HANDLE);
     if (p != VK_NULL_HANDLE)
-    {
       vkDestroyPipeline(device, p, nullptr);
-      slot.store(VK_NULL_HANDLE, std::memory_order_relaxed);
-    }
   });
-  m_batch_fragment_shaders.enumerate([device](std::atomic<VkShaderModule>& slot) {
-    VkShaderModule m = slot.load(std::memory_order_relaxed);
+  const auto destroy_module = [device](AtomicSlot<VkShaderModule>& slot) {
+    const VkShaderModule m = slot.Exchange(VK_NULL_HANDLE);
     if (m != VK_NULL_HANDLE)
-    {
       vkDestroyShaderModule(device, m, nullptr);
-      slot.store(VK_NULL_HANDLE, std::memory_order_relaxed);
-    }
-  });
-  m_batch_vertex_shaders.enumerate([device](std::atomic<VkShaderModule>& slot) {
-    VkShaderModule m = slot.load(std::memory_order_relaxed);
-    if (m != VK_NULL_HANDLE)
-    {
-      vkDestroyShaderModule(device, m, nullptr);
-      slot.store(VK_NULL_HANDLE, std::memory_order_relaxed);
-    }
-  });
+  };
+  m_batch_fragment_shaders.enumerate(destroy_module);
+  m_batch_vertex_shaders.enumerate(destroy_module);
 
   m_vram_fill_pipelines.enumerate(Vulkan::Util::SafeDestroyPipeline);
 
@@ -3081,7 +3023,7 @@ void GPU_HW_Vulkan::DrawBatchVertices(BatchRenderMode render_mode, uint32_t base
     GetBatchPipeline(m_texture_filtering, m_true_color, m_scaled_dithering,
                      depth_test, static_cast<uint8_t>(render_mode),
                      static_cast<uint8_t>(m_batch.texture_mode),
-                     static_cast<uint8_t>(m_batch.transparency_mode), m_batch.dithering, m_batch.interlacing);
+                     static_cast<uint8_t>(m_batch.transparency_mode), m_batch.dithering, m_batch.interlacing, false);
 
   vkCmdBindPipeline(cmdbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
   vkCmdDraw(cmdbuf, num_vertices, 1, base_vertex, 0);

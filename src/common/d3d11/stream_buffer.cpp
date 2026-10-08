@@ -1,6 +1,7 @@
 #include "stream_buffer.h"
 #include "../align.h"
 #include "../log.h"
+#include <utility>
 Log_SetChannel(D3D11);
 
 namespace D3D11 {

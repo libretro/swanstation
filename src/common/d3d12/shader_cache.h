@@ -6,7 +6,6 @@
 #include "pipeline_library_compat.h"
 #include <cstdio>
 #include <d3d12.h>
-#include <mutex>
 #include <string_view>
 #include <unordered_map>
 #include <vector>

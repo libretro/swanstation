@@ -557,15 +557,14 @@ void GPU_HW_D3D12::UpdateSettings()
       }
       else if (precompile_mode == GPUShaderPrecompileMode::Lazy)
       {
-        m_shader_compile_thread_quit.store(false, std::memory_order_relaxed);
-        m_shader_compile_thread = std::thread(&GPU_HW_D3D12::ShaderCompileThreadEntryPoint, this);
+        StartShaderCompileThread();
       }
     }
     else if (only_dim_changed)
     {
       // Filter changed but nothing in non_dim_diff (and the cbuffer-
       // only members in dim_diff don't move HLSL, so this is
-      // effectively "only filter changed"). m_batch_pipelines is
+      // effectively "only filter changed"). m_batch_pipelines_fastpath is
       // filter-dimensioned: the previous filter's sub-cube remains
       // populated and reachable, so DestroyPipelines would just
       // throw away valid PSOs. Skip it and just call CompilePipelines,
@@ -1095,7 +1094,7 @@ bool GPU_HW_D3D12::CompilePipelines()
   if (precompile_sync)
   {
     const bool dual_source = m_supports_dual_source_blend;
-    // The dim cache makes m_batch_pipelines filter-dimensioned.
+    // The dim cache makes m_batch_pipelines_fastpath filter-dimensioned.
     // precompile_sync walks ONLY the current m_texture_filtering
     // sub-cube, not the full 7-filter matrix - pre-filling six unused
     // sub-cubes would multiply the cold-cache PSO build pass by 7x
@@ -1225,27 +1224,13 @@ bool GPU_HW_D3D12::CompilePipelines()
   if (precompile_mode == GPUShaderPrecompileMode::Lazy)
   {
     // Pre-fill the non-batch pipelines on the main thread BEFORE
-    // launching the worker. This is mandatory, not an optimisation -
-    // without it the runloop's UpdateDepthBufferFromMaskBit() call at
-    // the end of Initialize() (and the first FillVRAM / UpdateDisplay
-    // etc. on the first frame after) goes to the corresponding
-    // GetXxxPipeline helper, which would have to take
-    // m_batch_shader_mutex - the same mutex the worker holds for the
-    // entire duration of each batch PSO compile. With 1440 batch PSOs
-    // averaging 20-50ms each on a modern GPU, std::mutex's lack of
-    // fairness on Windows means the main thread can starve for the
-    // entire worker run (30-60 seconds) waiting for a lock window
-    // between compiles. The window appears frozen the whole time.
-    //
-    // Pre-filling the 17 non-batch pipelines here costs Lazy the same
-    // few-hundred-ms upfront pause 'Enabled' pays for its non-batch
-    // section, which is well under a second on the 5090 and not
-    // perceived as a "frozen" window. The worker then only walks the
-    // batch matrix - the main thread doesn't generally need batch
-    // PSOs until a few frames into gameplay, by which point the
-    // worker is past its first few cells and the wait window is brief.
-    // (No fullscreen-quad VS pre-fill here either - pre-baked DXBC,
-    // see GetFullscreenQuadVertexShader.)
+    // launching the worker, so the first frame (the
+    // UpdateDepthBufferFromMaskBit() call at the end of Initialize(),
+    // the first FillVRAM / UpdateDisplay) doesn't fault them in. This
+    // costs Lazy the same few-hundred-ms upfront pause 'Enabled' pays
+    // for its non-batch section. The worker then only walks the batch
+    // matrix. (No fullscreen-quad VS pre-fill here either - pre-baked
+    // DXBC, see GetFullscreenQuadVertexShader.)
     for (uint8_t wrapped = 0; wrapped < 2; wrapped++)
     {
       for (uint8_t interlaced = 0; interlaced < 2; interlaced++)
@@ -1284,12 +1269,10 @@ bool GPU_HW_D3D12::CompilePipelines()
     // (depth_test, render_mode, transparency_mode, texture_mode)
     // order, calling the same GetBatchPipeline the draw path uses;
     // the main thread can race ahead and pre-fill any slot it
-    // actually needs at draw time, and the worker's
-    // recheck-under-lock pattern just observes the filled slot and
-    // moves on. DestroyPipelines signals m_shader_compile_thread_quit
-    // and joins.
-    m_shader_compile_thread_quit.store(false, std::memory_order_relaxed);
-    m_shader_compile_thread = std::thread(&GPU_HW_D3D12::ShaderCompileThreadEntryPoint, this);
+    // actually needs at draw time, and the worker just observes the
+    // filled slot and moves on. DestroyPipelines signals
+    // m_shader_compile_thread_quit and joins.
+    StartShaderCompileThread();
   }
 
   if (!CompileDownsamplePipeline())
@@ -1414,14 +1397,22 @@ bool GPU_HW_D3D12::CompileDownsamplePipeline()
   return true;
 }
 
+void GPU_HW_D3D12::StartShaderCompileThread()
+{
+  retro_atomic_store_release_int(&m_shader_compile_thread_quit, 0);
+  m_shader_compile_thread = sthread_create(
+    [](void* self) { static_cast<GPU_HW_D3D12*>(self)->ShaderCompileThreadEntryPoint(); }, this);
+}
+
 void GPU_HW_D3D12::StopShaderCompileThread()
 {
-  if (!m_shader_compile_thread.joinable())
+  if (!m_shader_compile_thread)
     return;
 
-  m_shader_compile_thread_quit.store(true, std::memory_order_relaxed);
-  m_shader_compile_thread.join();
-  m_shader_compile_thread_quit.store(false, std::memory_order_relaxed);
+  retro_atomic_store_release_int(&m_shader_compile_thread_quit, 1);
+  sthread_join(m_shader_compile_thread);
+  m_shader_compile_thread = nullptr;
+  retro_atomic_store_release_int(&m_shader_compile_thread_quit, 0);
 }
 
 void GPU_HW_D3D12::ShaderCompileThreadEntryPoint()
@@ -1477,7 +1468,7 @@ void GPU_HW_D3D12::ShaderCompileThreadEntryPoint()
           if (!IsBatchShaderReachable(static_cast<BatchRenderMode>(render_mode), texture_mode, dual_source))
             continue;
 
-          if (m_shader_compile_thread_quit.load(std::memory_order_relaxed))
+          if (retro_atomic_load_acquire_int(&m_shader_compile_thread_quit))
             return;
 
           GetBatchPipeline(cur_filter, depth_test, render_mode, texture_mode, transparency_mode);
@@ -1495,10 +1486,8 @@ GPU_HW_D3D12::ComPtr<ID3D12PipelineState> GPU_HW_D3D12::GetBatchPipeline(GPUText
   // the pre-baked picker collapses - Reserved_Direct16Bit and
   // Direct16Bit map to the same .inc blob, likewise the Raw
   // variants), the resulting PSO for the Reserved_* modes is bit-
-  // identical to the canonical mode and we can share the ComPtr
-  // across both slots. The atomic _fastpath array gets the same raw
-  // pointer in both slots, kept alive by the ComPtr for the lifetime
-  // of the GPU backend.
+  // identical to the canonical mode and both share the canonical
+  // slot.
   const uint8_t lookup_mode = (texture_mode == static_cast<uint8_t>(GPUTextureMode::Reserved_Direct16Bit))    ? 2u :
                          (texture_mode == static_cast<uint8_t>(GPUTextureMode::Reserved_RawDirect16Bit)) ? 6u :
                                                                                                       texture_mode;
@@ -1508,20 +1497,14 @@ GPU_HW_D3D12::ComPtr<ID3D12PipelineState> GPU_HW_D3D12::GetBatchPipeline(GPUText
   // once a slot is filled (either by the precompile worker or by
   // an earlier main-thread fault-in). No mutex, no contention
   // against the worker.
-  std::atomic<ID3D12PipelineState*>& fast_slot =
-    m_batch_pipelines_fastpath[filter_idx][depth_test][render_mode][texture_mode][transparency_mode];
-  ID3D12PipelineState* existing = fast_slot.load(std::memory_order_acquire);
-  if (existing)
-  {
-    ComPtr<ID3D12PipelineState> ret;
-    ret.Attach(existing);
-    existing->AddRef();
-    return ret;
-  }
+  AtomicSlot<ID3D12PipelineState*>& fast_slot =
+    m_batch_pipelines_fastpath[filter_idx][depth_test][render_mode][lookup_mode][transparency_mode];
+  if (ID3D12PipelineState* existing = fast_slot.Load())
+    return ComPtr<ID3D12PipelineState>(existing);
 
-  // Build the PSO WITHOUT m_batch_shader_mutex held. The on-disk PSO
-  // cache (m_shader_cache.GetPipelineState) is thread-safe via its
-  // own internal locking, so multiple threads can build different
+  // Build the PSO. The on-disk PSO cache
+  // (m_shader_cache.GetPipelineState) is thread-safe (the pipeline
+  // library is free-threaded), so multiple threads can build different
   // PSOs here in parallel. Two threads building the SAME PSO is
   // harmless - both produce identical state objects and the cache
   // dedups internally via its own double-check.
@@ -1717,56 +1700,18 @@ GPU_HW_D3D12::ComPtr<ID3D12PipelineState> GPU_HW_D3D12::GetBatchPipeline(GPUText
     return {};
   }
 
-  // Publish step: take the helper mutex briefly to write the
-  // canonical slot, the dup slot (for Reserved_* texture modes),
-  // and the fast-path atomics. The mutex window is microseconds -
-  // no D3DCompile or CreateGraphicsPipelineState inside it.
-  std::lock_guard<std::mutex> lock(m_batch_shader_mutex);
-
-  // Double-check the fast slot under the lock.
-  existing = fast_slot.load(std::memory_order_relaxed);
-  if (existing)
-  {
-    ComPtr<ID3D12PipelineState> ret;
-    ret.Attach(existing);
-    existing->AddRef();
-    return ret;
-  }
-
-  ComPtr<ID3D12PipelineState>& canonical_slot =
-    m_batch_pipelines[filter_idx][depth_test][render_mode][lookup_mode][transparency_mode];
-
-  if (!canonical_slot)
-  {
-    canonical_slot = fresh_pso;
-    D3D12::SetObjectNameFormatted(canonical_slot.Get(), "Batch Pipeline f%u,%u,%u,%u,%u", filter_idx, depth_test, render_mode,
-                                  lookup_mode, transparency_mode);
-
-    // Publish the canonical raw pointer for future fast-path
-    // readers of the canonical slot.
-    m_batch_pipelines_fastpath[filter_idx][depth_test][render_mode][lookup_mode][transparency_mode]
-                                .store(canonical_slot.Get(), std::memory_order_release);
-  }
-
-  if (lookup_mode != texture_mode)
-  {
-    ComPtr<ID3D12PipelineState>& dup_slot =
-      m_batch_pipelines[filter_idx][depth_test][render_mode][texture_mode][transparency_mode];
-    if (!dup_slot)
-      dup_slot = canonical_slot;
-  }
-
-  // Publish the caller's slot.
-  fast_slot.store(canonical_slot.Get(), std::memory_order_release);
-  return canonical_slot;
+  // Publish step. The loser of a race gets the winner's PSO and
+  // drops its own.
+  D3D12::SetObjectNameFormatted(fresh_pso.Get(), "Batch Pipeline f%u,%u,%u,%u,%u", filter_idx, depth_test, render_mode,
+                                lookup_mode, transparency_mode);
+  return ComPtr<ID3D12PipelineState>(PublishComSlot(fast_slot, fresh_pso));
 }
 
 // ----------------------------------------------------------------------
 // Non-batch lazy helpers. Same fast-path / slow-path layout as
-// GetBatchPipeline: an acquire-load on an atomic raw-pointer fast
-// path, falling back to the ComPtr slot under m_batch_shader_mutex
-// on a miss. The fast path is one uncontended atomic load per call
-// once the slot is filled.
+// GetBatchPipeline: an acquire-load on the slot, and on a miss a
+// build published by compare-exchange. The fast path is one
+// uncontended atomic load per call once the slot is filled.
 //
 // The shared fullscreen-quad vertex shader is pre-baked DXBC (see
 // GetFullscreenQuadVertexShader and src/common/d3d_common/embedded_shaders.h),
@@ -1789,15 +1734,9 @@ D3D12_SHADER_BYTECODE GPU_HW_D3D12::GetFullscreenQuadVertexShader()
 
 GPU_HW_D3D12::ComPtr<ID3D12PipelineState> GPU_HW_D3D12::GetVRAMFillPipeline(uint8_t wrapped, uint8_t interlaced)
 {
-  std::atomic<ID3D12PipelineState*>& fast_slot = m_vram_fill_pipelines_fastpath[wrapped][interlaced];
-  ID3D12PipelineState* existing = fast_slot.load(std::memory_order_acquire);
-  if (existing)
-  {
-    ComPtr<ID3D12PipelineState> ret;
-    ret.Attach(existing);
-    existing->AddRef();
-    return ret;
-  }
+  AtomicSlot<ID3D12PipelineState*>& fast_slot = m_vram_fill_pipelines_fastpath[wrapped][interlaced];
+  if (ID3D12PipelineState* existing = fast_slot.Load())
+    return ComPtr<ID3D12PipelineState>(existing);
 
   const D3D12_SHADER_BYTECODE vs = GetFullscreenQuadVertexShader();
 
@@ -1855,37 +1794,15 @@ GPU_HW_D3D12::ComPtr<ID3D12PipelineState> GPU_HW_D3D12::GetVRAMFillPipeline(uint
   if (!fresh)
     return {};
 
-  // Publish under brief lock; double-check for race winner.
-  std::lock_guard<std::mutex> lock(m_batch_shader_mutex);
-  existing = fast_slot.load(std::memory_order_relaxed);
-  if (existing)
-  {
-    ComPtr<ID3D12PipelineState> ret;
-    ret.Attach(existing);
-    existing->AddRef();
-    return ret;
-  }
-  ComPtr<ID3D12PipelineState>& slot = m_vram_fill_pipelines[wrapped][interlaced];
-  if (!slot)
-  {
-    slot = fresh;
-    D3D12::SetObjectNameFormatted(slot.Get(), "VRAM Fill Pipeline Wrapped=%u,Interlacing=%u", wrapped, interlaced);
-  }
-  fast_slot.store(slot.Get(), std::memory_order_release);
-  return slot;
+  D3D12::SetObjectNameFormatted(fresh.Get(), "VRAM Fill Pipeline Wrapped=%u,Interlacing=%u", wrapped, interlaced);
+  return ComPtr<ID3D12PipelineState>(PublishComSlot(fast_slot, fresh));
 }
 
 GPU_HW_D3D12::ComPtr<ID3D12PipelineState> GPU_HW_D3D12::GetVRAMCopyPipeline(uint8_t depth_test)
 {
-  std::atomic<ID3D12PipelineState*>& fast_slot = m_vram_copy_pipelines_fastpath[depth_test];
-  ID3D12PipelineState* existing = fast_slot.load(std::memory_order_acquire);
-  if (existing)
-  {
-    ComPtr<ID3D12PipelineState> ret;
-    ret.Attach(existing);
-    existing->AddRef();
-    return ret;
-  }
+  AtomicSlot<ID3D12PipelineState*>& fast_slot = m_vram_copy_pipelines_fastpath[depth_test];
+  if (ID3D12PipelineState* existing = fast_slot.Load())
+    return ComPtr<ID3D12PipelineState>(existing);
 
   const D3D12_SHADER_BYTECODE vs = GetFullscreenQuadVertexShader();
 
@@ -1920,36 +1837,15 @@ GPU_HW_D3D12::ComPtr<ID3D12PipelineState> GPU_HW_D3D12::GetVRAMCopyPipeline(uint
   if (!fresh)
     return {};
 
-  std::lock_guard<std::mutex> lock(m_batch_shader_mutex);
-  existing = fast_slot.load(std::memory_order_relaxed);
-  if (existing)
-  {
-    ComPtr<ID3D12PipelineState> ret;
-    ret.Attach(existing);
-    existing->AddRef();
-    return ret;
-  }
-  ComPtr<ID3D12PipelineState>& slot = m_vram_copy_pipelines[depth_test];
-  if (!slot)
-  {
-    slot = fresh;
-    D3D12::SetObjectNameFormatted(slot.Get(), "VRAM Copy Pipeline Depth=%u", depth_test);
-  }
-  fast_slot.store(slot.Get(), std::memory_order_release);
-  return slot;
+  D3D12::SetObjectNameFormatted(fresh.Get(), "VRAM Copy Pipeline Depth=%u", depth_test);
+  return ComPtr<ID3D12PipelineState>(PublishComSlot(fast_slot, fresh));
 }
 
 GPU_HW_D3D12::ComPtr<ID3D12PipelineState> GPU_HW_D3D12::GetVRAMWritePipeline(uint8_t depth_test)
 {
-  std::atomic<ID3D12PipelineState*>& fast_slot = m_vram_write_pipelines_fastpath[depth_test];
-  ID3D12PipelineState* existing = fast_slot.load(std::memory_order_acquire);
-  if (existing)
-  {
-    ComPtr<ID3D12PipelineState> ret;
-    ret.Attach(existing);
-    existing->AddRef();
-    return ret;
-  }
+  AtomicSlot<ID3D12PipelineState*>& fast_slot = m_vram_write_pipelines_fastpath[depth_test];
+  if (ID3D12PipelineState* existing = fast_slot.Load())
+    return ComPtr<ID3D12PipelineState>(existing);
 
   const D3D12_SHADER_BYTECODE vs = GetFullscreenQuadVertexShader();
 
@@ -1984,35 +1880,14 @@ GPU_HW_D3D12::ComPtr<ID3D12PipelineState> GPU_HW_D3D12::GetVRAMWritePipeline(uin
   if (!fresh)
     return {};
 
-  std::lock_guard<std::mutex> lock(m_batch_shader_mutex);
-  existing = fast_slot.load(std::memory_order_relaxed);
-  if (existing)
-  {
-    ComPtr<ID3D12PipelineState> ret;
-    ret.Attach(existing);
-    existing->AddRef();
-    return ret;
-  }
-  ComPtr<ID3D12PipelineState>& slot = m_vram_write_pipelines[depth_test];
-  if (!slot)
-  {
-    slot = fresh;
-    D3D12::SetObjectNameFormatted(slot.Get(), "VRAM Write Pipeline Depth=%u", depth_test);
-  }
-  fast_slot.store(slot.Get(), std::memory_order_release);
-  return slot;
+  D3D12::SetObjectNameFormatted(fresh.Get(), "VRAM Write Pipeline Depth=%u", depth_test);
+  return ComPtr<ID3D12PipelineState>(PublishComSlot(fast_slot, fresh));
 }
 
 GPU_HW_D3D12::ComPtr<ID3D12PipelineState> GPU_HW_D3D12::GetVRAMUpdateDepthPipeline()
 {
-  ID3D12PipelineState* existing = m_vram_update_depth_pipeline_fastpath.load(std::memory_order_acquire);
-  if (existing)
-  {
-    ComPtr<ID3D12PipelineState> ret;
-    ret.Attach(existing);
-    existing->AddRef();
-    return ret;
-  }
+  if (ID3D12PipelineState* existing = m_vram_update_depth_pipeline_fastpath.Load())
+    return ComPtr<ID3D12PipelineState>(existing);
 
   const D3D12_SHADER_BYTECODE vs = GetFullscreenQuadVertexShader();
 
@@ -2058,34 +1933,14 @@ GPU_HW_D3D12::ComPtr<ID3D12PipelineState> GPU_HW_D3D12::GetVRAMUpdateDepthPipeli
   if (!fresh)
     return {};
 
-  std::lock_guard<std::mutex> lock(m_batch_shader_mutex);
-  existing = m_vram_update_depth_pipeline_fastpath.load(std::memory_order_relaxed);
-  if (existing)
-  {
-    ComPtr<ID3D12PipelineState> ret;
-    ret.Attach(existing);
-    existing->AddRef();
-    return ret;
-  }
-  if (!m_vram_update_depth_pipeline)
-  {
-    m_vram_update_depth_pipeline = fresh;
-    D3D12::SetObjectName(m_vram_update_depth_pipeline.Get(), "VRAM Update Depth Pipeline");
-  }
-  m_vram_update_depth_pipeline_fastpath.store(m_vram_update_depth_pipeline.Get(), std::memory_order_release);
-  return m_vram_update_depth_pipeline;
+  D3D12::SetObjectName(fresh.Get(), "VRAM Update Depth Pipeline");
+  return ComPtr<ID3D12PipelineState>(PublishComSlot(m_vram_update_depth_pipeline_fastpath, fresh));
 }
 
 GPU_HW_D3D12::ComPtr<ID3D12PipelineState> GPU_HW_D3D12::GetVRAMReadbackPipeline()
 {
-  ID3D12PipelineState* existing = m_vram_readback_pipeline_fastpath.load(std::memory_order_acquire);
-  if (existing)
-  {
-    ComPtr<ID3D12PipelineState> ret;
-    ret.Attach(existing);
-    existing->AddRef();
-    return ret;
-  }
+  if (ID3D12PipelineState* existing = m_vram_readback_pipeline_fastpath.Load())
+    return ComPtr<ID3D12PipelineState>(existing);
 
   const D3D12_SHADER_BYTECODE vs = GetFullscreenQuadVertexShader();
 
@@ -2159,35 +2014,15 @@ GPU_HW_D3D12::ComPtr<ID3D12PipelineState> GPU_HW_D3D12::GetVRAMReadbackPipeline(
   if (!fresh)
     return {};
 
-  std::lock_guard<std::mutex> lock(m_batch_shader_mutex);
-  existing = m_vram_readback_pipeline_fastpath.load(std::memory_order_relaxed);
-  if (existing)
-  {
-    ComPtr<ID3D12PipelineState> ret;
-    ret.Attach(existing);
-    existing->AddRef();
-    return ret;
-  }
-  if (!m_vram_readback_pipeline)
-  {
-    m_vram_readback_pipeline = fresh;
-    D3D12::SetObjectName(m_vram_readback_pipeline.Get(), "VRAM Readback Pipeline");
-  }
-  m_vram_readback_pipeline_fastpath.store(m_vram_readback_pipeline.Get(), std::memory_order_release);
-  return m_vram_readback_pipeline;
+  D3D12::SetObjectName(fresh.Get(), "VRAM Readback Pipeline");
+  return ComPtr<ID3D12PipelineState>(PublishComSlot(m_vram_readback_pipeline_fastpath, fresh));
 }
 
 GPU_HW_D3D12::ComPtr<ID3D12PipelineState> GPU_HW_D3D12::GetDisplayPipeline(uint8_t depth_24, uint8_t interlace_mode)
 {
-  std::atomic<ID3D12PipelineState*>& fast_slot = m_display_pipelines_fastpath[depth_24][interlace_mode];
-  ID3D12PipelineState* existing = fast_slot.load(std::memory_order_acquire);
-  if (existing)
-  {
-    ComPtr<ID3D12PipelineState> ret;
-    ret.Attach(existing);
-    existing->AddRef();
-    return ret;
-  }
+  AtomicSlot<ID3D12PipelineState*>& fast_slot = m_display_pipelines_fastpath[depth_24][interlace_mode];
+  if (ID3D12PipelineState* existing = fast_slot.Load())
+    return ComPtr<ID3D12PipelineState>(existing);
 
   const D3D12_SHADER_BYTECODE vs = GetFullscreenQuadVertexShader();
 
@@ -2220,35 +2055,14 @@ GPU_HW_D3D12::ComPtr<ID3D12PipelineState> GPU_HW_D3D12::GetDisplayPipeline(uint8
   if (!fresh)
     return {};
 
-  std::lock_guard<std::mutex> lock(m_batch_shader_mutex);
-  existing = fast_slot.load(std::memory_order_relaxed);
-  if (existing)
-  {
-    ComPtr<ID3D12PipelineState> ret;
-    ret.Attach(existing);
-    existing->AddRef();
-    return ret;
-  }
-  ComPtr<ID3D12PipelineState>& slot = m_display_pipelines[depth_24][interlace_mode];
-  if (!slot)
-  {
-    slot = fresh;
-    D3D12::SetObjectNameFormatted(slot.Get(), "Display Pipeline Depth=%u Interlace=%u", depth_24, interlace_mode);
-  }
-  fast_slot.store(slot.Get(), std::memory_order_release);
-  return slot;
+  D3D12::SetObjectNameFormatted(fresh.Get(), "Display Pipeline Depth=%u Interlace=%u", depth_24, interlace_mode);
+  return ComPtr<ID3D12PipelineState>(PublishComSlot(fast_slot, fresh));
 }
 
 GPU_HW_D3D12::ComPtr<ID3D12PipelineState> GPU_HW_D3D12::GetCopyPipeline()
 {
-  ID3D12PipelineState* existing = m_copy_pipeline_fastpath.load(std::memory_order_acquire);
-  if (existing)
-  {
-    ComPtr<ID3D12PipelineState> ret;
-    ret.Attach(existing);
-    existing->AddRef();
-    return ret;
-  }
+  if (ID3D12PipelineState* existing = m_copy_pipeline_fastpath.Load())
+    return ComPtr<ID3D12PipelineState>(existing);
 
   const D3D12_SHADER_BYTECODE vs = GetFullscreenQuadVertexShader();
 
@@ -2275,67 +2089,31 @@ GPU_HW_D3D12::ComPtr<ID3D12PipelineState> GPU_HW_D3D12::GetCopyPipeline()
   if (!fresh)
     return {};
 
-  std::lock_guard<std::mutex> lock(m_batch_shader_mutex);
-  existing = m_copy_pipeline_fastpath.load(std::memory_order_relaxed);
-  if (existing)
-  {
-    ComPtr<ID3D12PipelineState> ret;
-    ret.Attach(existing);
-    existing->AddRef();
-    return ret;
-  }
-  if (!m_copy_pipeline)
-  {
-    m_copy_pipeline = fresh;
-    D3D12::SetObjectName(m_copy_pipeline.Get(), "Copy/Blit Pipeline");
-  }
-  m_copy_pipeline_fastpath.store(m_copy_pipeline.Get(), std::memory_order_release);
-  return m_copy_pipeline;
+  D3D12::SetObjectName(fresh.Get(), "Copy/Blit Pipeline");
+  return ComPtr<ID3D12PipelineState>(PublishComSlot(m_copy_pipeline_fastpath, fresh));
 }
 
 void GPU_HW_D3D12::DestroyPipelines()
 {
   // Tear down the background-compile worker before clearing the
-  // matrix - otherwise it would be writing into ComPtrs we're about
-  // to default-construct.
+  // matrix - otherwise it could still be publishing into it.
   StopShaderCompileThread();
 
-  // Clear the atomic fast-path views BEFORE dropping the ComPtr
-  // ownership so a hypothetical concurrent reader couldn't see a
-  // raw pointer pointing to a just-freed object. By this point the
-  // worker is stopped and the runloop isn't drawing (UpdateSettings
-  // is the only call site that runs DestroyPipelines, and it's on
-  // the runloop thread), so memory_order_relaxed is sufficient.
-  m_batch_pipelines_fastpath.enumerate(
-    [](std::atomic<ID3D12PipelineState*>& s) { s.store(nullptr, std::memory_order_relaxed); });
-
-  // Same pattern for the non-batch fast-path mirrors added when
-  // these pipelines moved onto the lazy-fault path.
-  m_vram_fill_pipelines_fastpath.enumerate(
-    [](std::atomic<ID3D12PipelineState*>& s) { s.store(nullptr, std::memory_order_relaxed); });
-  for (auto& s : m_vram_copy_pipelines_fastpath)
-    s.store(nullptr, std::memory_order_relaxed);
-  for (auto& s : m_vram_write_pipelines_fastpath)
-    s.store(nullptr, std::memory_order_relaxed);
-  m_display_pipelines_fastpath.enumerate(
-    [](std::atomic<ID3D12PipelineState*>& s) { s.store(nullptr, std::memory_order_relaxed); });
-  m_vram_readback_pipeline_fastpath.store(nullptr, std::memory_order_relaxed);
-  m_vram_update_depth_pipeline_fastpath.store(nullptr, std::memory_order_relaxed);
-  m_copy_pipeline_fastpath.store(nullptr, std::memory_order_relaxed);
-
-  m_batch_pipelines = {};
-  m_vram_fill_pipelines = {};
-  m_vram_write_pipelines = {};
-  m_vram_copy_pipelines = {};
-  m_vram_readback_pipeline.Reset();
-  m_vram_update_depth_pipeline.Reset();
-
-  m_display_pipelines = {};
-
-  // m_copy_pipeline was previously not cleared here - latent leak
-  // across UpdateSettings -> DestroyPipelines -> CompilePipelines
-  // cycles.
-  m_copy_pipeline.Reset();
+  // The worker is stopped and the runloop isn't drawing
+  // (UpdateSettings is the only call site that runs DestroyPipelines,
+  // and it's on the runloop thread), so the slots are released in
+  // place.
+  const auto release = [](AtomicSlot<ID3D12PipelineState*>& slot) { ReleaseComSlot(slot); };
+  m_batch_pipelines_fastpath.enumerate(release);
+  m_vram_fill_pipelines_fastpath.enumerate(release);
+  for (auto& slot : m_vram_copy_pipelines_fastpath)
+    release(slot);
+  for (auto& slot : m_vram_write_pipelines_fastpath)
+    release(slot);
+  m_display_pipelines_fastpath.enumerate(release);
+  release(m_vram_readback_pipeline_fastpath);
+  release(m_vram_update_depth_pipeline_fastpath);
+  release(m_copy_pipeline_fastpath);
 
   m_downsample_pipeline.Reset();
   m_downsample_first_pass_pipeline.Reset();
@@ -2358,9 +2136,7 @@ void GPU_HW_D3D12::ClearDisplayPipelines()
   // batch matrix. UpdateSettings has already executed the command
   // list to completion via g_d3d12_context->ExecuteCommandList(true),
   // so no in-flight draw references these PSOs.
-  m_display_pipelines_fastpath.enumerate(
-    [](std::atomic<ID3D12PipelineState*>& s) { s.store(nullptr, std::memory_order_relaxed); });
-  m_display_pipelines = {};
+  m_display_pipelines_fastpath.enumerate([](AtomicSlot<ID3D12PipelineState*>& slot) { ReleaseComSlot(slot); });
 }
 
 bool GPU_HW_D3D12::CreateTextureReplacementStreamBuffer()
@@ -2431,12 +2207,10 @@ void GPU_HW_D3D12::DrawBatchVertices(BatchRenderMode render_mode, uint32_t base_
 
   // Fetch the batch PSO via the lazy helper. In 'Enabled' precompile
   // mode every slot was filled at CompilePipelines time so this is a
-  // fast mutex-protected pointer load. In 'Lazy' mode this either
-  // gets the already-compiled PSO (background thread reached it
-  // first) or compiles it now on the main thread (game raced ahead
-  // of the worker). In 'Disabled' mode it always compiles on miss.
-  // The mutex serialises both the PSO matrix and the shader-cache
-  // mutation; cost is ~20 ns uncontended per modern std::mutex impl.
+  // single acquire load. In 'Lazy' mode this either gets the
+  // already-compiled PSO (background thread reached it first) or
+  // compiles it now on the main thread (game raced ahead of the
+  // worker). In 'Disabled' mode it always compiles on miss.
   //
   // [filter][depth_test][render_mode][texture_mode][transparency_mode]
   // m_texture_filtering selects the active filter's sub-cube. Filter

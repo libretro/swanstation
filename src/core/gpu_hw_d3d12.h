@@ -4,15 +4,14 @@
 #include "common/d3d12/stream_buffer.h"
 #include "common/d3d12/texture.h"
 #include "common/dimensional_array.h"
+#include "common/lockfree.h"
 #include "gpu_hw.h"
 #include "host_display.h"
 #include "texture_replacements.h"
 #include <array>
-#include <atomic>
 #include <d3d12.h>
 #include <memory>
-#include <mutex>
-#include <thread>
+#include <rthreads/rthreads.h>
 #include <tuple>
 #include <vector>
 #include <wrl/client.h>
@@ -161,12 +160,12 @@ private:
   // pre-baked picker (also pre-baked now; 2 variants). It then hands
   // the descriptor to m_shader_cache.GetPipelineState (which hits the
   // on-disk PSO cache where possible, only paying the actual driver
-  // compile on cold runs). Reserved_* texture-mode PSOs inherit the
-  // canonical PSO ComPtr.
+  // compile on cold runs). Reserved_* texture-mode PSOs share the
+  // canonical slot.
   //
-  // Mutations to the PSO cache + array are serialised through
-  // m_batch_shader_mutex. The fast path is one uncontended lock-free
-  // atomic load per DrawBatchVertices call.
+  // A new PSO is published with a compare-exchange on its slot. The
+  // fast path is one uncontended atomic load per DrawBatchVertices
+  // call.
   ComPtr<ID3D12PipelineState> GetBatchPipeline(GPUTextureFilter filter, uint8_t depth_test, uint8_t render_mode, uint8_t texture_mode, uint8_t transparency_mode);
 
   // Lazy non-batch PSO compile path.
@@ -184,12 +183,10 @@ private:
   // umbrella as the batch matrix.
   //
   // Each helper follows the same fast-path / slow-path layout as
-  // GetBatchPipeline: an acquire-load on an atomic raw-pointer
-  // fast-path array, falling back to the ComPtr slot under
-  // m_batch_shader_mutex on a miss. The atomic fast path means
-  // the runloop hot path - FillVRAM / CopyVRAM / UpdateVRAM /
-  // UpdateDisplay / etc. - takes no lock once the slot is filled.
-  // The single-PSO ones use a bare std::atomic + ComPtr pair.
+  // GetBatchPipeline: an acquire-load on the slot, and on a miss a
+  // build published by compare-exchange. The runloop hot path -
+  // FillVRAM / CopyVRAM / UpdateVRAM / UpdateDisplay / etc. - is one
+  // atomic load once the slot is filled.
   //
   // GetFullscreenQuadVertexShader returns the pre-baked DXBC blob for
   // the screen-quad VS. No lazy compile, no caching state - the blob
@@ -210,9 +207,9 @@ private:
   // texture_mode) order and calls
   // GetBatchPipeline on each cell. As with D3D11, the main thread
   // can race ahead and fill any slot it needs at draw time; the
-  // worker just observes the filled slot under the lock and moves
-  // on.
+  // worker just observes the filled slot and moves on.
   void ShaderCompileThreadEntryPoint();
+  void StartShaderCompileThread();
   void StopShaderCompileThread();
 
   bool CreateTextureReplacementStreamBuffer();
@@ -255,13 +252,10 @@ private:
 
   uint32_t m_current_uniform_buffer_offset = 0;
 
-  // Batch PSO matrix. The ComPtr array owns the reference; the
-  // parallel atomic-raw-pointer array exists so DrawBatchVertices
-  // can sample a slot without taking any lock. Same split as the
-  // D3D11 batch pixel shader matrix: m_batch_pipelines holds the
-  // COM ownership and is only written under m_batch_shader_mutex
-  // (in GetBatchPipeline's slow path); m_batch_pipelines_fastpath
-  // is the atomic view the runloop reads on the fast path.
+  // Batch PSO matrix. Each slot owns one reference to its PSO and is
+  // filled once by compare-exchange, so DrawBatchVertices samples a
+  // slot without taking any lock. Same scheme as the D3D11 batch
+  // pixel shader matrix.
   //
   // filter is the outermost dimension. With the cbuffer-refactor
   // patch (7b575a3) the HLSL is invariant under
@@ -294,28 +288,16 @@ private:
   // shape, same reasoning. m_batch.interlacing still flips per-batch
   // but the FS reads u_interlacing from the batch UBO with a
   // short-circuit branch; the PSO lookup is interlacing-agnostic.
-  DimensionalArray<ComPtr<ID3D12PipelineState>, 5, 9, 4, 2, 7> m_batch_pipelines;
-  DimensionalArray<std::atomic<ID3D12PipelineState*>, 5, 9, 4, 2, 7> m_batch_pipelines_fastpath{};
+  DimensionalArray<AtomicSlot<ID3D12PipelineState*>, 5, 9, 4, 2, 7> m_batch_pipelines_fastpath;
 
-  // m_batch_shader_mutex serialises the SLOW path of the lazy
-  // helpers (cache mutation, ComPtr-array write, atomic-raw-pointer
-  // publish). The FAST path - DrawBatchVertices looking up an
-  // already-filled PSO slot, or GetBatchPipeline looking up an
-  // already-compiled fragment shader - reads the corresponding
-  // _fastpath atomic array with an acquire-load and does not take
-  // this mutex. That decoupling is what keeps the runloop running
-  // while the background precompile worker is faulting in other
-  // cells.
-  //
   // m_shader_cache is retained for the PSO pipeline-library cache
   // (the gpbuilder.Create(device, m_shader_cache) calls). There is no
   // m_shadergen member any more: every batch / VRAM-ops / display
   // shader is pre-baked, so the D3D12 backend issues zero D3DCompile
   // calls and never instantiates GPU_HW_ShaderGen.
-  std::mutex m_batch_shader_mutex;
   D3D12::ShaderCache m_shader_cache;
-  std::thread m_shader_compile_thread;
-  std::atomic<bool> m_shader_compile_thread_quit{false};
+  sthread_t* m_shader_compile_thread = nullptr;
+  retro_atomic_int_t m_shader_compile_thread_quit = {};
 
   // The fragment-shader side needs no blob matrix: every batch FS
   // variant is pre-baked (the batch FS pre-bake arc completed at
@@ -326,27 +308,21 @@ private:
   // as well - GetBatchPipeline wraps the picked VS DXBC into a
   // D3D12_SHADER_BYTECODE inline.
 
+  // Non-batch PSO slots, same scheme as the batch matrix.
   // [wrapped][interlaced]
-  DimensionalArray<ComPtr<ID3D12PipelineState>, 2, 2> m_vram_fill_pipelines;
-  DimensionalArray<std::atomic<ID3D12PipelineState*>, 2, 2> m_vram_fill_pipelines_fastpath{};
+  DimensionalArray<AtomicSlot<ID3D12PipelineState*>, 2, 2> m_vram_fill_pipelines_fastpath;
 
   // [depth_test]
-  std::array<ComPtr<ID3D12PipelineState>, 2> m_vram_write_pipelines;
-  std::array<ComPtr<ID3D12PipelineState>, 2> m_vram_copy_pipelines;
-  std::array<std::atomic<ID3D12PipelineState*>, 2> m_vram_write_pipelines_fastpath{};
-  std::array<std::atomic<ID3D12PipelineState*>, 2> m_vram_copy_pipelines_fastpath{};
+  std::array<AtomicSlot<ID3D12PipelineState*>, 2> m_vram_write_pipelines_fastpath;
+  std::array<AtomicSlot<ID3D12PipelineState*>, 2> m_vram_copy_pipelines_fastpath;
 
-  ComPtr<ID3D12PipelineState> m_vram_readback_pipeline;
-  ComPtr<ID3D12PipelineState> m_vram_update_depth_pipeline;
-  std::atomic<ID3D12PipelineState*> m_vram_readback_pipeline_fastpath{nullptr};
-  std::atomic<ID3D12PipelineState*> m_vram_update_depth_pipeline_fastpath{nullptr};
+  AtomicSlot<ID3D12PipelineState*> m_vram_readback_pipeline_fastpath;
+  AtomicSlot<ID3D12PipelineState*> m_vram_update_depth_pipeline_fastpath;
 
   // [depth_24][interlace_mode]
-  DimensionalArray<ComPtr<ID3D12PipelineState>, 3, 2> m_display_pipelines;
-  DimensionalArray<std::atomic<ID3D12PipelineState*>, 3, 2> m_display_pipelines_fastpath{};
+  DimensionalArray<AtomicSlot<ID3D12PipelineState*>, 3, 2> m_display_pipelines_fastpath;
 
-  ComPtr<ID3D12PipelineState> m_copy_pipeline;
-  std::atomic<ID3D12PipelineState*> m_copy_pipeline_fastpath{nullptr};
+  AtomicSlot<ID3D12PipelineState*> m_copy_pipeline_fastpath;
 
   ComPtr<ID3D12PipelineState> m_downsample_pipeline;
   // Adaptive downsample pipelines. The mip-generation (first/mid) and

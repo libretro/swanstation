@@ -8,6 +8,9 @@ set(SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/encodings/encoding_utf.c
 	${CMAKE_CURRENT_SOURCE_DIR}/formats/data_transfer.c
 	${CMAKE_CURRENT_SOURCE_DIR}/memmap/memmap.c
+	${CMAKE_CURRENT_SOURCE_DIR}/queues/retro_spsc.c
+	${CMAKE_CURRENT_SOURCE_DIR}/rthreads/retro_eventcount.c
+	${CMAKE_CURRENT_SOURCE_DIR}/rthreads/rthreads.c
 	${CMAKE_CURRENT_SOURCE_DIR}/streams/file_stream.c
 	${CMAKE_CURRENT_SOURCE_DIR}/string/stdstring.c
 	${CMAKE_CURRENT_SOURCE_DIR}/time/rtime.c
@@ -26,6 +29,8 @@ option(LIBRETRO_COMMON_NO_MMAP "Disable file mapping (fallback-path testing)" OF
 if(NOT WIN32 AND NOT LIBRETRO_COMMON_NO_MMAP)
   target_compile_definitions(libretro-common PRIVATE HAVE_MMAP)
 endif()
+
+target_link_libraries(libretro-common PUBLIC Threads::Threads)
 
 target_include_directories(libretro-common PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include/")
 target_include_directories(libretro-common INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include/")

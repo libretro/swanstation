@@ -41,7 +41,6 @@
 #include <cstring>
 #include <deque>
 #include <limits>
-#include <thread>
 
 #include <compat/strl.h>
 #include <file/file_path.h>

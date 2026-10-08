@@ -1,6 +1,68 @@
+#include "common/lockfree.h"
 #include "cdrom_async_reader.h"
 #include "common/log.h"
+#include <rthreads/retro_eventcount.h>
+#include <rthreads/rthreads.h>
 Log_SetChannel(CDROMAsyncReader);
+
+enum class CDROMAsyncReader::Op : uint8_t
+{
+  ReadUncached,
+  SwapMedia,
+};
+
+/* The worker owns the media while it runs. The emulation thread posts
+ * seek requests and ops by sequence number and reads sectors out of the
+ * ring between tail (its front sector) and head (published by the
+ * worker); no lock is taken on either side. */
+struct CDROMAsyncReader::ThreadState
+{
+  CDROMAsyncReader* owner = nullptr;
+  sthread_t* thread = nullptr;
+  retro_eventcount_t worker_ec;
+  retro_eventcount_t reader_ec;
+
+  retro_atomic_size_t head;
+  retro_atomic_size_t tail;
+  retro_atomic_int_t request_seq;
+  retro_atomic_int_t request_lba;
+  retro_atomic_int_t ack_seq;
+  retro_atomic_int_t error_seq;
+  retro_atomic_int_t op_seq;
+  retro_atomic_int_t op_done;
+  retro_atomic_int_t quit;
+
+  /* Published by op_seq, answered by op_done. */
+  Op op = Op::ReadUncached;
+  CDImage::LBA op_lba = 0;
+  CDImage::SubChannelQ* op_subq = nullptr;
+  SectorBuffer* op_data = nullptr;
+  std::unique_ptr<CDImage>* op_media = nullptr;
+  bool op_result = false;
+
+  bool events_ok = false;
+
+  ThreadState()
+  {
+    retro_atomic_size_init(&head, 0);
+    retro_atomic_size_init(&tail, 0);
+    retro_atomic_int_init(&request_seq, 0);
+    retro_atomic_int_init(&request_lba, 0);
+    retro_atomic_int_init(&ack_seq, 0);
+    retro_atomic_int_init(&error_seq, 0);
+    retro_atomic_int_init(&op_seq, 0);
+    retro_atomic_int_init(&op_done, 0);
+    retro_atomic_int_init(&quit, 0);
+    events_ok = retro_eventcount_init(&worker_ec);
+    events_ok = retro_eventcount_init(&reader_ec) && events_ok;
+  }
+
+  ~ThreadState()
+  {
+    retro_eventcount_free(&reader_ec);
+    retro_eventcount_free(&worker_ec);
+  }
+};
 
 CDROMAsyncReader::CDROMAsyncReader() = default;
 
@@ -16,10 +78,25 @@ void CDROMAsyncReader::StartThread(uint32_t readahead_count)
 
   m_buffers.clear();
   m_buffers.resize(readahead_count);
-  EmptyBuffers();
+  m_buffer_front = 0;
 
-  m_shutdown_flag.store(false);
-  m_read_thread = std::thread(&CDROMAsyncReader::WorkerThreadEntryPoint, this);
+  std::unique_ptr<ThreadState> t = std::make_unique<ThreadState>();
+  t->owner = this;
+  if (!t->events_ok)
+  {
+    Log_ErrorPrint("Failed to initialise read thread events, reading synchronously");
+    return;
+  }
+
+  m_thread = std::move(t);
+  m_thread->thread = sthread_create(&CDROMAsyncReader::WorkerThreadEntryPoint, m_thread.get());
+  if (!m_thread->thread)
+  {
+    Log_ErrorPrint("Failed to create read thread, reading synchronously");
+    m_thread.reset();
+    return;
+  }
+
   Log_InfoPrintf("Read thread started with readahead of %u sectors", readahead_count);
 }
 
@@ -28,31 +105,32 @@ void CDROMAsyncReader::StopThread()
   if (!IsUsingThread())
     return;
 
-  {
-    std::unique_lock<std::mutex> lock(m_mutex);
-    m_shutdown_flag.store(true);
-    m_do_read_cv.notify_one();
-  }
+  retro_atomic_store_release_int(&m_thread->quit, 1);
+  retro_eventcount_notify(&m_thread->worker_ec);
+  sthread_join(m_thread->thread);
+  m_thread.reset();
 
-  m_read_thread.join();
-  EmptyBuffers();
   m_buffers.clear();
+  m_buffer_front = 0;
+  m_sector_valid = false;
 }
 
 void CDROMAsyncReader::SetMedia(std::unique_ptr<CDImage> media)
 {
   if (IsUsingThread())
-    CancelReadahead();
-
-  m_media = std::move(media);
+    RunOnWorker(Op::SwapMedia, 0, nullptr, nullptr, &media);
+  else
+    m_media = std::move(media);
 }
 
 std::unique_ptr<CDImage> CDROMAsyncReader::RemoveMedia()
 {
+  std::unique_ptr<CDImage> media;
   if (IsUsingThread())
-    CancelReadahead();
-
-  return std::move(m_media);
+    RunOnWorker(Op::SwapMedia, 0, nullptr, nullptr, &media);
+  else
+    media = std::move(m_media);
+  return media;
 }
 
 void CDROMAsyncReader::QueueReadSector(CDImage::LBA lba)
@@ -63,33 +141,36 @@ void CDROMAsyncReader::QueueReadSector(CDImage::LBA lba)
     return;
   }
 
-  const uint32_t buffer_count = m_buffer_count.load();
-  if (buffer_count > 0)
+  ThreadState* t = m_thread.get();
+  const int request = retro_atomic_load_relaxed_int(&t->request_seq);
+  if (retro_atomic_load_acquire_int(&t->ack_seq) == request)
   {
-    // don't re-read the same sector if it was the last one we read
-    // the CDC code does this when seeking->reading
-    const uint32_t buffer_front = m_buffer_front.load();
-    if (m_buffers[buffer_front].lba == lba)
-      return;
-
-    // did we readahead to the correct sector?
-    const uint32_t next_buffer = (buffer_front + 1) % static_cast<uint32_t>(m_buffers.size());
-    if (m_buffer_count > 1 && m_buffers[next_buffer].lba == lba)
+    const size_t tail = retro_atomic_load_relaxed_size(&t->tail);
+    const size_t count = retro_atomic_load_acquire_size(&t->head) - tail;
+    if (count > 0)
     {
-      // great, don't need a seek, but still kick the thread to start reading ahead again
-      m_buffer_front.store(next_buffer);
-      m_buffer_count.fetch_sub(1);
-      m_can_readahead.store(true);
-      m_do_read_cv.notify_one();
-      return;
+      // don't re-read the same sector if it was the last one we read
+      // the CDC code does this when seeking->reading
+      if (m_buffers[m_buffer_front].lba == lba)
+        return;
+
+      // did we readahead to the correct sector?
+      const uint32_t next_buffer = static_cast<uint32_t>((tail + 1) % m_buffers.size());
+      if (count > 1 && m_buffers[next_buffer].lba == lba)
+      {
+        // great, don't need a seek, but still kick the thread to start reading ahead again
+        m_buffer_front = next_buffer;
+        retro_atomic_store_release_size(&t->tail, tail + 1);
+        retro_eventcount_notify(&t->worker_ec);
+        return;
+      }
     }
   }
 
   // we need to toss away our readahead and start fresh
-  std::unique_lock<std::mutex> lock(m_mutex);
-  m_next_position_set.store(true);
-  m_next_position = lba;
-  m_do_read_cv.notify_one();
+  retro_atomic_store_relaxed_int(&t->request_lba, static_cast<int>(lba));
+  retro_atomic_store_release_int(&t->request_seq, NextSequence(request));
+  retro_eventcount_notify(&t->worker_ec);
 }
 
 bool CDROMAsyncReader::ReadSectorUncached(CDImage::LBA lba, CDImage::SubChannelQ* subq, SectorBuffer* data)
@@ -97,21 +178,8 @@ bool CDROMAsyncReader::ReadSectorUncached(CDImage::LBA lba, CDImage::SubChannelQ
   if (!IsUsingThread())
     return InternalReadSectorUncached(lba, subq, data);
 
-  std::unique_lock lock(m_mutex);
-
-  // wait until the read thread is idle
-  m_notify_read_complete_cv.wait(lock, [this]() { return !m_is_reading.load(); });
-
-  // read while the lock is held so it has to wait
-  const CDImage::LBA prev_lba = m_media->GetPositionOnDisc();
-  const bool result = InternalReadSectorUncached(lba, subq, data);
-  if (!m_media->Seek(prev_lba))
-  {
-    Log_ErrorPrintf("Failed to re-seek to cached position %u", prev_lba);
-    m_can_readahead.store(false);
-  }
-
-  return result;
+  RunOnWorker(Op::ReadUncached, lba, subq, data, nullptr);
+  return m_thread->op_result;
 }
 
 bool CDROMAsyncReader::InternalReadSectorUncached(CDImage::LBA lba, CDImage::SubChannelQ* subq, SectorBuffer* data)
@@ -133,59 +201,46 @@ bool CDROMAsyncReader::InternalReadSectorUncached(CDImage::LBA lba, CDImage::Sub
 
 bool CDROMAsyncReader::WaitForReadToComplete()
 {
-  // Safe without locking with memory_order_seq_cst.
-  if (!m_next_position_set.load() && m_buffer_count.load() > 0)
-    return m_buffers[m_buffer_front.load()].result;
+  if (!IsUsingThread())
+    return m_sector_valid && m_buffers[m_buffer_front].result;
 
-  std::unique_lock<std::mutex> lock(m_mutex);
-  m_notify_read_complete_cv.wait(
-    lock, [this]() { return (m_buffer_count.load() > 0 || m_seek_error.load()) && !m_next_position_set.load(); });
-  if (m_seek_error.load())
+  ThreadState* t = m_thread.get();
+  const int request = retro_atomic_load_relaxed_int(&t->request_seq);
+  const size_t tail = retro_atomic_load_relaxed_size(&t->tail);
+
+  /* 1 sector ready, 0 seek failed, -1 still pending. */
+  const auto poll = [t, request, tail]() {
+    if (retro_atomic_load_acquire_int(&t->ack_seq) != request)
+      return -1;
+    if (retro_atomic_load_acquire_int(&t->error_seq) == request)
+      return 0;
+    return (retro_atomic_load_acquire_size(&t->head) != tail) ? 1 : -1;
+  };
+
+  int state;
+  while ((state = poll()) < 0)
   {
-    m_seek_error.store(false);
-    return false;
+    const int key = retro_eventcount_prepare_wait(&t->reader_ec);
+    if ((state = poll()) >= 0)
+    {
+      retro_eventcount_cancel_wait(&t->reader_ec);
+      break;
+    }
+    retro_eventcount_commit_wait(&t->reader_ec, key);
   }
 
-  const uint32_t front = m_buffer_front.load();
-  return m_buffers[front].result;
-}
-
-void CDROMAsyncReader::EmptyBuffers()
-{
-  m_buffer_front.store(0);
-  m_buffer_back.store(0);
-  m_buffer_count.store(0);
-}
-
-bool CDROMAsyncReader::ReadSectorIntoBuffer(std::unique_lock<std::mutex>& lock)
-{
-  const uint32_t slot = m_buffer_back.load();
-  m_buffer_back.store((slot + 1) % static_cast<uint32_t>(m_buffers.size()));
-
-  BufferSlot& buffer = m_buffers[slot];
-  buffer.lba = m_media->GetPositionOnDisc();
-  m_is_reading.store(true);
-  lock.unlock();
-
-  buffer.result = m_media->ReadRawSector(buffer.data.data(), &buffer.subq);
-
-  lock.lock();
-  m_is_reading.store(false);
-  m_buffer_count.fetch_add(1);
-  m_notify_read_complete_cv.notify_all();
-  return true;
+  return state && m_buffers[m_buffer_front].result;
 }
 
 void CDROMAsyncReader::ReadSectorNonThreaded(CDImage::LBA lba)
 {
   m_buffers.resize(1);
-  m_seek_error.store(false);
-  EmptyBuffers();
+  m_buffer_front = 0;
+  m_sector_valid = false;
 
   if (m_media->GetPositionOnDisc() != lba && !m_media->Seek(lba))
   {
     Log_WarningPrintf("Seek to LBA %u failed", lba);
-    m_seek_error.store(true);
     return;
   }
 
@@ -193,88 +248,124 @@ void CDROMAsyncReader::ReadSectorNonThreaded(CDImage::LBA lba)
   buffer.lba = m_media->GetPositionOnDisc();
 
   buffer.result = m_media->ReadRawSector(buffer.data.data(), &buffer.subq);
-  m_buffer_count.fetch_add(1);
+  m_sector_valid = true;
 }
 
-void CDROMAsyncReader::CancelReadahead()
+void CDROMAsyncReader::RunOnWorker(Op op, CDImage::LBA lba, CDImage::SubChannelQ* subq, SectorBuffer* data,
+                                   std::unique_ptr<CDImage>* media)
 {
-  std::unique_lock lock(m_mutex);
+  ThreadState* t = m_thread.get();
+  t->op = op;
+  t->op_lba = lba;
+  t->op_subq = subq;
+  t->op_data = data;
+  t->op_media = media;
 
-  // wait until the read thread is idle
-  m_notify_read_complete_cv.wait(lock, [this]() { return !m_is_reading.load(); });
+  const int seq = NextSequence(retro_atomic_load_relaxed_int(&t->op_seq));
+  retro_atomic_store_release_int(&t->op_seq, seq);
+  retro_eventcount_notify(&t->worker_ec);
 
-  // prevent it from doing any more when it re-acquires the lock
-  m_can_readahead.store(false);
-  EmptyBuffers();
+  while (retro_atomic_load_acquire_int(&t->op_done) != seq)
+  {
+    const int key = retro_eventcount_prepare_wait(&t->reader_ec);
+    if (retro_atomic_load_acquire_int(&t->op_done) == seq)
+    {
+      retro_eventcount_cancel_wait(&t->reader_ec);
+      break;
+    }
+    retro_eventcount_commit_wait(&t->reader_ec, key);
+  }
 }
 
-void CDROMAsyncReader::WorkerThreadEntryPoint()
+void CDROMAsyncReader::WorkerThreadEntryPoint(void* userdata)
 {
-  std::unique_lock lock(m_mutex);
+  ThreadState* t = static_cast<ThreadState*>(userdata);
+  t->owner->WorkerThread(t);
+}
+
+void CDROMAsyncReader::WorkerThread(ThreadState* t)
+{
+  const size_t num_buffers = m_buffers.size();
+  size_t head = 0;
+  int ops_done = 0;
+  int requests_done = 0;
+  bool can_readahead = false;
 
   for (;;)
   {
-    m_do_read_cv.wait(
-      lock, [this]() { return (m_shutdown_flag.load() || m_next_position_set.load() || m_can_readahead.load()); });
-    if (m_shutdown_flag.load())
+    if (retro_atomic_load_acquire_int(&t->quit))
       break;
 
-    for (;;)
+    const int op = retro_atomic_load_acquire_int(&t->op_seq);
+    if (op != ops_done)
     {
-      if (m_next_position_set.load())
+      if (t->op == Op::ReadUncached)
       {
-        // discard buffers, we're seeking to a new location
-        const CDImage::LBA seek_location = m_next_position.load();
-        EmptyBuffers();
-        m_next_position_set.store(false);
-        m_seek_error.store(false);
-        m_is_reading.store(true);
-        lock.unlock();
-
-        // seek without lock held in case it takes time
-        const bool seek_result = (m_media->GetPositionOnDisc() == seek_location || m_media->Seek(seek_location));
-
-        lock.lock();
-        m_is_reading.store(false);
-
-        // did another request come in? abort if so
-        if (m_next_position_set.load())
-          continue;
-
-        // did we fail the seek?
-        if (!seek_result)
+        const CDImage::LBA prev_lba = m_media->GetPositionOnDisc();
+        t->op_result = InternalReadSectorUncached(t->op_lba, t->op_subq, t->op_data);
+        if (!m_media->Seek(prev_lba))
         {
-          // add the error result, and don't try to read ahead
-          Log_WarningPrintf("Seek to LBA %u failed", seek_location);
-          m_seek_error.store(true);
-          m_notify_read_complete_cv.notify_all();
-          break;
+          Log_ErrorPrintf("Failed to re-seek to cached position %u", prev_lba);
+          can_readahead = false;
         }
-
-        // go go read ahead!
-        m_can_readahead.store(true);
+      }
+      else
+      {
+        head = retro_atomic_load_acquire_size(&t->tail);
+        retro_atomic_store_release_size(&t->head, head);
+        can_readahead = false;
+        m_media.swap(*t->op_media);
       }
 
-      if (!m_can_readahead.load())
-        break;
+      ops_done = op;
+      retro_atomic_store_release_int(&t->op_done, op);
+      retro_eventcount_notify(&t->reader_ec);
+      continue;
+    }
 
-      // readahead time! read as many sectors as we have space for
-      while (m_buffer_count.load() < static_cast<uint32_t>(m_buffers.size()))
+    const int request = retro_atomic_load_acquire_int(&t->request_seq);
+    if (request != requests_done)
+    {
+      // discard buffers, we're seeking to a new location
+      const CDImage::LBA seek_location = static_cast<CDImage::LBA>(retro_atomic_load_relaxed_int(&t->request_lba));
+      requests_done = request;
+      head = retro_atomic_load_acquire_size(&t->tail);
+      retro_atomic_store_release_size(&t->head, head);
+
+      can_readahead =
+        m_media && (m_media->GetPositionOnDisc() == seek_location || m_media->Seek(seek_location));
+      if (!can_readahead)
       {
-        if (m_next_position_set.load())
-        {
-          // a seek request came in while we're reading, so bail out
-          break;
-        }
-
-        // stop reading if we hit the end or get an error
-        if (!ReadSectorIntoBuffer(lock))
-          break;
+        Log_WarningPrintf("Seek to LBA %u failed", seek_location);
+        retro_atomic_store_release_int(&t->error_seq, request);
       }
 
-      // readahead buffer is full or errored at this point
-      m_can_readahead.store(false);
-      break;
+      retro_atomic_store_release_int(&t->ack_seq, request);
+      retro_eventcount_notify(&t->reader_ec);
+      continue;
+    }
+
+    // readahead time! read as many sectors as we have space for
+    if (can_readahead && (head - retro_atomic_load_acquire_size(&t->tail)) < num_buffers)
+    {
+      BufferSlot& buffer = m_buffers[head % num_buffers];
+      buffer.lba = m_media->GetPositionOnDisc();
+      buffer.result = m_media->ReadRawSector(buffer.data.data(), &buffer.subq);
+      retro_atomic_store_release_size(&t->head, ++head);
+      retro_eventcount_notify(&t->reader_ec);
+      continue;
+    }
+
+    const int key = retro_eventcount_prepare_wait(&t->worker_ec);
+    if (retro_atomic_load_acquire_int(&t->quit) || retro_atomic_load_acquire_int(&t->op_seq) != ops_done ||
+        retro_atomic_load_acquire_int(&t->request_seq) != requests_done ||
+        (can_readahead && (head - retro_atomic_load_acquire_size(&t->tail)) < num_buffers))
+    {
+      retro_eventcount_cancel_wait(&t->worker_ec);
+    }
+    else
+    {
+      retro_eventcount_commit_wait(&t->worker_ec, key);
     }
   }
 }
