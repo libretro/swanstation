@@ -59,6 +59,10 @@ void Reset()
   g_state.cop0_regs.sr.bits = 0;
   g_state.cop0_regs.cause.bits = 0;
 
+  // SetPC() flushes delayed loads; discard any stale or partially loaded register indices first.
+  g_state.load_delay_reg = Reg::count;
+  g_state.next_load_delay_reg = Reg::count;
+
   ClearICache();
   UpdateFastmemBase();
 

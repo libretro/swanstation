@@ -961,7 +961,13 @@ bool LoadState(ByteStream* state, bool is_memory_state, bool restore_on_failure,
     return false;
 
   if (!restore_on_failure)
-    return DoLoadState(state, false, false, is_memory_state, media_path, media_subimage_index);
+  {
+    if (DoLoadState(state, false, false, is_memory_state, media_path, media_subimage_index))
+      return true;
+
+    Reset();
+    return false;
+  }
 
   /* A state rejected part way through leaves the sections before it loaded and the failing one half
    * loaded; save the running state first so a failed load leaves it untouched. */
