@@ -951,8 +951,8 @@ bool HostInterface::retro_unserialize(const void* data, size_t size)
                        ctx == RETRO_SAVESTATE_CONTEXT_RUNAHEAD_SAME_BINARY);
   }
 
-  /* Runahead and netplay states come from this core; only a state from elsewhere (a file, normal context)
-   * can be rejected part way through, so only those pay for a copy of the running state to fall back to. */
+  /* Normal state loads preserve the running state on failure. Runahead and netplay skip the per-load backup
+   * because they can happen every frame; LoadState resets the system if one of those states is rejected. */
   const bool restore_on_failure = !is_memory_state && ctx != RETRO_SAVESTATE_CONTEXT_ROLLBACK_NETPLAY;
 
   std::unique_ptr<ByteStream> stream = ByteStream_CreateReadOnlyMemoryStream(data, static_cast<uint32_t>(size));

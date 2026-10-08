@@ -92,6 +92,7 @@ void Reset();
 void Shutdown();
 
 /// With restore_on_failure, a state that fails to load leaves the running state as it was.
+/// Otherwise, a failed load resets the system so partially loaded state cannot run.
 bool LoadState(ByteStream* state, bool is_memory_state = false, bool restore_on_failure = false);
 bool SaveState(ByteStream* state);
 
