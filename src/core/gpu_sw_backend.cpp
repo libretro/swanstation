@@ -392,8 +392,9 @@ void GPU_SW_Backend::DrawSpan(const GPUBackendDrawPolygonCommand* cmd, int32_t y
     const uint32_t u = ig.u >> (COORD_FBS + COORD_POST_PADDING);
     const uint32_t v = ig.v >> (COORD_FBS + COORD_POST_PADDING);
 
+    /* y is the untruncated span coordinate; the clipped row is y modulo the VRAM height. */
     ShadePixel<texture_enable, raw_texture_enable, transparency_enable, dithering_enable>(
-      cmd, static_cast<uint32_t>(x), static_cast<uint32_t>(y), static_cast<uint8_t>(r), static_cast<uint8_t>(g), static_cast<uint8_t>(b), static_cast<uint8_t>(u),
+      cmd, static_cast<uint32_t>(x), static_cast<uint32_t>(y) & VRAM_HEIGHT_MASK, static_cast<uint8_t>(r), static_cast<uint8_t>(g), static_cast<uint8_t>(b), static_cast<uint8_t>(u),
       static_cast<uint8_t>(v));
 
     x++;
