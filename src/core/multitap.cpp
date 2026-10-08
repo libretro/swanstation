@@ -41,8 +41,14 @@ bool Multitap::DoState(StateWrapper& sw)
   sw.Do(&m_current_controller_done);
   sw.Do(&m_transfer_buffer);
 
-  if (sw.IsReading() && m_selected_slot >= 4)
+  if (sw.IsReading() &&
+      (m_transfer_state > TransferState::AllControllers || m_selected_slot >= 4 ||
+       m_controller_transfer_step >= m_transfer_buffer.size()))
+  {
+    /* Do not leave indices from a rejected state live if the caller continues running. */
+    ResetTransferState();
     return false;
+  }
 
   return !sw.HasError();
 }
@@ -222,8 +228,11 @@ bool Multitap::Transfer(const uint8_t data_in, uint8_t* data_out)
       {
         m_current_controller_done = false;
         m_selected_slot = (m_selected_slot + 1) % 4;
-        if (m_selected_slot == 0)
+        if (m_controller_transfer_step >= m_transfer_buffer.size())
+        {
           ack = false;
+          ResetTransferState();
+        }
       }
     }
     break;
