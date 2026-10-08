@@ -362,7 +362,7 @@ MemoryArena::View::View(MemoryArena* parent, void* base_pointer, size_t arena_of
 
 MemoryArena::View::View(View&& view)
   : m_parent(view.m_parent), m_base_pointer(view.m_base_pointer), m_arena_offset(view.m_arena_offset),
-    m_mapping_size(view.m_mapping_size)
+    m_mapping_size(view.m_mapping_size), m_writable(view.m_writable)
 {
   view.m_parent = nullptr;
   view.m_base_pointer = nullptr;
