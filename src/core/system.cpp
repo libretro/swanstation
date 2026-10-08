@@ -993,6 +993,9 @@ bool DoLoadState(ByteStream* state, bool force_software_renderer, bool update_di
   std::unique_ptr<CDImage> media;
   if (header.media_filename_length > 0)
   {
+    if (header.media_filename_length > state->GetSize())
+      return false;
+
     media_filename.resize(header.media_filename_length);
     if (!state->SeekAbsolute(header.offset_to_media_filename) ||
         !state->Read2(media_filename.data(), header.media_filename_length))

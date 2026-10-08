@@ -64,6 +64,9 @@ bool MemoryCard::DoState(StateWrapper& sw)
   sw.Do(&m_data);
   sw.Do(&m_changed);
 
+  if (sw.IsReading() && (m_address > 0x3FF || m_sector_offset >= MemoryCardImage::FRAME_SIZE))
+    return false;
+
   return !sw.HasError();
 }
 

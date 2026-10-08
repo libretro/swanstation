@@ -116,7 +116,7 @@ public:
     uint32_t length = static_cast<uint32_t>(data->size());
     Do(&length);
     if (m_mode == Mode::Read)
-      data->resize(length);
+      data->resize(CheckReadCount(length) ? length : 0);
     DoArray(data->data(), data->size());
   }
 
@@ -128,6 +128,8 @@ public:
     if (m_mode == Mode::Read)
     {
       data->clear();
+      if (!CheckReadCount(length))
+        return;
       for (uint32_t i = 0; i < length; i++)
       {
         T value;
@@ -138,7 +140,7 @@ public:
     else
     {
       for (uint32_t i = 0; i < length; i++)
-        Do(&data[i]);
+        Do(&(*data)[i]);
     }
   }
 
@@ -150,18 +152,19 @@ public:
 
     if (m_mode == Mode::Read)
     {
+      data->Clear();
       if (m_error || size > CAPACITY)
       {
         m_error = true;
-        data->Clear();
         return;
       }
 
-      T* temp = new T[size];
-      DoArray(temp, size);
-      data->Clear();
-      data->PushRange(temp, size);
-      delete[] temp;
+      for (uint32_t i = 0; i < size; i++)
+      {
+        T value;
+        Do(&value);
+        data->Push(value);
+      }
     }
     else
     {
@@ -174,6 +177,10 @@ public:
   }
 
   bool DoMarker(const char* marker);
+
+  /// Same encoding as Do(std::string*), into a caller buffer of buffer_size bytes, NUL terminated.
+  /// Reading a longer string is an error.
+  void DoCString(char* buffer, uint32_t buffer_size);
 
   template<typename T>
   void DoEx(T* data, uint32_t version_introduced, T default_value)
@@ -188,6 +195,9 @@ public:
   }
 
 private:
+  /// Reading: false, and the error set, if count elements can't fit in what is left of the stream.
+  bool CheckReadCount(uint32_t count);
+
   ByteStream* m_stream;
   Mode m_mode;
   uint32_t m_version;

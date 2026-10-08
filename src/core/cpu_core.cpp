@@ -112,6 +112,9 @@ bool DoState(StateWrapper& sw)
 
   if (sw.IsReading())
   {
+    if (g_state.load_delay_reg > Reg::count || g_state.next_load_delay_reg > Reg::count)
+      return false;
+
     UpdateFastmemBase();
     g_state.gte_completion_tick = 0;
   }

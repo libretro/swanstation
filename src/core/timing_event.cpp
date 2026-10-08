@@ -3,6 +3,7 @@
 #include "cpu_core.h"
 #include "cpu_core_private.h"
 #include "system.h"
+#include <limits>
 
 namespace TimingEvents {
 
@@ -295,17 +296,23 @@ bool DoState(StateWrapper& sw)
 
     for (uint32_t i = 0; i < event_count; i++)
     {
-      std::string event_name;
+      char event_name[64];
       TickCount downcount, time_since_last_run, period, interval;
-      sw.Do(&event_name);
+      sw.DoCString(event_name, sizeof(event_name));
       sw.Do(&downcount);
       sw.Do(&time_since_last_run);
       sw.Do(&period);
       sw.Do(&interval);
-      if (sw.HasError())
+      /* Real states are late by a CPU slice at most; a crafted one could stall emulation for minutes. */
+      static constexpr TickCount MAX_LATENESS = System::MASTER_CLOCK / 60;
+      static constexpr TickCount MAX_TICKS = std::numeric_limits<TickCount>::max() / 2;
+      if (sw.HasError() || period <= 0 || interval <= 0 || downcount < -MAX_LATENESS || downcount > MAX_TICKS ||
+          time_since_last_run < -MAX_LATENESS || time_since_last_run > MAX_TICKS)
+      {
         return false;
+      }
 
-      TimingEvent* event = FindActiveEvent(event_name.c_str());
+      TimingEvent* event = FindActiveEvent(event_name);
       if (!event)
         continue;
 

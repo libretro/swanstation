@@ -215,6 +215,41 @@ bool GPU::DoState(StateWrapper& sw, HostDisplayTexture** host_texture, bool upda
 
   if (sw.IsReading())
   {
+    /* Rederive what the registers determine; a crafted state must not reach outside VRAM. */
+    m_draw_mode.mode_reg.bits &= GPUDrawModeReg::MASK;
+    m_draw_mode.texture_page_x = m_draw_mode.mode_reg.GetTexturePageBaseX();
+    m_draw_mode.texture_page_y = m_draw_mode.mode_reg.GetTexturePageBaseY();
+    const uint16_t palette = m_draw_mode.palette_reg & DrawMode::PALETTE_MASK;
+    const uint32_t window = m_draw_mode.texture_window_value & DrawMode::TEXTURE_WINDOW_MASK;
+    /* Force the setters to recompute. */
+    m_draw_mode.palette_reg = static_cast<uint16_t>(~palette);
+    m_draw_mode.texture_window_value = ~window;
+    SetTexturePalette(palette);
+    SetTextureWindow(window);
+    m_drawing_area.left &= VRAM_WIDTH_MASK;
+    m_drawing_area.top &= VRAM_HEIGHT_MASK;
+    m_drawing_area.right &= VRAM_WIDTH_MASK;
+    m_drawing_area.bottom &= VRAM_HEIGHT_MASK;
+
+    if (m_crtc_state.current_tick_in_scanline < 0 || m_crtc_state.fractional_ticks < 0 ||
+        m_crtc_state.fractional_dot_ticks < 0 || m_drawing_offset.x != TruncateGPUVertexPosition(m_drawing_offset.x) ||
+        m_drawing_offset.y != TruncateGPUVertexPosition(m_drawing_offset.y))
+    {
+      return false;
+    }
+
+    if (m_blitter_state == BlitterState::WritingVRAM)
+    {
+      const VRAMTransfer& vt = m_vram_transfer;
+      if (vt.x > VRAM_WIDTH_MASK || vt.y > VRAM_HEIGHT_MASK || vt.width == 0 || vt.width > VRAM_WIDTH ||
+          vt.height == 0 || vt.height > VRAM_HEIGHT ||
+          m_blit_buffer.size() + m_blit_remaining_words !=
+            (static_cast<uint32_t>(vt.width) * static_cast<uint32_t>(vt.height) + 1) / 2)
+      {
+        return false;
+      }
+    }
+
     m_draw_mode.texture_page_changed = true;
     m_draw_mode.texture_window_changed = true;
     m_drawing_area_changed = true;

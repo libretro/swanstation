@@ -208,6 +208,7 @@ private:
 
     void Reset(uint8_t rate_, bool decreasing_, bool exponential_);
     int16_t Tick(int16_t current_level);
+    bool IsValid() const;
   };
 
   struct VolumeSweep
@@ -218,6 +219,7 @@ private:
 
     void Reset(VolumeRegister reg);
     void Tick();
+    bool IsValid() const;
   };
 
   enum class ADSRPhase : uint8_t

@@ -287,6 +287,17 @@ bool CDROM::DoState(StateWrapper& sw)
 
   if (sw.IsReading())
   {
+    if (m_xa_resample_p >= XA_RESAMPLE_RING_BUFFER_SIZE || m_current_read_sector_buffer >= NUM_SECTOR_BUFFERS ||
+        m_current_write_sector_buffer >= NUM_SECTOR_BUFFERS)
+    {
+      return false;
+    }
+    for (const SectorBuffer& sb : m_sector_buffers)
+    {
+      if (sb.size > RAW_SECTOR_OUTPUT_SIZE)
+        return false;
+    }
+
     if (m_reader.HasMedia())
       m_reader.QueueReadSector(m_requested_lba);
     UpdateCommandEvent();

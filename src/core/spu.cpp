@@ -172,6 +172,26 @@ bool SPU::DoState(StateWrapper& sw)
 
   if (sw.IsReading())
   {
+    /* A carry under a different overclock is kept modulo the current divider. */
+    if (m_ticks_carry < 0)
+      return false;
+    m_ticks_carry %= std::max<TickCount>(m_cpu_tick_divider, SYSCLK_TICKS_PER_SPU_TICK);
+
+    if (m_transfer_address >= RAM_SIZE || (m_transfer_address & 1u) != 0 ||
+        static_cast<uint32_t>(m_reverb_resample_buffer_position) > 0x3F || !m_main_volume_left.IsValid() ||
+        !m_main_volume_right.IsValid())
+    {
+      return false;
+    }
+    for (const Voice& v : m_voices)
+    {
+      if (v.counter.sample_index >= NUM_SAMPLES_PER_ADPCM_BLOCK || !v.left_volume.IsValid() ||
+          !v.right_volume.IsValid() || !v.adsr_envelope.IsValid())
+      {
+        return false;
+      }
+    }
+
     UpdateEventInterval();
     UpdateTransferEvent();
   }
@@ -1050,6 +1070,24 @@ void SPU::VolumeEnvelope::Reset(uint8_t rate_, bool decreasing_, bool exponentia
 
   const ADSRTableEntry& table_entry = s_adsr_table[static_cast<uint8_t>(decreasing)][rate];
   counter = table_entry.ticks;
+}
+
+/* Raw bytes from a save state: a bool must be 0 or 1, the rate must index the table. */
+static bool IsValidBool(const bool& value)
+{
+  uint8_t byte;
+  std::memcpy(&byte, &value, sizeof(byte));
+  return byte <= 1;
+}
+
+bool SPU::VolumeEnvelope::IsValid() const
+{
+  return rate < NUM_ADSR_TABLE_ENTRIES && IsValidBool(decreasing) && IsValidBool(exponential);
+}
+
+bool SPU::VolumeSweep::IsValid() const
+{
+  return envelope.IsValid() && IsValidBool(envelope_active);
 }
 
 int16_t SPU::VolumeEnvelope::Tick(int16_t current_level)

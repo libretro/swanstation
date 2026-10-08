@@ -41,6 +41,9 @@ bool Multitap::DoState(StateWrapper& sw)
   sw.Do(&m_current_controller_done);
   sw.Do(&m_transfer_buffer);
 
+  if (sw.IsReading() && m_selected_slot >= 4)
+    return false;
+
   return !sw.HasError();
 }
 

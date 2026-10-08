@@ -43,12 +43,29 @@ void StateWrapper::Do(bool* value_ptr)
   }
 }
 
+bool StateWrapper::CheckReadCount(uint32_t count)
+{
+  if (m_error || count > (m_stream->GetSize() - m_stream->GetPosition()))
+  {
+    m_error = true;
+    return false;
+  }
+  return true;
+}
+
 void StateWrapper::Do(std::string* value_ptr)
 {
   uint32_t length = static_cast<uint32_t>(value_ptr->length());
   Do(&length);
   if (m_mode == Mode::Read)
+  {
+    if (!CheckReadCount(length))
+    {
+      value_ptr->clear();
+      return;
+    }
     value_ptr->resize(length);
+  }
   DoBytes(&(*value_ptr)[0], length);
   value_ptr->resize(std::strlen(&(*value_ptr)[0]));
 }
@@ -58,23 +75,61 @@ void StateWrapper::Do(String* value_ptr)
   uint32_t length = static_cast<uint32_t>(value_ptr->GetLength());
   Do(&length);
   if (m_mode == Mode::Read)
+  {
+    if (!CheckReadCount(length))
+    {
+      value_ptr->Clear();
+      return;
+    }
     value_ptr->Resize(length);
+  }
   DoBytes(value_ptr->GetWriteableCharArray(), length);
   value_ptr->UpdateSize();
 }
 
+void StateWrapper::DoCString(char* buffer, uint32_t buffer_size)
+{
+  uint32_t length = (m_mode == Mode::Write) ? static_cast<uint32_t>(std::strlen(buffer)) : 0;
+  Do(&length);
+  if (m_mode == Mode::Read)
+  {
+    if (length >= buffer_size)
+      m_error = true;
+    if (m_error)
+    {
+      buffer[0] = '\0';
+      return;
+    }
+    DoBytes(buffer, length);
+    buffer[length] = '\0';
+  }
+  else
+  {
+    DoBytes(buffer, length);
+  }
+}
+
 bool StateWrapper::DoMarker(const char* marker)
 {
-  SmallString file_value(marker);
-  Do(&file_value);
+  char file_value[64];
+  if (m_mode == Mode::Write)
+  {
+    uint32_t length = static_cast<uint32_t>(std::strlen(marker));
+    Do(&length);
+    DoBytes(const_cast<char*>(marker), length);
+    return !m_error;
+  }
+
+  file_value[0] = '\0';
+  DoCString(file_value, sizeof(file_value));
   if (m_error)
     return false;
 
-  if (m_mode == Mode::Write || file_value.Compare(marker))
+  if (std::strcmp(file_value, marker) == 0)
     return true;
 
   Log_ErrorPrintf("Marker mismatch at offset %" PRIu64 ": found '%s' expected '%s'", m_stream->GetPosition(),
-                  file_value.GetCharArray(), marker);
+                  file_value, marker);
 
   return false;
 }
