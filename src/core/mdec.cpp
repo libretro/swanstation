@@ -118,7 +118,7 @@ void MDEC::DMARead(uint32_t* words, uint32_t word_count)
 
 void MDEC::DMAWrite(const uint32_t* words, uint32_t word_count)
 {
-  const uint32_t halfwords_to_write = std::min(word_count * 2, m_data_in_fifo.GetSpace() & ~uint32_t(2));
+  const uint32_t halfwords_to_write = std::min(word_count * 2, m_data_in_fifo.GetSpace() & ~uint32_t(1));
   m_data_in_fifo.PushRange(reinterpret_cast<const uint16_t*>(words), halfwords_to_write);
   Execute();
 }
@@ -192,6 +192,10 @@ uint32_t MDEC::ReadDataRegister()
 
 void MDEC::WriteCommandRegister(uint32_t value)
 {
+  /* Writes to a full data-in FIFO are dropped. */
+  if (m_data_in_fifo.GetSpace() < 2)
+    return;
+
   m_data_in_fifo.Push(static_cast<uint16_t>(value));
   m_data_in_fifo.Push(static_cast<uint16_t>(value >> 16));
 
@@ -199,6 +203,23 @@ void MDEC::WriteCommandRegister(uint32_t value)
 }
 
 void MDEC::Execute()
+{
+  if (m_executing)
+  {
+    m_execute_pending = true;
+    return;
+  }
+
+  m_executing = true;
+  do
+  {
+    m_execute_pending = false;
+    ExecuteCommands();
+  } while (m_execute_pending);
+  m_executing = false;
+}
+
+void MDEC::ExecuteCommands()
 {
   for (;;)
   {

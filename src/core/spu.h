@@ -353,6 +353,7 @@ private:
   void ManualTransferWrite(uint16_t value);
   void UpdateTransferEvent();
   void UpdateDMARequest();
+  void UpdateDMARequestInTransfer(TickCount* ticks);
 
   std::unique_ptr<TimingEvent> m_tick_event;
   std::unique_ptr<TimingEvent> m_transfer_event;

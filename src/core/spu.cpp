@@ -2,6 +2,7 @@
 #include "cdrom.h"
 #include "libretro/libretro_audio_stream.h"
 #include "common/state_wrapper.h"
+#include "cpu_core.h"
 #include "dma.h"
 #include "host_interface.h"
 #include "interrupt_controller.h"
@@ -753,7 +754,7 @@ void SPU::ExecuteTransfer(TickCount ticks)
       ExecuteFIFOReadFromRAM(ticks);
 
       // this can result in the FIFO being emptied, hence double the while loop
-      UpdateDMARequest();
+      UpdateDMARequestInTransfer(&ticks);
     }
 
     // we're done if we have no more data to read
@@ -777,7 +778,7 @@ void SPU::ExecuteTransfer(TickCount ticks)
       ExecuteFIFOWriteToRAM(ticks);
 
       // similar deal here, the FIFO can be written out in a long slice
-      UpdateDMARequest();
+      UpdateDMARequestInTransfer(&ticks);
     }
 
     // we're done if we have no more data to write
@@ -829,6 +830,14 @@ void SPU::UpdateTransferEvent()
   }
 
   m_SPUSTAT.transfer_busy = m_transfer_event->IsActive();
+}
+
+void SPU::UpdateDMARequestInTransfer(TickCount* ticks)
+{
+  /* Time a DMA spends on the bus comes out of this slice, or an oversized block size never lets the loop finish. */
+  const TickCount pending_before = CPU::GetPendingTicks();
+  UpdateDMARequest();
+  *ticks -= CPU::GetPendingTicks() - pending_before;
 }
 
 void SPU::UpdateDMARequest()
@@ -1641,9 +1650,17 @@ void SPU::Execute(TickCount ticks)
 
   while (remaining_frames > 0)
   {
+    /* With the output buffer full the SPU still has to run; those frames are dropped. */
+    int16_t discard_frames[64 * 2];
     int16_t* output_frame_start;
     uint32_t output_frame_space = remaining_frames;
     m_audio_stream->BeginWrite(&output_frame_start, &output_frame_space);
+    const bool discard = (output_frame_space == 0);
+    if (discard)
+    {
+      output_frame_start = discard_frames;
+      output_frame_space = 64;
+    }
 
     int16_t* output_frame = output_frame_start;
     const uint32_t frames_in_this_batch = std::min(remaining_frames, output_frame_space);
@@ -1743,7 +1760,8 @@ void SPU::Execute(TickCount ticks)
       }
     }
 
-    m_audio_stream->EndWrite(frames_in_this_batch);
+    if (!discard)
+      m_audio_stream->EndWrite(frames_in_this_batch);
     remaining_frames -= frames_in_this_batch;
   }
 }

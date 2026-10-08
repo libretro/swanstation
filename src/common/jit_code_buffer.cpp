@@ -195,6 +195,10 @@ void JitCodeBuffer::CommitFarCode(uint32_t length)
 
 void JitCodeBuffer::Reset()
 {
+  /* Nothing allocated when running the interpreter. */
+  if (!m_code_ptr)
+    return;
+
   WriteProtect(false);
 
   m_free_code_ptr = m_code_ptr + m_guard_size + m_code_reserve_size;

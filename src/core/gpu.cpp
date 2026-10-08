@@ -803,9 +803,11 @@ void GPU::UpdateCRTCTickEvent()
   if (g_timers.IsExternalIRQEnabled(DOT_TIMER_INDEX))
   {
     const TickCount dots_until_irq = g_timers.GetTicksUntilIRQ(DOT_TIMER_INDEX);
-    const TickCount ticks_until_irq =
-      (dots_until_irq * m_crtc_state.dot_clock_divider) - m_crtc_state.fractional_dot_ticks;
-    ticks_until_event = std::min(ticks_until_event, std::max<TickCount>(ticks_until_irq, 0));
+    /* dots_until_irq is INT_MAX when the timer never fires; widen so it cannot overflow. */
+    const int64_t ticks_until_irq = (static_cast<int64_t>(dots_until_irq) * m_crtc_state.dot_clock_divider) -
+                                    m_crtc_state.fractional_dot_ticks;
+    if (ticks_until_irq < ticks_until_event)
+      ticks_until_event = static_cast<TickCount>(std::max<int64_t>(ticks_until_irq, 0));
   }
 
   m_crtc_tick_event->Schedule(CRTCTicksToSystemTicks(ticks_until_event, m_crtc_state.fractional_ticks));

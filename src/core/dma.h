@@ -65,6 +65,7 @@ private:
   TickCount GetTransferSliceTicks() const;
   TickCount GetTransferHaltTicks() const;
   bool TransferChannel(Channel channel);
+  bool DoTransferChannel(Channel channel);
   void HaltTransfer(TickCount duration);
   void UnhaltTransfer(TickCount ticks);
 
@@ -81,6 +82,10 @@ private:
   std::vector<uint32_t> m_transfer_buffer;
   std::unique_ptr<TimingEvent> m_unhalt_event;
   TickCount m_halt_ticks_remaining = 0;
+
+  /* A device can raise a request from inside a transfer; that transfer runs after the current one. */
+  bool m_transfer_in_progress = false;
+  bool m_transfer_deferred = false;
 
   struct ChannelState
   {

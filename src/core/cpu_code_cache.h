@@ -142,10 +142,15 @@ void InterpretUncachedBlock();
 /// Invalidates any code pages which overlap the specified range.
 ALWAYS_INLINE void InvalidateCodePages(PhysicalMemoryAddress address, uint32_t word_count)
 {
-  const uint32_t start_page = address / HOST_PAGE_SIZE;
-  const uint32_t end_page = (address + word_count * sizeof(uint32_t) - sizeof(uint32_t)) / HOST_PAGE_SIZE;
-  for (uint32_t page = start_page; page <= end_page; page++)
+  /* address is the lowest word written; the range may wrap at the end of RAM. */
+  const uint32_t page_mask = Bus::g_ram_mask / HOST_PAGE_SIZE;
+  const uint32_t start_page = (address & Bus::g_ram_mask) / HOST_PAGE_SIZE;
+  uint32_t num_pages = ((address & HOST_PAGE_OFFSET_MASK) + word_count * sizeof(uint32_t) + HOST_PAGE_OFFSET_MASK) / HOST_PAGE_SIZE;
+  if (num_pages > page_mask + 1)
+    num_pages = page_mask + 1;
+  for (uint32_t i = 0; i < num_pages; i++)
   {
+    const uint32_t page = (start_page + i) & page_mask;
     if (Bus::m_ram_code_bits[page])
       CPU::CodeCache::InvalidateBlocksWithPageIndex(page);
   }
