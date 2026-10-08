@@ -91,7 +91,8 @@ bool Boot(const SystemBootParameters& params);
 void Reset();
 void Shutdown();
 
-bool LoadState(ByteStream* state, bool is_memory_state = false);
+/// With restore_on_failure, a state that fails to load leaves the running state as it was.
+bool LoadState(ByteStream* state, bool is_memory_state = false, bool restore_on_failure = false);
 bool SaveState(ByteStream* state);
 
 /// Recreates the GPU component, saving/loading the state so it is preserved. Call when the GPU renderer changes.

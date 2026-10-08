@@ -48,6 +48,15 @@ bool CodeGenerator::CompileBlock(CodeBlock* block, CodeBlock::HostCodePointer* o
 
   if (!m_block_linked)
   {
+    /* A block that stops in straight-line code (too long, or before an instruction it cannot compile)
+     * carries on at the next instruction; branches and exceptions have set the PC themselves. */
+    const CodeBlockInstruction& last = *(m_block_end - 1);
+    if (m_pc_valid && !last.is_branch_instruction && !last.is_branch_delay_slot &&
+        !IsExitBlockInstruction(last.instruction))
+    {
+      WriteNewPC(CalculatePC(), true);
+    }
+
     BlockEpilogue();
     EmitEndBlock(true, true);
   }
@@ -2227,8 +2236,9 @@ bool CodeGenerator::Compile_Branch(const CodeBlockInstruction& cbi)
 
     // we don't need to test the address of constant branches unless they're definitely misaligned, which would be
     // strange.
-    if (g_settings.cpu_recompiler_memory_exceptions &&
-        (!branch_target.IsConstant() || (branch_target.constant_value & 0x3) != 0))
+    /* Checked even without memory exceptions: the dispatcher indexes its block table with the PC, and a
+     * misaligned one (jr to a pointer read from unmapped memory, say) makes it read outside the table. */
+    if (!branch_target.IsConstant() || (branch_target.constant_value & 0x3) != 0)
     {
       LabelType branch_okay;
 

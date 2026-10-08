@@ -62,7 +62,20 @@ bool Timers::DoState(StateWrapper& sw)
   sw.Do(&m_sysclk_div_8_carry);
 
   if (sw.IsReading())
+  {
+    /* The counter and target registers are 16 bits wide. A rejected state must not leave values here
+     * that the GPU's CRTC scheduling would read before the timers are loaded again. */
+    bool valid = (m_syclk_ticks_carry >= 0 && m_sysclk_div_8_carry < 8);
+    for (const CounterState& cs : m_states)
+      valid = valid && cs.counter <= 0xFFFFu && cs.target <= 0xFFFFu;
+    if (!valid)
+    {
+      Reset();
+      return false;
+    }
+
     UpdateSysClkEvent();
+  }
 
   return !sw.HasError();
 }

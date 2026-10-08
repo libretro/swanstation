@@ -1,4 +1,5 @@
 #include "common/string_util.h"
+#include "cpu_core.h"
 #include "gpu.h"
 #include "interrupt_controller.h"
 #include "system.h"
@@ -19,6 +20,9 @@ static constexpr uint32_t ReplaceZero(uint32_t value, uint32_t value_for_zero)
 void GPU::ExecuteCommands()
 {
   m_syncing = true;
+
+  /* Only DMA transfers feeding the FIFO advance the CPU's pending ticks while this runs. */
+  TickCount dma_start_ticks = CPU::GetPendingTicks();
 
   for (;;)
   {
@@ -86,6 +90,34 @@ void GPU::ExecuteCommands()
             EndCommand();
             continue;
           }
+
+          /* Without a terminator the guest can send vertices forever; draw what is buffered and carry on from
+           * its last vertex. Shaded words alternate colour and position after the first position, so an even
+           * count ends with the colour of a vertex still to come, which is kept. */
+          if (GetPolyLineVertexCount() >= MAX_POLYLINE_VERTICES)
+          {
+            DispatchRenderCommand();
+
+            const size_t count = m_blit_buffer.size();
+            if (!m_render_command.shading_enable)
+            {
+              const uint32_t last_position = m_blit_buffer[count - 1];
+              m_blit_buffer.clear();
+              m_blit_buffer.push_back(last_position);
+            }
+            else
+            {
+              const bool pending_colour = (count & 1u) == 0;
+              const size_t last_position_index = pending_colour ? (count - 2) : (count - 1);
+              const uint32_t last_position = m_blit_buffer[last_position_index];
+              const uint32_t pending = m_blit_buffer[count - 1];
+              m_render_command.color_for_first_vertex = m_blit_buffer[last_position_index - 1] & UINT32_C(0x00FFFFFF);
+              m_blit_buffer.clear();
+              m_blit_buffer.push_back(last_position);
+              if (pending_colour)
+                m_blit_buffer.push_back(pending);
+            }
+          }
         }
         break;
       }
@@ -96,6 +128,15 @@ void GPU::ExecuteCommands()
     UpdateDMARequest();
     if (!m_fifo_pushed)
       break;
+
+    /* Commands that take no GPU time let a looping DMA linked list refill the FIFO forever without time
+     * passing. Past this much DMA time, count it as GPU time, so the FIFO fills and the events get a turn. */
+    const TickCount dma_ticks = CPU::GetPendingTicks() - dma_start_ticks;
+    if (dma_ticks > MAX_DMA_TICKS_PER_BATCH)
+    {
+      AddCommandTicks(SystemTicksToGPUTicks(dma_ticks));
+      dma_start_ticks = CPU::GetPendingTicks();
+    }
   }
 
   UpdateGPUIdle();
@@ -385,6 +426,7 @@ bool GPU::HandleRenderPolyLineCommand()
   const uint32_t words_to_pop = min_words - 1;
   // m_blit_buffer.resize(words_to_pop);
   // FifoPopRange(m_blit_buffer.data(), words_to_pop);
+  m_blit_buffer.clear();
   m_blit_buffer.reserve(words_to_pop);
   for (uint32_t i = 0; i < words_to_pop; i++)
     m_blit_buffer.push_back(static_cast<uint32_t>(FifoPop()));

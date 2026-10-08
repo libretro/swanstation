@@ -231,23 +231,35 @@ bool GPU::DoState(StateWrapper& sw, HostDisplayTexture** host_texture, bool upda
     m_drawing_area.right &= VRAM_WIDTH_MASK;
     m_drawing_area.bottom &= VRAM_HEIGHT_MASK;
 
-    if (m_crtc_state.current_tick_in_scanline < 0 || m_crtc_state.fractional_ticks < 0 ||
-        m_crtc_state.fractional_dot_ticks < 0 || m_drawing_offset.x != TruncateGPUVertexPosition(m_drawing_offset.x) ||
-        m_drawing_offset.y != TruncateGPUVertexPosition(m_drawing_offset.y))
-    {
-      return false;
-    }
+    bool valid = m_crtc_state.current_tick_in_scanline >= 0 && m_crtc_state.fractional_ticks >= 0 &&
+                 m_crtc_state.fractional_dot_ticks >= 0 &&
+                 m_drawing_offset.x == TruncateGPUVertexPosition(m_drawing_offset.x) &&
+                 m_drawing_offset.y == TruncateGPUVertexPosition(m_drawing_offset.y) &&
+                 m_blitter_state <= BlitterState::DrawingPolyLine;
+
+    /* Only a VRAM write or a poly-line in progress holds words in the blit buffer. */
+    if (m_blitter_state == BlitterState::DrawingPolyLine)
+      valid = valid && m_blit_buffer.size() <= (MAX_POLYLINE_VERTICES * 2u + MAX_FIFO_SIZE);
+    else if (m_blitter_state != BlitterState::WritingVRAM)
+      valid = valid && m_blit_buffer.empty();
 
     if (m_blitter_state == BlitterState::WritingVRAM)
     {
       const VRAMTransfer& vt = m_vram_transfer;
-      if (vt.x > VRAM_WIDTH_MASK || vt.y > VRAM_HEIGHT_MASK || vt.width == 0 || vt.width > VRAM_WIDTH ||
-          vt.height == 0 || vt.height > VRAM_HEIGHT ||
-          m_blit_buffer.size() + m_blit_remaining_words !=
-            (static_cast<uint32_t>(vt.width) * static_cast<uint32_t>(vt.height) + 1) / 2)
-      {
-        return false;
-      }
+      valid = valid && vt.x <= VRAM_WIDTH_MASK && vt.y <= VRAM_HEIGHT_MASK && vt.width != 0 &&
+              vt.width <= VRAM_WIDTH && vt.height != 0 && vt.height <= VRAM_HEIGHT &&
+              m_blit_buffer.size() + m_blit_remaining_words ==
+                (static_cast<uint32_t>(vt.width) * static_cast<uint32_t>(vt.height) + 1) / 2;
+    }
+
+    if (!valid)
+    {
+      /* The next reset finishes a pending VRAM write; do not leave it one of these sizes. */
+      m_blitter_state = BlitterState::Idle;
+      m_blit_buffer.clear();
+      m_blit_remaining_words = 0;
+      m_vram_transfer = {};
+      return false;
     }
 
     m_draw_mode.texture_page_changed = true;
@@ -403,7 +415,8 @@ void GPU::WriteRegister(uint32_t offset, uint32_t value)
   switch (offset)
   {
     case 0x00:
-      m_fifo.Push(value);
+      if (!m_fifo.IsFull())
+        m_fifo.Push(value);
       ExecuteCommands();
       UpdateCommandTickEvent();
       return;
@@ -732,6 +745,9 @@ void GPU::UpdateCRTCDisplayParameters()
   cs.display_vram_width -= std::min(cs.display_vram_width, horizontal_skip_pixels);
 
   // Apply crop from the end by shrinking VRAM rectangle width if display would end outside the visible area.
+  /* A display start past the visible area must not put the origin outside the output, or the host buffer
+   * size, which subtracts it, wraps around. */
+  cs.display_origin_left = std::min<uint16_t>(cs.display_origin_left, cs.display_width);
   cs.display_vram_width = std::min<uint16_t>(cs.display_vram_width, cs.display_width - cs.display_origin_left);
 
   if (vertical_display_start >= cs.vertical_visible_start)
@@ -759,6 +775,9 @@ void GPU::UpdateCRTCDisplayParameters()
        std::min(cs.vertical_visible_end, std::max(vertical_display_start, cs.vertical_visible_start)))
       << height_shift;
   }
+
+  cs.display_origin_top = std::min<uint16_t>(cs.display_origin_top, cs.display_height);
+  cs.display_vram_height = std::min<uint16_t>(cs.display_vram_height, cs.display_height - cs.display_origin_top);
 }
 
 TickCount GPU::GetPendingCRTCTicks() const

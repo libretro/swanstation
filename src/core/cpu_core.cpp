@@ -112,8 +112,13 @@ bool DoState(StateWrapper& sw)
 
   if (sw.IsReading())
   {
-    if (g_state.load_delay_reg > Reg::count || g_state.next_load_delay_reg > Reg::count)
+    /* Execution never leaves the PC unaligned (a jump there raises an address error first); the
+     * recompiler's block lookup relies on it. */
+    if (g_state.load_delay_reg > Reg::count || g_state.next_load_delay_reg > Reg::count ||
+        (g_state.regs.pc & 3u) != 0 || (g_state.regs.npc & 3u) != 0)
+    {
       return false;
+    }
 
     UpdateFastmemBase();
     g_state.gte_completion_tick = 0;

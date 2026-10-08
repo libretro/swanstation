@@ -427,6 +427,10 @@ uint8_t CDROM::ReadRegister(uint32_t offset)
 
     case 2: // always data FIFO
     {
+      /* An empty FIFO reads as zero; popping it would wrap the size and wedge the FIFO. */
+      if (m_data_fifo.IsEmpty())
+        return 0x00;
+
       const uint8_t value = m_data_fifo.Pop();
       UpdateStatusRegister();
       return value;

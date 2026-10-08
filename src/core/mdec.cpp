@@ -179,6 +179,11 @@ uint32_t MDEC::ReadDataRegister()
     if (!HasPendingBlockCopyOut())
       return UINT32_C(0xFFFFFFFF);
     CPU::AddPendingTicks(m_block_copy_out_event->GetTicksUntilNextExecution());
+
+    /* The copy-out event only runs with the next events; run it now so there is data to pop. */
+    m_block_copy_out_event->InvokeEarly(true);
+    if (m_data_out_fifo.IsEmpty())
+      return UINT32_C(0xFFFFFFFF);
   }
 
   const uint32_t value = m_data_out_fifo.Pop();

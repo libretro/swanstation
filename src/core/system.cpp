@@ -953,12 +953,28 @@ void Reset()
   g_gpu->ResetGraphicsAPIState();
 }
 
-bool LoadState(ByteStream* state, bool is_memory_state)
+bool LoadState(ByteStream* state, bool is_memory_state, bool restore_on_failure)
 {
   if (IsShutdown())
     return false;
 
-  return DoLoadState(state, false, false, is_memory_state);
+  if (!restore_on_failure)
+    return DoLoadState(state, false, false, is_memory_state);
+
+  /* A state rejected part way through leaves the sections before it loaded and the failing one half
+   * loaded; save the running state first so a failed load leaves it untouched. */
+  static std::unique_ptr<GrowableMemoryByteStream> s_backup;
+  if (!s_backup)
+    s_backup = ByteStream_CreateGrowableMemoryStream(nullptr, MAX_SAVE_STATE_SIZE);
+  s_backup->SeekAbsolute(0);
+  const bool have_backup = SaveState(s_backup.get());
+
+  if (DoLoadState(state, false, false, is_memory_state))
+    return true;
+
+  if (!have_backup || !s_backup->SeekAbsolute(0) || !DoLoadState(s_backup.get(), false, false, false))
+    Reset();
+  return false;
 }
 
 bool DoLoadState(ByteStream* state, bool force_software_renderer, bool update_display, bool is_memory_state)

@@ -40,6 +40,12 @@ public:
 
   static constexpr uint32_t MAX_FIFO_SIZE = 4096, DOT_TIMER_INDEX = 0, HBLANK_TIMER_INDEX = 1;
 
+  /* Longer poly-lines are drawn in pieces, so the vertex buffer stays bounded. */
+  static constexpr uint32_t MAX_POLYLINE_VERTICES = 1024;
+
+  /* DMA time one command batch may take before it counts as GPU time; see ExecuteCommands(). */
+  static constexpr TickCount MAX_DMA_TICKS_PER_BATCH = 65536;
+
   static constexpr uint16_t NTSC_TICKS_PER_LINE = 3413, NTSC_HSYNC_TICKS = 200, NTSC_TOTAL_LINES = 263,
                        PAL_TICKS_PER_LINE = 3406,
                        PAL_HSYNC_TICKS = 200, // actually one more on odd lines
@@ -74,7 +80,10 @@ public:
   ALWAYS_INLINE bool BeginDMAWrite() const { return (m_GPUSTAT.dma_direction == DMADirection::CPUtoGP0); }
   ALWAYS_INLINE void DMAWrite(uint32_t address, uint32_t value)
   {
-    m_fifo.Push((static_cast<uint64_t>(address) << 32) | static_cast<uint64_t>(value));
+    /* Only a block or manual transfer far larger than any game uses fills the FIFO; past that the words are
+     * dropped, as pushing would wrap over unread ones. */
+    if (!m_fifo.IsFull())
+      m_fifo.Push((static_cast<uint64_t>(address) << 32) | static_cast<uint64_t>(value));
   }
   void EndDMAWrite();
 

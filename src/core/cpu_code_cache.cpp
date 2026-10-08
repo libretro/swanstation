@@ -578,6 +578,8 @@ recompile:
   return true;
 }
 
+static constexpr size_t MAX_BLOCK_INSTRUCTIONS = 1024;
+
 bool CompileBlock(CodeBlock* block, bool allow_flush)
 {
   uint32_t pc = block->GetPC();
@@ -653,6 +655,11 @@ bool CompileBlock(CodeBlock* block, bool allow_flush)
 
     // is this a non-branchy exit? (e.g. syscall)
     if (IsExitBlockInstruction(cbi.instruction))
+      break;
+
+    /* Code without branches has to end somewhere: a jump into zero-filled RAM runs megabytes of NOPs,
+     * more than the code buffer holds. The next block carries on from here. */
+    if (!is_branch_delay_slot && block->instructions.size() >= MAX_BLOCK_INSTRUCTIONS)
       break;
   }
 
