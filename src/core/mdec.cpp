@@ -54,7 +54,18 @@ bool MDEC::DoState(StateWrapper& sw)
   bool block_copy_out_pending = HasPendingBlockCopyOut();
   sw.Do(&block_copy_out_pending);
   if (sw.IsReading())
+  {
+    const bool valid_parameter_count =
+      (m_state != State::SetIqTable || m_remaining_halfwords == 32 || m_remaining_halfwords == 64) &&
+      (m_state != State::SetScaleTable || m_remaining_halfwords == 64);
+    if (!valid_parameter_count)
+    {
+      SoftReset();
+      return false;
+    }
+
     m_block_copy_out_event->SetState(block_copy_out_pending);
+  }
 
   return !sw.HasError();
 }
