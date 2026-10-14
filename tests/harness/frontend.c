@@ -14,6 +14,10 @@
  *   DISKTEST=path         content is a two-entry M3U booted on its second entry;
  *                         swap, load a state saved before the swap, remove and
  *                         re-add entries through disk control, re-adding path
+ *   RELOADTEST=1          after the run, re-init and load the content twice more
+ *                         under a new environment: once with a second logger,
+ *                         once with a NULL one; fails if a logger is called
+ *                         while it is not the current one
  * Core options come from FE_CPU, FE_FASTMEM and FE_GPUTHREAD; the BIOS
  * and save directory is FE_DIR. A load that runs for more than a minute
  * is reported as a hang (exit code 3). */
@@ -44,9 +48,16 @@ static int options_dirty = 0;
 static struct retro_disk_control_ext_callback disk_cb;
 static int have_disk_cb = 0;
 
+/* 0: log_cb, 1: log_cb_second, 2: a NULL logger */
+static int logger_phase = 0;
+static unsigned stale_log_calls = 0;
+static unsigned second_log_calls = 0;
+
 static void log_cb(enum retro_log_level level, const char* fmt, ...)
 {
   va_list ap;
+  if (logger_phase != 0)
+    stale_log_calls++;
   if (level < RETRO_LOG_WARN && !getenv("VERBOSE"))
     return;
   va_start(ap, fmt);
@@ -54,12 +65,27 @@ static void log_cb(enum retro_log_level level, const char* fmt, ...)
   va_end(ap);
 }
 
+static void log_cb_second(enum retro_log_level level, const char* fmt, ...)
+{
+  (void)level;
+  (void)fmt;
+  if (logger_phase != 1)
+    stale_log_calls++;
+  else
+    second_log_calls++;
+}
+
 static bool env_cb(unsigned cmd, void* data)
 {
   switch (cmd)
   {
     case RETRO_ENVIRONMENT_GET_LOG_INTERFACE:
-      ((struct retro_log_callback*)data)->log = log_cb;
+      if (logger_phase == 0)
+        ((struct retro_log_callback*)data)->log = log_cb;
+      else if (logger_phase == 1)
+        ((struct retro_log_callback*)data)->log = log_cb_second;
+      else
+        ((struct retro_log_callback*)data)->log = NULL;
       return true;
     case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY:
     case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY:
@@ -391,6 +417,38 @@ static int disk_test(void* h, const char* readd_path)
   return 0;
 }
 
+static int reload_test(void* h, const char* content)
+{
+  struct retro_game_info info;
+  int phase;
+
+  memset(&info, 0, sizeof(info));
+  info.path = content;
+  for (phase = 1; phase <= 2; phase++)
+  {
+    logger_phase = phase;
+    ((fn_set_t)lookup(h, "retro_set_environment"))((void*)env_cb);
+    ((fn_void_t)lookup(h, "retro_init"))();
+    if (!((fn_load_game_t)lookup(h, "retro_load_game"))(content ? &info : NULL))
+    {
+      fprintf(stderr, "reload test: load %d failed\n", phase);
+      return 1;
+    }
+    run_frames((fn_void_t)lookup(h, "retro_run"), 30);
+    ((fn_void_t)lookup(h, "retro_unload_game"))();
+    ((fn_void_t)lookup(h, "retro_deinit"))();
+  }
+
+  if (stale_log_calls || !second_log_calls)
+  {
+    fprintf(stderr, "reload test: failed: %u calls to a replaced logger, %u to the current one\n", stale_log_calls,
+            second_log_calls);
+    return 1;
+  }
+  printf("reload test: passed (%u log calls after the reload)\n", second_log_calls);
+  return 0;
+}
+
 int main(int argc, char** argv)
 {
   void* h;
@@ -486,6 +544,8 @@ int main(int argc, char** argv)
 
   ((fn_void_t)lookup(h, "retro_unload_game"))();
   ((fn_void_t)lookup(h, "retro_deinit"))();
+  if (!rc && getenv("RELOADTEST"))
+    rc = reload_test(h, info.path);
   /* No dlclose(): the core's static libstdc++ keeps a pool that would then show up as a leak. */
   return rc;
 }

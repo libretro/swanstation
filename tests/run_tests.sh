@@ -8,6 +8,8 @@
 #   statefuzz [first] [last] [iters]  corrupted save states loaded into a fuzzed system (default 1 3 150)
 #   disk                              M3U entries swapped, removed and re-added through disk control,
 #                                     with a save state from before the swap loaded after it
+#   reload                            the core re-initialized under a new environment, with a
+#                                     second logger and then none; no call reaches a replaced logger
 #
 # UPDATE_EXPECTED=1 rewrites an expected file from the core under test.
 # Needs clang, ld.lld and llvm-objcopy for the MIPS test ROMs, python3, and a
@@ -142,6 +144,16 @@ case "$SUITE" in
       exit 1
     fi
     grep "disk test:" "$WORK/run.log"
+    ;;
+
+  reload)
+    build_rom gpu_polyline
+    python3 "$TESTS/make_disc.py" "$WORK"
+    if ! RELOADTEST=1 run_rom gpu_polyline 1 0 30 "$WORK/disc.cue"; then
+      echo "reload: failed"
+      exit 1
+    fi
+    grep "reload test:" "$WORK/run.log"
     ;;
 
   *)

@@ -222,7 +222,6 @@ bool g_retro_skip_video_this_frame = false;
 bool g_retro_skip_audio_this_frame = false;
 
 static retro_log_callback s_libretro_log_callback = {};
-static bool s_libretro_log_callback_valid = false;
 static bool s_libretro_log_callback_registered = false;
 static bool libretro_supports_option_categories = false;
 static bool analog_pressed = false;
@@ -236,9 +235,14 @@ static void LibretroLogCallback(void* pUserParam, const char* channelName, const
   static constexpr std::array<retro_log_level, static_cast<std::size_t>(LogLevel::Count)> levels = {
     {RETRO_LOG_ERROR, RETRO_LOG_ERROR, RETRO_LOG_WARN, RETRO_LOG_INFO, RETRO_LOG_INFO, RETRO_LOG_INFO, RETRO_LOG_INFO,
      RETRO_LOG_DEBUG, RETRO_LOG_DEBUG, RETRO_LOG_DEBUG}};
+  const retro_log_printf_t log = s_libretro_log_callback.log;
 
-  s_libretro_log_callback.log(levels[static_cast<std::size_t>(level)], "[%s] %s\n",
-                              (level <= LogLevel::Perf) ? functionName : channelName, message);
+  /* A logger still inside ExecuteCallbacks may arrive after the reset. */
+  if (!log)
+    return;
+
+  log(levels[static_cast<std::size_t>(level)], "[%s] %s\n", (level <= LogLevel::Perf) ? functionName : channelName,
+      message);
 }
 
 static void ResetLibretroLogging()
@@ -247,7 +251,6 @@ static void ResetLibretroLogging()
     Log::UnregisterCallback(LibretroLogCallback, nullptr);
   s_libretro_log_callback = {};
   s_libretro_log_callback_registered = false;
-  s_libretro_log_callback_valid = false;
 }
 
 HostInterface::HostInterface()
@@ -348,11 +351,10 @@ void HostInterface::InitLogging()
 {
   ResetLibretroLogging();
 
-  s_libretro_log_callback_valid =
-    g_retro_environment_callback(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &s_libretro_log_callback) &&
-    s_libretro_log_callback.log;
+  if (!g_retro_environment_callback(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &s_libretro_log_callback))
+    s_libretro_log_callback.log = nullptr;
 
-  if (s_libretro_log_callback_valid)
+  if (s_libretro_log_callback.log)
   {
     Log::RegisterCallback(LibretroLogCallback, nullptr);
     s_libretro_log_callback_registered = true;
