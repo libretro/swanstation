@@ -2386,9 +2386,11 @@ bool HostInterface::IsKnownMediaPath(const std::string& path) const
 
 bool HostInterface::DiskControlGetImagePath(unsigned index, char* path, size_t len)
 {
+  /* A truncated path names a different file, so a short buffer fails. */
   if (!path || len == 0 || (index >= P_THIS->m_disk_control_info.image_count) ||
       (index >= P_THIS->m_disk_control_info.image_paths.size()) ||
-      P_THIS->m_disk_control_info.image_paths[index].empty())
+      P_THIS->m_disk_control_info.image_paths[index].empty() ||
+      P_THIS->m_disk_control_info.image_paths[index].size() >= len)
     return false;
 
   strlcpy(path, P_THIS->m_disk_control_info.image_paths[index].c_str(), len);

@@ -13,7 +13,8 @@
  *   STATEFUZZ_PATCH=o:v,… load the state with these bytes changed instead of fuzzing
  *   DISKTEST=path         content is a two-entry M3U booted on its second entry;
  *                         swap, load a state saved before the swap, remove and
- *                         re-add entries through disk control, re-adding path
+ *                         re-add entries through disk control, re-adding path,
+ *                         then query its path and label with bad buffers
  *   RELOADTEST=1          after the run, re-init and load the content twice more
  *                         under a new environment: once with a second logger,
  *                         once with a NULL one; fails if a logger is called
@@ -372,6 +373,8 @@ static int disk_test(void* h, const char* readd_path)
   size_t size = serialize_size();
   unsigned char* state = (unsigned char*)malloc(size);
   struct retro_game_info disc;
+  char buf[1024];
+  const size_t readd_len = strlen(readd_path);
 
   DISK_CHECK(state != NULL);
   DISK_CHECK(have_disk_cb);
@@ -411,6 +414,18 @@ static int disk_test(void* h, const char* readd_path)
   DISK_CHECK(disk_cb.replace_image_index(0, &disc));
   DISK_CHECK(disk_cb.set_eject_state(false));
   run_frames(run, 3);
+
+  /* Path and label buffers: missing, empty and short ones fail; a path
+   * never comes back truncated, a label may. */
+  DISK_CHECK(readd_len < sizeof(buf));
+  DISK_CHECK(!disk_cb.get_image_path(0, NULL, sizeof(buf)));
+  DISK_CHECK(!disk_cb.get_image_path(0, buf, 0));
+  DISK_CHECK(!disk_cb.get_image_path(0, buf, readd_len));
+  DISK_CHECK(disk_cb.get_image_path(0, buf, readd_len + 1) && !strcmp(buf, readd_path));
+  DISK_CHECK(!disk_cb.get_image_path(1, buf, sizeof(buf)));
+  DISK_CHECK(!disk_cb.get_image_label(0, NULL, sizeof(buf)));
+  DISK_CHECK(!disk_cb.get_image_label(0, buf, 0));
+  DISK_CHECK(disk_cb.get_image_label(0, buf, 2) && strlen(buf) == 1);
 
   printf("disk test: passed\n");
   free(state);
