@@ -2386,7 +2386,7 @@ bool HostInterface::IsKnownMediaPath(const std::string& path) const
 
 bool HostInterface::DiskControlGetImagePath(unsigned index, char* path, size_t len)
 {
-  if ((index >= P_THIS->m_disk_control_info.image_count) ||
+  if (!path || len == 0 || (index >= P_THIS->m_disk_control_info.image_count) ||
       (index >= P_THIS->m_disk_control_info.image_paths.size()) ||
       P_THIS->m_disk_control_info.image_paths[index].empty())
     return false;
@@ -2397,7 +2397,7 @@ bool HostInterface::DiskControlGetImagePath(unsigned index, char* path, size_t l
 
 bool HostInterface::DiskControlGetImageLabel(unsigned index, char* label, size_t len)
 {
-  if ((index >= P_THIS->m_disk_control_info.image_count) ||
+  if (!label || len == 0 || (index >= P_THIS->m_disk_control_info.image_count) ||
       (index >= P_THIS->m_disk_control_info.image_labels.size()) ||
       P_THIS->m_disk_control_info.image_labels[index].empty())
     return false;
