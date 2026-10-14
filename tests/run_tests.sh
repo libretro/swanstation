@@ -6,6 +6,8 @@
 #   polyline                          long GPU poly-lines, compared with tests/gpu_polyline.expected
 #   regfuzz [first] [last] [frames]   register fuzzer, one run per seed (default 1 20 120)
 #   statefuzz [first] [last] [iters]  corrupted save states loaded into a fuzzed system (default 1 3 150)
+#   disk                              M3U entries swapped, removed and re-added through disk control,
+#                                     with a save state from before the swap loaded after it
 #
 # UPDATE_EXPECTED=1 rewrites an expected file from the core under test.
 # Needs clang, ld.lld and llvm-objcopy for the MIPS test ROMs, python3, and a
@@ -128,6 +130,18 @@ case "$SUITE" in
       seed=$((seed + 1))
     done
     echo "statefuzz: seeds $first-$last passed"
+    ;;
+
+  disk)
+    build_rom gpu_polyline
+    python3 "$TESTS/make_disc.py" "$WORK" disc1
+    python3 "$TESTS/make_disc.py" "$WORK" disc2
+    printf 'disc1.cue\ndisc2.cue\n' > "$WORK/discs.m3u"
+    if ! DISKTEST="$WORK/disc2.cue" run_rom gpu_polyline 1 0 120 "$WORK/discs.m3u"; then
+      echo "disk: failed"
+      exit 1
+    fi
+    grep "disk test:" "$WORK/run.log"
     ;;
 
   *)

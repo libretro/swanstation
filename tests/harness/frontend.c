@@ -11,24 +11,38 @@
  *   STATEFUZZ_LOG=1       print each corrupted byte before loading
  *   STATEFUZZ_DUMP=file   write the uncorrupted state to file
  *   STATEFUZZ_PATCH=o:v,… load the state with these bytes changed instead of fuzzing
+ *   DISKTEST=path         content is a two-entry M3U booted on its second entry;
+ *                         swap, load a state saved before the swap, remove and
+ *                         re-add entries through disk control, re-adding path
  * Core options come from FE_CPU, FE_FASTMEM and FE_GPUTHREAD; the BIOS
  * and save directory is FE_DIR. A load that runs for more than a minute
  * is reported as a hang (exit code 3). */
-#include <dlfcn.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include "libretro.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#define dlopen(path, flags) ((void*)LoadLibraryA(path))
+#define dlsym(h, name) ((void*)GetProcAddress((HMODULE)(h), name))
+#define dlerror() "LoadLibrary failed"
+#define alarm(s) ((void)0)
+#else
+#include <dlfcn.h>
+#include <unistd.h>
+#endif
 
 static const char* opt_gpu_thread = "true";
 static const char* opt_readahead = "8";
 static const char* opt_fastmem = "MMap";
 static const char* opt_cpu = "Recompiler";
 static int options_dirty = 0;
+static struct retro_disk_control_ext_callback disk_cb;
+static int have_disk_cb = 0;
 
 static void log_cb(enum retro_log_level level, const char* fmt, ...)
 {
@@ -54,6 +68,13 @@ static bool env_cb(unsigned cmd, void* data)
     case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT:
     case RETRO_ENVIRONMENT_SET_VARIABLES:
     case RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME:
+      return true;
+    case RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION:
+      *(unsigned*)data = 1;
+      return true;
+    case RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE:
+      disk_cb = *(const struct retro_disk_control_ext_callback*)data;
+      have_disk_cb = 1;
       return true;
     case RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE:
       *(bool*)data = options_dirty != 0;
@@ -129,12 +150,14 @@ static void* lookup(void* h, const char* name)
 }
 
 static unsigned fuzz_iteration;
+#ifndef _WIN32
 static void alarm_handler(int sig)
 {
   (void)sig;
   fprintf(stderr, "HANG at state fuzz iteration %u\n", fuzz_iteration);
   _exit(3);
 }
+#endif
 
 static uint32_t rng_state;
 static uint32_t rng(void)
@@ -158,12 +181,13 @@ static void corrupt_state(unsigned char* buf, const unsigned char* orig, size_t 
   for (k = 0; k < flips; k++)
   {
     const unsigned mi = rng() % num_markers;
-    if (getenv("STATEFUZZ_SECTION") && strcmp(getenv("STATEFUZZ_SECTION"), markers[mi]) != 0)
-      continue;
     const size_t mlen = strlen(markers[mi]);
     size_t off = 0, p;
     unsigned found = 0;
     unsigned char v;
+
+    if (getenv("STATEFUZZ_SECTION") && strcmp(getenv("STATEFUZZ_SECTION"), markers[mi]) != 0)
+      continue;
 
     for (p = 0; p + mlen + 4 < size; p++)
     {
@@ -229,7 +253,9 @@ static int state_fuzz(void* h, unsigned iters, uint32_t seed)
   }
 
   rng_state = seed;
+#ifndef _WIN32
   signal(SIGALRM, alarm_handler);
+#endif
 
   if (getenv("STATEFUZZ_PATCH"))
   {
@@ -293,6 +319,78 @@ static int state_fuzz(void* h, unsigned iters, uint32_t seed)
   return 0;
 }
 
+#define DISK_CHECK(cond)                                    \
+  do                                                        \
+  {                                                         \
+    if (!(cond))                                            \
+    {                                                       \
+      fprintf(stderr, "disk test: failed: %s\n", #cond);    \
+      free(state);                                          \
+      return 1;                                             \
+    }                                                       \
+  } while (0)
+
+static void run_frames(fn_void_t run, unsigned n)
+{
+  unsigned i;
+  for (i = 0; i < n; i++)
+    run();
+}
+
+static int disk_test(void* h, const char* readd_path)
+{
+  fn_void_t run = (fn_void_t)lookup(h, "retro_run");
+  fn_serialize_size_t serialize_size = (fn_serialize_size_t)lookup(h, "retro_serialize_size");
+  fn_serialize_t serialize = (fn_serialize_t)lookup(h, "retro_serialize");
+  fn_unserialize_t unserialize = (fn_unserialize_t)lookup(h, "retro_unserialize");
+  size_t size = serialize_size();
+  unsigned char* state = (unsigned char*)malloc(size);
+  struct retro_game_info disc;
+
+  DISK_CHECK(state != NULL);
+  DISK_CHECK(have_disk_cb);
+  DISK_CHECK(disk_cb.get_num_images() == 2);
+  DISK_CHECK(disk_cb.get_image_index() == 1);
+
+  /* The state names the playlist and its second entry. */
+  DISK_CHECK(serialize(state, size));
+
+  /* The first entry goes in as an image of its own. */
+  DISK_CHECK(disk_cb.set_eject_state(true));
+  DISK_CHECK(disk_cb.set_image_index(0));
+  DISK_CHECK(disk_cb.set_eject_state(false));
+  run_frames(run, 3);
+
+  DISK_CHECK(unserialize(state, size));
+  run_frames(run, 3);
+
+  /* Removing the selected last entry leaves index == count: no disc. */
+  DISK_CHECK(disk_cb.set_eject_state(true));
+  DISK_CHECK(disk_cb.set_image_index(1));
+  DISK_CHECK(disk_cb.replace_image_index(1, NULL));
+  DISK_CHECK(disk_cb.get_num_images() == 1);
+  DISK_CHECK(!disk_cb.set_eject_state(false));
+
+  DISK_CHECK(disk_cb.replace_image_index(0, NULL));
+  DISK_CHECK(disk_cb.get_num_images() == 0);
+  DISK_CHECK(!disk_cb.set_eject_state(false));
+
+  /* An added slot has no image until it is replaced. */
+  DISK_CHECK(disk_cb.add_image_index());
+  DISK_CHECK(disk_cb.set_image_index(0));
+  DISK_CHECK(!disk_cb.set_eject_state(false));
+
+  memset(&disc, 0, sizeof(disc));
+  disc.path = readd_path;
+  DISK_CHECK(disk_cb.replace_image_index(0, &disc));
+  DISK_CHECK(disk_cb.set_eject_state(false));
+  run_frames(run, 3);
+
+  printf("disk test: passed\n");
+  free(state);
+  return 0;
+}
+
 int main(int argc, char** argv)
 {
   void* h;
@@ -328,6 +426,14 @@ int main(int argc, char** argv)
   ((fn_set_t)lookup(h, "retro_set_input_poll"))((void*)input_poll_cb);
   ((fn_set_t)lookup(h, "retro_set_input_state"))((void*)input_state_cb);
   ((fn_void_t)lookup(h, "retro_init"))();
+  if (getenv("DISKTEST"))
+  {
+    if (argc < 4 || !have_disk_cb || !disk_cb.set_initial_image(1, argv[3]))
+    {
+      fprintf(stderr, "disk test: no disk control interface\n");
+      return 1;
+    }
+  }
 
   memset(&info, 0, sizeof(info));
   info.path = (argc > 3) ? argv[3] : NULL;
@@ -373,7 +479,9 @@ int main(int argc, char** argv)
     }
   }
 
-  if (getenv("STATEFUZZ"))
+  if (getenv("DISKTEST"))
+    rc = disk_test(h, getenv("DISKTEST"));
+  if (!rc && getenv("STATEFUZZ"))
     rc = state_fuzz(h, (unsigned)atoi(getenv("STATEFUZZ")), getenv("SEED") ? (uint32_t)atoi(getenv("SEED")) : 1u);
 
   ((fn_void_t)lookup(h, "retro_unload_game"))();

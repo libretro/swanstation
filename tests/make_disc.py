@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""make_disc.py dir: writes dir/disc.cue and dir/disc.bin, a small Mode 2 data
-track plus an audio track, so CD-ROM commands have something to read."""
+"""make_disc.py dir [name]: writes dir/name.cue and dir/name.bin (name defaults
+to disc), a small Mode 2 data track plus an audio track, so CD-ROM commands
+have something to read."""
 import os
 import random
 import sys
 
 work = sys.argv[1]
+name = sys.argv[2] if len(sys.argv) > 2 else 'disc'
 rng = random.Random(1)
 
 
@@ -20,10 +22,10 @@ for lba in range(300):
     data += bytes(8) + bytes(rng.getrandbits(8) for _ in range(2352 - 24))
 audio = bytes(rng.getrandbits(8) for _ in range(2352 * 150))
 
-with open(os.path.join(work, 'disc.bin'), 'wb') as f:
+with open(os.path.join(work, name + '.bin'), 'wb') as f:
     f.write(data + audio)
-with open(os.path.join(work, 'disc.cue'), 'w') as f:
-    f.write('FILE "disc.bin" BINARY\n'
+with open(os.path.join(work, name + '.cue'), 'w') as f:
+    f.write('FILE "' + name + '.bin" BINARY\n'
             '  TRACK 01 MODE2/2352\n'
             '    INDEX 01 00:00:00\n'
             '  TRACK 02 AUDIO\n'

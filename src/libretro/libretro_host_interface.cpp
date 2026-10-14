@@ -2232,8 +2232,15 @@ bool HostInterface::DiskControlSetEjectState(bool ejected)
       if (!System::SwitchMediaSubImage(P_THIS->m_disk_control_info.image_index))
         return false;
     }
-    else if (!System::InsertMedia(P_THIS->m_disk_control_info.image_paths[P_THIS->m_disk_control_info.image_index].c_str()))
-      return false;
+    else
+    {
+      /* index == count selects no disc; an added slot is empty until replaced. */
+      const uint32_t index = P_THIS->m_disk_control_info.image_index;
+      if (index >= P_THIS->m_disk_control_info.image_paths.size() ||
+          P_THIS->m_disk_control_info.image_paths[index].empty() ||
+          !System::InsertMedia(P_THIS->m_disk_control_info.image_paths[index].c_str()))
+        return false;
+    }
   }
 
   return true;
@@ -2352,7 +2359,8 @@ bool HostInterface::IsKnownMediaPath(const std::string& path) const
   size_t i;
   if (path.empty())
     return false;
-  if (m_disk_control_info.has_sub_images && path == m_disk_control_info.sub_images_parent_path)
+  /* An M3U opened as separate images still names itself in states saved before a swap. */
+  if (path == m_disk_control_info.sub_images_parent_path)
     return true;
   for (i = 0; i < m_disk_control_info.image_paths.size(); i++)
   {
