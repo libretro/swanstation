@@ -241,6 +241,15 @@ static void LibretroLogCallback(void* pUserParam, const char* channelName, const
                               (level <= LogLevel::Perf) ? functionName : channelName, message);
 }
 
+static void ResetLibretroLogging()
+{
+  if (s_libretro_log_callback_registered)
+    Log::UnregisterCallback(LibretroLogCallback, nullptr);
+  s_libretro_log_callback = {};
+  s_libretro_log_callback_registered = false;
+  s_libretro_log_callback_valid = false;
+}
+
 HostInterface::HostInterface()
 {
   g_host_interface = this;
@@ -337,11 +346,11 @@ void HostInterface::InitInterfaces()
 
 void HostInterface::InitLogging()
 {
-  if (s_libretro_log_callback_registered)
-    return;
+  ResetLibretroLogging();
 
   s_libretro_log_callback_valid =
-    g_retro_environment_callback(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &s_libretro_log_callback);
+    g_retro_environment_callback(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &s_libretro_log_callback) &&
+    s_libretro_log_callback.log;
 
   if (s_libretro_log_callback_valid)
   {
@@ -361,6 +370,7 @@ bool HostInterface::Initialize()
   P_THIS->m_disk_control_info.image_paths.clear();
   P_THIS->m_disk_control_info.image_labels.clear();
 
+  InitLogging();
   InitInterfaces();
   LoadSettings();
   FixIncompatibleSettings(true);
@@ -386,6 +396,8 @@ void HostInterface::Shutdown()
   P_THIS->m_disk_control_info.sub_images_parent_path.clear();
   P_THIS->m_disk_control_info.image_paths.clear();
   P_THIS->m_disk_control_info.image_labels.clear();
+
+  ResetLibretroLogging();
 }
 
 void HostInterface::ReportError(const char* message)
