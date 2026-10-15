@@ -23,6 +23,14 @@
  *                         under a new environment: once with a second logger,
  *                         once with a NULL one; fails if a logger is called
  *                         while it is not the current one
+ *   PADTEST=1             with a DualShock on port 1 and a NeGcon Rumble on
+ *                         port 2, check after each of 60 frames that saving,
+ *                         loading and saving again leaves the Pad section
+ *                         unchanged, pressing the analog combo on two frames;
+ *                         then check that loading an early state and running a
+ *                         frame matches the original run, in the running game
+ *                         and in a freshly loaded one
+ * FE_PADS=1 plugs the same two pads without running PADTEST.
  * FE_STATE_CONTEXT=rollback reports every state load as a netplay rollback,
  * which the core loads without a fallback copy of the running state.
  * Core options come from FE_CPU, FE_FASTMEM and FE_GPUTHREAD; the BIOS
@@ -158,13 +166,17 @@ static size_t audio_batch_cb(const int16_t* d, size_t f)
   (void)d;
   return f;
 }
+/* Port 1 holds L1 + R1 + L3 + R3, the analog combo the core uses with no option set, while this is set. */
+static int press_analog_combo = 0;
+
 static void input_poll_cb(void) {}
 static int16_t input_state_cb(unsigned p, unsigned d, unsigned i, unsigned id)
 {
-  (void)p;
-  (void)d;
   (void)i;
-  (void)id;
+  if (press_analog_combo && p == 0 && d == RETRO_DEVICE_JOYPAD &&
+      (id == RETRO_DEVICE_ID_JOYPAD_L || id == RETRO_DEVICE_ID_JOYPAD_R || id == RETRO_DEVICE_ID_JOYPAD_L3 ||
+       id == RETRO_DEVICE_ID_JOYPAD_R3))
+    return 1;
   return 0;
 }
 
@@ -555,6 +567,164 @@ static int reload_test(void* h, const char* content)
   return 0;
 }
 
+#define PAD_FRAMES 60
+/* With this ROM several of these frames end with a controller part way through a command. */
+#define PAD_FIRST_KEPT 2
+#define PAD_KEPT_STATES 9
+/* The guest's poll results: the count at 0, each port's last response at 0x100 and 0x110, the card's at 0x120. */
+#define PAD_RAM_BYTES 0x130
+/* RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_ANALOG, 0) and (..., 3) in the core */
+#define PAD_DEVICE_DUALSHOCK RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_ANALOG, 0)
+#define PAD_DEVICE_NEGCON_RUMBLE RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_ANALOG, 3)
+
+typedef void (*fn_set_port_device_t)(unsigned, unsigned);
+
+static void plug_pads(void* h)
+{
+  fn_set_port_device_t set_device = (fn_set_port_device_t)lookup(h, "retro_set_controller_port_device");
+  set_device(0, PAD_DEVICE_DUALSHOCK);
+  set_device(1, PAD_DEVICE_NEGCON_RUMBLE);
+}
+
+/* Offset just past a length-prefixed section marker, or 0. */
+static size_t find_marker(const unsigned char* buf, size_t size, const char* name)
+{
+  const size_t len = strlen(name);
+  size_t p;
+  for (p = 0; p + len + 4 < size; p++)
+  {
+    uint32_t l;
+    memcpy(&l, buf + p, 4);
+    if (l == len && !memcmp(buf + p + 4, name, len))
+      return p + 4 + len;
+  }
+  return 0;
+}
+
+/* Returns -1 when the Pad sections match, else the first differing offset within them. */
+static long compare_pad_sections(const unsigned char* a, const unsigned char* b, size_t size)
+{
+  const size_t start = find_marker(a, size, "Pad");
+  const size_t end = find_marker(a, size, "Timers");
+  size_t o;
+
+  if (!start || end <= start || find_marker(b, size, "Pad") != start || find_marker(b, size, "Timers") != end)
+    return 0;
+  for (o = start; o < end; o++)
+  {
+    if (a[o] != b[o])
+      return (long)(o - start);
+  }
+  return -1;
+}
+
+#define PAD_CHECK(cond)                                                       \
+  do                                                                          \
+  {                                                                           \
+    if (!(cond))                                                              \
+    {                                                                         \
+      fprintf(stderr, "pad test: line %d failed: %s\n", __LINE__, #cond);     \
+      free(states);                                                           \
+      return 1;                                                               \
+    }                                                                         \
+  } while (0)
+
+static int pad_test(void* h, const char* content)
+{
+  fn_void_t run = (fn_void_t)lookup(h, "retro_run");
+  fn_serialize_size_t serialize_size = (fn_serialize_size_t)lookup(h, "retro_serialize_size");
+  fn_serialize_t serialize = (fn_serialize_t)lookup(h, "retro_serialize");
+  fn_unserialize_t unserialize = (fn_unserialize_t)lookup(h, "retro_unserialize");
+  fn_memory_data_t memory_data = (fn_memory_data_t)lookup(h, "retro_get_memory_data");
+  const size_t size = serialize_size();
+  /* two scratch states, then the kept states */
+  unsigned char* states = (unsigned char*)malloc(size * (2 + PAD_KEPT_STATES));
+  unsigned char* saved = states;
+  unsigned char* resaved = states ? states + size : NULL;
+  static unsigned char kept_ram[PAD_KEPT_STATES][PAD_RAM_BYTES];
+  struct retro_game_info info;
+  const unsigned char* ram;
+  unsigned frame, k, pass;
+  long diff;
+
+  PAD_CHECK(states != NULL);
+  ram = (const unsigned char*)memory_data(RETRO_MEMORY_SYSTEM_RAM);
+  PAD_CHECK(ram != NULL);
+
+  /* Saving, loading and saving again changes nothing, with the analog combo pressed on two frames. */
+  for (frame = 0; frame < PAD_FRAMES; frame++)
+  {
+    press_analog_combo = (frame == 20 || frame == 41);
+    run();
+    press_analog_combo = 0;
+
+    PAD_CHECK(serialize(saved, size));
+    PAD_CHECK(unserialize(saved, size));
+    PAD_CHECK(serialize(resaved, size));
+    diff = compare_pad_sections(saved, resaved, size);
+    if (diff != -1)
+    {
+      fprintf(stderr, "pad test: frame %u: a load changed Pad section byte %ld\n", frame, diff);
+      free(states);
+      return 1;
+    }
+
+    /* The first press switches the DualShock to analog mode, the second back to digital. */
+    if (frame == 30)
+      PAD_CHECK(ram[0x100] == 0x73);
+    if (frame == PAD_FRAMES - 1)
+      PAD_CHECK(ram[0x100] == 0x41);
+
+    if (frame >= PAD_FIRST_KEPT && frame < PAD_FIRST_KEPT + PAD_KEPT_STATES)
+    {
+      memcpy(states + size * (2 + frame - PAD_FIRST_KEPT), saved, size);
+      memcpy(kept_ram[frame - PAD_FIRST_KEPT], ram, PAD_RAM_BYTES);
+    }
+  }
+
+  /* Both pads and the card answered; a card read replies 0x5A 0x5D after its command byte. */
+  PAD_CHECK(ram[0] != 0 || ram[1] != 0);
+  PAD_CHECK(ram[0x110] == 0x23);
+  PAD_CHECK(ram[0x122] == 0x5A && ram[0x123] == 0x5D);
+
+  /* Loading a kept state and running a frame matches the original run's next frame, first into
+   * the running game, then each into a freshly loaded one, where nothing is mid-transfer. */
+  memset(&info, 0, sizeof(info));
+  info.path = content;
+  for (pass = 0; pass < 2; pass++)
+  {
+    /* Newest first, so each load lands on what a later frame left behind, not on its own frame's leftovers. */
+    for (k = PAD_KEPT_STATES - 1; k-- > 0;)
+    {
+      if (pass == 1)
+      {
+        ((fn_void_t)lookup(h, "retro_unload_game"))();
+        PAD_CHECK(((fn_load_game_t)lookup(h, "retro_load_game"))(content ? &info : NULL));
+        plug_pads(h);
+        ram = (const unsigned char*)memory_data(RETRO_MEMORY_SYSTEM_RAM);
+        PAD_CHECK(ram != NULL);
+      }
+
+      PAD_CHECK(unserialize(states + size * (2 + k), size));
+      run();
+      PAD_CHECK(serialize(saved, size));
+      diff = compare_pad_sections(saved, states + size * (2 + k + 1), size);
+      if (diff != -1 || memcmp(ram, kept_ram[k + 1], PAD_RAM_BYTES) != 0)
+      {
+        fprintf(stderr, "pad test: %s game: the frame after loading frame %u's state differs (Pad byte %ld%s)\n",
+                pass ? "fresh" : "running", PAD_FIRST_KEPT + k, diff,
+                memcmp(ram, kept_ram[k + 1], PAD_RAM_BYTES) ? ", poll results" : "");
+        free(states);
+        return 1;
+      }
+    }
+  }
+
+  printf("pad test: passed\n");
+  free(states);
+  return 0;
+}
+
 int main(int argc, char** argv)
 {
   void* h;
@@ -607,6 +777,9 @@ int main(int argc, char** argv)
     return 1;
   }
 
+  if (getenv("PADTEST") || getenv("FE_PADS"))
+    plug_pads(h);
+
   for (i = 0; i < frames; i++)
   {
     /* Switch the threading options while running; the GPU thread keeps its setting at the end. */
@@ -645,6 +818,8 @@ int main(int argc, char** argv)
 
   if (getenv("DISKTEST"))
     rc = disk_test(h, getenv("DISKTEST"));
+  if (!rc && getenv("PADTEST"))
+    rc = pad_test(h, info.path);
   if (!rc && getenv("STATEFUZZ"))
     rc = state_fuzz(h, (unsigned)atoi(getenv("STATEFUZZ")), getenv("SEED") ? (uint32_t)atoi(getenv("SEED")) : 1u);
 

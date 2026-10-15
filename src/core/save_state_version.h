@@ -2,7 +2,7 @@
 #include "types.h"
 
 static constexpr uint32_t SAVE_STATE_MAGIC = 0x43435544;
-static constexpr uint32_t SAVE_STATE_VERSION = 56;
+static constexpr uint32_t SAVE_STATE_VERSION = 57;
 static constexpr uint32_t SAVE_STATE_MINIMUM_VERSION = 42;
 
 #pragma pack(push, 4)

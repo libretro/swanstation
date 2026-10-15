@@ -184,6 +184,11 @@ bool Pad::DoState(StateWrapper& sw)
   sw.Do(&m_transmit_buffer);
   sw.Do(&m_receive_buffer_full);
   sw.Do(&m_transmit_buffer_full);
+  sw.DoEx(&m_active_device, 57, ActiveDevice::None);
+  sw.DoEx(&m_transmit_value, 57, static_cast<uint8_t>(0));
+
+  if (sw.IsReading() && m_active_device > ActiveDevice::Multitap)
+    return false;
 
   if (sw.IsReading() && IsTransmitting())
     m_transfer_event->Activate();

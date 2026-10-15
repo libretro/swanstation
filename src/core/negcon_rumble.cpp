@@ -56,6 +56,10 @@ bool NeGconRumble::DoState(StateWrapper& sw, bool apply_input_state)
     m_analog_mode = old_analog_mode;
 
   sw.Do(&m_command);
+  sw.DoEx(&m_command_step, 57, 0);
+  sw.DoEx(&m_response_length, 57, static_cast<uint32_t>(0));
+  sw.DoEx(&m_rx_buffer, 57, m_rx_buffer);
+  sw.DoEx(&m_tx_buffer, 57, m_tx_buffer);
 
   sw.DoEx(&m_rumble_config, 45, {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF});
   sw.DoEx(&m_rumble_config_large_motor_index, 45, -1);
@@ -67,8 +71,22 @@ bool NeGconRumble::DoState(StateWrapper& sw, bool apply_input_state)
 
   if (sw.IsReading())
   {
-    /* The state format does not contain the command step, response length, or response buffers. */
-    ResetTransferState();
+    /* Idle and Ready do not read the response length; every other command set it before its first byte. */
+    const bool responding = m_command != Command::Idle && m_command != Command::Ready;
+
+    if (sw.GetVersion() < 57)
+    {
+      /* Older states have no step or response, so a command in progress cannot resume. */
+      m_command = Command::Idle;
+      m_command_step = 0;
+    }
+    else if (m_command > Command::GetSetRumble || m_command_step < 0 ||
+             static_cast<uint32_t>(m_command_step) >= MAX_RESPONSE_LENGTH ||
+             (responding && (m_response_length == 0 || m_response_length > MAX_RESPONSE_LENGTH ||
+                             static_cast<uint32_t>(m_command_step) >= m_response_length)))
+    {
+      return false;
+    }
 
     for (uint8_t i = 0; i < NUM_MOTORS; i++)
       SetMotorState(i, motor_state[i]);

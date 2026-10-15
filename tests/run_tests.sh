@@ -9,6 +9,10 @@
 #   rollback                          every byte of the CPU section head set to 0xFF in turn and
 #                                     loaded as a netplay rollback (no fallback copy); frames still run
 #                                     after each rejected load
+#   pad                               both ports polled continuously (DualShock, NeGcon Rumble); a
+#                                     save/load/save round trip leaves the Pad section unchanged, and
+#                                     a loaded state runs its next frame as the original run did; then
+#                                     each byte of the DualShock's state is corrupted and loaded in turn
 #   disk                              M3U entries swapped, removed and re-added through disk control,
 #                                     an empty drive closed and that state loaded,
 #                                     with a save state from before the swap loaded after it, and
@@ -145,6 +149,24 @@ case "$SUITE" in
     if ! FE_STATE_CONTEXT=rollback STATEFUZZ=1 STATEFUZZ_SWEEP=CPU:400 \
       run_rom regfuzz 1 0xFFFFFFFF 120 "$WORK/disc.cue"; then
       echo "rollback: failed"
+      exit 1
+    fi
+    grep "state fuzz:" "$WORK/run.log"
+    ;;
+
+  pad)
+    build_rom pad_poll
+    python3 "$TESTS/make_disc.py" "$WORK"
+    # Interpreter only: the recompiler does not yet replay a frame identically after a state load.
+    if ! FE_CPU=Interpreter PADTEST=1 run_rom pad_poll 1 0 30 "$WORK/disc.cue"; then
+      echo "pad: failed"
+      exit 1
+    fi
+    grep "pad test:" "$WORK/run.log"
+    # Every byte of the DualShock's state set to 0xFF in turn, loaded as a rollback with frames run after each.
+    if ! FE_CPU=Interpreter FE_PADS=1 FE_STATE_CONTEXT=rollback STATEFUZZ=1 STATEFUZZ_SWEEP=Controller:96 \
+      run_rom pad_poll 1 0 30 "$WORK/disc.cue"; then
+      echo "pad: controller sweep failed"
       exit 1
     fi
     grep "state fuzz:" "$WORK/run.log"
