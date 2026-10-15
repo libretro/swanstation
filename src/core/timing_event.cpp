@@ -307,7 +307,8 @@ bool DoState(StateWrapper& sw)
       static constexpr TickCount MAX_LATENESS = System::MASTER_CLOCK / 60;
       static constexpr TickCount MAX_TICKS = std::numeric_limits<TickCount>::max() / 2;
       if (sw.HasError() || period <= 0 || interval <= 0 || downcount < -MAX_LATENESS || downcount > MAX_TICKS ||
-          time_since_last_run < -MAX_LATENESS || time_since_last_run > MAX_TICKS)
+          time_since_last_run < -MAX_LATENESS || time_since_last_run > MAX_TICKS ||
+          static_cast<int64_t>(downcount) + static_cast<int64_t>(time_since_last_run) < 0)
       {
         return false;
       }
@@ -315,6 +316,14 @@ bool DoState(StateWrapper& sw)
       TimingEvent* event = FindActiveEvent(event_name);
       if (!event)
         continue;
+
+      /* The CRTC event is recalculated from the restored GPU state and must run regularly to finish a frame. */
+      if (event->GetName() == "GPU CRTC Tick" &&
+          (downcount > System::GetMaxSliceTicks() || time_since_last_run > System::GetMaxSliceTicks() || period != 1 ||
+           interval != 1))
+      {
+        return false;
+      }
 
       // Using reschedule is safe here since we call sort afterwards.
       event->m_downcount = downcount;
