@@ -68,6 +68,9 @@ bool AnalogController::DoState(StateWrapper& sw, bool apply_input_state)
 
   if (sw.IsReading())
   {
+    /* The state format does not contain the command step, response length, or response buffers. */
+    ResetTransferState();
+
     for (uint8_t i = 0; i < NUM_MOTORS; i++)
       SetMotorState(i, motor_state[i]);
 
