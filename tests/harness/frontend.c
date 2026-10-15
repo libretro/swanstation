@@ -15,6 +15,7 @@
  *                         swap, load a state saved before the swap, remove and
  *                         re-add entries through disk control, re-adding path,
  *                         close the tray on an empty drive and load that state,
+ *                         checking that each load selects the entry it was saved on,
  *                         then query its path and label with bad buffers
  *   RELOADTEST=1          after the run, re-init and load the content twice more
  *                         under a new environment: once with a second logger,
@@ -394,7 +395,11 @@ static int disk_test(void* h, const char* readd_path)
   DISK_CHECK(disk_cb.set_eject_state(false));
   run_frames(run, 3);
 
+  /* The state also selects the entry it was saved on. */
+  DISK_CHECK(disk_cb.get_image_index() == 0);
   DISK_CHECK(unserialize(state, size));
+  DISK_CHECK(disk_cb.get_image_index() == 1);
+  DISK_CHECK(!disk_cb.get_eject_state());
   run_frames(run, 3);
 
   /* Removing the selected last entry leaves index == count: no disc, and
@@ -413,8 +418,10 @@ static int disk_test(void* h, const char* readd_path)
   /* The closed empty tray is part of the state, so loading it closes an open tray. */
   DISK_CHECK(serialize(empty_state, size));
   DISK_CHECK(disk_cb.set_eject_state(true));
+  DISK_CHECK(disk_cb.set_image_index(0));
   DISK_CHECK(unserialize(empty_state, size));
   DISK_CHECK(!disk_cb.get_eject_state());
+  DISK_CHECK(disk_cb.get_image_index() == disk_cb.get_num_images());
   run_frames(run, 3);
 
   /* Entries are edited with the tray open. */

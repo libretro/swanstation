@@ -1027,7 +1027,6 @@ bool HostInterface::retro_unserialize(const void* data, size_t size)
 
   DiskControlInfo& info = m_disk_control_info;
   uint32_t selected_index = info.image_index;
-  bool ejected = state_header.media_filename_length == 0;
   std::string media_path;
   const char* media_override = nullptr;
   uint32_t media_subimage_index = 0;
@@ -1048,7 +1047,7 @@ bool HostInterface::retro_unserialize(const void* data, size_t size)
 
     std::string path(reinterpret_cast<const char*>(data) + data_end + sizeof(header), header.path_length);
     const bool no_disc = (header.flags & DISK_STATE_NO_DISC) != 0;
-    ejected = (header.flags & DISK_STATE_EJECTED) != 0;
+    const bool ejected = (header.flags & DISK_STATE_EJECTED) != 0;
     if (path.find('\0') != std::string::npos || no_disc != path.empty() ||
         (state_header.media_filename_length != 0) != (!no_disc && !ejected))
       return false;
@@ -1133,6 +1132,7 @@ bool HostInterface::retro_unserialize(const void* data, size_t size)
   if (!System::LoadState(stream.get(), is_memory_state, restore_on_failure, media_override, media_subimage_index))
     return false;
 
+  info.image_index = selected_index;
   return true;
 }
 
