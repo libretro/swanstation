@@ -119,6 +119,7 @@ std::string GetMediaFileName();
 bool InsertMedia(const char* path);
 void RemoveMedia();
 void SetMediaTrayOpen(bool opened);
+bool IsMediaTrayOpen();
 
 /// Returns true if this is a multi-subimage image (e.g. m3u).
 bool HasMediaSubImages();

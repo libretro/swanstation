@@ -7,6 +7,7 @@
 #   regfuzz [first] [last] [frames]   register fuzzer, one run per seed (default 1 20 120)
 #   statefuzz [first] [last] [iters]  corrupted save states loaded into a fuzzed system (default 1 3 150)
 #   disk                              M3U entries swapped, removed and re-added through disk control,
+#                                     an empty drive closed and that state loaded,
 #                                     with a save state from before the swap loaded after it, and
 #                                     path/label queries with missing, empty and short buffers
 #   reload                            the core re-initialized under a new environment, with a

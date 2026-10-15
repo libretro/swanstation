@@ -14,6 +14,7 @@
  *   DISKTEST=path         content is a two-entry M3U booted on its second entry;
  *                         swap, load a state saved before the swap, remove and
  *                         re-add entries through disk control, re-adding path,
+ *                         close the tray on an empty drive and load that state,
  *                         then query its path and label with bad buffers
  *   RELOADTEST=1          after the run, re-init and load the content twice more
  *                         under a new environment: once with a second logger,
@@ -351,7 +352,7 @@ static int state_fuzz(void* h, unsigned iters, uint32_t seed)
   {                                                         \
     if (!(cond))                                            \
     {                                                       \
-      fprintf(stderr, "disk test: failed: %s\n", #cond);    \
+      fprintf(stderr, "disk test: line %d failed: %s\n", __LINE__, #cond); \
       free(state);                                          \
       return 1;                                             \
     }                                                       \
@@ -371,7 +372,9 @@ static int disk_test(void* h, const char* readd_path)
   fn_serialize_t serialize = (fn_serialize_t)lookup(h, "retro_serialize");
   fn_unserialize_t unserialize = (fn_unserialize_t)lookup(h, "retro_unserialize");
   size_t size = serialize_size();
-  unsigned char* state = (unsigned char*)malloc(size);
+  /* Two states back to back: the boot state, then one with an empty closed tray. */
+  unsigned char* state = (unsigned char*)malloc(size * 2);
+  unsigned char* empty_state = state ? state + size : NULL;
   struct retro_game_info disc;
   char buf[1024];
   const size_t readd_len = strlen(readd_path);
@@ -380,6 +383,7 @@ static int disk_test(void* h, const char* readd_path)
   DISK_CHECK(have_disk_cb);
   DISK_CHECK(disk_cb.get_num_images() == 2);
   DISK_CHECK(disk_cb.get_image_index() == 1);
+  DISK_CHECK(!disk_cb.get_eject_state());
 
   /* The state names the playlist and its second entry. */
   DISK_CHECK(serialize(state, size));
@@ -393,26 +397,45 @@ static int disk_test(void* h, const char* readd_path)
   DISK_CHECK(unserialize(state, size));
   run_frames(run, 3);
 
-  /* Removing the selected last entry leaves index == count: no disc. */
+  /* Removing the selected last entry leaves index == count: no disc, and
+   * the tray closes on an empty drive. */
+  DISK_CHECK(!disk_cb.get_eject_state());
   DISK_CHECK(disk_cb.set_eject_state(true));
+  DISK_CHECK(disk_cb.get_eject_state());
   DISK_CHECK(disk_cb.set_image_index(1));
   DISK_CHECK(disk_cb.replace_image_index(1, NULL));
   DISK_CHECK(disk_cb.get_num_images() == 1);
-  DISK_CHECK(!disk_cb.set_eject_state(false));
+  DISK_CHECK(disk_cb.get_image_index() == 1);
+  DISK_CHECK(disk_cb.set_eject_state(false));
+  DISK_CHECK(!disk_cb.get_eject_state());
+  run_frames(run, 3);
 
+  /* The closed empty tray is part of the state, so loading it closes an open tray. */
+  DISK_CHECK(serialize(empty_state, size));
+  DISK_CHECK(disk_cb.set_eject_state(true));
+  DISK_CHECK(unserialize(empty_state, size));
+  DISK_CHECK(!disk_cb.get_eject_state());
+  run_frames(run, 3);
+
+  /* Entries are edited with the tray open. */
+  DISK_CHECK(!disk_cb.replace_image_index(0, NULL));
+  DISK_CHECK(disk_cb.set_eject_state(true));
   DISK_CHECK(disk_cb.replace_image_index(0, NULL));
   DISK_CHECK(disk_cb.get_num_images() == 0);
-  DISK_CHECK(!disk_cb.set_eject_state(false));
+  DISK_CHECK(disk_cb.set_eject_state(false));
+  DISK_CHECK(disk_cb.set_eject_state(true));
 
-  /* An added slot has no image until it is replaced. */
+  /* An added slot keeps no disc selected and cannot be selected until it is replaced. */
   DISK_CHECK(disk_cb.add_image_index());
-  DISK_CHECK(disk_cb.set_image_index(0));
-  DISK_CHECK(!disk_cb.set_eject_state(false));
+  DISK_CHECK(disk_cb.get_image_index() == 1);
+  DISK_CHECK(!disk_cb.set_image_index(0));
 
   memset(&disc, 0, sizeof(disc));
   disc.path = readd_path;
   DISK_CHECK(disk_cb.replace_image_index(0, &disc));
+  DISK_CHECK(disk_cb.set_image_index(0));
   DISK_CHECK(disk_cb.set_eject_state(false));
+  DISK_CHECK(!disk_cb.get_eject_state());
   run_frames(run, 3);
 
   /* Path and label buffers: missing, empty and short ones fail; a path

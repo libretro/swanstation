@@ -229,6 +229,8 @@ bool CDROM::DoState(StateWrapper& sw)
   sw.Do(&m_drive_state);
   sw.Do(&m_status.bits);
   sw.Do(&m_secondary_status.bits);
+  /* Media is restored before this runs; older states imply an open tray when empty. */
+  sw.DoEx(&m_shell_open, 56, !HasMedia());
   sw.Do(&m_mode.bits);
 
   bool current_double_speed = m_mode.double_speed;

@@ -1624,8 +1624,15 @@ void RemoveMedia()
 
 void SetMediaTrayOpen(bool opened)
 {
+  if (g_cdrom.IsShellOpen() == opened)
+    return;
   g_cdrom.SetShellOpen(opened);
   ClearMemorySaveStates();
+}
+
+bool IsMediaTrayOpen()
+{
+  return g_cdrom.IsShellOpen();
 }
 
 void UpdateRunningGame(const char* path, CDImage* image)

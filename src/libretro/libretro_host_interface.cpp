@@ -365,7 +365,6 @@ bool HostInterface::Initialize()
 {
   /* Reset disk control info struct */
   P_THIS->m_disk_control_info.has_sub_images      = false;
-  P_THIS->m_disk_control_info.ejected             = false;
   P_THIS->m_disk_control_info.initial_image_index = 0;
   P_THIS->m_disk_control_info.image_index         = 0;
   P_THIS->m_disk_control_info.image_count         = 0;
@@ -393,7 +392,6 @@ void HostInterface::Shutdown()
 
   /* Reset disk control info struct */
   P_THIS->m_disk_control_info.has_sub_images      = false;
-  P_THIS->m_disk_control_info.ejected             = false;
   P_THIS->m_disk_control_info.initial_image_index = 0;
   P_THIS->m_disk_control_info.image_index         = 0;
   P_THIS->m_disk_control_info.image_count         = 0;
@@ -979,12 +977,7 @@ bool HostInterface::retro_unserialize(const void* data, size_t size)
   const bool restore_on_failure = !is_memory_state && ctx != RETRO_SAVESTATE_CONTEXT_ROLLBACK_NETPLAY;
 
   std::unique_ptr<ByteStream> stream = ByteStream_CreateReadOnlyMemoryStream(data, static_cast<uint32_t>(size));
-  if (!System::LoadState(stream.get(), is_memory_state, restore_on_failure))
-    return false;
-
-  m_disk_control_info.ejected = !System::HasMedia();
-  System::SetMediaTrayOpen(m_disk_control_info.ejected);
-  return true;
+  return System::LoadState(stream.get(), is_memory_state, restore_on_failure);
 }
 
 void* HostInterface::retro_get_memory_data(unsigned id)
@@ -2235,7 +2228,7 @@ bool HostInterface::DiskControlSetEjectState(bool ejected)
     return false;
 
   DiskControlInfo& info = P_THIS->m_disk_control_info;
-  if (info.ejected == ejected)
+  if (System::IsMediaTrayOpen() == ejected)
     return true;
 
   if (ejected)
@@ -2259,14 +2252,13 @@ bool HostInterface::DiskControlSetEjectState(bool ejected)
       return false;
   }
 
-  info.ejected = ejected;
   System::SetMediaTrayOpen(ejected);
   return true;
 }
 
 bool HostInterface::DiskControlGetEjectState()
 {
-  return !System::IsShutdown() && P_THIS->m_disk_control_info.ejected;
+  return !System::IsShutdown() && System::IsMediaTrayOpen();
 }
 
 unsigned HostInterface::DiskControlGetImageIndex()
@@ -2277,7 +2269,7 @@ unsigned HostInterface::DiskControlGetImageIndex()
 bool HostInterface::DiskControlSetImageIndex(unsigned index)
 {
   DiskControlInfo& info = P_THIS->m_disk_control_info;
-  if (System::IsShutdown() || !info.ejected || (index < info.image_count && info.image_paths[index].empty()))
+  if (System::IsShutdown() || !System::IsMediaTrayOpen() || (index < info.image_count && info.image_paths[index].empty()))
     return false;
 
   info.image_index = std::min(index, info.image_count);
@@ -2297,7 +2289,7 @@ bool HostInterface::DiskControlReplaceImageIndex(unsigned index, const retro_gam
 #define CASE_COMPARE strcasecmp
 #endif
 
-  if (System::IsShutdown() || !P_THIS->m_disk_control_info.ejected ||
+  if (System::IsShutdown() || !System::IsMediaTrayOpen() ||
       (index >= P_THIS->m_disk_control_info.image_count))
     return false;
 

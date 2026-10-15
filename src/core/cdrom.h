@@ -33,6 +33,7 @@ public:
   void InsertMedia(std::unique_ptr<CDImage> media);
   std::unique_ptr<CDImage> RemoveMedia(bool for_disc_swap);
   void SetShellOpen(bool opened) { m_shell_open = opened; }
+  bool IsShellOpen() const { return m_shell_open; }
 
   void CPUClockChanged();
 
