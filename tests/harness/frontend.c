@@ -11,6 +11,8 @@
  *   STATEFUZZ_LOG=1       print each corrupted byte before loading
  *   STATEFUZZ_DUMP=file   write the uncorrupted state to file
  *   STATEFUZZ_PATCH=o:v,… load the state with these bytes changed instead of fuzzing
+ *   STATEFUZZ_SWEEP=s:n   instead of fuzzing, set each of the n bytes after the
+ *                         first section marker s to 0xFF in turn and load it
  *   DISKTEST=path         content is a two-entry M3U booted on its second entry;
  *                         swap, load a state saved before the swap, remove and
  *                         re-add entries through disk control, re-adding path,
@@ -21,6 +23,8 @@
  *                         under a new environment: once with a second logger,
  *                         once with a NULL one; fails if a logger is called
  *                         while it is not the current one
+ * FE_STATE_CONTEXT=rollback reports every state load as a netplay rollback,
+ * which the core loads without a fallback copy of the running state.
  * Core options come from FE_CPU, FE_FASTMEM and FE_GPUTHREAD; the BIOS
  * and save directory is FE_DIR. A load that runs for more than a minute
  * is reported as a hang (exit code 3). */
@@ -97,6 +101,11 @@ static bool env_cb(unsigned cmd, void* data)
     case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT:
     case RETRO_ENVIRONMENT_SET_VARIABLES:
     case RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME:
+      return true;
+    case RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT:
+      if (!getenv("FE_STATE_CONTEXT") || strcmp(getenv("FE_STATE_CONTEXT"), "rollback") != 0)
+        return false;
+      *(int*)data = RETRO_SAVESTATE_CONTEXT_ROLLBACK_NETPLAY;
       return true;
     case RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION:
       *(unsigned*)data = 1;
@@ -308,6 +317,58 @@ static int state_fuzz(void* h, unsigned iters, uint32_t seed)
     for (j = 0; j < 3; j++)
       run();
     alarm(0);
+    iters = 0;
+  }
+  if (getenv("STATEFUZZ_SWEEP"))
+  {
+    /* Deterministic: every byte of a section's head in turn, so a validated field is always hit. */
+    char section[32];
+    unsigned long count = 0;
+    size_t start = 0, mlen, p;
+
+    if (sscanf(getenv("STATEFUZZ_SWEEP"), "%31[^:]:%lu", section, &count) != 2)
+    {
+      fprintf(stderr, "bad STATEFUZZ_SWEEP\n");
+      free(orig);
+      free(buf);
+      return 1;
+    }
+    mlen = strlen(section);
+    for (p = 0; p + mlen + 4 < size; p++)
+    {
+      uint32_t l;
+      memcpy(&l, orig + p, 4);
+      if (l == mlen && !memcmp(orig + p + 4, section, mlen))
+      {
+        start = p + 4 + mlen;
+        break;
+      }
+    }
+    if (!start)
+    {
+      fprintf(stderr, "section %s not found\n", section);
+      free(orig);
+      free(buf);
+      return 1;
+    }
+    for (fuzz_iteration = 0; fuzz_iteration < count && start + fuzz_iteration < size; fuzz_iteration++)
+    {
+      memcpy(buf, orig, size);
+      buf[start + fuzz_iteration] = 0xFF;
+      alarm(60);
+      if (unserialize(buf, size))
+        loaded++;
+      else
+        rejected++;
+      for (j = 0; j < 3; j++)
+        run();
+      alarm(0);
+      if (!unserialize(orig, size))
+      {
+        fprintf(stderr, "restoring the good state failed at sweep byte %u\n", fuzz_iteration);
+        return 1;
+      }
+    }
     iters = 0;
   }
   for (fuzz_iteration = 0; fuzz_iteration < iters; fuzz_iteration++)

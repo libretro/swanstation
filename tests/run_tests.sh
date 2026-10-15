@@ -6,6 +6,9 @@
 #   polyline                          long GPU poly-lines, compared with tests/gpu_polyline.expected
 #   regfuzz [first] [last] [frames]   register fuzzer, one run per seed (default 1 20 120)
 #   statefuzz [first] [last] [iters]  corrupted save states loaded into a fuzzed system (default 1 3 150)
+#   rollback                          every byte of the CPU section head set to 0xFF in turn and
+#                                     loaded as a netplay rollback (no fallback copy); frames still run
+#                                     after each rejected load
 #   disk                              M3U entries swapped, removed and re-added through disk control,
 #                                     an empty drive closed and that state loaded,
 #                                     with a save state from before the swap loaded after it, and
@@ -134,6 +137,17 @@ case "$SUITE" in
       seed=$((seed + 1))
     done
     echo "statefuzz: seeds $first-$last passed"
+    ;;
+
+  rollback)
+    build_rom regfuzz
+    python3 "$TESTS/make_disc.py" "$WORK"
+    if ! FE_STATE_CONTEXT=rollback STATEFUZZ=1 STATEFUZZ_SWEEP=CPU:400 \
+      run_rom regfuzz 1 0xFFFFFFFF 120 "$WORK/disc.cue"; then
+      echo "rollback: failed"
+      exit 1
+    fi
+    grep "state fuzz:" "$WORK/run.log"
     ;;
 
   disk)
