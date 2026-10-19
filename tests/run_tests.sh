@@ -19,6 +19,8 @@
 #                                     path/label queries with missing, empty and short buffers
 #   reload                            the core re-initialized under a new environment, with a
 #                                     second logger and then none; no call reaches a replaced logger
+#   vulkan                            the Vulkan renderer's device negotiated with the core, under the
+#                                     validation layer; needs a Vulkan driver, e.g. lavapipe
 #
 # UPDATE_EXPECTED=1 rewrites an expected file from the core under test.
 # Needs clang, ld.lld and llvm-objcopy for the MIPS test ROMs, python3, and a
@@ -192,6 +194,28 @@ case "$SUITE" in
       exit 1
     fi
     grep "reload test:" "$WORK/run.log"
+    ;;
+
+  vulkan)
+    build_rom gpu_polyline
+    python3 "$TESTS/make_disc.py" "$WORK"
+    "$CC" -O1 -g ${FRONTEND_CFLAGS:-} -I"$TESTS/../dep/libretro-common/include" -I"$TESTS/../dep/vulkan-loader/include" \
+      "$TESTS/harness/vk_negotiate.c" -o "$WORK/vk_negotiate" -ldl
+    # Each frontend: RetroArch's (negotiation v2).
+    for offer in 2; do
+      dir="$WORK/bios-vk"
+      rm -rf "$dir"
+      mkdir -p "$dir"
+      python3 "$TESTS/guest/mkrom.py" "$WORK/gpu_polyline.rom" "$dir/bios.bin" 1 0
+      if ! VKN_OFFER=$offer VKN_DIR="$dir" timeout "$TIMEOUT" "$WORK/vk_negotiate" "$CORE" "$WORK/disc.cue" \
+        swanstation_GPU_Renderer=Vulkan swanstation_CPU_ExecutionMode="$FE_CPU" \
+        swanstation_CPU_FastmemMode="$FE_FASTMEM" > "$WORK/run.log" 2>&1; then
+        cat "$WORK/run.log"
+        echo "vulkan: negotiation v$offer failed"
+        exit 1
+      fi
+      cat "$WORK/run.log"
+    done
     ;;
 
   *)

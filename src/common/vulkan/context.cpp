@@ -241,6 +241,9 @@ bool Context::CreateDevice(VkSurfaceKHR surface, bool enable_validation_layer, c
     Log_ErrorPrintf("Vulkan: Failed to find an acceptable present queue.");
     return false;
   }
+  // Without a surface there is no present queue: only the graphics queue is created.
+  if (!surface)
+    m_present_queue_family_index = m_graphics_queue_family_index;
 
   VkDeviceCreateInfo device_info = {};
   device_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
