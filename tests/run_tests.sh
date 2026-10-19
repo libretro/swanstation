@@ -19,8 +19,10 @@
 #                                     path/label queries with missing, empty and short buffers
 #   reload                            the core re-initialized under a new environment, with a
 #                                     second logger and then none; no call reaches a replaced logger
-#   vulkan                            the Vulkan renderer's device negotiated with the core, under the
-#                                     validation layer; needs a Vulkan driver, e.g. lavapipe
+#   vulkan                            the Vulkan renderer's device negotiated as RetroArch does (v2,
+#                                     made through the frontend's wrapper) and as a frontend without
+#                                     v2 does (v1), under the validation layer; needs a Vulkan
+#                                     driver, e.g. lavapipe
 #
 # UPDATE_EXPECTED=1 rewrites an expected file from the core under test.
 # Needs clang, ld.lld and llvm-objcopy for the MIPS test ROMs, python3, and a
@@ -201,13 +203,16 @@ case "$SUITE" in
     python3 "$TESTS/make_disc.py" "$WORK"
     "$CC" -O1 -g ${FRONTEND_CFLAGS:-} -I"$TESTS/../dep/libretro-common/include" -I"$TESTS/../dep/vulkan-loader/include" \
       "$TESTS/harness/vk_negotiate.c" -o "$WORK/vk_negotiate" -ldl
-    # Each frontend: RetroArch's (negotiation v2).
-    for offer in 2; do
+    # Each frontend: RetroArch's (negotiation v2: the device must be made through
+    # its wrapper), and one that predates v2.
+    for offer in 2 1; do
       dir="$WORK/bios-vk"
       rm -rf "$dir"
       mkdir -p "$dir"
       python3 "$TESTS/guest/mkrom.py" "$WORK/gpu_polyline.rom" "$dir/bios.bin" 1 0
-      if ! VKN_OFFER=$offer VKN_DIR="$dir" timeout "$TIMEOUT" "$WORK/vk_negotiate" "$CORE" "$WORK/disc.cue" \
+      expect=0
+      [ "$offer" -ge 2 ] && expect=1
+      if ! VKN_OFFER=$offer VKN_EXPECT_WRAPPER=$expect VKN_DIR="$dir" timeout "$TIMEOUT" "$WORK/vk_negotiate" "$CORE" "$WORK/disc.cue" \
         swanstation_GPU_Renderer=Vulkan swanstation_CPU_ExecutionMode="$FE_CPU" \
         swanstation_CPU_FastmemMode="$FE_FASTMEM" > "$WORK/run.log" 2>&1; then
         cat "$WORK/run.log"

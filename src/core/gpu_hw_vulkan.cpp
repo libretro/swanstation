@@ -162,11 +162,14 @@ void LibretroVulkanHostDisplay::EndSetDisplayPixels()
                                          static_cast<uint32_t>(m_display_texture_view_height));
 }
 
-static bool RetroCreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instance, VkPhysicalDevice gpu,
-                                    VkSurfaceKHR surface, PFN_vkGetInstanceProcAddr get_instance_proc_addr,
-                                    const char** required_device_extensions, unsigned num_required_device_extensions,
-                                    const char** required_device_layers, unsigned num_required_device_layers,
-                                    const VkPhysicalDeviceFeatures* required_features)
+static bool RetroCreateVulkanDeviceCommon(struct retro_vulkan_context* context, VkInstance instance,
+                                          VkPhysicalDevice gpu, VkSurfaceKHR surface,
+                                          PFN_vkGetInstanceProcAddr get_instance_proc_addr,
+                                          const char** required_device_extensions,
+                                          unsigned num_required_device_extensions,
+                                          const char** required_device_layers, unsigned num_required_device_layers,
+                                          const VkPhysicalDeviceFeatures* required_features,
+                                          retro_vulkan_create_device_wrapper_t create_device_wrapper, void* opaque)
 {
   // We need some module functions.
   vkGetInstanceProcAddr = get_instance_proc_addr;
@@ -193,7 +196,7 @@ static bool RetroCreateVulkanDevice(struct retro_vulkan_context* context, VkInst
 
   if (!Vulkan::Context::CreateFromExistingInstance(
         instance, gpu, surface, false, false, false, required_device_extensions, num_required_device_extensions,
-        required_device_layers, num_required_device_layers, required_features))
+        required_device_layers, num_required_device_layers, required_features, create_device_wrapper, opaque))
   {
     Vulkan::ResetVulkanLibraryFunctionPointers();
     return false;
@@ -208,6 +211,27 @@ static bool RetroCreateVulkanDevice(struct retro_vulkan_context* context, VkInst
   return true;
 }
 
+static bool RetroCreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instance, VkPhysicalDevice gpu,
+                                    VkSurfaceKHR surface, PFN_vkGetInstanceProcAddr get_instance_proc_addr,
+                                    const char** required_device_extensions, unsigned num_required_device_extensions,
+                                    const char** required_device_layers, unsigned num_required_device_layers,
+                                    const VkPhysicalDeviceFeatures* required_features)
+{
+  return RetroCreateVulkanDeviceCommon(context, instance, gpu, surface, get_instance_proc_addr,
+                                       required_device_extensions, num_required_device_extensions,
+                                       required_device_layers, num_required_device_layers, required_features, nullptr,
+                                       nullptr);
+}
+
+// The same device, made through the frontend's wrapper, which brings its own extensions and features.
+static bool RetroCreateVulkanDevice2(struct retro_vulkan_context* context, VkInstance instance, VkPhysicalDevice gpu,
+                                     VkSurfaceKHR surface, PFN_vkGetInstanceProcAddr get_instance_proc_addr,
+                                     retro_vulkan_create_device_wrapper_t create_device_wrapper, void* opaque)
+{
+  return RetroCreateVulkanDeviceCommon(context, instance, gpu, surface, get_instance_proc_addr, nullptr, 0, nullptr,
+                                       0, nullptr, create_device_wrapper, opaque);
+}
+
 static const VkApplicationInfo *get_application_info_vulkan(void)
 {
 	static VkApplicationInfo app_info{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
@@ -219,12 +243,22 @@ static const VkApplicationInfo *get_application_info_vulkan(void)
 	return &app_info;
 }
 
-static retro_hw_render_context_negotiation_interface_vulkan s_vulkan_context_negotiation_interface = {
-  RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN,         // interface_type
-  RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN_VERSION, // interface_version
-  get_application_info_vulkan,                                  // get_application_info
-  RetroCreateVulkanDevice,                                      // create_device
-  nullptr                                                       // destroy_device
+static const retro_hw_render_context_negotiation_interface_vulkan s_vulkan_context_negotiation_interface_v1 = {
+  RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN, // interface_type
+  1,                                                    // interface_version
+  get_application_info_vulkan,                          // get_application_info
+  RetroCreateVulkanDevice,                              // create_device
+  nullptr                                               // destroy_device
+};
+
+static const retro_hw_render_context_negotiation_interface_vulkan s_vulkan_context_negotiation_interface_v2 = {
+  RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN, // interface_type
+  2,                                                    // interface_version
+  get_application_info_vulkan,                          // get_application_info
+  RetroCreateVulkanDevice,                              // create_device
+  nullptr,                                              // destroy_device
+  nullptr,                                              // create_instance
+  RetroCreateVulkanDevice2                              // create_device2
 };
 
 bool LibretroVulkanHostDisplay::RequestHardwareRendererContext(retro_hw_render_callback* cb)
@@ -232,9 +266,18 @@ bool LibretroVulkanHostDisplay::RequestHardwareRendererContext(retro_hw_render_c
   cb->cache_context = false;
   cb->bottom_left_origin = false;
   cb->context_type = RETRO_HW_CONTEXT_VULKAN;
+
+  // v2 where the frontend has it, so it makes the device and can add what it needs (e.g. for its
+  // low-latency modes); a frontend that predates v2 rejects a v2 interface.
+  retro_hw_render_context_negotiation_interface support = {RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN, 0};
+  if (!g_retro_environment_callback(RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT, &support))
+    support.interface_version = 0;
+
   return g_retro_environment_callback(RETRO_ENVIRONMENT_SET_HW_RENDER, cb) &&
          g_retro_environment_callback(RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE,
-                                      &s_vulkan_context_negotiation_interface);
+                                      const_cast<retro_hw_render_context_negotiation_interface_vulkan*>(
+                                        support.interface_version >= 2 ? &s_vulkan_context_negotiation_interface_v2 :
+                                                                         &s_vulkan_context_negotiation_interface_v1));
 }
 
 bool LibretroVulkanHostDisplay::CreateRenderDevice(const WindowInfo& wi, std::string_view adapter_name,

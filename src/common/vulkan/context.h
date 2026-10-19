@@ -21,6 +21,10 @@ class Context
 public:
   static constexpr uint32_t NUM_COMMAND_BUFFERS = 2;
 
+  // Creates the device in place of vkCreateDevice, e.g. a libretro
+  // frontend's, which adds what it needs to the create info.
+  using CreateDeviceWrapper = VkDevice (*)(VkPhysicalDevice gpu, void* opaque, const VkDeviceCreateInfo* info);
+
   ~Context();
 
   // Returns a list of Vulkan-compatible GPUs.
@@ -34,7 +38,9 @@ public:
                                          uint32_t num_required_device_extensions = 0,
                                          const char** required_device_layers = nullptr,
                                          uint32_t num_required_device_layers = 0,
-                                         const VkPhysicalDeviceFeatures* required_features = nullptr);
+                                         const VkPhysicalDeviceFeatures* required_features = nullptr,
+                                         CreateDeviceWrapper create_device_wrapper = nullptr,
+                                         void* create_device_wrapper_opaque = nullptr);
 
   // Destroys context.
   static void Destroy();
@@ -141,7 +147,8 @@ private:
   bool SelectDeviceFeatures(const VkPhysicalDeviceFeatures* required_features);
   bool CreateDevice(VkSurfaceKHR surface, bool enable_validation_layer, const char** required_device_extensions,
                     uint32_t num_required_device_extensions, const char** required_device_layers,
-                    uint32_t num_required_device_layers, const VkPhysicalDeviceFeatures* required_features);
+                    uint32_t num_required_device_layers, const VkPhysicalDeviceFeatures* required_features,
+                    CreateDeviceWrapper create_device_wrapper, void* create_device_wrapper_opaque);
 
   bool CreateCommandBuffers();
   void DestroyCommandBuffers();

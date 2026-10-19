@@ -86,7 +86,9 @@ bool Context::CreateFromExistingInstance(VkInstance instance, VkPhysicalDevice g
                                          uint32_t num_required_device_extensions /* = 0 */,
                                          const char** required_device_layers /* = nullptr */,
                                          uint32_t num_required_device_layers /* = 0 */,
-                                         const VkPhysicalDeviceFeatures* required_features /* = nullptr */)
+                                         const VkPhysicalDeviceFeatures* required_features /* = nullptr */,
+                                         CreateDeviceWrapper create_device_wrapper /* = nullptr */,
+                                         void* create_device_wrapper_opaque /* = nullptr */)
 {
   g_vulkan_context.reset(new Context(instance, gpu, take_ownership));
 
@@ -97,7 +99,8 @@ bool Context::CreateFromExistingInstance(VkInstance instance, VkPhysicalDevice g
   // Attempt to create the device.
   if (!g_vulkan_context->CreateDevice(surface, enable_validation_layer, required_device_extensions,
                                       num_required_device_extensions, required_device_layers,
-                                      num_required_device_layers, required_features) ||
+                                      num_required_device_layers, required_features, create_device_wrapper,
+                                      create_device_wrapper_opaque) ||
       !g_vulkan_context->CreateGlobalDescriptorPool() || !g_vulkan_context->CreateCommandBuffers())
   {
     g_vulkan_context.reset();
@@ -179,7 +182,8 @@ bool Context::SelectDeviceFeatures(const VkPhysicalDeviceFeatures* required_feat
 
 bool Context::CreateDevice(VkSurfaceKHR surface, bool enable_validation_layer, const char** required_device_extensions,
                            uint32_t num_required_device_extensions, const char** required_device_layers,
-                           uint32_t num_required_device_layers, const VkPhysicalDeviceFeatures* required_features)
+                           uint32_t num_required_device_layers, const VkPhysicalDeviceFeatures* required_features,
+                           CreateDeviceWrapper create_device_wrapper, void* create_device_wrapper_opaque)
 {
   uint32_t queue_family_count;
   vkGetPhysicalDeviceQueueFamilyProperties(m_physical_device, &queue_family_count, nullptr);
@@ -304,11 +308,23 @@ bool Context::CreateDevice(VkSurfaceKHR surface, bool enable_validation_layer, c
     device_info.ppEnabledLayerNames = layer_names;
   }
 
-  VkResult res = vkCreateDevice(m_physical_device, &device_info, nullptr, &m_device);
-  if (res != VK_SUCCESS)
+  if (create_device_wrapper)
   {
-    LOG_VULKAN_ERROR(res, "vkCreateDevice failed: ");
-    return false;
+    m_device = create_device_wrapper(m_physical_device, create_device_wrapper_opaque, &device_info);
+    if (m_device == VK_NULL_HANDLE)
+    {
+      Log_ErrorPrintf("Vulkan: the frontend did not create the device.");
+      return false;
+    }
+  }
+  else
+  {
+    VkResult res = vkCreateDevice(m_physical_device, &device_info, nullptr, &m_device);
+    if (res != VK_SUCCESS)
+    {
+      LOG_VULKAN_ERROR(res, "vkCreateDevice failed: ");
+      return false;
+    }
   }
 
   // With the device created, we can fill the remaining entry points.
