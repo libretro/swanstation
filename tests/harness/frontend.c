@@ -10,7 +10,8 @@
  *   STATEFUZZ_SECTION=s   only corrupt the state section with marker s
  *   STATEFUZZ_LOG=1       print each corrupted byte before loading
  *   STATEFUZZ_DUMP=file   write the uncorrupted state to file
- *   STATEFUZZ_PATCH=o:v,… load the state with these bytes changed instead of fuzzing
+ *   STATEFUZZ_PATCH=o:v,… load the state with these bytes changed instead of fuzzing, then
+ *                         save it again; s+o:v counts o from after section marker s
  *   STATEFUZZ_SWEEP=s:n   instead of fuzzing, set each of the n bytes after the
  *                         first section marker s to 0xFF in turn and load it
  *   DISKTEST=path         content is a two-entry M3U booted on its second entry;
@@ -216,6 +217,21 @@ static uint32_t rng(void)
   return rng_state >> 8;
 }
 
+/* Offset of the first byte after section marker name, or 0 if there is none. */
+static size_t section_start(const unsigned char* state, size_t size, const char* name)
+{
+  const size_t mlen = strlen(name);
+  size_t p;
+  for (p = 0; p + mlen + 4 < size; p++)
+  {
+    uint32_t l;
+    memcpy(&l, state + p, 4);
+    if (l == mlen && !memcmp(state + p + 4, name, mlen))
+      return p + 4 + mlen;
+  }
+  return 0;
+}
+
 /* Corrupts bytes just after a random section marker; the bulk RAM/VRAM payloads are not interesting. */
 static void corrupt_state(unsigned char* buf, const unsigned char* orig, size_t size)
 {
@@ -309,17 +325,38 @@ static int state_fuzz(void* h, unsigned iters, uint32_t seed)
 
   if (getenv("STATEFUZZ_PATCH"))
   {
-    /* Replay one corruption: comma-separated offset:hexvalue pairs. */
+    /* Replay one corruption: comma-separated [section+]offset:hexvalue pairs,
+     * the offset counted from after the section's marker when one is named. */
     const char* p = getenv("STATEFUZZ_PATCH");
     memcpy(buf, orig, size);
     while (*p)
     {
+      char section[32];
       unsigned long off;
       unsigned val;
+      size_t base = 0;
       int n = 0;
-      if (sscanf(p, "%lu:%x%n", &off, &val, &n) != 2 || off >= size)
-        break;
-      buf[off] = (unsigned char)val;
+      if (sscanf(p, "%31[^+:,]+%n", section, &n) == 1 && n > 0)
+      {
+        base = section_start(orig, size, section);
+        if (!base)
+        {
+          fprintf(stderr, "section %s not found\n", section);
+          free(orig);
+          free(buf);
+          return 1;
+        }
+        p += n;
+        n = 0;
+      }
+      if (sscanf(p, "%lu:%x%n", &off, &val, &n) != 2 || base + off >= size)
+      {
+        fprintf(stderr, "bad STATEFUZZ_PATCH at '%s'\n", p);
+        free(orig);
+        free(buf);
+        return 1;
+      }
+      buf[base + off] = (unsigned char)val;
       p += n;
       if (*p == ',')
         p++;
@@ -328,6 +365,8 @@ static int state_fuzz(void* h, unsigned iters, uint32_t seed)
     printf("patched state %s\n", unserialize(buf, size) ? "loaded" : "rejected");
     for (j = 0; j < 3; j++)
       run();
+    /* Whatever was loaded must save again. */
+    printf("patched state %s\n", serialize(buf, size) ? "saved" : "not saved");
     alarm(0);
     iters = 0;
   }
@@ -336,7 +375,7 @@ static int state_fuzz(void* h, unsigned iters, uint32_t seed)
     /* Deterministic: every byte of a section's head in turn, so a validated field is always hit. */
     char section[32];
     unsigned long count = 0;
-    size_t start = 0, mlen, p;
+    size_t start;
 
     if (sscanf(getenv("STATEFUZZ_SWEEP"), "%31[^:]:%lu", section, &count) != 2)
     {
@@ -345,17 +384,7 @@ static int state_fuzz(void* h, unsigned iters, uint32_t seed)
       free(buf);
       return 1;
     }
-    mlen = strlen(section);
-    for (p = 0; p + mlen + 4 < size; p++)
-    {
-      uint32_t l;
-      memcpy(&l, orig + p, 4);
-      if (l == mlen && !memcmp(orig + p + 4, section, mlen))
-      {
-        start = p + 4 + mlen;
-        break;
-      }
-    }
+    start = section_start(orig, size, section);
     if (!start)
     {
       fprintf(stderr, "section %s not found\n", section);

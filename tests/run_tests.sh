@@ -6,6 +6,9 @@
 #   polyline                          long GPU poly-lines, compared with tests/gpu_polyline.expected
 #   regfuzz [first] [last] [frames]   register fuzzer, one run per seed (default 1 20 120)
 #   statefuzz [first] [last] [iters]  corrupted save states loaded into a fuzzed system (default 1 3 150)
+#   mdecstate                         MDEC states with table commands short of parameters, unknown
+#                                     states and a block write-out with nothing scheduled must be
+#                                     rejected, valid pending table commands loaded; all must save again
 #   rollback                          every byte of the CPU section head set to 0xFF in turn and
 #                                     loaded as a netplay rollback (no fallback copy); frames still run
 #                                     after each rejected load
@@ -145,6 +148,31 @@ case "$SUITE" in
       seed=$((seed + 1))
     done
     echo "statefuzz: seeds $first-$last passed"
+    ;;
+
+  mdecstate)
+    build_rom mdec_state
+    # MDEC section with both FIFOs empty: status (4), DMA in/out (1+1), FIFO sizes (4+4),
+    # state (1) at 14, remaining halfwords (4) at 15. States: 2 WritingMacroblock,
+    # 3 SetIqTable, 4 SetScaleTable, 5 NoCommand (last).
+    for c in 3:32:loaded 3:64:loaded 4:64:loaded 3:0:rejected 3:2:rejected 3:66:rejected \
+      4:0:rejected 4:32:rejected 2:0:rejected 6:0:rejected; do
+      state=${c%%:*}
+      rest=${c#*:}
+      halfwords=${rest%%:*}
+      expect=${rest#*:}
+      patch=$(printf 'MDEC+14:%x,MDEC+15:%x,MDEC+16:0,MDEC+17:0,MDEC+18:0' "$state" "$halfwords")
+      if ! STATEFUZZ=1 STATEFUZZ_PATCH="$patch" run_rom mdec_state 1 0 10; then
+        echo "mdecstate: state $state, $halfwords halfwords failed"
+        exit 1
+      fi
+      if ! grep -q "patched state $expect" "$WORK/run.log" || ! grep -q "patched state saved" "$WORK/run.log"; then
+        cat "$WORK/run.log"
+        echo "mdecstate: state $state, $halfwords halfwords: expected $expect and saved"
+        exit 1
+      fi
+    done
+    echo "mdecstate: passed"
     ;;
 
   rollback)
