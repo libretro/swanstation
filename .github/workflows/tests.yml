@@ -38,8 +38,10 @@ jobs:
       - name: Save state fuzzer
         run: tests/run_tests.sh swanstation_libretro.so statefuzz 1 4 150
 
-      - name: MDEC save state checks
-        run: tests/run_tests.sh swanstation_libretro.so mdecstate
+      - name: MDEC and timing event save state checks
+        run: |
+          tests/run_tests.sh swanstation_libretro.so mdecstate
+          tests/run_tests.sh swanstation_libretro.so eventstate
 
   sanitizers:
     name: ASan and UBSan
@@ -74,8 +76,10 @@ jobs:
           FE_CPU=Recompiler tests/run_tests.sh swanstation_libretro.so statefuzz 1 4 150
           FE_CPU=Interpreter tests/run_tests.sh swanstation_libretro.so statefuzz 5 8 150
 
-      - name: MDEC save state checks
-        run: tests/run_tests.sh swanstation_libretro.so mdecstate
+      - name: MDEC and timing event save state checks
+        run: |
+          tests/run_tests.sh swanstation_libretro.so mdecstate
+          tests/run_tests.sh swanstation_libretro.so eventstate
 
   thread-sanitizer:
     name: TSan
@@ -98,3 +102,4 @@ jobs:
           tests/run_tests.sh swanstation_libretro.so regfuzz 1 10 200
           tests/run_tests.sh swanstation_libretro.so statefuzz 1 2 100
           tests/run_tests.sh swanstation_libretro.so mdecstate
+          tests/run_tests.sh swanstation_libretro.so eventstate

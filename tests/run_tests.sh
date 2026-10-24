@@ -9,6 +9,10 @@
 #   mdecstate                         MDEC states with table commands short of parameters, unknown
 #                                     states and a block write-out with nothing scheduled must be
 #                                     rejected, valid pending table commands loaded; all must save again
+#   eventstate                        timing events already due or that would run with negative elapsed
+#                                     time, and a GPU CRTC event postponed past a CPU slice or with
+#                                     another period or interval, must be rejected; in-range ones and
+#                                     real states loaded at the lowest and highest clocks; all must save
 #   rollback                          every byte of the CPU section head set to 0xFF in turn and
 #                                     loaded as a netplay rollback (no fallback copy); frames still run
 #                                     after each rejected load
@@ -173,6 +177,58 @@ case "$SUITE" in
       fi
     done
     echo "mdecstate: passed"
+    ;;
+
+  eventstate)
+    build_rom mdec_state
+    # Each event record is its name (u32 length, bytes) then downcount, time since
+    # last run, period and interval, each a little-endian s32 at +0, +4, +8, +12.
+    le32()
+    {
+      v=$(( $3 & 0xFFFFFFFF ))
+      printf '%s+%d:%x,%s+%d:%x,%s+%d:%x,%s+%d:%x' "$1" "$2" $((v & 255)) "$1" $(($2 + 1)) $(((v >> 8) & 255)) \
+        "$1" $(($2 + 2)) $(((v >> 16) & 255)) "$1" $(($2 + 3)) $(((v >> 24) & 255))
+    }
+    crtc="GPU CRTC Tick"
+    spu="SPU Sample"
+    for c in \
+      "loaded 100 $(le32 "$crtc" 0 1),$(le32 "$crtc" 4 0)" \
+      "loaded 50 $(le32 "$crtc" 0 1),$(le32 "$crtc" 4 0)" \
+      "loaded 100 $(le32 "$spu" 0 1),$(le32 "$spu" 4 -1)" \
+      "rejected 100 $(le32 "$spu" 0 0),$(le32 "$spu" 4 0)" \
+      "rejected 100 $(le32 "$spu" 0 -1000),$(le32 "$spu" 4 2000)" \
+      "rejected 100 $(le32 "$crtc" 0 -1000),$(le32 "$crtc" 4 2000)" \
+      "rejected 100 $(le32 "$spu" 0 1),$(le32 "$spu" 4 -2)" \
+      "rejected 100 $(le32 "$crtc" 0 0x3FFFFFFF)" \
+      "rejected 160 $(le32 "$crtc" 0 0x3FFFFFFF)" \
+      "rejected 100 $(le32 "$crtc" 4 0x3FFFFFFF)" \
+      "rejected 100 $(le32 "$crtc" 8 2)" \
+      "rejected 100 $(le32 "$crtc" 12 2)"; do
+      expect=${c%% *}
+      rest=${c#* }
+      clock=${rest%% *}
+      patch=${rest#* }
+      if ! FE_OVERCLOCK=$clock STATEFUZZ=1 STATEFUZZ_PATCH="$patch" run_rom mdec_state 1 0 10; then
+        echo "eventstate: $patch at $clock% failed"
+        exit 1
+      fi
+      if ! grep -q "patched state $expect" "$WORK/run.log" || ! grep -q "patched state saved" "$WORK/run.log"; then
+        cat "$WORK/run.log"
+        echo "eventstate: $patch at $clock%: expected $expect and saved"
+        exit 1
+      fi
+    done
+    # States saved at frame ends across a run at the lowest and highest clocks load again.
+    build_rom gpu_polyline
+    for clock in 50 160; do
+      for frames in 1 17 60 121; do
+        if ! FE_OVERCLOCK=$clock STATEFUZZ=0 run_rom gpu_polyline 1 0 $frames; then
+          echo "eventstate: state saved after $frames frames at $clock% failed"
+          exit 1
+        fi
+      done
+    done
+    echo "eventstate: passed"
     ;;
 
   rollback)

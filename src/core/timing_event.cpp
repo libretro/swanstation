@@ -303,10 +303,11 @@ bool DoState(StateWrapper& sw)
       sw.Do(&time_since_last_run);
       sw.Do(&period);
       sw.Do(&interval);
-      /* Real states are late by a CPU slice at most; a crafted one could stall emulation for minutes. */
+      /* States are saved with every due event run, so each is pending; one already due never runs, as the CPU
+       * would not advance. Real states are late by a CPU slice at most; a crafted one could stall for minutes. */
       static constexpr TickCount MAX_LATENESS = System::MASTER_CLOCK / 60;
       static constexpr TickCount MAX_TICKS = std::numeric_limits<TickCount>::max() / 2;
-      if (sw.HasError() || period <= 0 || interval <= 0 || downcount < -MAX_LATENESS || downcount > MAX_TICKS ||
+      if (sw.HasError() || period <= 0 || interval <= 0 || downcount <= 0 || downcount > MAX_TICKS ||
           time_since_last_run < -MAX_LATENESS || time_since_last_run > MAX_TICKS ||
           static_cast<int64_t>(downcount) + static_cast<int64_t>(time_since_last_run) < 0)
       {

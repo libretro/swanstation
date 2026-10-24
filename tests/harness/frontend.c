@@ -34,7 +34,8 @@
  * FE_PADS=1 plugs the same two pads without running PADTEST.
  * FE_STATE_CONTEXT=rollback reports every state load as a netplay rollback,
  * which the core loads without a fallback copy of the running state.
- * Core options come from FE_CPU, FE_FASTMEM and FE_GPUTHREAD; the BIOS
+ * Core options come from FE_CPU, FE_FASTMEM, FE_GPUTHREAD and FE_OVERCLOCK
+ * (percent, unset for the default); the BIOS
  * and save directory is FE_DIR. A load that runs for more than a minute
  * is reported as a hang (exit code 3). */
 #include <signal.h>
@@ -143,6 +144,8 @@ static bool env_cb(unsigned cmd, void* data)
         v->value = opt_fastmem;
       else if (!strcmp(v->key, "swanstation_CPU_ExecutionMode"))
         v->value = opt_cpu;
+      else if (!strcmp(v->key, "swanstation_CPU_Overclock"))
+        v->value = getenv("FE_OVERCLOCK");
       return v->value != NULL;
     }
     default:
