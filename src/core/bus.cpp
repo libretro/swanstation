@@ -188,11 +188,41 @@ bool DoState(StateWrapper& sw)
     CPU::UpdateFastmemBase();
   }
 
-  sw.Do(&m_exp1_access_time);
-  sw.Do(&m_exp2_access_time);
-  sw.Do(&m_bios_access_time);
-  sw.Do(&m_cdrom_access_time);
-  sw.Do(&m_spu_access_time);
+  auto exp1_access_time = m_exp1_access_time;
+  auto exp2_access_time = m_exp2_access_time;
+  auto bios_access_time = m_bios_access_time;
+  auto cdrom_access_time = m_cdrom_access_time;
+  auto spu_access_time = m_spu_access_time;
+  sw.Do(&exp1_access_time);
+  sw.Do(&exp2_access_time);
+  sw.Do(&bios_access_time);
+  sw.Do(&cdrom_access_time);
+  sw.Do(&spu_access_time);
+  if (sw.IsReading())
+  {
+    // The memory controller fields can produce at most 183 ticks for a word access.
+    static constexpr TickCount MAX_MEMORY_ACCESS_TICKS = 183;
+    const auto valid_access_times = [](const std::array<TickCount, 3>& access_times) {
+      for (const TickCount ticks : access_times)
+      {
+        if (ticks < 0 || ticks > MAX_MEMORY_ACCESS_TICKS)
+          return false;
+      }
+      return true;
+    };
+    if (sw.HasError() || !valid_access_times(exp1_access_time) || !valid_access_times(exp2_access_time) ||
+        !valid_access_times(bios_access_time) || !valid_access_times(cdrom_access_time) ||
+        !valid_access_times(spu_access_time))
+    {
+      return false;
+    }
+
+    m_exp1_access_time = exp1_access_time;
+    m_exp2_access_time = exp2_access_time;
+    m_bios_access_time = bios_access_time;
+    m_cdrom_access_time = cdrom_access_time;
+    m_spu_access_time = spu_access_time;
+  }
   sw.DoBytes(g_ram, g_ram_size);
   sw.DoBytes(g_bios, BIOS_SIZE);
   sw.DoArray(m_MEMCTRL.regs, countof(m_MEMCTRL.regs));
