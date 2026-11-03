@@ -239,7 +239,8 @@ bool GPU::DoState(StateWrapper& sw, HostDisplayTexture** host_texture, bool upda
 
     /* Only a VRAM write or a poly-line in progress holds words in the blit buffer. */
     if (m_blitter_state == BlitterState::DrawingPolyLine)
-      valid = valid && m_blit_buffer.size() <= (MAX_POLYLINE_VERTICES * 2u + MAX_FIFO_SIZE);
+      valid = valid && !m_blit_buffer.empty() &&
+              m_blit_buffer.size() <= (MAX_POLYLINE_VERTICES * 2u + MAX_FIFO_SIZE);
     else if (m_blitter_state != BlitterState::WritingVRAM)
       valid = valid && m_blit_buffer.empty();
 
